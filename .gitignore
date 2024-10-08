@@ -1,3 +1,13 @@
+# file explorer
+.DS_STORE
+.idea
+
+#config
+helios_config.json
+.env
+
+
+
 # Logs
 logs
 *.log
