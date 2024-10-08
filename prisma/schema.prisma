@@ -1,0 +1,29 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// npx prisma migrate dev  --name init
+
+model RefTypesGroepen {
+  ID                Int       @id @default(autoincrement())
+  CODE              String?   @db.VarChar(10)
+  EXT_REF           String?   @db.VarChar(25)
+  OMSCHRIJVING      String    @db.VarChar(75)
+  SORTEER_VOLGORDE  Int?      @db.TinyInt
+  READ_ONLY         Boolean   @db.TinyInt @default(false)
+  BEDRAG_EENHEDEN   Int?       @db.TinyInt
+  VERWIJDERD        Boolean   @db.TinyInt @default(false)
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+}
+

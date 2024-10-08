@@ -3,10 +3,8 @@
 .idea
 
 #config
-helios_config.json
+helios-config.json
 .env
-
-
 
 # Logs
 logs
