@@ -27,7 +27,7 @@ export class TypesGroepenService extends IHeliosService
     {
         const where: Prisma.RefTypesGroepenWhereInput = {}; // = this.Where<Prisma.RefTypesGroepenWhereInput>(params)
 
-        const w =  this.Where<Prisma.RefTypesGroepenWhereInput>(params)
+        //const w =  this.Where<Prisma.RefTypesGroepenWhereInput>(params)
         const sort = params.SORT ? params.SORT : "ID";
 
         const objs = await this.dbService.refTypesGroepen.findMany({

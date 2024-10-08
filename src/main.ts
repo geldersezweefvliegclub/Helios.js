@@ -1,10 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-<<<<<<< Updated upstream
-import {INestApplication} from "@nestjs/common";
-=======
 import {INestApplication, Logger, ValidationPipe} from "@nestjs/common";
->>>>>>> Stashed changes
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 function setupSwagger(app: INestApplication, swaggerUrl: string) {
