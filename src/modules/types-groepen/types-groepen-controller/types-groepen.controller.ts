@@ -18,12 +18,13 @@ export class TypesGroepenController {
     }
 
     @Get("GetObjects")
+    @ApiQuery({name: 'VERWIJDERD', required: false, type: Boolean})
     @ApiQuery({name: 'VELDEN', required: false, type: String})
     @ApiQuery({name: 'SORT', required: false, type: String})
     @ApiQuery({name: 'MAX', required: false, type: Number})
     @ApiQuery({name: 'START', required: false, type: Number})
     @ApiQuery({name: 'HASH', required: false, type: String})
-    @ApiQuery({name: 'VERWIJDERD', required: false, type: Boolean})
+    @ApiQuery({name: 'IDs', required: false, type: String})
     @ApiQuery({name: 'ID', required: false, type: Number})
     GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepen>> {
         // sort is optional, so if it is not provided, it should default to "SORTEER_VOLGORDE"

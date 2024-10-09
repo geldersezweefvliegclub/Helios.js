@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// npx prisma migrate dev  --name init
+//  npx prisma migrate dev  --name new_helios
 
 model RefTypesGroepen {
   ID                Int       @id @default(autoincrement())

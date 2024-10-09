@@ -17,5 +17,14 @@ const optionBooleanMapper = new Map<string, boolean>([
  *     someBoolean?: boolean;
  * };
  */
+
 export const OptionalBooleanTransform = () => Transform((options) => optionBooleanMapper.get(options.value));
 export const OptionalNumberTransform = () => Transform((options) => options.value != null ? Number(options.value) : null);
+
+export const CSVTransform = () => Transform((options) =>
+{
+    const o =  options.value != null ? options.value.split(",") : null
+    for (let i = 0; i < o.length; i++)
+        o[i] = Number(o[i].trim());
+    return o;
+});

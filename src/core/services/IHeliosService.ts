@@ -50,6 +50,11 @@ export abstract class IHeliosService {
 
     protected Select<oType>(fields: string): oType
     {
-        return undefined;
+        const retObj: oType = {} as oType;
+        fields.split(',').forEach(field =>  // split on comma
+        {
+            retObj[field] = true
+        });
+        return retObj;
     }
 }

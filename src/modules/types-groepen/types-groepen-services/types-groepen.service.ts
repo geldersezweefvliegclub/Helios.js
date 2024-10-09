@@ -25,15 +25,22 @@ export class TypesGroepenService extends IHeliosService
     // retrieve objects from the database based on the query parameters
     async GetObjects(params:GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepen>>
     {
-        const where: Prisma.RefTypesGroepenWhereInput = {}; // = this.Where<Prisma.RefTypesGroepenWhereInput>(params)
+        const where: Prisma.RefTypesGroepenWhereInput =
+        {
+            ID: params.ID,
+            VERWIJDERD: params.VERWIJDERD,
+            AND: {
+                ID: {in: params.IDs}
+            }
+        }
 
         //const w =  this.Where<Prisma.RefTypesGroepenWhereInput>(params)
         const sort = params.SORT ? params.SORT : "ID";
 
         const objs = await this.dbService.refTypesGroepen.findMany({
             where: where,
-            orderBy: this.Sort<Prisma.RefTypesGroepenOrderByWithRelationInput>(params.SORT),
-            // select: this.Select<Prisma.RefTypesGroepenSelect>(params.VELDEN),
+            orderBy: this.Sort<Prisma.RefTypesGroepenOrderByWithRelationInput>(sort),
+            select: this.Select<Prisma.RefTypesGroepenSelect>(params.VELDEN),
             take: params.MAX,
             skip: params.START
         });

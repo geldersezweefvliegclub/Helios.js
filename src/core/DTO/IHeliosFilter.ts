@@ -1,6 +1,6 @@
 import {IsBoolean, IsDate, IsInt, IsOptional} from "class-validator";
 import {Type} from "class-transformer";
-import {OptionalBooleanTransform, OptionalNumberTransform} from "../helpers/Transformers";
+import {OptionalBooleanTransform, OptionalNumberTransform, CSVTransform} from "../helpers/Transformers";
 
 // class as query parameter to get a single object
 export class GetObjectRequest {
@@ -15,6 +15,10 @@ export class GetObjectsRequest {
     @OptionalNumberTransform()
     @IsOptional()
     public ID?: number;
+
+    @CSVTransform()
+    @IsOptional()
+    public IDs?: number[];
 
     @IsBoolean()
     @OptionalBooleanTransform()
@@ -39,6 +43,8 @@ export class GetObjectsRequest {
 
     @IsOptional()
     public VELDEN?: string;
+
+
 }
 
 export class GetObjectsDateRequest extends GetObjectsRequest {
