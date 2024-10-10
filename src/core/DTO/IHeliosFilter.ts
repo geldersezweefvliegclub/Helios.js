@@ -3,62 +3,65 @@ import {Type} from "class-transformer";
 import {OptionalBooleanTransform, OptionalNumberTransform, CSVTransform} from "../helpers/Transformers";
 
 // class as query parameter to get a single object
-export class GetObjectRequest {
-    @IsInt()
-    @Type(() => Number)
-    public ID: number;
+export class GetObjectRequest
+{
+   @IsInt()
+   @Type(() => Number)
+   public ID: number;
 }
 
 // base class as query parameter to get multiple objects
-export class GetObjectsRequest {
-    @IsInt()
-    @OptionalNumberTransform()
-    @IsOptional()
-    public ID?: number;
+export class GetObjectsRequest
+{
+   @IsInt()
+   @OptionalNumberTransform()
+   @IsOptional()
+   public ID?: number;
 
-    @CSVTransform()
-    @IsOptional()
-    public IDs?: number[];
+   @CSVTransform()
+   @IsOptional()
+   public IDs?: number[];
 
-    @IsBoolean()
-    @OptionalBooleanTransform()
-    @IsOptional()
-    public VERWIJDERD?: boolean;
+   @IsBoolean()
+   @OptionalBooleanTransform()
+   @IsOptional()
+   public VERWIJDERD?: boolean;
 
-    @IsOptional()
-    public HASH?: string;
+   @IsOptional()
+   public HASH?: string;
 
-    @IsOptional()
-    public SORT?: string;
+   @IsOptional()
+   public SORT?: string;
 
-    @IsInt()
-    @OptionalNumberTransform()
-    @IsOptional()
-    public MAX?: number;
+   @IsInt()
+   @OptionalNumberTransform()
+   @IsOptional()
+   public MAX?: number;
 
-    @IsInt()
-    @OptionalNumberTransform()
-    @IsOptional()
-    public START?: number;
+   @IsInt()
+   @OptionalNumberTransform()
+   @IsOptional()
+   public START?: number;
 
-    @IsOptional()
-    public VELDEN?: string;
+   @IsOptional()
+   public VELDEN?: string;
 
 
 }
 
-export class GetObjectsDateRequest extends GetObjectsRequest {
+export class GetObjectsDateRequest extends GetObjectsRequest
+{
 
-    @IsDate()
-    @IsOptional()
-    public DATUM?: Date;
+   @IsDate()
+   @IsOptional()
+   public DATUM?: Date;
 
-    @IsDate()
-    @IsOptional()
-    public BEGIN_DATUM?: Date;
+   @IsDate()
+   @IsOptional()
+   public BEGIN_DATUM?: Date;
 
-    @IsDate()
-    @IsOptional()
-    public EIND_DATUM?: Date;
+   @IsDate()
+   @IsOptional()
+   public EIND_DATUM?: Date;
 }
 
