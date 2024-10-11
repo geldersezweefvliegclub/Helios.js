@@ -1,24 +1,31 @@
-import {Body, Controller, Delete, Get, Patch, Post, Put, Query} from '@nestjs/common';
-import {ApiQuery, ApiResponse} from "@nestjs/swagger";
+import {Body, Controller, Delete, Get, HttpException, HttpStatus, Patch, Post, Put, Query} from '@nestjs/common';
+import {ApiOperation, ApiQuery, ApiResponse} from "@nestjs/swagger";
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
 import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepenDTO";
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
+import {HeliosController} from "../../../core/controllers/helios/helios.controller";
 
 
 @Controller('TypesGroepen')
-export class TypesGroepenController
+export class TypesGroepenController extends HeliosController
 {
    constructor(private readonly typesGroepenService: TypesGroepenService)
    {
+      super()
    }
 
    @Get("GetObject")
    @ApiQuery({name: 'ID', required: true, type: Number})
-   GetObject(@Query() queryParams: GetObjectRequest): Promise<RefTypesGroepen>
+   @ApiResponse({ status: 404, description: 'Record not found.' })
+   async GetObject(@Query() queryParams: GetObjectRequest): Promise<RefTypesGroepen>
    {
-      return this.typesGroepenService.GetObject(queryParams.ID);
+      const obj =  await this.typesGroepenService.GetObject(queryParams.ID);
+      if (!obj)
+         throw new HttpException(`Record with ID ${queryParams.ID} not found`, 404);
+
+      return obj;
    }
 
    @Get("GetObjects")
@@ -38,12 +45,14 @@ export class TypesGroepenController
    }
 
    @Post("SaveObject")
+   @ApiOperation({ summary: 'Create a new record' })
    async SaveObject(@Body() data: Prisma.RefTypesGroepenCreateInput): Promise<RefTypesGroepen>
    {
       return this.typesGroepenService.AddObject(data);
    }
 
    @Put("SaveObject")
+   @ApiOperation({ summary: 'Update an existing record' })
    // @ApiResponse({ status: 201, description: 'The record has been successfully created.', type: RefTypesGroepen })
    async UpdateObject(@Query('ID') id: number, @Body() data: Prisma.RefTypesGroepenUpdateInput): Promise<RefTypesGroepen>
    {
@@ -51,10 +60,15 @@ export class TypesGroepenController
    }
 
    @Delete("DeleteObject")
+   @ApiOperation({ summary: 'Delete a record by setting VERWIJDERD=true' })
    @ApiQuery({name: 'ID', required: true, type: Number})
+   @ApiResponse({ status: 404, description: 'Record not found.' })
+   @ApiResponse({ status: 409, description: 'Record is already deleted.' })
    @ApiResponse({ status: 204, description: 'The record has been successfully deleted.' })
    async DeleteObject(@Query('ID') id: number): Promise<void>
    {
+      this.DeletePreconditions(this.typesGroepenService,id);
+
       const data: Prisma.RefTypesGroepenUpdateInput = {
          VERWIJDERD: true
       }
@@ -62,6 +76,7 @@ export class TypesGroepenController
    }
 
    @Patch("RestoreObject")
+   @ApiOperation({ summary: 'Restore a deleted record by setting VERWIJDERD=false' })
    @ApiQuery({name: 'ID', required: true, type: Number})
    @ApiResponse({ status: 202, description: 'The record has been successfully restored.' })
    async RestoreObject(@Query('ID') id: number): Promise<void>

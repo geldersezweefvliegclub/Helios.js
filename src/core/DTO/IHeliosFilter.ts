@@ -10,7 +10,7 @@ export class GetObjectRequest
    public ID: number;
 }
 
-// base class as query parameter to get multiple objects
+// base class as query parameter to get multiple objects via the GetObjects call
 export class GetObjectsRequest
 {
    @IsInt()
@@ -45,10 +45,9 @@ export class GetObjectsRequest
 
    @IsOptional()
    public VELDEN?: string;
-
-
 }
 
+// The generic class when a DATUM field is available in the object
 export class GetObjectsDateRequest extends GetObjectsRequest
 {
 

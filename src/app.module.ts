@@ -4,6 +4,7 @@ import {AppService} from './app.service';
 import {ConfigModule} from '@nestjs/config';
 import {TypesGroepenModule} from './modules/types-groepen/types-groepen.module';
 import {DbService} from './database/db-service/db.service';
+import { HeliosController } from './core/controllers/helios/helios.controller';
 import config from './config/configuration';
 
 
@@ -16,7 +17,7 @@ import config from './config/configuration';
       ConfigModule,
       TypesGroepenModule,
    ],
-   controllers: [AppController],
+   controllers: [AppController, HeliosController],
    providers: [AppService, DbService],
 })
 export class AppModule
