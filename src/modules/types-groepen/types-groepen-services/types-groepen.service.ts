@@ -66,4 +66,13 @@ export class TypesGroepenService extends IHeliosService
          data: data
       });
    }
+
+   async RemoveObject(id: number): Promise<void>
+   {
+      this.dbService.refTypesGroepen.delete({
+         where: {
+            ID: id
+         }
+      });
+   }
 }

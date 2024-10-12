@@ -79,6 +79,7 @@ export class TypesGroepenController extends HeliosController
    @Delete("DeleteObject")
    @ApiOperation({ summary: 'Verwijder record door VERWIJDERD op true te zetten' })
    @ApiQuery({name: 'ID', required: true, type: Number})
+   @HttpCode(204)
    @ApiResponse({ status: 204, description: 'Het record is succesvol verwijderd.' })
    @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
    @ApiResponse({ status: 409, description: 'Record is reeds verwijderd.' })
@@ -95,19 +96,18 @@ export class TypesGroepenController extends HeliosController
    @Delete("RemoveObject")
    @ApiOperation({ summary: 'Verwijder record uit de database, herstel niet mogelijk' })
    @ApiQuery({name: 'ID', required: true, type: Number})
+   @HttpCode(204)
    @ApiResponse({ status: 204, description: 'Het record is succesvol verwijderd.' })
    @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
    async RemoveObject(@Query('ID') id: number): Promise<void>
    {
-      const data: Prisma.RefTypesGroepenUpdateInput = {
-         VERWIJDERD: true
-      }
-      this.typesGroepenService.UpdateObject(id, data);
+      this.typesGroepenService.RemoveObject(id);
    }
 
    @Patch("RestoreObject")
    @ApiOperation({ summary: 'Herstel een verwijderd record door VERWIJDERD op false te zetten' })
    @ApiQuery({name: 'ID', required: true, type: Number})
+   @HttpCode(202)
    @ApiResponse({ status: 202, description: 'Het record is succesvol hersteld.' })
    @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
    @ApiResponse({ status: 409, description: 'Record is niet verwijderd.' })
