@@ -8,6 +8,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "../src/generated/nestjs-dto"
+  outputToNestJsResourceStructure = "false"
+  flatResourceStructure           = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "false"
+  generateFileTypes               = "dto"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = ""
+  classValidation                 = "false"
+  fileNamingStyle                 = "camel"
+  noDependencies                  = "false"
+  outputType                      = "class"
+  definiteAssignmentAssertion     = "false"
+  requiredResponseApiProperty     = "true"
+  prettier                        = "true"
+  outputApiPropertyType           = "true"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
@@ -15,15 +38,42 @@ datasource db {
 
 //  npx prisma migrate dev  --name new_helios
 
+///
 model RefTypesGroepen {
+  /// @DtoReadOnly
+  /// @DtoCreateHidden
+  /// @DtoUpdateHidden
+  /// @description De primary ID van de groep, andere objecten refereren naar dit ID
   ID                Int       @id @default(autoincrement())
+
+  /// @description De code van de groep
   CODE              String?   @db.VarChar(10)
+
+  /// @description De externe referentie van de groep
   EXT_REF           String?   @db.VarChar(25)
+
+  /// @description De omschrijving van de groep
   OMSCHRIJVING      String    @db.VarChar(75)
-  SORTEER_VOLGORDE  Int?      @db.TinyInt
+
+  /// @description De sorteer volgorde van de groep
+  SORTEER_VOLGORDE  Int?      @db.SmallInt
+
+  /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
   READ_ONLY         Boolean   @db.TinyInt @default(false)
+
+  /// @description Het bedrag van de groep
   BEDRAG_EENHEDEN   Int?      @db.TinyInt
+
+  /// @DtoReadOnly
+  /// @DtoCreateHidden
+  /// @DtoUpdateHidden
+  /// @description Is de groep gemarkeerd als verwijderd
   VERWIJDERD        Boolean   @db.TinyInt @default(false)
+
+  /// @DtoReadOnly
+  /// @DtoCreateHidden
+  /// @DtoUpdateHidden
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 }
 
@@ -42,7 +92,7 @@ model RefTypesGroepen {
 //`LAATSTE_AANPASSING` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 //)
 
-ALTER TABLE `RefTypes`
-ADD CONSTRAINT `ref_types_ibfk_1` FOREIGN KEY (`TYPEGROEP_ID`) REFERENCES `RefTypesGroepen` (`ID`)
-COMMIT;
+//ALTER TABLE `RefTypes`
+//ADD CONSTRAINT `ref_types_ibfk_1` FOREIGN KEY (`TYPEGROEP_ID`) REFERENCES `RefTypesGroepen` (`ID`)
+//COMMIT;
 

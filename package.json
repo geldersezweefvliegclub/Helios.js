@@ -37,6 +37,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@brakebein/prisma-generator-nestjs-dto": "^1.23.2",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
