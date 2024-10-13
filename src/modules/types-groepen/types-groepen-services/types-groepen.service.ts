@@ -69,7 +69,7 @@ export class TypesGroepenService extends IHeliosService
 
    async RemoveObject(id: number): Promise<void>
    {
-      this.dbService.refTypesGroepen.delete({
+      await this.dbService.refTypesGroepen.delete({
          where: {
             ID: id
          }

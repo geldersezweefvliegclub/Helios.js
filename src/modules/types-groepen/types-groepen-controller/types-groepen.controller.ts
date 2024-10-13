@@ -1,4 +1,16 @@
-import {Body, Controller, Delete, Get, HttpException, Patch, Post, Put, Query} from '@nestjs/common';
+import {
+   Body,
+   Controller,
+   Delete,
+   Get,
+   HttpCode,
+   HttpException,
+   HttpStatus,
+   Patch,
+   Post,
+   Put,
+   Query
+} from '@nestjs/common';
 import {ApiOperation, ApiQuery, ApiResponse, ApiExtraModels, getSchemaPath} from "@nestjs/swagger";
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
@@ -23,7 +35,7 @@ export class TypesGroepenController extends HeliosController
    @ApiExtraModels(RefTypesGroepenDto)
    @ApiQuery({name: 'ID', required: true, type: Number})
    @ApiOperation({ summary: 'Ophalen enkel record op basis van ID' })
-   @ApiResponse({ status: 200, description: 'Record opgehaald.',   schema: {
+   @ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
          '$ref': getSchemaPath(RefTypesGroepenDto)
       }})
    @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
@@ -45,8 +57,8 @@ export class TypesGroepenController extends HeliosController
    @ApiQuery({name: 'HASH', required: false, type: String})
    @ApiQuery({name: 'IDs', required: false, type: String})
    @ApiQuery({name: 'ID', required: false, type: Number})
-   @ApiOperation({ summary: 'Ophalen records' })
-   @ApiResponse({ status: 200, description: 'Data opgehaald.' })
+   @ApiOperation({ summary: 'Ophalen records uit de database' })
+   @ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.' })
    GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
       // sort is optional, so if it is not provided, it should default to "SORTEER_VOLGORDE"
@@ -57,60 +69,89 @@ export class TypesGroepenController extends HeliosController
    @Post("SaveObject")
    @ApiExtraModels(RefTypesGroepenDto)
    @ApiOperation({ summary: 'Aanmaken a nieuw record' })
-   @ApiResponse({ status: 201, description: 'Record aangemaakt.',   schema: {
+   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' })
+   @ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.',   schema: {
          '$ref': getSchemaPath(RefTypesGroepenDto)
       }})
+   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record already exists' })
    async SaveObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
    {
-      return this.typesGroepenService.AddObject(data);
+      try
+      {
+         return await this.typesGroepenService.AddObject(data);
+      }
+      catch (e)
+      {
+         this.handlePrismaError(e)
+      }
    }
 
    @Put("SaveObject")
    @ApiExtraModels(RefTypesGroepenDto)
-   @ApiOperation({ summary: 'Update an existing record' })
-   @ApiResponse({ status: 201, description: 'Record aangepast.',   schema: {
+   @ApiOperation({ summary: 'Update van bestaand record' })
+   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' })
+   @ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
          '$ref': getSchemaPath(RefTypesGroepenDto)
       }})
    async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroepen>
    {
-      return this.typesGroepenService.UpdateObject(id, data);
+      try
+      {
+         return await this.typesGroepenService.UpdateObject(id, data);
+      }
+      catch (e)
+      {
+         this.handlePrismaError(e)
+      }
    }
 
    @Delete("DeleteObject")
    @ApiOperation({ summary: 'Verwijder record door VERWIJDERD op true te zetten' })
    @ApiQuery({name: 'ID', required: true, type: Number})
-   @HttpCode(204)
-   @ApiResponse({ status: 204, description: 'Het record is succesvol verwijderd.' })
-   @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
-   @ApiResponse({ status: 409, description: 'Record is reeds verwijderd.' })
+   @HttpCode(HttpStatus.NO_CONTENT)
+   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' })
+   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record is reeds verwijderd.' })
    async DeleteObject(@Query('ID') id: number): Promise<void>
    {
-      this.DeletePreconditions(this.typesGroepenService,id);
-
       const data: Prisma.RefTypesGroepenUpdateInput = {
          VERWIJDERD: true
       }
-      this.typesGroepenService.UpdateObject(id, data);
+      try
+      {
+         await this.typesGroepenService.UpdateObject(id, data);
+      }
+      catch (e)
+      {
+         this.handlePrismaError(e)
+      }
    }
 
    @Delete("RemoveObject")
    @ApiOperation({ summary: 'Verwijder record uit de database, herstel niet mogelijk' })
    @ApiQuery({name: 'ID', required: true, type: Number})
-   @HttpCode(204)
-   @ApiResponse({ status: 204, description: 'Het record is succesvol verwijderd.' })
-   @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
+   @HttpCode(HttpStatus.GONE)
+   @ApiResponse({ status: HttpStatus.GONE, description: 'Het record is succesvol verwijderd.' })
+   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    async RemoveObject(@Query('ID') id: number): Promise<void>
    {
-      this.typesGroepenService.RemoveObject(id);
+      try
+      {
+         await this.typesGroepenService.RemoveObject(id);
+      }
+      catch (e)
+      {
+         this.handlePrismaError(e)
+      }
    }
 
    @Patch("RestoreObject")
    @ApiOperation({ summary: 'Herstel een verwijderd record door VERWIJDERD op false te zetten' })
    @ApiQuery({name: 'ID', required: true, type: Number})
-   @HttpCode(202)
-   @ApiResponse({ status: 202, description: 'Het record is succesvol hersteld.' })
-   @ApiResponse({ status: 404, description: 'Record niet gevonden.' })
-   @ApiResponse({ status: 409, description: 'Record is niet verwijderd.' })
+   @HttpCode(HttpStatus.RESET_CONTENT)
+   @ApiResponse({ status: HttpStatus.RESET_CONTENT, description: 'Het record is succesvol hersteld.' })
+   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record is niet verwijderd.' })
    async RestoreObject(@Query('ID') id: number): Promise<void>
    {
       const data: Prisma.RefTypesGroepenUpdateInput = {
