@@ -5,6 +5,7 @@ import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import {SeqTransport} from "@datalust/winston-seq";
+import {HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
 
 /**
  * Create a logger for the application using Winston instead of the built-in nestjs logger.
@@ -69,6 +70,7 @@ async function bootstrap()
 
    // Enable validation and conversion of incoming data before it reaches the controller
    app.useGlobalPipes(new ValidationPipe({transform: true}));
+   app.useGlobalFilters(new HeliosHttpExceptionFilter());
 
    await app.listen(3000);
 }
