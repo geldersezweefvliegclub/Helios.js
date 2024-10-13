@@ -16,8 +16,7 @@ export class DbService extends PrismaClient implements  OnModuleInit
        this.$use(async (params, next) => {
           console.log(`Query: ${params.model}.${params.action}`);
           console.log(`Params: ${JSON.stringify(params.args)}`);
-          const result = await next(params);
-          return result;
+          return await next(params);
        });
     }
 }
