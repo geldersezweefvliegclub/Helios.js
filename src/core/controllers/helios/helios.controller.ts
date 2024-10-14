@@ -3,14 +3,6 @@ import {Prisma} from "@prisma/client";
 
 @Controller('helios')
 export class HeliosController {
-   async DeletePreconditions(service: any, id: number){
-      const obj =  await service.GetObject(id);
-      if (!obj)
-         throw new HttpException(`Record with ID ${id} not found`, HttpStatus.NOT_FOUND);
-
-      if (obj.VERWIJDERD)
-         throw new HttpException(`Record with ID ${id} already deleted`, HttpStatus.CONFLICT);
-   }
 
    // for more information, see https://www.prisma.io/docs/orm/reference/error-reference
    handlePrismaError(e: Prisma.PrismaClientValidationError |

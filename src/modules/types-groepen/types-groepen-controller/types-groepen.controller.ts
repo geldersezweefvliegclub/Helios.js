@@ -58,7 +58,19 @@ export class TypesGroepenController extends HeliosController
    @ApiQuery({name: 'IDs', required: false, type: String})
    @ApiQuery({name: 'ID', required: false, type: Number})
    @ApiOperation({ summary: 'Ophalen records uit de database' })
-   @ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.' })
+   @ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
+         type: 'object',
+         properties:
+            {
+               dataset:
+                  {
+                     type: 'array',
+                     items: {$ref: getSchemaPath(RefTypesGroepenDto)},
+                  },
+               totaal: {type: 'number'},
+               hash: {type: 'string'},
+            }
+      }})
    GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
       // sort is optional, so if it is not provided, it should default to "SORTEER_VOLGORDE"
@@ -70,8 +82,8 @@ export class TypesGroepenController extends HeliosController
    @ApiExtraModels(RefTypesGroepenDto)
    @ApiOperation({ summary: 'Aanmaken a nieuw record' })
    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' })
-   @ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.',   schema: {
-         '$ref': getSchemaPath(RefTypesGroepenDto)
+   @ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
+         '$ref': getSchemaPath(IHeliosGetObjectsResponse<RefTypesGroepenDto>)
       }})
    @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record already exists' })
    async SaveObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
