@@ -1,9 +1,20 @@
-import {Controller, HttpException, HttpStatus} from '@nestjs/common';
+import {
+   applyDecorators,
+   Controller,
+   Delete,
+   Get,
+   HttpCode,
+   HttpException,
+   HttpStatus, Patch,
+   Post,
+   Put,
+   Type
+} from '@nestjs/common';
 import {Prisma} from "@prisma/client";
+import {ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
 
 @Controller('helios')
 export class HeliosController {
-
    // for more information, see https://www.prisma.io/docs/orm/reference/error-reference
    handlePrismaError(e: Prisma.PrismaClientValidationError |
                         Prisma.PrismaClientKnownRequestError |
@@ -191,3 +202,94 @@ export class HeliosController {
       return (lines.length === 0) ? message : lines[lines.length - 1].trim();
    }
 }
+
+
+export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+    applyDecorators(
+      Get("GetObject"),
+      ApiExtraModels(dataDto),
+      ApiQuery({name: 'ID', required: true, type: Number}),
+      ApiOperation({ summary: 'Ophalen enkel record op basis van ID' }),
+      ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
+            '$ref': getSchemaPath(dataDto)
+         }}),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+   );
+
+
+export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+    applyDecorators(
+      Get("GetObjects"),
+      ApiQuery({name: 'VERWIJDERD', required: false, type: Boolean}),
+      ApiQuery({name: 'VELDEN', required: false, type: String}),
+      ApiQuery({name: 'SORT', required: false, type: String}),
+      ApiQuery({name: 'MAX', required: false, type: Number}),
+      ApiQuery({name: 'START', required: false, type: Number}),
+      ApiQuery({name: 'HASH', required: false, type: String}),
+      ApiQuery({name: 'IDs', required: false, type: String}),
+      ApiQuery({name: 'ID', required: false, type: Number}),
+      ApiOperation({ summary: 'Ophalen records uit de database' }),
+      ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
+            type: 'object',
+            properties:
+               {
+                  dataset:
+                     {
+                        type: 'array',
+                        items: {$ref: getSchemaPath(dataDto)},
+                     },
+                  totaal: {type: 'number'},
+                  hash: {type: 'string'},
+               }
+         }})
+   );
+
+export const HeliosCreateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+   applyDecorators(
+      Post("SaveObject"),
+      ApiExtraModels(dataDto),
+      ApiOperation({ summary: 'Aanmaken nieuw record' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
+      ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
+            '$ref': getSchemaPath(dataDto)
+         }})
+   );
+
+export const HeliosUpdateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+    applyDecorators(
+      Put("SaveObject"),
+      ApiExtraModels(dataDto),
+      ApiOperation({ summary: 'Update van bestaand record' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
+      ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
+            '$ref': getSchemaPath(dataDto)
+         }})
+   );
+
+export const HeliosDeleteObject = () =>
+    applyDecorators(
+      Delete("DeleteObject"),
+      ApiQuery({name: 'ID', required: true, type: Number}),
+      HttpCode(HttpStatus.NO_CONTENT),
+      ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
+      ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record is reeds verwijderd.' })
+   );
+
+export const HeliosRemoveObject = () =>
+    applyDecorators(
+      Delete("RemoveObject"),
+      ApiQuery({name: 'ID', required: true, type: Number}),
+      HttpCode(HttpStatus.GONE),
+      ApiResponse({ status: HttpStatus.GONE, description: 'Het record is succesvol verwijderd.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+   );
+
+export const HeliosRestoreObject = () =>
+    applyDecorators(
+      Patch("RestoreObject"),
+      ApiQuery({name: 'ID', required: true, type: Number}),
+      ApiResponse({ status: HttpStatus.OK, description: 'Het record is succesvol hersteld.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+   );
+
