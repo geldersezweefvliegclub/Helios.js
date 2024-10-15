@@ -215,7 +215,7 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
       Get("GetObject"),
       ApiExtraModels(dataDto),
       ApiQuery({name: 'ID', required: true, type: Number}),
-      ApiOperation({ summary: 'Ophalen enkel record op basis van ID' }),
+      ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
             '$ref': getSchemaPath(dataDto)
          }}),
@@ -237,7 +237,7 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
       ApiQuery({name: 'HASH', required: false, type: String}),
       ApiQuery({name: 'IDs', required: false, type: String}),
       ApiQuery({name: 'ID', required: false, type: Number}),
-      ApiOperation({ summary: 'Ophalen records uit de database' }),
+      ApiOperation({ summary: 'Ophalen records uit de database.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
             type: 'object',
             properties:
@@ -269,8 +269,8 @@ export const HeliosCreateObject = <DataDto extends Type<unknown>>(dataDto: DataD
    applyDecorators(
       Post("AddObject"),
       ApiExtraModels(dataDto),
-      ApiOperation({ summary: 'Aanmaken nieuw record' }),
-      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
+      ApiOperation({ summary: 'Aanmaken nieuw record.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
             '$ref': getSchemaPath(dataDto)
          }})
@@ -282,8 +282,8 @@ export const HeliosUpdateObject = <DataDto extends Type<unknown>>(dataDto: DataD
     applyDecorators(
       Put("UpdateObject"),
       ApiExtraModels(dataDto),
-      ApiOperation({ summary: 'Update van bestaand record' }),
-      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
+      ApiOperation({ summary: 'Update van bestaand record.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
             '$ref': getSchemaPath(dataDto)
          }})
@@ -296,6 +296,7 @@ export const HeliosDeleteObject = () =>
       Delete("DeleteObject"),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.NO_CONTENT),
+      ApiOperation({ summary: 'Markeer record als verwijderd door VERWIJDERD op true te zetten.' }),
       ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
    );
@@ -307,6 +308,7 @@ export const HeliosRemoveObject = () =>
       Delete("RemoveObject"),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.GONE),
+      ApiOperation({ summary: 'Verwijderen record uit de database, herstel niet mogelijk.' }),
       ApiResponse({ status: HttpStatus.GONE, description: 'Het record is succesvol verwijderd.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    );
@@ -317,6 +319,7 @@ export const HeliosRestoreObject = () =>
     applyDecorators(
       Patch("RestoreObject"),
       ApiQuery({name: 'ID', required: true, type: Number}),
+      ApiOperation({ summary: 'Maak de verwijdering ongedaan door VERWIJDERD op false te zetten.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Het record is succesvol hersteld.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    );
