@@ -1,17 +1,10 @@
 import {
    Body,
    Controller,
-   Delete,
-   Get,
-   HttpCode,
    HttpException,
    HttpStatus,
-   Patch,
-   Post,
-   Put,
    Query
 } from '@nestjs/common';
-import {ApiOperation, ApiQuery, ApiResponse, ApiExtraModels, getSchemaPath} from "@nestjs/swagger";
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
 import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepenDTO";
@@ -115,6 +108,6 @@ export class TypesGroepenController extends HeliosController
       const data: Prisma.RefTypesGroepenUpdateInput = {
          VERWIJDERD: false
       }
-      this.typesGroepenService.UpdateObject(id, data);
+      await this.typesGroepenService.UpdateObject(id, data);
    }
 }
