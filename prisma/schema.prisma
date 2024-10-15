@@ -39,11 +39,11 @@ datasource db {
 
 //  npx prisma migrate dev  --name new_helios
 
-///
+// triple / are used to control the generation of the DTO classes
+// the DTO classes are generated in the src/generated/nestjs-dto folder by using
+// @brakebein/prisma-generator-nestjs-dto see package.json
+
 model RefTypesGroepen {
-  /// @DtoReadOnly
-  /// @DtoCreateHidden
-  /// @DtoUpdateHidden
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID
   ID                Int       @id @default(autoincrement())
 

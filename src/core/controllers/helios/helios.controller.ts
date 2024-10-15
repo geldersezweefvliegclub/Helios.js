@@ -204,6 +204,12 @@ export class HeliosController {
 }
 
 
+//--------------------------------------------------------------------------------------------------
+// Swagger Api DECORATORS
+//--------------------------------------------------------------------------------------------------
+
+// Swagger definitie voor het ophalen van een enkel record. Dit is universeel en kan in elke controller gebruikt worden.
+// Input is een ID en het resultaat is een enkel record. Indien record niet gevonden is wordt een NOT_FOUND status teruggegeven.
 export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObject"),
@@ -217,6 +223,9 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
    );
 
 
+// Swagger definitie voor het ophalen van records. Dit is universeel en kan in elke controller gebruikt worden.
+// Resultaat is een array van records en een totaal aantal records. De hash is een checksum van de data.
+// De query parameters zijn optioneel en kunnen gebruikt worden om de data te filteren, wordt als where clausule gebruikt.
 export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObjects"),
@@ -244,9 +253,21 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
          }})
    );
 
+// Swagger definitie voor het ophalen van records. Dit is universeel en kan in elke controller gebruikt worden.
+// Dit wordt in combinatie met HeliosGetObjects gebruikt om een datum filter toe te voegen.
+// START_DATUM is inclusief en EIND_DATUM is ook inclusief. DATUM is een enkele datum.
+export const HeliosGetObjectsDatum =() =>
+   applyDecorators(
+      ApiQuery({name: 'DATUM', required: false, type: Date}),
+      ApiQuery({name: 'BEGIN_DATUM', required: false, type: Date}),
+      ApiQuery({name: 'EIND_DATUM', required: false, type: Date}),
+   );
+
+// Swagger definitie voor het aanmaken van een nieuw record. Dit is universeel en kan in elke controller gebruikt worden.
+// dataDto is het object wat door de service wordt aangemaakt en wordt teruggegeven naar de client.
 export const HeliosCreateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
    applyDecorators(
-      Post("SaveObject"),
+      Post("AddObject"),
       ApiExtraModels(dataDto),
       ApiOperation({ summary: 'Aanmaken nieuw record' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
@@ -255,9 +276,11 @@ export const HeliosCreateObject = <DataDto extends Type<unknown>>(dataDto: DataD
          }})
    );
 
+// Swagger definitie voor een update van een bestaand record. Dit is universeel en kan in elke controller gebruikt worden.
+// dataDto is het object wat door de service wordt ontvangen en data vanuit de database wordt teruggegeven naar de client.
 export const HeliosUpdateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
-      Put("SaveObject"),
+      Put("UpdateObject"),
       ApiExtraModels(dataDto),
       ApiOperation({ summary: 'Update van bestaand record' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data' }),
@@ -266,6 +289,8 @@ export const HeliosUpdateObject = <DataDto extends Type<unknown>>(dataDto: DataD
          }})
    );
 
+// Swagger definitie voor het verwijderen van een record. Dit is universeel en kan in elke controller gebruikt worden.
+// Alleen het ID is noodzakelijk om een record te markeren als verwijderd.
 export const HeliosDeleteObject = () =>
     applyDecorators(
       Delete("DeleteObject"),
@@ -273,9 +298,10 @@ export const HeliosDeleteObject = () =>
       HttpCode(HttpStatus.NO_CONTENT),
       ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
-      ApiResponse({ status: HttpStatus.CONFLICT, description: 'Record is reeds verwijderd.' })
    );
 
+// Swagger definitie voor het fysiek verwijderen van een record. Dit is universeel en kan in elke controller gebruikt worden.
+// Alleen het ID is noodzakelijk om een record uit de database te verwijderen. Dit is een permanente actie en kan niet teruggedraaid worden.
 export const HeliosRemoveObject = () =>
     applyDecorators(
       Delete("RemoveObject"),
@@ -285,6 +311,8 @@ export const HeliosRemoveObject = () =>
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    );
 
+// Swagger definitie voor het herstellen van een record. Dit is universeel en kan in elke controller gebruikt worden.
+// Alleen het ID is noodzakelijk om een record te herstellen. De markering als verwijderd wordt ongedaan gemaakt.
 export const HeliosRestoreObject = () =>
     applyDecorators(
       Patch("RestoreObject"),

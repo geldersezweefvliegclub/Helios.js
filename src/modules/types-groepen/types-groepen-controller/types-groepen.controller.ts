@@ -55,7 +55,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosCreateObject(RefTypesGroepenDto)
-   async SaveObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
+   async AddObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
    {
       try
       {
