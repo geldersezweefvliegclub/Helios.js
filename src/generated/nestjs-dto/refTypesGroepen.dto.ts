@@ -10,18 +10,21 @@ export class RefTypesGroepenDto {
   ID: number;
   @ApiProperty({
     description: "De code van de groep",
+    maxLength: 10,
     type: "string",
     nullable: true,
   })
   CODE: string | null;
   @ApiProperty({
     description: "De externe referentie van de groep",
+    maxLength: 25,
     type: "string",
     nullable: true,
   })
   EXT_REF: string | null;
   @ApiProperty({
     description: "De omschrijving van de groep",
+    maxLength: 75,
     type: "string",
   })
   OMSCHRIJVING: string;
@@ -38,13 +41,6 @@ export class RefTypesGroepenDto {
     type: "boolean",
   })
   READ_ONLY: boolean;
-  @ApiProperty({
-    description: "Het bedrag van de groep",
-    type: "integer",
-    format: "int32",
-    nullable: true,
-  })
-  BEDRAG_EENHEDEN: number | null;
   @ApiProperty({
     description: "Is de groep gemarkeerd als verwijderd",
     type: "boolean",

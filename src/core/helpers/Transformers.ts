@@ -6,6 +6,7 @@ const optionBooleanMapper = new Map<string, boolean>([
    ["true", true],
    ["false", false]
 ]);
+
 /**
  * Decorator. Transforms an optional boolean to a boolean (or undefined) using the optionBooleanMapper
  * Problem: when using class transformer to transform query parameters, using @Type(() => Boolean) will always transform to a boolean that is true

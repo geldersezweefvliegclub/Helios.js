@@ -1,4 +1,4 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import {ExceptionFilter, Catch, ArgumentsHost, HttpException, BadRequestException} from '@nestjs/common';
 import { Response } from 'express';
 
 @Catch(HttpException)
@@ -13,5 +13,20 @@ export class HeliosHttpExceptionFilter implements ExceptionFilter {
       response
          .status(status)
          .header('X-Error-Message', exception.message).json();
+   }
+}
+
+@Catch(BadRequestException)
+export class BadRequestExceptionFilter implements ExceptionFilter {
+   catch(exception: BadRequestException, host: ArgumentsHost) {
+      const ctx = host.switchToHttp();
+      const response = ctx.getResponse<Response>();
+      const status = exception.getStatus();
+      const message = exception.message;
+
+      response
+         .status(status)
+         .header('X-Error-Message', message)
+         .json();
    }
 }

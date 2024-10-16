@@ -1,4 +1,8 @@
 {
+  "logging": {
+    "sql": true
+  },
+
   "db_info": {
     "dbType": "mysql",
     "dbHost": "host",

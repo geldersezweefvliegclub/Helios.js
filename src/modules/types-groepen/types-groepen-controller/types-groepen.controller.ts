@@ -1,9 +1,9 @@
 import {
-   Body,
+   Body, ClassSerializerInterceptor,
    Controller,
    HttpException,
    HttpStatus,
-   Query
+   Query, UseInterceptors
 } from '@nestjs/common';
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
@@ -47,7 +47,7 @@ export class TypesGroepenController extends HeliosController
       return this.typesGroepenService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(RefTypesGroepenDto)
+   @HeliosCreateObject(CreateRefTypesGroepenDto, RefTypesGroepenDto)
    async AddObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
    {
       try
@@ -60,7 +60,7 @@ export class TypesGroepenController extends HeliosController
       }
    }
 
-   @HeliosUpdateObject(RefTypesGroepenDto)
+   @HeliosUpdateObject(UpdateRefTypesGroepenDto, RefTypesGroepenDto)
    async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroepen>
    {
       try

@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsInt, IsNotEmpty } from "class-validator";
 
 export class ConnectRefTypesGroepenDto {
   @ApiProperty({
@@ -7,5 +8,7 @@ export class ConnectRefTypesGroepenDto {
     type: "integer",
     format: "int32",
   })
+  @IsNotEmpty()
+  @IsInt()
   ID: number;
 }

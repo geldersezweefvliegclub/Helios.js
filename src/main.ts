@@ -1,11 +1,11 @@
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
-import {INestApplication, ValidationPipe} from "@nestjs/common";
+import {BadRequestException, INestApplication, ValidationPipe} from "@nestjs/common";
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import {SeqTransport} from "@datalust/winston-seq";
-import {HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
+import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
 
 /**
  * Create a logger for the application using Winston instead of the built-in nestjs logger.
@@ -69,8 +69,18 @@ async function bootstrap()
    setupSwagger(app, 'docs');
 
    // Enable validation and conversion of incoming data before it reaches the controller
-   app.useGlobalPipes(new ValidationPipe({transform: true}));
-   app.useGlobalFilters(new HeliosHttpExceptionFilter());
+   app.useGlobalPipes(new ValidationPipe(
+      {
+         transform: true,
+         whitelist: true,
+         forbidNonWhitelisted: true,
+
+         exceptionFactory: (errors) => {
+            const msg = errors[0].constraints[Object.keys(errors[0].constraints)[0]]
+            return new BadRequestException(msg);
+         },
+      }));
+   app.useGlobalFilters(new HeliosHttpExceptionFilter(), new BadRequestExceptionFilter());
 
    await app.listen(3000);
 }

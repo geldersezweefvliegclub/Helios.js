@@ -4,6 +4,7 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+
 generator client {
   provider = "prisma-client-js"
 
@@ -22,7 +23,7 @@ generator nestjsDto {
   dtoSuffix                       = "Dto"
   entityPrefix                    = ""
   entitySuffix                    = ""
-  classValidation                 = "false"
+  classValidation                 = "true"
   fileNamingStyle                 = "camel"
   noDependencies                  = "false"
   outputType                      = "class"
@@ -42,38 +43,40 @@ datasource db {
 // triple / are used to control the generation of the DTO classes
 // the DTO classes are generated in the src/generated/nestjs-dto folder by using
 // @brakebein/prisma-generator-nestjs-dto see package.json
+// See https://github.com/typestack/class-validator#validation-decorators for the validation decorators
 
 model RefTypesGroepen {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID
   ID                Int       @id @default(autoincrement())
 
   /// @description De code van de groep
+  /// @maxLength 10
   CODE              String?   @db.VarChar(10)
 
   /// @description De externe referentie van de groep
+  /// @maxLength 25
   EXT_REF           String?   @db.VarChar(25)
 
   /// @description De omschrijving van de groep
+  /// @maxLength 75
+  /// @IsNotEmpty()
   OMSCHRIJVING      String    @db.VarChar(75)
 
   /// @description De sorteer volgorde van de groep
   SORTEER_VOLGORDE  Int?      @db.SmallInt
 
   /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   READ_ONLY         Boolean   @db.TinyInt @default(false)
 
-  /// @description Het bedrag van de groep
-  BEDRAG_EENHEDEN   Int?      @db.TinyInt
-
   /// @DtoReadOnly
-  /// @DtoCreateHidden
-  /// @DtoUpdateHidden
   /// @description Is de groep gemarkeerd als verwijderd
   VERWIJDERD        Boolean   @db.TinyInt @default(false)
 
   /// @DtoReadOnly
-  /// @DtoCreateHidden
-  /// @DtoUpdateHidden
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 }

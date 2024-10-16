@@ -265,27 +265,28 @@ export const HeliosGetObjectsDatum =() =>
 
 // Swagger definitie voor het aanmaken van een nieuw record. Dit is universeel en kan in elke controller gebruikt worden.
 // dataDto is het object wat door de service wordt aangemaakt en wordt teruggegeven naar de client.
-export const HeliosCreateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+
+export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
    applyDecorators(
       Post("AddObject"),
-      ApiExtraModels(dataDto),
+      ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Aanmaken nieuw record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
-            '$ref': getSchemaPath(dataDto)
+            '$ref': getSchemaPath(outputDto)
          }})
    );
 
 // Swagger definitie voor een update van een bestaand record. Dit is universeel en kan in elke controller gebruikt worden.
 // dataDto is het object wat door de service wordt ontvangen en data vanuit de database wordt teruggegeven naar de client.
-export const HeliosUpdateObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
+export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
     applyDecorators(
       Put("UpdateObject"),
-      ApiExtraModels(dataDto),
+      ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Update van bestaand record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
-            '$ref': getSchemaPath(dataDto)
+            '$ref': getSchemaPath(outputDto)
          }})
    );
 
