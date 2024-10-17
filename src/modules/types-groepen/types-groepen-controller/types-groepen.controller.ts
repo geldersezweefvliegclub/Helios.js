@@ -42,8 +42,6 @@ export class TypesGroepenController extends HeliosController
    @HeliosGetObjects(RefTypesGroepenDto)
    GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
-      // sort is optional, so if it is not provided, it should default to "SORTEER_VOLGORDE"
-      queryParams.SORT = queryParams.SORT ?? "SORTEER_VOLGORDE";
       return this.typesGroepenService.GetObjects(queryParams);
    }
 
