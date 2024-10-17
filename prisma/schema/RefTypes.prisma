@@ -1,0 +1,68 @@
+model RefTypes {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van het type, andere objecten refereren naar dit ID
+  ID                Int       @id @default(autoincrement())
+
+  /// @description Verwijzing naar de RefTypesGroepen
+  TYPEGROEP_ID      Int
+
+  groep             RefTypesGroepen @relation(fields: [TYPEGROEP_ID], references: [ID])
+
+  /// @description De code van dit type
+  /// @maxLength 10
+  CODE              String?   @db.VarChar(10)
+
+  /// @description De externe referentie van dit type
+  /// @maxLength 25
+  EXT_REF           String?   @db.VarChar(25)
+
+  /// @description De omschrijving van de groep
+  /// @maxLength 75
+  /// @IsNotEmpty()
+  OMSCHRIJVING      String    @db.VarChar(75)
+
+  // @description De sorteer volgorde van de groep
+  SORTEER_VOLGORDE  Int?      @db.TinyInt
+
+  /// @description Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  READ_ONLY         Boolean   @db.TinyInt @default(false)
+
+  /// @description Het bedrag om te kunnen factureren
+  BEDRAG            Decimal?  @db.Decimal(6, 2)
+
+  /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
+  EENHEDEN          Decimal?  @db.Decimal(6, 2)
+
+  /// @DtoReadOnly
+  /// @description Is de groep gemarkeerd als verwijderd
+  VERWIJDERD        Boolean   @db.TinyInt @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
+}
+
+
+
+//CREATE TABLE `RefTypes` (
+//`ID` mediumint(8) UNSIGNED NOT NULL,
+//`TYPEGROEP_ID` smallint(5) UNSIGNED NOT NULL,
+//`CODE` varchar(10) DEFAULT NULL,
+//`EXT_REF` varchar(25) DEFAULT NULL,
+//`OMSCHRIJVING` varchar(75) NOT NULL,
+//`SORTEER_VOLGORDE` tinyint(3) UNSIGNED DEFAULT NULL,
+//`READ_ONLY` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+//`BEDRAG` decimal(6,2) DEFAULT NULL,
+//`EENHEDEN` decimal(6,2) DEFAULT NULL,
+//`VERWIJDERD` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+//`LAATSTE_AANPASSING` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+//)
+
+//ALTER TABLE `RefTypes`
+//ADD CONSTRAINT `ref_types_ibfk_1` FOREIGN KEY (`TYPEGROEP_ID`) REFERENCES `RefTypesGroepen` (`ID`)
+//COMMIT;

@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+//  npx prisma migrate dev  --name new_helios
+
+// triple / are used to control the generation of the DTO classes
+// the DTO classes are generated in the src/generated/nestjs-dto folder by using
+// @brakebein/prisma-generator-nestjs-dto see package.json
+// See https://github.com/typestack/class-validator#validation-decorators for the validation decorators
+
+
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "../../src/generated/nestjs-dto"
+  outputToNestJsResourceStructure = "false"
+  flatResourceStructure           = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "false"
+  generateFileTypes               = "dto"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = ""
+  classValidation                 = "true"
+  fileNamingStyle                 = "camel"
+  noDependencies                  = "false"
+  outputType                      = "class"
+  definiteAssignmentAssertion     = "false"
+  requiredResponseApiProperty     = "true"
+  prettier                        = "true"
+  outputApiPropertyType           = "true"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
