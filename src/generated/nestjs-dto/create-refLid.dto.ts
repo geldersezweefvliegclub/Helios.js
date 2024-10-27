@@ -11,7 +11,7 @@ import {
 export class CreateRefLidDto {
   @ApiProperty({
     description:
-      "De primary ID van het type, andere objecten refereren naar dit ID",
+      "De primary ID van het lid, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
     default: "autoincrement",

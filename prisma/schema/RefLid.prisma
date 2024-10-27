@@ -3,7 +3,7 @@ model RefLid {
 
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description De primary ID van het type, andere objecten refereren naar dit ID
+  /// @description De primary ID van het lid, andere objecten refereren naar dit ID
   ID                Int       @id @default(autoincrement())
 
   /// @DtoReadOnly
@@ -57,7 +57,7 @@ model RefLid {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  LidType           RefType? @relation("LidType", fields: [LIDTYPE_ID], references: [ID])
+  LidType           RefType? @relation("LidType", fields: [LIDTYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Verwijzing naar de lidtype (bv. lid, donateur, etc.)
   /// @DtoRelationIncludeId
@@ -67,7 +67,7 @@ model RefLid {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  VliegStatus       RefType? @relation("VliegStatus", fields: [STATUSTYPE_ID], references: [ID])
+  VliegStatus       RefType? @relation("VliegStatus", fields: [STATUSTYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
   /// @DtoRelationIncludeId
@@ -77,7 +77,7 @@ model RefLid {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Zusterclub       RefLid? @relation("Zusterclub", fields: [ZUSTERCLUB_ID], references: [ID])
+  Zusterclub       RefLid? @relation("Zusterclub", fields: [ZUSTERCLUB_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
   LedenZusterclub  RefLid[] @relation("Zusterclub")
 
   /// @description Is het lid ook lid van een zusterclub
@@ -87,7 +87,7 @@ model RefLid {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Buddy       RefLid? @relation("Buddy1", fields: [BUDDY_ID], references: [ID])
+  Buddy       RefLid? @relation("Buddy1", fields: [BUDDY_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
   LedenBuddy  RefLid[] @relation("Buddy1")
 
   /// @description Verwijzing naar het ID de buddy in de leden tabel
@@ -96,7 +96,7 @@ model RefLid {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Buddy2       RefLid? @relation("Buddy2", fields: [BUDDY_ID2], references: [ID])
+  Buddy2       RefLid? @relation("Buddy2", fields: [BUDDY_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
   LedenBuddy2  RefLid[] @relation("Buddy2")
 
   /// @description Verwijzing naar het ID de tweede buddy in de leden tabel
