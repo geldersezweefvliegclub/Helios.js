@@ -31,7 +31,7 @@ export abstract class IHeliosService
 
    // Convert the CSV string with field name to a select object
    // This is used to limit the number of field which will returned from a prisma query
-   protected Select<oType>(fields: string): oType
+   protected SelectStringToSelectObj<oType>(fields: string): oType
    {
       const retObj: oType = {} as oType;
       if (!fields) return undefined;
