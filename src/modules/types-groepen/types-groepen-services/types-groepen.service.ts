@@ -72,7 +72,7 @@ export class TypesGroepenService extends IHeliosService
          },
          data: data
       });
-      // this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
       return obj;
    }
 
