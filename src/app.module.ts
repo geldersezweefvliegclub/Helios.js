@@ -3,11 +3,11 @@ import {AppController} from './app.controller';
 import {AppService} from './app.service';
 import {ConfigModule} from '@nestjs/config';
 import {TypesGroepenModule} from './modules/types-groepen/types-groepen.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import {DbService} from './database/db-service/db.service';
-import { HeliosController } from './core/controllers/helios/helios.controller';
-import { TypesModule } from './modules/types/types.module';
-import { AuditModule } from './modules/audit/audit.module';
+import {EventEmitterModule} from '@nestjs/event-emitter';
+import {HeliosController} from './core/controllers/helios/helios.controller';
+import {TypesModule} from './modules/types/types.module';
+import {AuditModule} from './modules/audit/audit.module';
+import {HeliosCoreModule} from './core/helios.core.module';
 import config from './config/configuration';
 
 
@@ -22,9 +22,10 @@ import config from './config/configuration';
       TypesGroepenModule,
       TypesModule,
       AuditModule,
+      HeliosCoreModule,
    ],
    controllers: [AppController, HeliosController],
-   providers: [AppService, DbService],
+   providers: [AppService],
 })
 export class AppModule
 {

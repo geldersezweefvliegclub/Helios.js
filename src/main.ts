@@ -2,7 +2,7 @@ import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import {BadRequestException, INestApplication, ValidationPipe} from "@nestjs/common";
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
-import {WinstonModule} from 'nest-winston';
+import {utilities, WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import {SeqTransport} from "@datalust/winston-seq";
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
@@ -23,28 +23,26 @@ const createLogger = () => WinstonModule.createLogger({
       Environment: process.env.NODE_ENV || 'Local',
    },
    transports: [
-      // log everything to the console
       new winston.transports.Console({
          format: winston.format.combine(
-            winston.format.colorize({
-               all: true,
-            }),
-            winston.format.simple(),
-         ),
+             winston.format.timestamp(),
+             winston.format.ms(),
+             utilities.format.nestLike('Helios API', {
+                colors: true,
+                prettyPrint: true,
+                appName: true,
+             }),
+          ),
       }),
       new SeqTransport({
          serverUrl: process.env.LOGGER_SERVER_URL || 'http://localhost:5341',
          apiKey: process.env.LOGGER_API_KEY,
-         onError: (e =>
-         {
-            console.error(e);
-         }),
+         onError: (e) => console.error(e),
          handleExceptions: true,
          handleRejections: true,
       }),
    ],
 });
-
 
 function setupSwagger(app: INestApplication, swaggerUrl: string)
 {
@@ -62,7 +60,7 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
 async function bootstrap()
 {
    const app = await NestFactory.create(AppModule, {
-    //  logger: createLogger()  // the logger to record debug information
+     logger: createLogger()  // the logger to record debug information
    });
    app.enableCors();
 
