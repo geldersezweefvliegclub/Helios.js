@@ -22,9 +22,9 @@ export abstract class IHeliosService
       sort.split(',').forEach(part =>  // split on comma
       {
          const [field, order] = part.trim().split(' ');
-         const s = {} as oType;
-         s[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
-         retVal.push(s);
+         const sortObj = {} as oType;
+         sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
+         retVal.push(sortObj);
       });
       return retVal;
    }
