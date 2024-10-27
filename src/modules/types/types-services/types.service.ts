@@ -1,11 +1,11 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../../database/db-service/db.service";
-import {Prisma, RefTypes} from '@prisma/client';
+import {Prisma, RefType} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../../core/services/IHeliosService";
 import {GetObjectsRefTypesRequest} from "../DTO/TypesDTO";
 import {DatabaseEvents} from "../../../core/helpers/Events";
-import {EventEmitter2, OnEvent} from "@nestjs/event-emitter";
+import {EventEmitter2} from "@nestjs/event-emitter";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -17,9 +17,9 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<RefTypes>
+   async GetObject(id: number): Promise<RefType>
    {
-      return this.dbService.refTypes.findUnique({
+      return this.dbService.refType.findUnique({
          where: {
             ID: id
          }
@@ -27,13 +27,13 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<RefTypes>>
+   async GetObjects(params: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<RefType>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
       const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
 
       // create the where clause
-      const where: Prisma.RefTypesWhereInput =
+      const where: Prisma.RefTypeWhereInput =
          {
             ID: params.ID,
             VERWIJDERD: verwijderd,
@@ -42,10 +42,10 @@ export class TypesService extends IHeliosService
             }
          }
 
-      const objs = await this.dbService.refTypes.findMany({
+      const objs = await this.dbService.refType.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefTypesOrderByWithRelationInput>(sort),
-         select: this.SelectStringToSelectObj<Prisma.RefTypesSelect>(params.VELDEN),
+         orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(sort),
+         select: this.SelectStringToSelectObj<Prisma.RefTypeSelect>(params.VELDEN),
          take: params.MAX,
          skip: params.START
       });
@@ -53,9 +53,9 @@ export class TypesService extends IHeliosService
       return this.buildGetObjectsResponse(objs);
    }
 
-   async AddObject(data: Prisma.RefTypesCreateInput ): Promise<RefTypes>
+   async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefType>
    {
-      const obj = await this.dbService.refTypes.create({
+      const obj = await this.dbService.refType.create({
          data: data
       });
 
@@ -63,10 +63,10 @@ export class TypesService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypesUpdateInput): Promise<RefTypes>
+   async UpdateObject(id: number, data: Prisma.RefTypeUpdateInput): Promise<RefType>
    {
       const db = this.GetObject(id);
-      const obj = await this.dbService.refTypes.update({
+      const obj = await this.dbService.refType.update({
          where: {
             ID: id
          },
@@ -79,7 +79,7 @@ export class TypesService extends IHeliosService
    async RemoveObject(id: number): Promise<void>
    {
       const db = this.GetObject(id);
-      await this.dbService.refTypes.delete({
+      await this.dbService.refType.delete({
          where: {
             ID: id
          }

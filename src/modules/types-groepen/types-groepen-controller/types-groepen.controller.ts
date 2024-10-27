@@ -6,8 +6,6 @@ import {
    Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
-import {Prisma, RefTypesGroepen} from '@prisma/client';
-import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepDTO";
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
 import {
@@ -19,6 +17,8 @@ import {
 import {CreateRefTypesGroepenDto} from "../../../generated/nestjs-dto/create-refTypesGroepen.dto";
 import {UpdateRefTypesGroepenDto} from "../../../generated/nestjs-dto/update-refTypesGroepen.dto";
 import {RefTypesGroepenDto} from "../../../generated/nestjs-dto/refTypesGroepen.dto";
+import {GetObjectsRefTypesGroepRequest} from "../DTO/TypesGroepDTO";
+import {Prisma, RefTypesGroep} from "@prisma/client";
 
 
 @Controller('TypesGroepen')
@@ -40,7 +40,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosGetObjects(RefTypesGroepenDto)
-   GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
+   GetObjects(@Query() queryParams: GetObjectsRefTypesGroepRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
       return this.typesGroepenService.GetObjects(queryParams);
    }
@@ -59,7 +59,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepenDto, RefTypesGroepenDto)
-   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroepen>
+   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroep>
    {
       try
       {
@@ -74,7 +74,7 @@ export class TypesGroepenController extends HeliosController
    @HeliosDeleteObject()
    async DeleteObject(@Query('ID') id: number): Promise<void>
    {
-      const data: Prisma.RefTypesGroepenUpdateInput = {
+      const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: true
       }
       try
@@ -103,7 +103,7 @@ export class TypesGroepenController extends HeliosController
    @HeliosRestoreObject()
    async RestoreObject(@Query('ID') id: number): Promise<void>
    {
-      const data: Prisma.RefTypesGroepenUpdateInput = {
+      const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: false
       }
       await this.typesGroepenService.UpdateObject(id, data);

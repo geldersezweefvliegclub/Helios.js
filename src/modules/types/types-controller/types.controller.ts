@@ -6,7 +6,7 @@ import {
    Query
 } from '@nestjs/common';
 import {TypesService} from "../types-services/types.service";
-import {Prisma, RefTypes} from '@prisma/client';
+import {Prisma, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "../DTO/TypesDTO";
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
@@ -51,9 +51,9 @@ export class TypesController extends HeliosController
       {
          const id = data.TYPEGROEP_ID;
          delete data.TYPEGROEP_ID;
-         const insertData: Prisma.RefTypesCreateInput = {
+         const insertData: Prisma.RefTypeCreateInput = {
             ...data,
-            RefTypesGroepen: {
+            TypesGroep: {
                connect: {
                   ID: id
                }
@@ -71,7 +71,7 @@ export class TypesController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefTypesDto, RefTypesDto)
-   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesDto): Promise<RefTypes>
+   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesDto): Promise<RefType>
    {
       try
       {
@@ -86,7 +86,7 @@ export class TypesController extends HeliosController
    @HeliosDeleteObject()
    async DeleteObject(@Query('ID') id: number): Promise<void>
    {
-      const data: Prisma.RefTypesUpdateInput = {
+      const data: Prisma.RefTypeUpdateInput = {
          VERWIJDERD: true
       }
       try
@@ -115,7 +115,7 @@ export class TypesController extends HeliosController
    @HeliosRestoreObject()
    async RestoreObject(@Query('ID') id: number): Promise<void>
    {
-      const data: Prisma.RefTypesUpdateInput = {
+      const data: Prisma.RefTypeUpdateInput = {
          VERWIJDERD: false
       }
       await this.typesService.UpdateObject(id, data);
