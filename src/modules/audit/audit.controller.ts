@@ -4,18 +4,18 @@ import {
    HttpStatus,
    Query
 } from '@nestjs/common';
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController,
    HeliosGetObject,
    HeliosGetObjects
-} from "../../../core/controllers/helios/helios.controller";
-import {AuditService} from "../audit-services/audit.service";
-import {AuditDto} from "../../../generated/nestjs-dto/audit.dto";
-import {GetObjectsAuditRequest} from "../DTO/AuditDTO";
+} from "../../core/controllers/helios/helios.controller";
+import {AuditService} from "./audit.service";
+import {AuditDto} from "../../generated/nestjs-dto/audit.dto";
+import {GetObjectsAuditRequest} from "./AuditDTO";
 import {OnEvent} from "@nestjs/event-emitter";
-import {DatabaseEvents} from "../../../core/helpers/Events";
+import {DatabaseEvents} from "../../core/helpers/Events";
 import {ConfigService} from "@nestjs/config";
 
 @Controller('Audit')

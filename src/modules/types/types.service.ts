@@ -1,10 +1,10 @@
 import {Injectable} from '@nestjs/common';
-import {DbService} from "../../../database/db-service/db.service";
+import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefType} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {IHeliosService} from "../../../core/services/IHeliosService";
-import {GetObjectsRefTypesRequest} from "../DTO/TypesDTO";
-import {DatabaseEvents} from "../../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosService} from "../../core/services/IHeliosService";
+import {GetObjectsRefTypesRequest} from "./TypesDTO";
+import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
 
 @Injectable()

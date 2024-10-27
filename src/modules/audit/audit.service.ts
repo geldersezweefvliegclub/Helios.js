@@ -1,9 +1,9 @@
 import {Injectable} from '@nestjs/common';
-import {DbService} from "../../../database/db-service/db.service";
+import {DbService} from "../../database/db-service/db.service";
 import {Audit, Prisma} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {IHeliosService} from "../../../core/services/IHeliosService";
-import {GetObjectsAuditRequest} from "../DTO/AuditDTO";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosService} from "../../core/services/IHeliosService";
+import {GetObjectsAuditRequest} from "./AuditDTO";
 
 @Injectable()
 export class AuditService extends IHeliosService
@@ -26,7 +26,7 @@ export class AuditService extends IHeliosService
    // retrieve objects from the database based on the query parameters
    async GetObjects(params: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<Audit>>
    {
-      const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
+      const sort = params.SORT ? params.SORT : "ID DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
       const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
 
       // create the where clause

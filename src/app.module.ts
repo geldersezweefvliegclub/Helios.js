@@ -8,6 +8,7 @@ import {HeliosController} from './core/controllers/helios/helios.controller';
 import {TypesModule} from './modules/types/types.module';
 import {AuditModule} from './modules/audit/audit.module';
 import {HeliosCoreModule} from './core/helios.core.module';
+import { LedenModule } from './modules/leden/leden.module';
 import config from './config/configuration';
 
 
@@ -19,10 +20,11 @@ import config from './config/configuration';
       }),
       EventEmitterModule.forRoot(),
       ConfigModule,
+      HeliosCoreModule,
       TypesGroepenModule,
       TypesModule,
       AuditModule,
-      HeliosCoreModule,
+      LedenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],

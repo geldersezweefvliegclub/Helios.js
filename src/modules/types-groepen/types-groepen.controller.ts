@@ -5,19 +5,19 @@ import {
    HttpStatus,
    Query
 } from '@nestjs/common';
-import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
+import {TypesGroepenService} from "./types-groepen.service";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
    HeliosGetObject,
    HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
-} from "../../../core/controllers/helios/helios.controller";
-import {CreateRefTypesGroepenDto} from "../../../generated/nestjs-dto/create-refTypesGroepen.dto";
-import {UpdateRefTypesGroepenDto} from "../../../generated/nestjs-dto/update-refTypesGroepen.dto";
-import {RefTypesGroepenDto} from "../../../generated/nestjs-dto/refTypesGroepen.dto";
-import {GetObjectsRefTypesGroepRequest} from "../DTO/TypesGroepDTO";
+} from "../../core/controllers/helios/helios.controller";
+import {CreateRefTypesGroepenDto} from "../../generated/nestjs-dto/create-refTypesGroepen.dto";
+import {UpdateRefTypesGroepenDto} from "../../generated/nestjs-dto/update-refTypesGroepen.dto";
+import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto";
+import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
 import {Prisma, RefTypesGroep} from "@prisma/client";
 
 
@@ -40,7 +40,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosGetObjects(RefTypesGroepenDto)
-   GetObjects(@Query() queryParams: GetObjectsRefTypesGroepRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
+   GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
       return this.typesGroepenService.GetObjects(queryParams);
    }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuditController } from './audit-controller/audit.controller';
-import { AuditService } from './audit-services/audit.service';
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
 import {HeliosCoreModule} from "../../core/helios.core.module";
 
 @Module({

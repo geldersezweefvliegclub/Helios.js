@@ -1,4 +1,4 @@
-import {GetObjectsDateRequest} from "../../../core/DTO/IHeliosFilter";
+import {GetObjectsDateRequest} from "../../core/DTO/IHeliosFilter";
 
 export class GetObjectsAuditRequest extends GetObjectsDateRequest
 {

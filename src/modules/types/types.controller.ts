@@ -5,20 +5,20 @@ import {
    HttpStatus,
    Query
 } from '@nestjs/common';
-import {TypesService} from "../types-services/types.service";
+import {TypesService} from "./types.service";
 import {Prisma, RefType} from '@prisma/client';
-import {GetObjectsRefTypesRequest} from "../DTO/TypesDTO";
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
+import {GetObjectsRefTypesRequest} from "./TypesDTO";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
    HeliosGetObject,
    HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
-} from "../../../core/controllers/helios/helios.controller";
-import {CreateRefTypesDto} from "../../../generated/nestjs-dto/create-refTypes.dto";
-import {UpdateRefTypesDto} from "../../../generated/nestjs-dto/update-refTypes.dto";
-import {RefTypesDto} from "../../../generated/nestjs-dto/refTypes.dto";
+} from "../../core/controllers/helios/helios.controller";
+import {CreateRefTypesDto} from "../../generated/nestjs-dto/create-refTypes.dto";
+import {UpdateRefTypesDto} from "../../generated/nestjs-dto/update-refTypes.dto";
+import {RefTypesDto} from "../../generated/nestjs-dto/refTypes.dto";
 
 @Controller('Types')
 export class TypesController extends HeliosController

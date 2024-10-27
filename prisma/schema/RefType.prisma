@@ -49,25 +49,12 @@ model RefType {
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
+  /// @description De leden die dit type hebben (bijv Ereleden, Jeugdleden, etc)
+  RefLid            RefLid[] @relation("LidType")
+
+  /// @description De leden die deze vliegstatus hebben (bijv. DBO, Solist, Brevethouder, etc)
+  RefVliegStatus    RefLid[] @relation("VliegStatus")
+
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
 }
 
-
-
-//CREATE TABLE `RefTypes` (
-//`ID` mediumint(8) UNSIGNED NOT NULL,
-//`TYPEGROEP_ID` smallint(5) UNSIGNED NOT NULL,
-//`CODE` varchar(10) DEFAULT NULL,
-//`EXT_REF` varchar(25) DEFAULT NULL,
-//`OMSCHRIJVING` varchar(75) NOT NULL,
-//`SORTEER_VOLGORDE` tinyint(3) UNSIGNED DEFAULT NULL,
-//`READ_ONLY` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
-//`BEDRAG` decimal(6,2) DEFAULT NULL,
-//`EENHEDEN` decimal(6,2) DEFAULT NULL,
-//`VERWIJDERD` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
-//`LAATSTE_AANPASSING` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-//)
-
-//ALTER TABLE `RefTypes`
-//ADD CONSTRAINT `ref_types_ibfk_1` FOREIGN KEY (`TYPEGROEP_ID`) REFERENCES `RefTypesGroepen` (`ID`)
-//COMMIT;

@@ -1,4 +1,4 @@
-import {GetObjectsRequest} from "../../../core/DTO/IHeliosFilter";
+import {GetObjectsRequest} from "../../core/DTO/IHeliosFilter";
 
 export class GetObjectsRefTypesRequest extends GetObjectsRequest
 {

@@ -1,11 +1,11 @@
 import {Injectable} from '@nestjs/common';
-import {DbService} from "../../../database/db-service/db.service";
+import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefTypesGroep} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
-import {IHeliosService} from "../../../core/services/IHeliosService";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {DatabaseEvents} from "../../../core/helpers/Events";
-import {GetObjectsRefTypesGroepRequest} from "../DTO/TypesGroepDTO";
+import {DatabaseEvents} from "../../core/helpers/Events";
+import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
 
 @Injectable()
 export class TypesGroepenService extends IHeliosService
@@ -27,7 +27,7 @@ export class TypesGroepenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesGroepRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
+   async GetObjects(params: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
       const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
