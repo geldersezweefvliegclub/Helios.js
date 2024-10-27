@@ -34,5 +34,5 @@ model RefTypesGroepen {
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  refTypes          RefTypes[]
+  RefTypes          RefTypes[]
 }

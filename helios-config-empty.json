@@ -1,7 +1,10 @@
 {
   "logging": {
-    "sql": true
+    "sql": true,
+    "excludeAudit" : [ "table1", "table2" ]
   },
+
+
 
   "db_info": {
     "dbType": "mysql",

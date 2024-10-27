@@ -7,8 +7,6 @@ model RefTypes {
   /// @description Verwijzing naar de RefTypesGroepen
   TYPEGROEP_ID      Int
 
-  groep             RefTypesGroepen @relation(fields: [TYPEGROEP_ID], references: [ID])
-
   /// @description De code van dit type
   /// @maxLength 10
   CODE              String?   @db.VarChar(10)
@@ -43,6 +41,9 @@ model RefTypes {
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+
+  RefTypesGroepen   RefTypesGroepen @relation(fields: [TYPEGROEP_ID], references: [ID])
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
 }

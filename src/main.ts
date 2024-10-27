@@ -62,7 +62,7 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
 async function bootstrap()
 {
    const app = await NestFactory.create(AppModule, {
-      logger: createLogger()  // the logger to record debug information
+    //  logger: createLogger()  // the logger to record debug information
    });
    app.enableCors();
 

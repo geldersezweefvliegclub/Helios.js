@@ -1,9 +1,9 @@
 import {
-   Body, ClassSerializerInterceptor,
+   Body,
    Controller,
    HttpException,
    HttpStatus,
-   Query, UseInterceptors
+   Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
