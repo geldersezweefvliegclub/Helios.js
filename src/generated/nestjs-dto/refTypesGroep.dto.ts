@@ -1,29 +1,22 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
-export class RefTypesDto {
+export class RefTypesGroepDto {
   @ApiProperty({
     description:
-      "De primary ID van het type, andere objecten refereren naar dit ID",
+      "De primary ID van de groep, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
   })
   ID: number;
   @ApiProperty({
-    description: "Verwijzing naar de RefTypesGroepen",
-    type: "integer",
-    format: "int32",
-  })
-  TYPEGROEP_ID: number;
-  @ApiProperty({
-    description: "De code van dit type",
+    description: "De code van de groep",
     maxLength: 10,
     type: "string",
     nullable: true,
   })
   CODE: string | null;
   @ApiProperty({
-    description: "De externe referentie van dit type",
+    description: "De externe referentie van de groep",
     maxLength: 25,
     type: "string",
     nullable: true,
@@ -36,6 +29,7 @@ export class RefTypesDto {
   })
   OMSCHRIJVING: string;
   @ApiProperty({
+    description: "De sorteer volgorde van de groep",
     type: "integer",
     format: "int32",
     nullable: true,
@@ -43,24 +37,10 @@ export class RefTypesDto {
   SORTEER_VOLGORDE: number | null;
   @ApiProperty({
     description:
-      "Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
+      "Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
     type: "boolean",
   })
   READ_ONLY: boolean;
-  @ApiProperty({
-    description: "Het bedrag om te kunnen factureren",
-    type: "number",
-    format: "double",
-    nullable: true,
-  })
-  BEDRAG: Prisma.Decimal | null;
-  @ApiProperty({
-    description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
-    type: "number",
-    format: "double",
-    nullable: true,
-  })
-  EENHEDEN: Prisma.Decimal | null;
   @ApiProperty({
     description: "Is de groep gemarkeerd als verwijderd",
     type: "boolean",

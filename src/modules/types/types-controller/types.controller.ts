@@ -49,10 +49,20 @@ export class TypesController extends HeliosController
    {
       try
       {
-
-         //TODO
+         const id = data.TYPEGROEP_ID;
+         delete data.TYPEGROEP_ID;
+         const insertData: Prisma.RefTypesCreateInput = {
+            ...data,
+            RefTypesGroepen: {
+               connect: {
+                  ID: id
+               }
+            }
+         };
+         return await this.typesService.AddObject(insertData);
          //return await this.typesService.AddObject(data);
-         return {} as RefTypesDto;
+
+         //return {} as RefTypesDto;
       }
       catch (e)
       {

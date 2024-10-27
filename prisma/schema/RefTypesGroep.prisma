@@ -1,5 +1,7 @@
 
-model RefTypesGroepen {
+model RefTypesGroep {
+  @@map("ref_types_groepen")
+
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID
@@ -34,5 +36,5 @@ model RefTypesGroepen {
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  RefTypes          RefTypes[]
+  RefTypes          RefType[]
 }

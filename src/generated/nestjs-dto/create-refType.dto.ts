@@ -4,11 +4,12 @@ import {
   IsBoolean,
   IsDecimal,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
 
-export class UpdateRefTypesDto {
+export class CreateRefTypeDto {
   @ApiProperty({
     description:
       "De primary ID van het type, andere objecten refereren naar dit ID",
@@ -24,11 +25,10 @@ export class UpdateRefTypesDto {
     description: "Verwijzing naar de RefTypesGroepen",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  TYPEGROEP_ID?: number;
+  TYPEGROEP_ID: number;
   @ApiProperty({
     description: "De code van dit type",
     maxLength: 10,
@@ -53,11 +53,10 @@ export class UpdateRefTypesDto {
     description: "De omschrijving van de groep",
     maxLength: 75,
     type: "string",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  OMSCHRIJVING?: string;
+  OMSCHRIJVING: string;
   @ApiProperty({
     type: "integer",
     format: "int32",

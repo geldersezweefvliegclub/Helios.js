@@ -8,7 +8,7 @@ import {
   IsString,
 } from "class-validator";
 
-export class UpdateRefTypesDto {
+export class UpdateRefTypeDto {
   @ApiProperty({
     description:
       "De primary ID van het type, andere objecten refereren naar dit ID",

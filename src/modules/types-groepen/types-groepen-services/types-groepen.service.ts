@@ -4,7 +4,7 @@ import {Prisma, RefTypesGroepen} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../../core/services/IHeliosService";
 import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepenDTO";
-import {EventEmitter2, OnEvent} from "@nestjs/event-emitter";
+import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../../core/helpers/Events";
 
 @Injectable()

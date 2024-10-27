@@ -1,18 +1,16 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsBoolean,
-  IsDecimal,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
 
-export class CreateRefTypesDto {
+export class CreateRefTypesGroepDto {
   @ApiProperty({
     description:
-      "De primary ID van het type, andere objecten refereren naar dit ID",
+      "De primary ID van de groep, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
     default: "autoincrement",
@@ -22,15 +20,7 @@ export class CreateRefTypesDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Verwijzing naar de RefTypesGroepen",
-    type: "integer",
-    format: "int32",
-  })
-  @IsNotEmpty()
-  @IsInt()
-  TYPEGROEP_ID: number;
-  @ApiProperty({
-    description: "De code van dit type",
+    description: "De code van de groep",
     maxLength: 10,
     type: "string",
     required: false,
@@ -40,7 +30,7 @@ export class CreateRefTypesDto {
   @IsString()
   CODE?: string | null;
   @ApiProperty({
-    description: "De externe referentie van dit type",
+    description: "De externe referentie van de groep",
     maxLength: 25,
     type: "string",
     required: false,
@@ -58,6 +48,7 @@ export class CreateRefTypesDto {
   @IsString()
   OMSCHRIJVING: string;
   @ApiProperty({
+    description: "De sorteer volgorde van de groep",
     type: "integer",
     format: "int32",
     required: false,
@@ -68,7 +59,7 @@ export class CreateRefTypesDto {
   SORTEER_VOLGORDE?: number | null;
   @ApiProperty({
     description:
-      "Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
+      "Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
     type: "boolean",
     default: false,
     required: false,
@@ -76,24 +67,4 @@ export class CreateRefTypesDto {
   @IsOptional()
   @IsBoolean()
   READ_ONLY?: boolean;
-  @ApiProperty({
-    description: "Het bedrag om te kunnen factureren",
-    type: "number",
-    format: "double",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsDecimal()
-  BEDRAG?: Prisma.Decimal | null;
-  @ApiProperty({
-    description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
-    type: "number",
-    format: "double",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsDecimal()
-  EENHEDEN?: Prisma.Decimal | null;
 }
