@@ -29,8 +29,9 @@ export class AuditController extends HeliosController
 
       // excludeClasses is a list of classes that should not be audited
       const excludeAudit: string[] = this.configService.get('logging.excludeAudit');
-      if (excludeAudit)
+      if (excludeAudit) {
          this.excludeClasses = this.excludeClasses.concat(excludeAudit)
+      }
    }
 
 
@@ -54,7 +55,7 @@ export class AuditController extends HeliosController
    // listen to events from the database actions
    // store data in the audit table
    @OnEvent(DatabaseEvents.Created)
-   CreatedRecord(objNaam: string, id: number, data: any, result: any)
+   CreatedRecord(objNaam: string, id: number, data: unknown, result: unknown)
    {
       // Niet alles mag in de audit trail
       if (this.excludeClasses.includes(objNaam))
@@ -74,7 +75,7 @@ export class AuditController extends HeliosController
 
 
    @OnEvent(DatabaseEvents.Updated)
-   UpdatedRecord(objNaam: string, id: number, before:any, data: any, result: any)
+   UpdatedRecord(objNaam: string, id: number, before: unknown, data: unknown, result: unknown)
    {
       // Niet alles mag in de audit trail
       if (this.excludeClasses.includes(objNaam))
@@ -95,7 +96,7 @@ export class AuditController extends HeliosController
 
 
    @OnEvent(DatabaseEvents.Removed)
-   RemovedRecord(objNaam: string, id: number, data: any)
+   RemovedRecord(objNaam: string, id: number, data: unknown)
    {
       // Niet alles mag in de audit trail
       if (this.excludeClasses.includes(objNaam))
