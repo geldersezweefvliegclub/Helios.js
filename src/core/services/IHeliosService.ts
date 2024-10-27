@@ -1,6 +1,4 @@
 import {IHeliosGetObjectsResponse} from "../DTO/IHeliosGetObjectsReponse";
-import {Prisma, RefTypesGroepen} from "@prisma/client";
-import {GetObjectsDateRequest, GetObjectsRequest} from "../DTO/IHeliosFilter";
 
 export abstract class IHeliosService
 {
@@ -15,8 +13,8 @@ export abstract class IHeliosService
    }
 
    // Convert a string like "field1 asc, field2 desc" to an array of objects like [{field1: "asc"}, {field2: "desc"}]
-   // This is used to sort the results of a prisma query
-   protected Sort<oType>(sort: string): oType[]
+   // This is used to be using in prismas sort function
+   protected SortStringToSortObj<oType>(sort: string): oType[]
    {
       const retVal: oType[] = [];
       if (!sort) return undefined;

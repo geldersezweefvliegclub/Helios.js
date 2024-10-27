@@ -41,7 +41,7 @@ export class AuditService extends IHeliosService
 
       const objs = await this.dbService.audit.findMany({
          where: where,
-         orderBy: this.Sort<Prisma.AuditOrderByWithRelationInput>(sort),
+         orderBy: this.SortStringToSortObj<Prisma.AuditOrderByWithRelationInput>(sort),
          select: this.Select<Prisma.AuditSelect>(params.VELDEN),
          take: params.MAX,
          skip: params.START

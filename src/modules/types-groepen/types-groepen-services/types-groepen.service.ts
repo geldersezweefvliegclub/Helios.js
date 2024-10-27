@@ -44,7 +44,7 @@ export class TypesGroepenService extends IHeliosService
 
       const objs = await this.dbService.refTypesGroepen.findMany({
          where: where,
-         orderBy: this.Sort<Prisma.RefTypesGroepenOrderByWithRelationInput>(sort),
+         orderBy: this.SortStringToSortObj<Prisma.RefTypesGroepenOrderByWithRelationInput>(sort),
          select: this.Select<Prisma.RefTypesGroepenSelect>(params.VELDEN),
          take: params.MAX,
          skip: params.START
