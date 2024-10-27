@@ -1,11 +1,11 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../../database/db-service/db.service";
-import {Prisma, RefTypesGroepen} from '@prisma/client';
+import {Prisma, RefTypesGroep} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../../core/services/IHeliosService";
-import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepenDTO";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../../core/helpers/Events";
+import {GetObjectsRefTypesGroepRequest} from "../DTO/TypesGroepDTO";
 
 @Injectable()
 export class TypesGroepenService extends IHeliosService
@@ -17,9 +17,9 @@ export class TypesGroepenService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<RefTypesGroepen>
+   async GetObject(id: number): Promise<RefTypesGroep>
    {
-      return this.dbService.refTypesGroepen.findUnique({
+      return this.dbService.refTypesGroep.findUnique({
          where: {
             ID: id
          }
@@ -27,13 +27,13 @@ export class TypesGroepenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepen>>
+   async GetObjects(params: GetObjectsRefTypesGroepRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
       const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
 
       // create the where clause
-      const where: Prisma.RefTypesGroepenWhereInput =
+      const where: Prisma.RefTypesGroepWhereInput =
          {
             ID: params.ID,
             VERWIJDERD: verwijderd,
@@ -42,10 +42,10 @@ export class TypesGroepenService extends IHeliosService
             }
          }
 
-      const objs = await this.dbService.refTypesGroepen.findMany({
+      const objs = await this.dbService.refTypesGroep.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefTypesGroepenOrderByWithRelationInput>(sort),
-         select: this.SelectStringToSelectObj<Prisma.RefTypesGroepenSelect>(params.VELDEN),
+         orderBy: this.SortStringToSortObj<Prisma.RefTypesGroepOrderByWithRelationInput>(sort),
+         select: this.SelectStringToSelectObj<Prisma.RefTypesGroepSelect>(params.VELDEN),
          take: params.MAX,
          skip: params.START
       });
@@ -53,9 +53,9 @@ export class TypesGroepenService extends IHeliosService
       return this.buildGetObjectsResponse(objs);
    }
 
-   async AddObject(data: Prisma.RefTypesGroepenCreateInput): Promise<RefTypesGroepen>
+   async AddObject(data: Prisma.RefTypesGroepCreateInput): Promise<RefTypesGroep>
    {
-      const obj = await this.dbService.refTypesGroepen.create({
+      const obj = await this.dbService.refTypesGroep.create({
          data: data
       });
 
@@ -63,10 +63,10 @@ export class TypesGroepenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypesGroepenUpdateInput): Promise<RefTypesGroepen>
+   async UpdateObject(id: number, data: Prisma.RefTypesGroepUpdateInput): Promise<RefTypesGroep>
    {
       const db = this.GetObject(id);
-      const obj = await this.dbService.refTypesGroepen.update({
+      const obj = await this.dbService.refTypesGroep.update({
          where: {
             ID: id
          },
@@ -79,7 +79,7 @@ export class TypesGroepenService extends IHeliosService
    async RemoveObject(id: number): Promise<void>
    {
       const db = this.GetObject(id);
-      await this.dbService.refTypesGroepen.delete({
+      await this.dbService.refTypesGroep.delete({
          where: {
             ID: id
          }

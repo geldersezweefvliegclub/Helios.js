@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import {TypesGroepenService} from "../types-groepen-services/types-groepen.service";
 import {Prisma, RefTypesGroepen} from '@prisma/client';
-import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepenDTO";
+import {GetObjectsRefTypesGroepenRequest} from "../DTO/TypesGroepDTO";
 import {IHeliosGetObjectsResponse} from "../../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectRequest} from "../../../core/DTO/IHeliosFilter";
 import {

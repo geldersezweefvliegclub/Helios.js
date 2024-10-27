@@ -8,7 +8,7 @@ model RefType {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  RefTypesGroep   RefTypesGroep @relation(fields: [TYPEGROEP_ID], references: [ID])
+  TypesGroep   RefTypesGroep @relation(fields: [TYPEGROEP_ID], references: [ID])
 
   /// @description Verwijzing naar de RefTypesGroepen
   /// @DtoRelationIncludeId

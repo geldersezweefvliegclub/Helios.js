@@ -1,6 +1,6 @@
 import {GetObjectsRequest} from "../../../core/DTO/IHeliosFilter";
 
-export class GetObjectsRefTypesGroepenRequest extends GetObjectsRequest
+export class GetObjectsRefTypesGroepRequest extends GetObjectsRequest
 {
    // hier komen de specifieke velden voor GetObjects
 }
