@@ -10,3 +10,10 @@ services:
       MYSQL_DATABASE: helios
     ports:
       - "3306:3306"
+  helios-logging:
+    image: datalust/seq:latest
+    container_name: helios-logging
+    ports:
+      - "5341:80"
+    environment:
+      ACCEPT_EULA: Y
