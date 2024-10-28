@@ -70,7 +70,7 @@ export class TypesController extends HeliosController
          // remove TYPEGROEP_ID from the data
          // and add it to the TypesGroep property
          const { TYPEGROEP_ID, ...updateData} = data;
-         (updateData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
+         (updateData as Prisma.RefTypeCreateInput).TypesGroep = (TYPEGROEP_ID !== undefined) ? { connect: {ID: TYPEGROEP_ID }} : undefined
 
          return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
       }
