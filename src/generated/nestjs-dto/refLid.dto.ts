@@ -107,6 +107,27 @@ export class RefLidDto {
   })
   STATUSTYPE_ID: number | null;
   @ApiProperty({
+    description: "Is het lid ook lid van een zusterclub",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  ZUSTERCLUB_ID: number | null;
+  @ApiProperty({
+    description: "Verwijzing naar het ID de buddy in de leden tabel",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  BUDDY_ID: number | null;
+  @ApiProperty({
+    description: "Verwijzing naar het ID de tweede buddy in de leden tabel",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  BUDDY_ID2: number | null;
+  @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierdienst",
     type: "boolean",
   })

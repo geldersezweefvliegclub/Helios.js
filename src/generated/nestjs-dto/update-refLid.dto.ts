@@ -152,6 +152,36 @@ export class UpdateRefLidDto {
   @IsInt()
   STATUSTYPE_ID?: number | null;
   @ApiProperty({
+    description: "Is het lid ook lid van een zusterclub",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  ZUSTERCLUB_ID?: number | null;
+  @ApiProperty({
+    description: "Verwijzing naar het ID de buddy in de leden tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  BUDDY_ID?: number | null;
+  @ApiProperty({
+    description: "Verwijzing naar het ID de tweede buddy in de leden tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  BUDDY_ID2?: number | null;
+  @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierdienst",
     type: "boolean",
     default: false,

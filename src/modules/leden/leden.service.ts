@@ -55,6 +55,11 @@ export class LedenService extends IHeliosService
 
    async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>
    {
+      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
+      data.NAAM = data.VOORNAAM
+      data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
+      data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
+
       const obj = await this.dbService.refLid.create({
          data: data
       });
@@ -65,6 +70,11 @@ export class LedenService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.RefLidUpdateInput): Promise<RefLid>
    {
+      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
+      data.NAAM = data.VOORNAAM
+      data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
+      data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
+
       const db = this.GetObject(id);
       const obj = await this.dbService.refLid.update({
          where: {
@@ -85,5 +95,23 @@ export class LedenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+   }
+
+   async GetVerjaardagen(): Promise<RefLid[]>
+   {
+      const today = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+
+      return this.dbService.refLid.findMany({
+         where: {
+
+
+         },
+         orderBy: {
+
+         },
+         take: 7
+      });
    }
 }

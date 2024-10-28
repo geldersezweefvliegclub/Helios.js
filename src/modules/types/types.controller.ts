@@ -49,20 +49,12 @@ export class TypesController extends HeliosController
    {
       try
       {
-         const id = data.TYPEGROEP_ID;
-         delete data.TYPEGROEP_ID;
-         const insertData: Prisma.RefTypeCreateInput = {
-            ...data,
-            TypesGroep: {
-               connect: {
-                  ID: id
-               }
-            }
-         };
-         return await this.typesService.AddObject(insertData);
-         //return await this.typesService.AddObject(data);
+         // remove TYPEGROEP_ID from the data
+         // and add it to the TypesGroep property
+         const { TYPEGROEP_ID, ...insertData} = data;
+         (insertData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
 
-         //return {} as RefTypesDto;
+         return await this.typesService.AddObject(insertData as Prisma.RefTypeCreateInput);
       }
       catch (e)
       {
@@ -75,7 +67,12 @@ export class TypesController extends HeliosController
    {
       try
       {
-         return await this.typesService.UpdateObject(id, data);
+         // remove TYPEGROEP_ID from the data
+         // and add it to the TypesGroep property
+         const { TYPEGROEP_ID, ...updateData} = data;
+         (updateData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
+
+         return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
       }
       catch (e)
       {

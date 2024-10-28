@@ -81,6 +81,7 @@ model RefLid {
   LedenZusterclub  RefLid[] @relation("Zusterclub")
 
   /// @description Is het lid ook lid van een zusterclub
+  /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   ZUSTERCLUB_ID     Int?  @db.Int
@@ -91,6 +92,9 @@ model RefLid {
   LedenBuddy  RefLid[] @relation("Buddy1")
 
   /// @description Verwijzing naar het ID de buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BUDDY_ID          Int?  @db.Int
 
 
@@ -100,6 +104,7 @@ model RefLid {
   LedenBuddy2  RefLid[] @relation("Buddy2")
 
   /// @description Verwijzing naar het ID de tweede buddy in de leden tabel
+  /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   BUDDY_ID2         Int?  @db.Int
