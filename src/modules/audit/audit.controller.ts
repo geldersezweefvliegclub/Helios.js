@@ -53,7 +53,7 @@ export class AuditController extends HeliosController
    }
 
    // listen to events from the database actions
-   // store data in the audit table
+   // store data in the audit table when a record is added
    @OnEvent(DatabaseEvents.Created)
    CreatedRecord(objNaam: string, id: number, data: unknown, result: unknown)
    {
@@ -74,6 +74,9 @@ export class AuditController extends HeliosController
    }
 
 
+   //----------------------------------------------------------------------------------------------------------------------------------//
+   // listen to events from the database actions
+   // store data in the audit table when a record is updated
    @OnEvent(DatabaseEvents.Updated)
    UpdatedRecord(objNaam: string, id: number, before: unknown, data: unknown, result: unknown)
    {
@@ -95,6 +98,8 @@ export class AuditController extends HeliosController
    }
 
 
+   // listen to events from the database actions
+   // store data in the audit table when a record is removed
    @OnEvent(DatabaseEvents.Removed)
    RemovedRecord(objNaam: string, id: number, data: unknown)
    {
