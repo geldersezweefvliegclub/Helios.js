@@ -4,6 +4,7 @@ import {BadRequestException, INestApplication, ValidationPipe} from "@nestjs/com
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {utilities, WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
+import * as cookieParser from 'cookie-parser';
 import {SeqTransport} from "@datalust/winston-seq";
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
 
@@ -79,7 +80,7 @@ async function bootstrap()
          },
       }));
    app.useGlobalFilters(new HeliosHttpExceptionFilter(), new BadRequestExceptionFilter());
-
+   app.use(cookieParser()); // Allow the application to read cookies and add them to the request object
    await app.listen(3000);
 }
 

@@ -2,6 +2,9 @@
 .DS_STORE
 .idea
 
+# SQL Script
+SQL/*
+
 #config
 helios-config.json
 .env
@@ -136,3 +139,4 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+

@@ -32,7 +32,7 @@ export class DbService extends PrismaClient implements  OnModuleInit
     {
        await this.$connect();
 
-        const prismaLoggingEnabled: boolean =   this.configService.get('logging.sql');
+        const prismaLoggingEnabled: boolean = this.configService.getOrThrow<string>('LOGGING.SQL') === 'true';
 
         // indien environment variabele LOG_SQL = true is, log dan alle SQL queries
         if (prismaLoggingEnabled) {

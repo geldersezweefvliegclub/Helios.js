@@ -3,7 +3,7 @@ import {
    Controller,
    HttpException,
    HttpStatus,
-   Query
+   Query, UseGuards
 } from '@nestjs/common';
 import {TypesGroepenService} from "./types-groepen.service";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
@@ -18,7 +18,9 @@ import {CreateRefTypesGroepenDto} from "../../generated/nestjs-dto/create-refTyp
 import {UpdateRefTypesGroepenDto} from "../../generated/nestjs-dto/update-refTypesGroepen.dto";
 import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto";
 import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
-import {Prisma, RefTypesGroep} from "@prisma/client";
+import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
+import {CurrentUser} from "../login/current-user.decorator";
+import {JwtAuthGuard} from "../login/guards/jwt-auth.guard";
 
 
 @Controller('TypesGroepen')
@@ -30,7 +32,9 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosGetObject(RefTypesGroepenDto)
-   async GetObject(@Query() queryParams: GetObjectRequest): Promise<RefTypesGroepenDto>
+   async GetObject(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectRequest): Promise<RefTypesGroepenDto>
    {
       const obj =  await this.typesGroepenService.GetObject(queryParams.ID);
       if (!obj)
@@ -40,13 +44,17 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosGetObjects(RefTypesGroepenDto)
-   GetObjects(@Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
+   GetObjects(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
    {
       return this.typesGroepenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateRefTypesGroepenDto, RefTypesGroepenDto)
-   async AddObject(@Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
+   async AddObject(
+      @CurrentUser() user: RefLid,
+      @Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
    {
       try
       {
@@ -59,7 +67,9 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepenDto, RefTypesGroepenDto)
-   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroep>
+   async UpdateObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroep>
    {
       try
       {
@@ -72,7 +82,9 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosDeleteObject()
-   async DeleteObject(@Query('ID') id: number): Promise<void>
+   async DeleteObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: true
@@ -88,7 +100,9 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosRemoveObject()
-   async RemoveObject(@Query('ID') id: number): Promise<void>
+   async RemoveObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
       try
       {
@@ -101,7 +115,9 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosRestoreObject()
-   async RestoreObject(@Query('ID') id: number): Promise<void>
+   async RestoreObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: false

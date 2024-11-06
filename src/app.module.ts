@@ -9,6 +9,7 @@ import {TypesModule} from './modules/types/types.module';
 import {AuditModule} from './modules/audit/audit.module';
 import {HeliosCoreModule} from './core/helios.core.module';
 import { LedenModule } from './modules/leden/leden.module';
+import { LoginModule } from './modules/login/login.module';
 import config from './config/configuration';
 
 
@@ -25,6 +26,7 @@ import config from './config/configuration';
       TypesModule,
       AuditModule,
       LedenModule,
+      LoginModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],

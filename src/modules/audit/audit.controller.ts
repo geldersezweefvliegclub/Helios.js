@@ -28,7 +28,7 @@ export class AuditController extends HeliosController
       super()
 
       // excludeClasses is a list of classes that should not be audited
-      const excludeAudit: string[] = this.configService.get('logging.excludeAudit');
+      const excludeAudit: string[] = this.configService.getOrThrow<string[]>('LOGGING.EXCLUDE_AUDIT');
       if (excludeAudit) {
          this.excludeClasses = this.excludeClasses.concat(excludeAudit)
       }

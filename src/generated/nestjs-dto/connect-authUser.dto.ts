@@ -1,10 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsOptional, IsString } from "class-validator";
+import { IsInt, IsOptional } from "class-validator";
 
-export class ConnectRefLidDto {
+export class ConnectAuthUserDto {
   @ApiProperty({
     description:
-      "De primary ID van het lid, andere objecten refereren naar dit ID",
+      "De primary ID van de gebruiker, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
     required: false,
@@ -14,13 +14,13 @@ export class ConnectRefLidDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Inlognaam voor de website",
-    maxLength: 45,
-    type: "string",
+    description: "Verwijzing naar het lid",
+    type: "integer",
+    format: "int32",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  INLOGNAAM?: string;
+  @IsInt()
+  LID_ID?: number;
 }

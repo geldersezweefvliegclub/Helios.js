@@ -26,6 +26,16 @@ export class LedenService extends IHeliosService
       });
    }
 
+   // retrieve a single object from the database based on the inlognaam
+   async GetObjectByInlognaam(loginname: string): Promise<RefLid>
+   {
+      return this.dbService.refLid.findUnique({
+         where: {
+            INLOGNAAM: loginname.toLowerCase()
+         }
+      });
+   }
+
    // retrieve objects from the database based on the query parameters
    async GetObjects(params: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<RefLid>>
    {

@@ -8,10 +8,12 @@ import {
    HttpStatus, Patch,
    Post,
    Put,
-   Type
+   Type, UseGuards
 } from '@nestjs/common';
 import {Prisma} from "@prisma/client";
 import {ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
+import {JwtStrategy} from "../../../modules/login/strategies/jwt.strategy";
+import {JwtAuthGuard} from "../../../modules/login/guards/jwt-auth.guard";
 
 @Controller('helios')
 export class HeliosController {
@@ -213,6 +215,7 @@ export class HeliosController {
 export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObject"),
+      UseGuards(JwtAuthGuard),
       ApiExtraModels(dataDto),
       ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),
@@ -229,6 +232,7 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
 export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObjects"),
+      UseGuards(JwtAuthGuard),
       ApiQuery({name: 'VERWIJDERD', required: false, type: Boolean}),
       ApiQuery({name: 'VELDEN', required: false, type: String}),
       ApiQuery({name: 'SORT', required: false, type: String}),
@@ -269,6 +273,7 @@ export const HeliosGetObjectsDatum =() =>
 export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
    applyDecorators(
       Post("AddObject"),
+      UseGuards(JwtAuthGuard),
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Aanmaken nieuw record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
@@ -282,6 +287,7 @@ export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto ext
 export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
     applyDecorators(
       Put("UpdateObject"),
+      UseGuards(JwtAuthGuard),
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Update van bestaand record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
@@ -295,6 +301,7 @@ export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto ext
 export const HeliosDeleteObject = () =>
     applyDecorators(
       Delete("DeleteObject"),
+      UseGuards(JwtAuthGuard),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.NO_CONTENT),
       ApiOperation({ summary: 'Markeer record als verwijderd door VERWIJDERD op true te zetten.' }),
@@ -307,6 +314,7 @@ export const HeliosDeleteObject = () =>
 export const HeliosRemoveObject = () =>
     applyDecorators(
       Delete("RemoveObject"),
+      UseGuards(JwtAuthGuard),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.GONE),
       ApiOperation({ summary: 'Verwijderen record uit de database, herstel niet mogelijk.' }),
@@ -319,6 +327,7 @@ export const HeliosRemoveObject = () =>
 export const HeliosRestoreObject = () =>
     applyDecorators(
       Patch("RestoreObject"),
+      UseGuards(JwtAuthGuard),
       ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Maak de verwijdering ongedaan door VERWIJDERD op false te zetten.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Het record is succesvol hersteld.' }),

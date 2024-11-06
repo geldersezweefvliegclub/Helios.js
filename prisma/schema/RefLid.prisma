@@ -201,7 +201,7 @@ model RefLid {
 
   /// @description Inlognaam voor de website
   /// @maxLength 45
-  INLOGNAAM         String?   @db.VarChar(45)
+  INLOGNAAM         String?   @unique @db.VarChar(45)
 
   /// @description Het wachtwoord
   /// @minLength 8
@@ -273,6 +273,8 @@ model RefLid {
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  Auth            AuthUser[]
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

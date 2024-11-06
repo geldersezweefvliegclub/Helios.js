@@ -6,6 +6,7 @@ import {HeliosCoreModule} from "../../core/helios.core.module";
 @Module({
   imports: [HeliosCoreModule],
   controllers: [LedenController],
-  providers: [LedenService]
+  providers: [LedenService],
+  exports: [LedenService],
 })
 export class LedenModule {}
