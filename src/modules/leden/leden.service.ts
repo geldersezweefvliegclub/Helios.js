@@ -6,6 +6,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {GetObjectsRefLedenRequest} from "./LedenDTO";
+import {hash} from "bcryptjs";
 
 @Injectable()
 export class LedenService extends IHeliosService
@@ -70,6 +71,9 @@ export class LedenService extends IHeliosService
       data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
       data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
 
+      if (data.WACHTWOORD)
+         data.WACHTWOORD = await hash(data.WACHTWOORD, 10)
+
       const obj = await this.dbService.refLid.create({
          data: data
       });
@@ -84,6 +88,9 @@ export class LedenService extends IHeliosService
       data.NAAM = data.VOORNAAM
       data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
       data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
+
+      if (data.WACHTWOORD)
+         data.WACHTWOORD = await hash(data.WACHTWOORD as string, 10)
 
       const db = this.GetObject(id);
       const obj = await this.dbService.refLid.update({
