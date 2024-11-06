@@ -19,7 +19,6 @@ export class LoginService
                private readonly jwtService: JwtService)  {}
 
    async login(lid: RefLid, response: Response, redirect = false) {
-
       const expiresAccessToken = new Date();
       expiresAccessToken.setMilliseconds(
          expiresAccessToken.getTime() +
@@ -79,7 +78,7 @@ export class LoginService
          const lid = await this.ledenService.GetObjectByInlognaam(inlognaam);
          // todo: check password with current implementation
 
-         const authenticated = true; // await compare(password, lid.WACHTWOORD);
+         const authenticated = (this.configService.get("DEMO_MODE") === true) ? true : await compare(wachtwoord, lid.WACHTWOORD);
          if (!authenticated) {
             throw new UnauthorizedException();
          }
