@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import {Prisma} from "@prisma/client";
 import {ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
-import {JwtStrategy} from "../../../modules/login/strategies/jwt.strategy";
 import {JwtAuthGuard} from "../../../modules/login/guards/jwt-auth.guard";
 
 @Controller('helios')

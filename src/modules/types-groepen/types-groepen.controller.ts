@@ -3,7 +3,7 @@ import {
    Controller,
    HttpException,
    HttpStatus,
-   Query, UseGuards
+   Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "./types-groepen.service";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
@@ -20,8 +20,6 @@ import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto
 import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
 import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
-import {JwtAuthGuard} from "../login/guards/jwt-auth.guard";
-
 
 @Controller('TypesGroepen')
 export class TypesGroepenController extends HeliosController
