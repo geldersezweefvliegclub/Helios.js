@@ -12,9 +12,6 @@ import {
 } from '@nestjs/common';
 import {Prisma} from "@prisma/client";
 import {ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
-import {JwtAuthGuard} from "../../../modules/login/guards/jwt-auth.guard";
-import {OrGuard} from "@nest-lab/or-guard";
-import {BasicAuthGuard} from "../../../modules/login/guards/auth-basic-guard";
 import {AuthGuard} from "@nestjs/passport";
 
 @Controller('helios')
@@ -217,7 +214,7 @@ export class HeliosController {
 export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObject"),
-      UseGuards(OrGuard([JwtAuthGuard, BasicAuthGuard])),
+      UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(dataDto),
       ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),

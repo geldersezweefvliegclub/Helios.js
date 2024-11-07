@@ -33,6 +33,7 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
     "eventemitter2": "^6.4.9",
+    "js-crc": "^0.3.0",
     "luxon": "^3.5.0",
     "nest-winston": "^1.9.7",
     "passport": "^0.7.0",
