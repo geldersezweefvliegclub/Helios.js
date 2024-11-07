@@ -8,10 +8,11 @@ import {JwtModule} from "@nestjs/jwt";
 import {JwtStrategy} from "./strategies/jwt.strategy";
 import {HeliosCoreModule} from "../../core/helios.core.module";
 import {JwtRefreshStrategy} from "./strategies/jwt-refresh.strategy";
+import {BasicStrategy} from "./strategies/auth-basic.strategy";
 
 @Module({
   imports: [HeliosCoreModule, LedenModule, PassportModule, JwtModule],
   controllers: [LoginController],
-  providers: [LoginService, LocalStrategy, JwtStrategy, JwtRefreshStrategy]
+  providers: [LoginService, LoginController, LocalStrategy, JwtStrategy, JwtRefreshStrategy, BasicStrategy]
 })
 export class LoginModule {}
