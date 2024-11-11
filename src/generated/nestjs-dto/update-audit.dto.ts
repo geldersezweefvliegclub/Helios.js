@@ -23,15 +23,6 @@ export class UpdateAuditDto {
   @IsDateString()
   DATUM?: Date;
   @ApiProperty({
-    description: "Lid dat de wijziging heeft gedaan",
-    type: "integer",
-    format: "int32",
-    required: false,
-  })
-  @IsOptional()
-  @IsInt()
-  LID_ID?: number;
-  @ApiProperty({
     description: "De database tabel waar de wijziging is gedaan",
     type: "string",
     required: false,

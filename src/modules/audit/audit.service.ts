@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
-import {Audit, Prisma} from '@prisma/client';
+import {Audit, Prisma } from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsAuditRequest} from "./AuditDTO";
@@ -14,12 +14,13 @@ export class AuditService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<Audit>
+   async GetObject(id: number, relation = undefined): Promise<Audit>
    {
       return this.dbService.audit.findUnique({
          where: {
             ID: id
-         }
+         },
+         include: this.SelectStringToInclude<Prisma.AuditSelect>(relation),
       });
    }
 
@@ -39,6 +40,11 @@ export class AuditService extends IHeliosService
             }
          }
 
+      let count;
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.audit.count({where: where});
+      }
       const objs = await this.dbService.audit.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.AuditOrderByWithRelationInput>(sort),
@@ -47,7 +53,7 @@ export class AuditService extends IHeliosService
          skip: params.START
       });
 
-      return this.buildGetObjectsResponse(objs);
+      return this.buildGetObjectsResponse(objs, count);
    }
 
 

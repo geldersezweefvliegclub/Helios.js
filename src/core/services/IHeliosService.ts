@@ -5,11 +5,11 @@ import {crc32} from "js-crc";
 export abstract class IHeliosService
 {
    // The output format of the GetObjects call
-   protected buildGetObjectsResponse<Type>(objects: Type[]): IHeliosGetObjectsResponse<Type>
+   protected buildGetObjectsResponse<Type>(objects: Type[], count = undefined): IHeliosGetObjectsResponse<Type>
    {
       return {
          dataset: objects,
-         totaal: objects.length,
+         totaal: count ? count : objects.length,      // if count is not defined return the length of the array
          hash: crc32(JSON.stringify(objects))
       }
    }
@@ -35,11 +35,34 @@ export abstract class IHeliosService
    // This is used to limit the number of field which will returned from a prisma query
    protected SelectStringToSelectObj<oType>(fields: string): oType
    {
-      const retObj: oType = {} as oType;
       if (!fields) return undefined;
+
+      const retObj: any = {};
+      const fieldArray = fields.split(',').map(field => field.trim());
+
+      fieldArray.forEach(field => {
+         const parts = field.split('.');
+         if (parts.length > 1) {
+            if (!retObj[parts[0]]) {
+               retObj[parts[0]] = { select: {} };
+            }
+            retObj[parts[0]].select[parts[1]] = true;
+         } else {
+            retObj[parts[0]] = true;
+         }
+      });
+
+      return retObj as oType;
+   }
+
+   protected SelectStringToInclude<oType>(fields: string): oType
+   {
+      if (!fields) return undefined;
+
+      const retObj: oType = {} as oType;
       fields.split(',').forEach(field =>  // split on comma
       {
-         retObj[field] = true
+         retObj[field.trim()] = true
       });
       return retObj;
    }

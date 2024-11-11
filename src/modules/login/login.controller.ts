@@ -30,7 +30,6 @@ export class LoginController
       @CurrentUser() user: RefLid,
       @Res({ passthrough: true }) response: Response)
    {
-      console.log('LoginController.login() ingelogd_lid:', user);
       await this.loginService.login(user, response);
    }
 

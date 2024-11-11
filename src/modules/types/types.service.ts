@@ -6,6 +6,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsRefTypesRequest} from "./TypesDTO";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import {count} from "rxjs";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -17,17 +18,18 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<RefType>
+   async GetObject(id: number, relation = undefined): Promise<RefType>
    {
       return this.dbService.refType.findUnique({
          where: {
             ID: id
-         }
+         },
+         include: this.SelectStringToInclude<Prisma.RefTypeSelect>(relation),
       });
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<RefType>>
+   async GetObjects(params: GetObjectsRefTypesRequest, relation = undefined): Promise<IHeliosGetObjectsResponse<RefType>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
       const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
@@ -42,15 +44,20 @@ export class TypesService extends IHeliosService
             }
          }
 
+      let count;
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.refType.count({where: where});
+      }
       const objs = await this.dbService.refType.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(sort),
-         select: this.SelectStringToSelectObj<Prisma.RefTypeSelect>(params.VELDEN),
+         select:  this.SelectStringToSelectObj<Prisma.RefTypeSelect>(params.VELDEN),
          take: params.MAX,
-         skip: params.START
+         skip: params.START,
       });
 
-      return this.buildGetObjectsResponse(objs);
+      return this.buildGetObjectsResponse(objs, count);
    }
 
    async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefType>

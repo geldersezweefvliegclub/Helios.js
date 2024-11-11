@@ -7,6 +7,14 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
 
+export type OptionalKeysOf<Obj> = keyof {
+   [Key
+      in keyof Obj
+      as Omit<Obj, Key> extends Obj ? Key : never
+   ]: Obj[Key];
+};
+
+
 @Injectable()
 export class TypesGroepenService extends IHeliosService
 {
@@ -16,13 +24,15 @@ export class TypesGroepenService extends IHeliosService
       super();
    }
 
+
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<RefTypesGroep>
+   async GetObject(id: number, relation = undefined): Promise<RefTypesGroep>
    {
       return this.dbService.refTypesGroep.findUnique({
          where: {
             ID: id
-         }
+         },
+         include: this.SelectStringToInclude<Prisma.RefTypesGroepSelect>(relation),
       });
    }
 
@@ -43,14 +53,18 @@ export class TypesGroepenService extends IHeliosService
          }
 
       const objs = await this.dbService.refTypesGroep.findMany({
+         select:  this.SelectStringToSelectObj<Prisma.RefTypesGroepSelect>(params.VELDEN),
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefTypesGroepOrderByWithRelationInput>(sort),
-         select: this.SelectStringToSelectObj<Prisma.RefTypesGroepSelect>(params.VELDEN),
          take: params.MAX,
-         skip: params.START
-      });
+         skip: params.START});
 
-      return this.buildGetObjectsResponse(objs);
+      let count;
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.refTypesGroep.count({where: where});
+      }
+      return this.buildGetObjectsResponse(objs, count);
    }
 
    async AddObject(data: Prisma.RefTypesGroepCreateInput): Promise<RefTypesGroep>

@@ -8,6 +8,15 @@ model Audit {
   /// @description De datum van de audit
   DATUM             DateTime  @db.Date
 
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid            RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het ID de buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+
   /// @description Lid dat de wijziging heeft gedaan
   LID_ID            Int       @db.Int
 

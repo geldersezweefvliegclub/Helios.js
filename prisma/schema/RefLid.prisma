@@ -275,6 +275,7 @@ model RefLid {
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   Auth            AuthUser[]
+  Audit           Audit[] @relation("RefLid")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

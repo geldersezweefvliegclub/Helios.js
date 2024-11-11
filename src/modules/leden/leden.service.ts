@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
-import {Prisma, RefLid} from '@prisma/client';
+import {Audit, Prisma, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DatabaseEvents} from "../../core/helpers/Events";
@@ -18,12 +18,13 @@ export class LedenService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number): Promise<RefLid>
+   async GetObject(id: number, relation = undefined): Promise<RefLid>
    {
       return this.dbService.refLid.findUnique({
          where: {
             ID: id
-         }
+         },
+         include: this.SelectStringToInclude<Prisma.RefLidSelect>(relation),
       });
    }
 
@@ -53,6 +54,11 @@ export class LedenService extends IHeliosService
             }
          }
 
+      let count;
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.refLid.count({where: where});
+      }
       const objs = await this.dbService.refLid.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefLidOrderByWithRelationInput>(sort),
@@ -61,7 +67,7 @@ export class LedenService extends IHeliosService
          skip: params.START
       });
 
-      return this.buildGetObjectsResponse(objs);
+      return this.buildGetObjectsResponse(objs, count);
    }
 
    async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>
