@@ -51,7 +51,7 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
       .setTitle('Helios API')
       .setDescription('De Helios API')
       .setVersion('1.0')
-      .addBearerAuth()
+      .addBasicAuth()
       .build();
 
    const document = SwaggerModule.createDocument(app, swaggerConfig);

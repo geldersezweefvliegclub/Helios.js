@@ -10,8 +10,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
    constructor(private readonly loginervice: LoginService) {
       super({
          // incoming request will have a field called inlognaam to authenticate the user.
-         usernameField: 'inlognaam',
-         passwordField: 'wachtwoord',
+         usernameField: 'Inlognaam',
+         passwordField: 'Wachtwoord',
       });
    }
 

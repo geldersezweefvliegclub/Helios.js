@@ -11,7 +11,7 @@ import {
    Type, UseGuards
 } from '@nestjs/common';
 import {Prisma} from "@prisma/client";
-import {ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiQuery, ApiResponse, getSchemaPath} from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
 
 @Controller('helios')
@@ -216,7 +216,6 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
       Get("GetObject"),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(dataDto),
-      ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
             '$ref': getSchemaPath(dataDto)
@@ -231,15 +230,8 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
 export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObjects"),
+      ApiBasicAuth,
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
-      ApiQuery({name: 'VERWIJDERD', required: false, type: Boolean}),
-      ApiQuery({name: 'VELDEN', required: false, type: String}),
-      ApiQuery({name: 'SORT', required: false, type: String}),
-      ApiQuery({name: 'MAX', required: false, type: Number}),
-      ApiQuery({name: 'START', required: false, type: Number}),
-      ApiQuery({name: 'HASH', required: false, type: String}),
-      ApiQuery({name: 'IDs', required: false, type: String}),
-      ApiQuery({name: 'ID', required: false, type: Number}),
       ApiOperation({ summary: 'Ophalen records uit de database.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
             type: 'object',
@@ -256,15 +248,6 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
          }})
    );
 
-// Swagger definitie voor het ophalen van records. Dit is universeel en kan in elke controller gebruikt worden.
-// Dit wordt in combinatie met HeliosGetObjects gebruikt om een datum filter toe te voegen.
-// START_DATUM is inclusief en EIND_DATUM is ook inclusief. DATUM is een enkele datum.
-export const HeliosGetObjectsDatum =() =>
-   applyDecorators(
-      ApiQuery({name: 'DATUM', required: false, type: Date}),
-      ApiQuery({name: 'BEGIN_DATUM', required: false, type: Date}),
-      ApiQuery({name: 'EIND_DATUM', required: false, type: Date}),
-   );
 
 // Swagger definitie voor het aanmaken van een nieuw record. Dit is universeel en kan in elke controller gebruikt worden.
 // dataDto is het object wat door de service wordt aangemaakt en wordt teruggegeven naar de client.

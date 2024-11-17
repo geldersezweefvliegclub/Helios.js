@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, OnModuleInit} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
-import {Audit, Prisma, RefLid} from '@prisma/client';
+import {Prisma, PrismaClient, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DatabaseEvents} from "../../core/helpers/Events";
@@ -9,12 +9,43 @@ import {GetObjectsRefLedenRequest} from "./LedenDTO";
 import {hash} from "bcryptjs";
 
 @Injectable()
-export class LedenService extends IHeliosService
+export class LedenService extends IHeliosService implements OnModuleInit
 {
-   constructor(private readonly dbService: DbService,
+
+   constructor(private readonly logger: Logger,
+               private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
+   }
+
+   onModuleInit() {
+
+      const view = `
+         SELECT
+            l.*,
+            t.OMSCHRIJVING AS LIDTYPE,
+            t.EXT_REF AS LIDTYPE_REF,
+            s.OMSCHRIJVING AS STATUS,
+            z.NAAM AS ZUSTERCLUB,
+            b.NAAM AS BUDDY,
+            b2.NAAM AS BUDDY2
+         FROM
+            ref_leden l
+            LEFT JOIN ref_types t ON (l.LIDTYPE_ID = t.ID)
+            LEFT JOIN ref_types s ON (l.STATUSTYPE_ID = s.ID)
+            LEFT JOIN ref_leden z ON (l.ZUSTERCLUB_ID = z.ID)
+            LEFT JOIN ref_leden b ON (l.BUDDY_ID = b.ID)
+            LEFT JOIN ref_leden b2 ON (l.BUDDY_ID = b2.ID)
+         WHERE
+             l.VERWIJDERD = #WHERE#
+         ORDER BY
+             ACHTERNAAM, VOORNAAM;`
+
+      const prisma = new PrismaClient()
+
+      prisma.$executeRawUnsafe("CREATE OR REPLACE VIEW leden_view AS " + view.replace("#WHERE#", "0")).catch(e => this.logger.error(e));
+      prisma.$executeRawUnsafe("CREATE OR REPLACE VIEW verwijderd_leden_view AS " + view.replace("#WHERE#", "1")).catch(e => this.logger.error(e));
    }
 
    // retrieve a single object from the database based on the id
@@ -36,6 +67,42 @@ export class LedenService extends IHeliosService
             INLOGNAAM: loginname.toLowerCase()
          }
       });
+   }
+
+   async GetObjectsByQuery(params: GetObjectsRefLedenRequest): Promise<any>
+   {
+      const fields = params.VELDEN ? params.VELDEN : "*";
+      const where = ["WHERE 1=1"];
+      if (params.ID)
+         where.push("AND ID = " + params.ID);
+      if (params.IDs)
+         where.push("AND ID IN (" + params.IDs.join(",") + ")");
+      if (params.SELECTIE)
+         where.push("AND (NAAM LIKE '%" + params.SELECTIE + "%' OR EMAIL LIKE '%" + params.SELECTIE + "%' OR TELEFOON LIKE '%" + params.SELECTIE + "%' OR MOBIEL LIKE '%" + params.SELECTIE + "%' OR NOODNUMMER LIKE '%" + params.SELECTIE + "%')");
+      if (params.TYPES)
+         where.push("AND LIDTYPE_ID IN (" + params.TYPES.join(",") + ")");
+      if (params.CLUBLEDEN)
+         where.push("AND LIDTYPE_ID >= 600 AND LIDTYPE_ID <= 606");
+      if (params.INSTRUCTEURS)
+         where.push("AND INSTRUCTEUR = 1");
+      if (params.LIERISTEN)
+         where.push("AND LIERIST = 1");
+      if (params.LIO)
+         where.push("AND LIERIST_IO = 1");
+      if (params.STARTLEIDERS)
+         where.push("AND STARTLEIDER = 1");
+      if (params.DDWV_CREW)
+         where.push("AND DDWV_CREW = 1");
+      if (params.BEHEERDERS)
+         where.push("AND BEHEERDER = 1");
+
+      const orderby = params.SORT ? "ORDER BY " + params.SORT : "ORDER BY ACHTERNAAM, VOORNAAM";
+
+      const SQL = ("SELECT " + fields + " FROM ####leden_view" + " " + where.join(" ") + " " + orderby).replaceAll("####", params.VERWIJDERD ? "verwijderd_" : "");
+
+      const results = await this.dbService.dbQuery(SQL, params.START, params.MAX);
+
+      console.log(results[0])
    }
 
    // retrieve objects from the database based on the query parameters

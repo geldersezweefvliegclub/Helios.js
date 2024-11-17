@@ -7,7 +7,8 @@ import {DbService} from "../database/db-service/db.service";
         Logger
     ],
     exports: [
-        DbService
+        DbService,
+        Logger
     ]
 })
 export class HeliosCoreModule {

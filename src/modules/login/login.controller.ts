@@ -4,18 +4,25 @@ import {LocalAuthGuard} from "./guards/local-auth.guard";
 import {CurrentUser} from "./current-user.decorator";
 import {RefLid} from "@prisma/client";
 import { Response } from 'express';
-import {ApiExtraModels, ApiProperty} from "@nestjs/swagger";
+import {ApiBody, ApiProperty} from "@nestjs/swagger";
 import {JwtRefreshAuthGuard} from "./guards/jwt-refresh-auth.guard";
 
-export class Ilogin {
+export class LoginDTO {
    @ApiProperty({
-      description: "inlognaam",
+      description: "De inlognaam om systeem te kunnen gebruiken",
       maxLength: 50,
       type: "string",
       nullable: false,
    })
-   inlognaam: string;
-   wachtwoord: string;
+   Inlognaam: string;
+
+   @ApiProperty({
+      description: "Het wachtwoord voor deze gebruiker",
+      maxLength: 50,
+      type: "string",
+      nullable: false
+   })
+   Wachtwoord: string;
 }
 
 @Controller('Login')
@@ -23,8 +30,8 @@ export class LoginController
 {
    constructor(private readonly loginService: LoginService) {}
 
-   @Post('login')
-   @ApiExtraModels(Ilogin)
+   @Post('Login')
+   @ApiBody({type: LoginDTO})
    @UseGuards(LocalAuthGuard)    // LocalAuthGuard is a guard that will be used for http requests to authenticate a user.
    async login(
       @CurrentUser() user: RefLid,

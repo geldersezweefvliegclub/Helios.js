@@ -1,5 +1,4 @@
 import {IHeliosGetObjectsResponse} from "../DTO/IHeliosGetObjectsReponse";
-import {hash, hashSync} from "bcryptjs";
 import {crc32} from "js-crc";
 
 export abstract class IHeliosService
