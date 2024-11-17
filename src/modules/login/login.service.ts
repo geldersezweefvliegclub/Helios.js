@@ -1,12 +1,11 @@
 import {Injectable, UnauthorizedException} from '@nestjs/common';
 import {LedenService} from "../leden/leden.service";
 import {ConfigService} from "@nestjs/config";
-import { JwtService } from '@nestjs/jwt';
+import {JwtService } from '@nestjs/jwt';
 import {RefLid} from "@prisma/client";
 import {compare, hash} from "bcryptjs";
-import {logger} from "@brakebein/prisma-generator-nestjs-dto/dist/utils";
 import {TokenPayload} from "./token-payload.interface";
-import { Response } from 'express';
+import {Response } from 'express';
 import {DbService} from "../../database/db-service/db.service";
 import {AuthUserDto} from "../../generated/nestjs-dto/authUser.dto";
 
@@ -74,34 +73,23 @@ export class LoginService
    }
 
    async verifyUser(inlognaam: string, wachtwoord: string): Promise<RefLid> {
-      try {
-         const lid = await this.ledenService.GetObjectByInlognaam(inlognaam);
-         // todo: check password with current implementation
+      const lid = await this.ledenService.GetObjectByInlognaam(inlognaam);
+      // todo: check password with current implementation
 
-         const authenticated = (this.configService.get("DEMO_MODE") === true) ? true : await compare(wachtwoord, lid.WACHTWOORD);
-         if (!authenticated) {
-            throw new UnauthorizedException();
-         }
-         return lid; // return the user object for upcomming actions
-      } catch (err) {
-         logger(err);
+      const authenticated = (this.configService.get("DEMO_MODE") === true) ? true : await compare(wachtwoord, lid.WACHTWOORD);
+      if (!authenticated) {
          throw new UnauthorizedException('Credentials are not valid.');
       }
+      return lid; // return the user object for upcomming actions
    }
 
    async veryifyUserRefreshToken(refreshToken: string, userId: number) {
-      try {
-
-         const token = await this.getRefreshToken(userId);
-         const authenticated = await compare(refreshToken, token.REFRESH_TOKEN);
-         if (!authenticated) {
-            throw new UnauthorizedException();
-         }
-         return await this.ledenService.GetObject(userId);
-      } catch (err) {
-         logger(err);
+      const token = await this.getRefreshToken(userId);
+      const authenticated = await compare(refreshToken, token.REFRESH_TOKEN);
+      if (!authenticated) {
          throw new UnauthorizedException('Refresh token is not valid.');
       }
+      return await this.ledenService.GetObject(userId);
    }
 
    // Get the refresh token from the database

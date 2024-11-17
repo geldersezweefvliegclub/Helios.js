@@ -1,7 +1,7 @@
-import {IsBoolean, IsDate, IsInt, IsOptional} from "class-validator";
+import {IsInt, IsOptional} from "class-validator";
 import {Type} from "class-transformer";
 import {OptionalBooleanTransform, OptionalNumberTransform, CSVTransform} from "../helpers/Transformers";
-import {ApiProperty, ApiQuery} from "@nestjs/swagger";
+import {ApiProperty} from "@nestjs/swagger";
 
 // class as query parameter to get a single object
 export class GetObjectRequest

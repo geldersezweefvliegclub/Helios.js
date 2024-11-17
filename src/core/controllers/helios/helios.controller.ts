@@ -230,6 +230,7 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
 export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObjects"),
+      ApiExtraModels(dataDto),
       ApiBasicAuth,
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiOperation({ summary: 'Ophalen records uit de database.' }),

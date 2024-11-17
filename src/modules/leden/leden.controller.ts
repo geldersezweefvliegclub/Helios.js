@@ -43,7 +43,7 @@ export class LedenController extends HeliosController
    @HeliosGetObjects(GetObjectsRefLedenResponse)
    GetObjects(@Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<RefLidDto>>
    {
-      return this.ledenService.GetObjectsByQuery (queryParams);
+      return this.ledenService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)

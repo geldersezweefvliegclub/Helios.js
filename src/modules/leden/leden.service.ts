@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DbService } from "../../database/db-service/db.service";
 import { Prisma, RefLid } from '@prisma/client';
 import { IHeliosGetObjectsResponse } from "../../core/DTO/IHeliosGetObjectsReponse";
@@ -10,7 +10,7 @@ import { hash } from "bcryptjs";
 import { GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 
 @Injectable()
-export class LedenService extends IHeliosService implements OnModuleInit
+export class LedenService extends IHeliosService
 {
 
    constructor(private readonly logger: Logger,
@@ -18,10 +18,6 @@ export class LedenService extends IHeliosService implements OnModuleInit
                private readonly eventEmitter: EventEmitter2)
    {
       super();
-   }
-
-   onModuleInit() {
-      // Module initialization logic if needed
    }
 
    // retrieve a single object from the database based on the id
@@ -48,9 +44,28 @@ export class LedenService extends IHeliosService implements OnModuleInit
    // retrieve objects from the database based on the query parameters
    async GetObjects(params: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
       const where: Prisma.RefLidWhereInput = {
-         ID: params.ID,
-         VERWIJDERD: params.VERWIJDERD ?? false,
-         AND: params.IDs ? { ID: { in: params.IDs } } : undefined,
+         AND:
+         [
+            { ID: params.ID },
+            { VERWIJDERD: params.VERWIJDERD ?? false },
+            { ID: { in: params.IDs }},
+            { OR: [
+                  { NAAM: { contains: params.SELECTIE }},
+                  { EMAIL: { contains: params.SELECTIE }},
+                  { TELEFOON: { contains: params.SELECTIE }},
+                  { MOBIEL: { contains: params.SELECTIE }},
+                  { NOODNUMMER: { contains: params.SELECTIE }}
+               ]
+            },
+            { DDWV_CREW: params.DDWV_CREW },
+            { BEHEERDER: params.BEHEERDERS },
+            { INSTRUCTEUR: params.INSTRUCTEURS },
+            { STARTLEIDER: params.STARTLEIDERS },
+            { LIERIST: params.LIERISTEN },
+            { LIERIST_IO: params.LIO },
+            { LIDTYPE_ID: { in: params.TYPES }},
+            { LIDTYPE_ID: params.CLUBLEDEN ? { in: [600, 601, 602, 603, 604, 605, 606] } : undefined }
+         ]
       };
 
       let count: number | undefined;
@@ -61,23 +76,38 @@ export class LedenService extends IHeliosService implements OnModuleInit
       const objs = await this.dbService.refLid.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefLidOrderByWithRelationInput>(params.SORT ?? "ID"),
-         select: this.SelectStringToSelectObj<Prisma.RefLidSelect>(params.VELDEN),
          take: params.MAX,
-         skip: params.START
+         skip: params.START,
+         include: {
+            LidType: true,
+            VliegStatus: true,
+            Zusterclub: true,
+            Buddy: true,
+            Buddy2: true,
+         },
       });
 
       const response = objs.map((obj) => {
-         return {
+         // copy relevant fields from child objects to the parent object
+         const retObj = {
             ...obj,
-            LIDTYPE: obj.LidType?.OMSCHRIJVING,
-            LIDTYPE_REF: obj.LidType?.EXT_REF,
-            STATUS: obj.VliegStatus?.OMSCHRIJVING,
-            ZUSTERCLUB: obj.Zusterclub?.NAAM,
-            BUDDY: obj.Buddy?.NAAM,
-            BUDDY2: obj.Buddy2?.NAAM,
-         } as GetObjectsRefLedenResponse;
-      });
+            LIDTYPE: obj.LidType?.OMSCHRIJVING ?? null,
+            LIDTYPE_REF: obj.LidType?.EXT_REF ?? null,
+            STATUS: obj.VliegStatus?.OMSCHRIJVING ?? null,
+            ZUSTERCLUB: obj.Zusterclub?.NAAM ?? null,
+            BUDDY: obj.Buddy?.NAAM ?? null,
+            BUDDY2: obj.Buddy2?.NAAM ?? null,
+         } ;
 
+         // delete child objects from the response
+         delete retObj.LidType;
+         delete retObj.VliegStatus;
+         delete retObj.Zusterclub;
+         delete retObj.Buddy;
+         delete retObj.Buddy2;
+
+         return  retObj as GetObjectsRefLedenResponse
+      });
       return this.buildGetObjectsResponse(response, count);
    }
 

@@ -36,7 +36,7 @@ export abstract class IHeliosService
    {
       if (!fields) return undefined;
 
-      const retObj: any = {};
+      const retObj: unknown = {};
       const fieldArray = fields.split(',').map(field => field.trim());
 
       fieldArray.forEach(field => {
