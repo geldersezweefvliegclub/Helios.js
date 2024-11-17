@@ -4,7 +4,7 @@ import {LocalAuthGuard} from "./guards/local-auth.guard";
 import {CurrentUser} from "./current-user.decorator";
 import {RefLid} from "@prisma/client";
 import { Response } from 'express';
-import {ApiBody, ApiProperty} from "@nestjs/swagger";
+import {ApiBody, ApiProperty, ApiTags} from "@nestjs/swagger";
 import {JwtRefreshAuthGuard} from "./guards/jwt-refresh-auth.guard";
 
 export class LoginDTO {
@@ -26,6 +26,7 @@ export class LoginDTO {
 }
 
 @Controller('Login')
+@ApiTags('Login')
 export class LoginController
 {
    constructor(private readonly loginService: LoginService) {}

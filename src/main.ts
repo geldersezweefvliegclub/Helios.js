@@ -55,7 +55,12 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
       .build();
 
    const document = SwaggerModule.createDocument(app, swaggerConfig);
-   SwaggerModule.setup(swaggerUrl, app, document);
+   SwaggerModule.setup(swaggerUrl, app, document, {
+      swaggerOptions: {
+         tagsSorter: 'alpha',
+         operationsSorter: 'alpha',
+      },
+   });
 }
 
 async function bootstrap()

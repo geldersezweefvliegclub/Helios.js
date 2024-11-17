@@ -1,6 +1,6 @@
 import {
    Body,
-   Controller, Get,
+   Controller,
    HttpException,
    HttpStatus,
    Query
@@ -10,16 +10,19 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
-   HeliosGetObject, HeliosRemoveObject,
+   HeliosGetObject, HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
 import {LedenService} from "./leden.service";
 import {RefLidDto} from "../../generated/nestjs-dto/refLid.dto";
-import { GetObjectsRefLedenRequest} from "./LedenDTO";
+import { GetObjectsRefLedenRequest} from "./GetObjectsRefLedenRequest";
 import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
+import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
+import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Leden')
+@ApiTags('Leden')
 export class LedenController extends HeliosController
 {
    constructor(private readonly ledenService: LedenService)
@@ -37,8 +40,7 @@ export class LedenController extends HeliosController
       return obj;
    }
 
-   //@HeliosGetObjects(RefLidDto)
-   @Get("GetObjects")
+   @HeliosGetObjects(GetObjectsRefLedenResponse)
    GetObjects(@Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<RefLidDto>>
    {
       return this.ledenService.GetObjectsByQuery (queryParams);

@@ -17,8 +17,10 @@ import {GetObjectsAuditRequest} from "./AuditDTO";
 import {OnEvent} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {ConfigService} from "@nestjs/config";
+import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Audit')
+@ApiTags('Audit')
 export class AuditController extends HeliosController
 {
    excludeClasses = ['ABCD'];

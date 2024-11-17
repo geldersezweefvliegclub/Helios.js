@@ -5,8 +5,9 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {GetObjectsRefLedenRequest} from "./LedenDTO";
+import {GetObjectsRefLedenRequest} from "./GetObjectsRefLedenRequest";
 import {hash} from "bcryptjs";
+import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
 
 @Injectable()
 export class LedenService extends IHeliosService implements OnModuleInit
@@ -69,7 +70,7 @@ export class LedenService extends IHeliosService implements OnModuleInit
       });
    }
 
-   async GetObjectsByQuery(params: GetObjectsRefLedenRequest): Promise<any>
+   async GetObjectsByQuery(params: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>>
    {
       const fields = params.VELDEN ? params.VELDEN : "*";
       const where = ["WHERE 1=1"];
@@ -100,9 +101,9 @@ export class LedenService extends IHeliosService implements OnModuleInit
 
       const SQL = ("SELECT " + fields + " FROM ####leden_view" + " " + where.join(" ") + " " + orderby).replaceAll("####", params.VERWIJDERD ? "verwijderd_" : "");
 
-      const results = await this.dbService.dbQuery(SQL, params.START, params.MAX);
+      const data: IHeliosGetObjectsResponse<GetObjectsRefLedenResponse> = await this.dbService.dbQuery<GetObjectsRefLedenResponse>(SQL, params.START, params.MAX);
 
-      console.log(results[0])
+      return data;
    }
 
    // retrieve objects from the database based on the query parameters

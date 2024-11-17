@@ -20,8 +20,10 @@ import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto
 import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
 import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
+import {ApiTags} from "@nestjs/swagger";
 
 @Controller('TypesGroepen')
+@ApiTags('TypesGroepen')
 export class TypesGroepenController extends HeliosController
 {
    constructor(private readonly typesGroepenService: TypesGroepenService)

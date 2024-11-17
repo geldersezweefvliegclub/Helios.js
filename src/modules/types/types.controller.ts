@@ -19,8 +19,10 @@ import {
 import {CreateRefTypesDto} from "../../generated/nestjs-dto/create-refTypes.dto";
 import {UpdateRefTypesDto} from "../../generated/nestjs-dto/update-refTypes.dto";
 import {RefTypesDto} from "../../generated/nestjs-dto/refTypes.dto";
+import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Types')
+@ApiTags('Types')
 export class TypesController extends HeliosController
 {
    constructor(private readonly typesService: TypesService)
