@@ -217,6 +217,8 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(dataDto),
       ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
             '$ref': getSchemaPath(dataDto)
          }}),
@@ -234,6 +236,9 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
       ApiBasicAuth,
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiOperation({ summary: 'Ophalen records uit de database.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.' }),
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
             type: 'object',
             properties:
@@ -289,6 +294,7 @@ export const HeliosDeleteObject = () =>
       HttpCode(HttpStatus.NO_CONTENT),
       ApiOperation({ summary: 'Markeer record als verwijderd door VERWIJDERD op true te zetten.' }),
       ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
    );
 
@@ -302,6 +308,7 @@ export const HeliosRemoveObject = () =>
       HttpCode(HttpStatus.GONE),
       ApiOperation({ summary: 'Verwijderen record uit de database, herstel niet mogelijk.' }),
       ApiResponse({ status: HttpStatus.GONE, description: 'Het record is succesvol verwijderd.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    );
 
@@ -314,6 +321,7 @@ export const HeliosRestoreObject = () =>
       ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Maak de verwijdering ongedaan door VERWIJDERD op false te zetten.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Het record is succesvol hersteld.' }),
+      ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
    );
 

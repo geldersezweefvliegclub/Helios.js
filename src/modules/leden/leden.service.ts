@@ -109,7 +109,7 @@ export class LedenService extends IHeliosService
 
          return  retObj as GetObjectsRefLedenResponse
       });
-      return this.buildGetObjectsResponse(response, count);
+      return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
    async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>

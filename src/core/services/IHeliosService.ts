@@ -1,16 +1,23 @@
 import {IHeliosGetObjectsResponse} from "../DTO/IHeliosGetObjectsReponse";
 import {crc32} from "js-crc";
+import {HttpException, HttpStatus} from "@nestjs/common";
 
 export abstract class IHeliosService
 {
    // The output format of the GetObjects call
-   protected buildGetObjectsResponse<Type>(objects: Type[], count = undefined): IHeliosGetObjectsResponse<Type>
+   protected buildGetObjectsResponse<Type>(objects: Type[], count = undefined, hash: string = undefined): IHeliosGetObjectsResponse<Type>
    {
-      return {
+      const response = {
          dataset: objects,
          totaal: count ? count : objects.length,      // if count is not defined return the length of the array
          hash: crc32(JSON.stringify(objects))
+      } as IHeliosGetObjectsResponse<Type>
+
+      if ((response.hash === hash) && (hash !== undefined)) {
+         throw new HttpException("Data is ongewijzigd", HttpStatus.NOT_MODIFIED);
       }
+
+      return response;
    }
 
    // Convert a string like "field1 asc, field2 desc" to an array of objects like [{field1: "asc"}, {field2: "desc"}]

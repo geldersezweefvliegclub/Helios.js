@@ -93,7 +93,7 @@ export class AuditService extends IHeliosService
          return  retObj as GetObjectsAuditResponse
       });
 
-      return this.buildGetObjectsResponse(response, count);
+      return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
 

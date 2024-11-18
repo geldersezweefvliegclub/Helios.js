@@ -37,11 +37,11 @@ export class TypesService extends IHeliosService
       const where: Prisma.RefTypeWhereInput =
       {
          AND:
-            [
-               {ID: params.ID},
-               {VERWIJDERD: params.VERWIJDERD ?? false},
-               {ID: {in: params.IDs}}
-            ]
+         [
+            {ID: params.ID},
+            {VERWIJDERD: params.VERWIJDERD ?? false},
+            {ID: {in: params.IDs}}
+         ]
       }
 
       let count;
@@ -71,7 +71,7 @@ export class TypesService extends IHeliosService
 
          return  retObj as GetObjectsRefTypesReponse
       });
-      return this.buildGetObjectsResponse(response, count);
+      return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
    async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefType>

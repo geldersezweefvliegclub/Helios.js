@@ -63,7 +63,7 @@ export class TypesGroepenService extends IHeliosService
       {
          count = await this.dbService.refTypesGroep.count({where: where});
       }
-      return this.buildGetObjectsResponse(objs, count);
+      return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
    async AddObject(data: Prisma.RefTypesGroepCreateInput): Promise<RefTypesGroep>
