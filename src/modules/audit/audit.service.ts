@@ -106,13 +106,12 @@ export class AuditService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.AuditUpdateInput): Promise<Audit>
    {
-      const obj = await this.dbService.audit.update({
+      return await this.dbService.audit.update({
          where: {
             ID: id
          },
          data: data
       });
-      return obj;
    }
 
    async RemoveObject(id: number): Promise<void>
