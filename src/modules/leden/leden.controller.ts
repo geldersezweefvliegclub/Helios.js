@@ -20,19 +20,25 @@ import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
 import {ApiTags} from "@nestjs/swagger";
+import {CurrentUser} from "../login/current-user.decorator";
+import {PermissieService} from "../authorisatie/permissie.service";
 
 @Controller('Leden')
 @ApiTags('Leden')
 export class LedenController extends HeliosController
 {
-   constructor(private readonly ledenService: LedenService)
+   constructor(private readonly ledenService: LedenService,
+               private readonly permissieService:PermissieService)
    {
       super()
    }
 
    @HeliosGetObject(RefLidDto)
-   async GetObject(@Query() queryParams: GetObjectRequest): Promise<RefLidDto>
+   async GetObject(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectRequest): Promise<RefLidDto>
    {
+      this.permissieService.heeftToegang(user, 'Leden.GetObject');
       const obj =  await this.ledenService.GetObject(queryParams.ID);
       if (!obj)
          throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
@@ -41,14 +47,20 @@ export class LedenController extends HeliosController
    }
 
    @HeliosGetObjects(GetObjectsRefLedenResponse)
-   GetObjects(@Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<RefLidDto>>
+   GetObjects(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<RefLidDto>>
    {
+      this.permissieService.heeftToegang(user, 'Leden.GetObjects');
       return this.ledenService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)
-   async AddObject(@Body() data: CreateRefLidDto): Promise<RefLidDto>
+   async AddObject(
+      @CurrentUser() user: RefLid,
+      @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
+      this.permissieService.heeftToegang(user, 'Leden.AddObject');
       try
       {
          // remove LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 from the data
@@ -69,8 +81,12 @@ export class LedenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefLidDto, RefLidDto)
-   async UpdateObject(@Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
+   async UpdateObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
    {
+      this.permissieService.heeftToegang(user, 'Leden.UpdateObject');
+
       try
       {
          // remove LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 from the data
@@ -91,8 +107,12 @@ export class LedenController extends HeliosController
    }
 
    @HeliosDeleteObject()
-   async DeleteObject(@Query('ID') id: number): Promise<void>
+   async DeleteObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
+      this.permissieService.heeftToegang(user, 'Leden.DeleteObject');
+
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: true
       }
@@ -107,8 +127,11 @@ export class LedenController extends HeliosController
    }
 
    @HeliosRemoveObject()
-   async RemoveObject(@Query('ID') id: number): Promise<void>
+   async RemoveObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
+      this.permissieService.heeftToegang(user, 'Leden.RemoveObject');
       try
       {
          await this.ledenService.RemoveObject(id);
@@ -120,8 +143,11 @@ export class LedenController extends HeliosController
    }
 
    @HeliosRestoreObject()
-   async RestoreObject(@Query('ID') id: number): Promise<void>
+   async RestoreObject(
+      @CurrentUser() user: RefLid,
+      @Query('ID') id: number): Promise<void>
    {
+      this.permissieService.heeftToegang(user, 'Leden.RestoreObject');
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: false
       }

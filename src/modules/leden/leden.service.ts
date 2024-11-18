@@ -12,7 +12,6 @@ import { GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 @Injectable()
 export class LedenService extends IHeliosService
 {
-
    constructor(private readonly logger: Logger,
                private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)

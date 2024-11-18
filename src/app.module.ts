@@ -10,6 +10,7 @@ import {AuditModule} from './modules/audit/audit.module';
 import {HeliosCoreModule} from './core/helios.core.module';
 import { LedenModule } from './modules/leden/leden.module';
 import { LoginModule } from './modules/login/login.module';
+import { AuthorisatieModule } from './modules/authorisatie/authorisatie.module';
 import config from './config/configuration';
 
 
@@ -27,6 +28,7 @@ import config from './config/configuration';
       AuditModule,
       LedenModule,
       LoginModule,
+      AuthorisatieModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],
