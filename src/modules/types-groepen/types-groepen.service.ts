@@ -40,7 +40,6 @@ export class TypesGroepenService extends IHeliosService
    async GetObjects(params: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
-      const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
 
       // create the where clause
       const where: Prisma.RefTypesGroepWhereInput =
