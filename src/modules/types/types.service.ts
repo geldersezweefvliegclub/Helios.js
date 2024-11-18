@@ -6,7 +6,6 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {GetObjectsAuditResponse} from "../audit/GetObjectsAuditReponse";
 import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
 
 @Injectable()
