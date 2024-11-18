@@ -21,13 +21,13 @@ export class LedenService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number, relation = undefined): Promise<RefLid>
+   async GetObject(id: number, relation:string = undefined): Promise<RefLid>
    {
       return this.dbService.refLid.findUnique({
          where: {
             ID: id
          },
-         include: this.SelectStringToInclude<Prisma.RefLidSelect>(relation),
+         include: this.SelectStringToInclude<Prisma.RefLidInclude>(relation)
       });
    }
 
@@ -43,7 +43,8 @@ export class LedenService extends IHeliosService
 
    // retrieve objects from the database based on the query parameters
    async GetObjects(params: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
-      const where: Prisma.RefLidWhereInput = {
+      const where: Prisma.RefLidWhereInput =
+      {
          AND:
          [
             { ID: params.ID },

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import {TypesService} from "./types.service";
 import {Prisma, RefType} from '@prisma/client';
-import {GetObjectsRefTypesRequest} from "./TypesDTO";
+import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
@@ -20,6 +20,7 @@ import {CreateRefTypesDto} from "../../generated/nestjs-dto/create-refTypes.dto"
 import {UpdateRefTypesDto} from "../../generated/nestjs-dto/update-refTypes.dto";
 import {RefTypesDto} from "../../generated/nestjs-dto/refTypes.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
 
 @Controller('Types')
 @ApiTags('Types')
@@ -40,8 +41,8 @@ export class TypesController extends HeliosController
       return obj;
    }
 
-   @HeliosGetObjects(RefTypesDto)
-   GetObjects(@Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<RefTypesDto>>
+   @HeliosGetObjects(GetObjectsRefTypesReponse)
+   GetObjects(@Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesReponse>>
    {
       return this.typesService.GetObjects(queryParams);
    }

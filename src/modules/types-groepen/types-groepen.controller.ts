@@ -17,10 +17,11 @@ import {
 import {CreateRefTypesGroepenDto} from "../../generated/nestjs-dto/create-refTypesGroepen.dto";
 import {UpdateRefTypesGroepenDto} from "../../generated/nestjs-dto/update-refTypesGroepen.dto";
 import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto";
-import {GetObjectsRefTypesGroepenRequest} from "./TypesGroepDTO";
+import {GetObjectsRefTypesGroepenRequest} from "./GetObjectsRefTypesGroepenRequest";
 import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
 import {ApiTags} from "@nestjs/swagger";
+import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResponse";
 
 @Controller('TypesGroepen')
 @ApiTags('TypesGroepen')
@@ -43,10 +44,10 @@ export class TypesGroepenController extends HeliosController
       return obj;
    }
 
-   @HeliosGetObjects(RefTypesGroepenDto)
+   @HeliosGetObjects(GetObjectsRefTypesGroepenResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroepenDto>>
+      @Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesGroepenResponse>>
    {
       return this.typesGroepenService.GetObjects(queryParams);
    }

@@ -13,11 +13,12 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {AuditService} from "./audit.service";
 import {AuditDto} from "../../generated/nestjs-dto/audit.dto";
-import {GetObjectsAuditRequest} from "./AuditDTO";
+import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
 import {OnEvent} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {ConfigService} from "@nestjs/config";
 import {ApiTags} from "@nestjs/swagger";
+import {GetObjectsAuditResponse} from "./GetObjectsAuditReponse";
 
 @Controller('Audit')
 @ApiTags('Audit')
@@ -48,8 +49,8 @@ export class AuditController extends HeliosController
    }
 
    // retrieve objects from the database based on the query parameters
-   @HeliosGetObjects(AuditDto)
-   GetObjects(@Query() queryParams: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<AuditDto>>
+   @HeliosGetObjects(GetObjectsAuditResponse)
+   GetObjects(@Query() queryParams: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>>
    {
       return this.auditService.GetObjects(queryParams);
    }

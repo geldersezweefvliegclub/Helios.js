@@ -21,6 +21,8 @@ const optionBooleanMapper = new Map<string, boolean>([
 
 export const OptionalBooleanTransform = () => Transform((options) => optionBooleanMapper.get(options.value));
 export const OptionalNumberTransform = () => Transform((options) => options.value != null ? Number(options.value) : null);
+export const OptionalDateTransform = () => Transform((options) => options.value != null ? new Date(options.value) : null);
+
 
 // converts a string of comma separated values to an array of numbers.
 // If the string is null or undefined, it returns null

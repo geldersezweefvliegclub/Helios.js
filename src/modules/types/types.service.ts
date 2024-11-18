@@ -3,9 +3,11 @@ import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefType} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
-import {GetObjectsRefTypesRequest} from "./TypesDTO";
+import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import {GetObjectsAuditResponse} from "../audit/GetObjectsAuditReponse";
+import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -17,31 +19,31 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number, relation = undefined): Promise<RefType>
+   async GetObject(id: number, relation :string = undefined): Promise<RefType>
    {
       return this.dbService.refType.findUnique({
          where: {
             ID: id
          },
-         include: this.SelectStringToInclude<Prisma.RefTypeSelect>(relation),
+         include: this.SelectStringToInclude<Prisma.RefTypeInclude>(relation)
       });
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<RefType>>
+   async GetObjects(params: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesReponse>>
    {
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
-      const verwijderd = params.VERWIJDERD ? params.VERWIJDERD : false;  // if verwijderd is not defined default to false to show only active records
 
       // create the where clause
       const where: Prisma.RefTypeWhereInput =
-         {
-            ID: params.ID,
-            VERWIJDERD: verwijderd,
-            AND: {
-               ID: {in: params.IDs}
-            }
-         }
+      {
+         AND:
+            [
+               {ID: params.ID},
+               {VERWIJDERD: params.VERWIJDERD ?? false},
+               {ID: {in: params.IDs}}
+            ]
+      }
 
       let count;
       if (params.MAX !== undefined || params.START !== undefined)
@@ -51,12 +53,26 @@ export class TypesService extends IHeliosService
       const objs = await this.dbService.refType.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(sort),
-         select:  this.SelectStringToSelectObj<Prisma.RefTypeSelect>(params.VELDEN),
          take: params.MAX,
          skip: params.START,
+         include: {
+            TypesGroep: true
+         }
       });
 
-      return this.buildGetObjectsResponse(objs, count);
+      const response = objs.map((obj) => {
+         // copy relevant fields from child objects to the parent object
+         const retObj = {
+            ...obj,
+            NAAM: obj.TypesGroep?.OMSCHRIJVING ?? null,
+         } ;
+
+         // delete child objects from the response
+         delete retObj.TypesGroep;
+
+         return  retObj as GetObjectsRefTypesReponse
+      });
+      return this.buildGetObjectsResponse(response, count);
    }
 
    async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefType>

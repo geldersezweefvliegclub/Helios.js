@@ -30,36 +30,12 @@ export abstract class IHeliosService
       return retVal;
    }
 
-   // Convert the CSV string with field name to a select object
-   // This is used to limit the number of field which will returned from a prisma query
-   protected SelectStringToSelectObj<oType>(fields: string): oType
+   protected SelectStringToInclude<oType>(tables: string): oType
    {
-      if (!fields) return undefined;
-
-      const retObj: unknown = {};
-      const fieldArray = fields.split(',').map(field => field.trim());
-
-      fieldArray.forEach(field => {
-         const parts = field.split('.');
-         if (parts.length > 1) {
-            if (!retObj[parts[0]]) {
-               retObj[parts[0]] = { select: {} };
-            }
-            retObj[parts[0]].select[parts[1]] = true;
-         } else {
-            retObj[parts[0]] = true;
-         }
-      });
-
-      return retObj as oType;
-   }
-
-   protected SelectStringToInclude<oType>(fields: string): oType
-   {
-      if (!fields) return undefined;
+      if (!tables) return undefined;
 
       const retObj: oType = {} as oType;
-      fields.split(',').forEach(field =>  // split on comma
+      tables.split(',').forEach(field =>  // split on comma
       {
          retObj[field.trim()] = true
       });

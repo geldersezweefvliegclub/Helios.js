@@ -1,6 +1,11 @@
 import {IsInt, IsOptional} from "class-validator";
 import {Type} from "class-transformer";
-import {OptionalBooleanTransform, OptionalNumberTransform, CSVTransform} from "../helpers/Transformers";
+import {
+   OptionalBooleanTransform,
+   OptionalNumberTransform,
+   CSVTransform,
+   OptionalDateTransform
+} from "../helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
 
 // class as query parameter to get a single object
@@ -111,6 +116,7 @@ export class GetObjectsRequest
 export class GetObjectsDateRequest extends GetObjectsRequest
 {
    @IsOptional()
+   @OptionalDateTransform()
    @ApiProperty(
       {
          name: 'DATUM',
@@ -120,6 +126,7 @@ export class GetObjectsDateRequest extends GetObjectsRequest
    public DATUM?: Date;
 
    @IsOptional()
+   @OptionalDateTransform()
    @ApiProperty(
       {
          name: 'BEGIN_DATUM',
@@ -129,6 +136,7 @@ export class GetObjectsDateRequest extends GetObjectsRequest
    public BEGIN_DATUM?: Date;
 
    @IsOptional()
+   @OptionalDateTransform()
    @ApiProperty(
       {
          name: 'EIND_DATUM',
