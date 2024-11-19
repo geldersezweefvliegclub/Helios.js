@@ -44,6 +44,18 @@ export class AuditService extends IHeliosService
             { VERWIJDERD: params.VERWIJDERD ?? false },
             { ID: { in: params.IDs }},
             { LID_ID: params.LID_ID },
+            { TABEL: params.TABEL },
+            { ID: { gte: params.BEGIN_ID }},
+            { ID: { lte: params.EIND_ID }},
+            { OR: [
+                  { RefLid: { NAAM: {contains: params.SELECTIE }}},
+                  { TABEL: { contains: params.SELECTIE }},
+                  { ACTIE: { contains: params.SELECTIE }},
+                  { VOOR: { contains: params.SELECTIE }},
+                  { DATA: { contains: params.SELECTIE }},
+                  { RESULTAAT: { contains: params.SELECTIE }}
+               ]
+            },
             {
                OR: [
                   {

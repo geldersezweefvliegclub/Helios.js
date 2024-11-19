@@ -19,14 +19,18 @@ import {DatabaseEvents} from "../../core/helpers/Events";
 import {ConfigService} from "@nestjs/config";
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectsAuditResponse} from "./GetObjectsAuditReponse";
+import {PermissieService} from "../authorisatie/permissie.service";
+import {CurrentUser} from "../login/current-user.decorator";
+import {RefLid} from "@prisma/client";
 
 @Controller('Audit')
 @ApiTags('Audit')
 export class AuditController extends HeliosController
 {
    excludeClasses = ['ABCD'];
-   constructor(private readonly configService: ConfigService,
-               private readonly auditService: AuditService)
+   constructor(private readonly auditService: AuditService,
+               private readonly configService: ConfigService,
+               private readonly permissieService:PermissieService)
    {
       super()
 
@@ -39,19 +43,34 @@ export class AuditController extends HeliosController
 
 
    @HeliosGetObject(AuditDto)
-   async GetObject(@Query() queryParams: GetObjectRequest): Promise<AuditDto>
+   async GetObject(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectRequest): Promise<AuditDto>
    {
+      this.permissieService.heeftToegang(user, 'Audit.GetObject');
+
       const obj =  await this.auditService.GetObject(queryParams.ID);
       if (!obj)
          throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
 
+      // record moet van de user zijn of de gebruiker moet beheerder zijn
+      if (!this.permissieService.isBeheerder(user) && obj.LID_ID !== user.ID) {
+         throw new HttpException(`Geen eigenaar`, HttpStatus.UNAUTHORIZED);
+      }
       return obj;
    }
 
    // retrieve objects from the database based on the query parameters
    @HeliosGetObjects(GetObjectsAuditResponse)
-   GetObjects(@Query() queryParams: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>>
+   GetObjects(
+      @CurrentUser() user: RefLid,
+      @Query() queryParams: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>>
    {
+      this.permissieService.heeftToegang(user, 'Audit.GetObjects');
+      // als de gebruiker geen beheerder is, dan mag hij alleen zijn eigen records zien
+      if (!this.permissieService.isBeheerder(user)) {
+         queryParams.LID_ID = user.ID;
+      }
       return this.auditService.GetObjects(queryParams);
    }
 
