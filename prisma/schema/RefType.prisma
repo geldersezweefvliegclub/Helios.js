@@ -55,6 +55,9 @@ model RefType {
   /// @description De leden die deze vliegstatus hebben (bijv. DBO, Solist, Brevethouder, etc)
   RefVliegStatus    RefLid[] @relation("VliegStatus")
 
+  /// @description Het type brandstof dat kan worden getankt
+  Brandstof         OperBrandstof[] @relation("BrandstofType")
+
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
 }
 

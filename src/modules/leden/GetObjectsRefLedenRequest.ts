@@ -35,6 +35,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public CLUBLEDEN?: boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -44,6 +45,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public INSTRUCTEURS? : boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -53,6 +55,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public LIERISTEN? : boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -62,6 +65,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public LIO? : boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -71,6 +75,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public STARTLEIDERS? : boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -80,6 +85,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
       })
    public DDWV_CREW? : boolean;
 
+   @IsOptional()
    @OptionalBooleanTransform()
    @ApiProperty(
       {
@@ -88,5 +94,15 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
          type: "boolean"
       })
    public BEHEERDERS? : boolean;
+
+   @IsOptional()
+   @OptionalBooleanTransform()
+   @ApiProperty(
+      {
+         required: false,
+         description: 'Als "true", dan worden alleen leden met brandstofpas opgehaald',
+         type: "boolean"
+      })
+   public BRANDSTOF_PAS? : boolean;
 }
 

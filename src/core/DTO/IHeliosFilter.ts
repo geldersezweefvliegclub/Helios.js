@@ -105,7 +105,7 @@ export class GetObjectsRequest
    @ApiProperty(
       {
          name: 'VELDEN',
-         description: 'Comma separated lijst van velden die opgehaald moeten worden',
+         description: 'Niet meer in gebruik, aanwezig voor compatiblity',
          required: false,
          type: String
       })

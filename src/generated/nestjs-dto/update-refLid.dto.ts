@@ -52,7 +52,7 @@ export class UpdateRefLidDto {
   ACHTERNAAM?: string | null;
   @ApiProperty({
     description: "Het adres waar het lid woont",
-    maxLength: 30,
+    maxLength: 50,
     type: "string",
     required: false,
     nullable: true,
@@ -442,6 +442,16 @@ export class UpdateRefLidDto {
   @IsOptional()
   @IsString()
   SLEUTEL2?: string | null;
+  @ApiProperty({
+    description: "Sleutelnummer om te kunnen tanken",
+    maxLength: 25,
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  BRANDSTOF_PAS?: string | null;
   @ApiProperty({
     description:
       "Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben",

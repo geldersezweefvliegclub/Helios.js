@@ -24,7 +24,7 @@ model RefLid {
   ACHTERNAAM        String?   @db.VarChar(30)
 
   /// @description Het adres waar het lid woont
-  /// @maxLength 30
+  /// @maxLength 50
   ADRES             String?   @db.VarChar(50)
 
   /// @description De postcode van het adres
@@ -242,6 +242,10 @@ model RefLid {
   /// @maxLength 25
   SLEUTEL2          String?   @db.VarChar(25)
 
+  /// @description Sleutelnummer om te kunnen tanken
+  /// @maxLength 25
+  BRANDSTOF_PAS    String?   @db.VarChar(25)
+
   /// @description Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben
   BEROEP            String?   @db.VarChar(50)
 
@@ -276,6 +280,7 @@ model RefLid {
 
   Auth            AuthUser[]
   Audit           Audit[] @relation("RefLid")
+  Brandstof       OperBrandstof[] @relation("RefLid")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

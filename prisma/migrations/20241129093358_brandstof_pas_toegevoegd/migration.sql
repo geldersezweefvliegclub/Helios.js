@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `ref_leden` ADD COLUMN `BRANDSTOF_PAS` VARCHAR(25) NULL;

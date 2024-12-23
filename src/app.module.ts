@@ -11,6 +11,7 @@ import {HeliosCoreModule} from './core/helios.core.module';
 import { LedenModule } from './modules/leden/leden.module';
 import { LoginModule } from './modules/login/login.module';
 import { AuthorisatieModule } from './modules/authorisatie/authorisatie.module';
+import { BrandstofModule } from './modules/brandstof/brandstof.module';
 import config from './config/configuration';
 
 
@@ -29,6 +30,7 @@ import config from './config/configuration';
       LedenModule,
       LoginModule,
       AuthorisatieModule,
+      BrandstofModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],

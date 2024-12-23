@@ -37,7 +37,7 @@ export class RefLidDto {
   ACHTERNAAM: string | null;
   @ApiProperty({
     description: "Het adres waar het lid woont",
-    maxLength: 30,
+    maxLength: 50,
     type: "string",
     nullable: true,
   })
@@ -284,6 +284,13 @@ export class RefLidDto {
     nullable: true,
   })
   SLEUTEL2: string | null;
+  @ApiProperty({
+    description: "Sleutelnummer om te kunnen tanken",
+    maxLength: 25,
+    type: "string",
+    nullable: true,
+  })
+  BRANDSTOF_PAS: string | null;
   @ApiProperty({
     description:
       "Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben",

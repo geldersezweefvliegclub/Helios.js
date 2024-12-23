@@ -1,10 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsNotEmpty } from "class-validator";
 
-export class ConnectRefTypesDto {
+export class ConnectOperBrandstofDto {
   @ApiProperty({
     description:
-      "De primary ID van het type, andere objecten refereren naar dit ID",
+      "De primary ID van het tankbeurt, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
   })

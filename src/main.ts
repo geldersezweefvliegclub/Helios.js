@@ -7,6 +7,7 @@ import * as winston from 'winston';
 import * as cookieParser from 'cookie-parser';
 import {SeqTransport} from "@datalust/winston-seq";
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
+import {Prisma} from "@prisma/client";
 
 /**
  * Create a logger for the application using Winston instead of the built-in nestjs logger.
@@ -71,6 +72,12 @@ async function bootstrap()
    app.enableCors();
 
    setupSwagger(app, 'docs');
+
+
+   // Otherwise decimals will be returned as strings
+   Prisma.Decimal.prototype.toJSON = function() {
+      return this.toNumber();
+   }
 
    // Enable validation and conversion of incoming data before it reaches the controller
    app.useGlobalPipes(new ValidationPipe(

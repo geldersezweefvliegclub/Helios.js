@@ -63,6 +63,7 @@ export class LedenService extends IHeliosService
             { STARTLEIDER: params.STARTLEIDERS },
             { LIERIST: params.LIERISTEN },
             { LIERIST_IO: params.LIO },
+            { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? { not: null } : undefined },
             { LIDTYPE_ID: { in: params.TYPES }},
             { LIDTYPE_ID: params.CLUBLEDEN ? { in: [600, 601, 602, 603, 604, 605, 606] } : undefined }
          ]
