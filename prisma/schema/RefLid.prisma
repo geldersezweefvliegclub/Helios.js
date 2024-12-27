@@ -53,7 +53,7 @@ model RefLid {
 
   /// @description Het lidnummer zoals dat in de financiele administratie wordt gebruikt
   /// @maxLength 10
-  LIDNR             String?   @db.VarChar(10)
+  LIDNR             String?   @unique @db.VarChar(10)
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly

@@ -12,6 +12,7 @@ import { LedenModule } from './modules/leden/leden.module';
 import { LoginModule } from './modules/login/login.module';
 import { AuthorisatieModule } from './modules/authorisatie/authorisatie.module';
 import { BrandstofModule } from './modules/brandstof/brandstof.module';
+import { VliegtuigenModule } from './modules/vliegtuigen/vliegtuigen.module';
 import config from './config/configuration';
 
 
@@ -31,6 +32,7 @@ import config from './config/configuration';
       LoginModule,
       AuthorisatieModule,
       BrandstofModule,
+      VliegtuigenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],
