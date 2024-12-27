@@ -21,8 +21,12 @@ export class HeliosController {
                         Prisma.PrismaClientKnownRequestError |
                         Prisma.PrismaClientUnknownRequestError  |
                         Prisma.PrismaClientInitializationError |
-                        Prisma.PrismaClientRustPanicError)
+                        Prisma.PrismaClientRustPanicError |
+                        HttpException)
    {
+      if (e instanceof HttpException)
+         throw new HttpException(this.printMessage(e.message), e.getStatus());
+
       if (e instanceof Prisma.PrismaClientKnownRequestError)
       {
          switch (e.code)
@@ -187,12 +191,12 @@ export class HeliosController {
             default:
                throw new HttpException('Database error', HttpStatus.INTERNAL_SERVER_ERROR);
          }
+
+         if (e instanceof Prisma.PrismaClientValidationError)
+            throw new HttpException(this.printMessage(e.message), HttpStatus.BAD_REQUEST);
+
+         throw new HttpException(this.printMessage(e.message), HttpStatus.INTERNAL_SERVER_ERROR);
       }
-
-      if (e instanceof Prisma.PrismaClientValidationError)
-         throw new HttpException(this.printMessage(e.message), HttpStatus.BAD_REQUEST);
-
-      throw new HttpException(this.printMessage(e.message), HttpStatus.INTERNAL_SERVER_ERROR);
    }
 
    printMessage(message: string): string {
@@ -265,6 +269,7 @@ export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto ext
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Aanmaken nieuw record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data bestaat al.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
             '$ref': getSchemaPath(outputDto)
          }})
@@ -279,6 +284,7 @@ export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto ext
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Update van bestaand record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data bestaat al.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
             '$ref': getSchemaPath(outputDto)
          }})

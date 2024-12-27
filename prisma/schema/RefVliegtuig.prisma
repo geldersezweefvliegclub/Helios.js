@@ -66,7 +66,7 @@ model RefVliegtuig {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @minimum 0
-  VOLGORDE            Int
+  VOLGORDE            Int?      @db.Int
 
   /// @description Is het vliegtuig een instructievliegtuig
   /// @DtoCreateOptional
@@ -77,12 +77,12 @@ model RefVliegtuig {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @maxLength 1024
-  URL                 String   @db.VarChar(1024)
+  URL                 String?   @db.VarChar(1024)
 
   /// @description Opmerkingen over het vliegtuig
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  OPMERKINGEN       String?   @db.Text
+  OPMERKINGEN         String?   @db.Text
 
   //TODO: bevoegdheid_lokaal, bevoegdheid_overland link naar competentie tabel
   /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen

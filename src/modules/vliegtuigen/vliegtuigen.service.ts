@@ -1,4 +1,4 @@
-import {Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -87,6 +87,17 @@ export class VliegtuigenService extends IHeliosService
 
    async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<RefVliegtuig>
    {
+      const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
+         where: {
+            REGISTRATIE: data.REGISTRATIE,
+            VERWIJDERD: false
+         }
+      })
+
+      if (dbVliegtuigen) {
+         throw new HttpException("Vliegtuig met registratie " + data.REGISTRATIE + " bestaat al", HttpStatus.CONFLICT);
+      }
+
       const obj = await this.dbService.refVliegtuig.create({
          data: data
       });
@@ -98,6 +109,22 @@ export class VliegtuigenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<RefVliegtuig>
    {
       const db = await this.GetObject(id);
+
+      // Dit moeten we ALTIJD doen, ook als er geen REGISTRATIE in de data zit. Bijvoorbeeld voor een restore
+      const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
+         where: {
+            REGISTRATIE: (typeof data.REGISTRATIE == "string") ? data.REGISTRATIE : db.REGISTRATIE,
+            VERWIJDERD: false,
+            ID:
+            {
+               not: id        // niet het ID meenemen wat we gaan updaten
+            }
+         }
+      })
+
+      if (dbVliegtuigen)
+         throw new HttpException("Vliegtuig met registratie " + data.REGISTRATIE + " bestaat al", HttpStatus.CONFLICT);
+
       const obj = await this.dbService.refVliegtuig.update({
          where: {
             ID: id

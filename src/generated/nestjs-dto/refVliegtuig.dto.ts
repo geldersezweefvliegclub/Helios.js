@@ -75,8 +75,9 @@ export class RefVliegtuigDto {
     minimum: 0,
     type: "integer",
     format: "int32",
+    nullable: true,
   })
-  VOLGORDE: number;
+  VOLGORDE: number | null;
   @ApiProperty({
     description: "Is het vliegtuig een instructievliegtuig",
     type: "boolean",
@@ -86,8 +87,9 @@ export class RefVliegtuigDto {
     description: "De URL naar de handleiding van het vliegtuig",
     maxLength: 1024,
     type: "string",
+    nullable: true,
   })
-  URL: string;
+  URL: string | null;
   @ApiProperty({
     description: "Opmerkingen over het vliegtuig",
     type: "string",

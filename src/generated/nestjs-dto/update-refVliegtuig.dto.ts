@@ -117,10 +117,11 @@ export class UpdateRefVliegtuigDto {
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  VOLGORDE?: number;
+  VOLGORDE?: number | null;
   @ApiProperty({
     description: "Is het vliegtuig een instructievliegtuig",
     type: "boolean",
@@ -135,10 +136,11 @@ export class UpdateRefVliegtuigDto {
     maxLength: 1024,
     type: "string",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsString()
-  URL?: string;
+  URL?: string | null;
   @ApiProperty({
     description: "Opmerkingen over het vliegtuig",
     type: "string",
