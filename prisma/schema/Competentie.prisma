@@ -1,0 +1,92 @@
+// `ID` mediumint  UNSIGNED NOT NULL AUTO_INCREMENT,
+// `VOLGORDE` smallint UNSIGNED NULL,
+// `LEERFASE_ID` mediumint UNSIGNED NOT NULL,
+// `BLOK_ID` mediumint UNSIGNED NULL,
+// `BLOK` varchar(7) DEFAULT NULL,
+// `ONDERWERP` varchar(75) NOT NULL,
+// `DOCUMENTATIE` varchar(75) NULL,
+// `GELDIGHEID` tinyint UNSIGNED NOT NULL DEFAULT 0,
+// `SCORE` tinyint UNSIGNED NOT NULL DEFAULT 0,
+// `VERWIJDERD` tinyint UNSIGNED NOT NULL DEFAULT '0',
+// `LAATSTE_AANPASSING` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+
+model RefCompetentie {
+  @@map("ref_competenties")
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van de competentie, andere objecten refereren naar dit ID
+  ID           Int @id @default(autoincrement())
+
+  /// @description Sorteer volgorde
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  VOLGORDE     Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LeerfaseType RefType? @relation("LeerfaseType", fields: [LEERFASE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Het type vliegtuig, relatie naar de types tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LEERFASE_ID  Int?     @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Ouder        RefCompetentie? @relation("Ouder", fields: [OUDER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Bovenliggende competentie
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OUDER_ID             Int?     @db.Int
+
+  /// @description Leerblok van de comptentie zoals in de syllabus
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 7
+  BLOK         String?    @db.VarChar(7)
+
+  /// @description Omschrijving van de competentie
+  /// @minLength 3
+  /// @maxLength 75
+  OMSCHRIJVING String    @db.VarChar(75)
+
+  /// @description Omschrijving van de competentie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 75
+  DOCUMENTATIE String?    @db.VarChar(75)
+
+  /// @description Is deze competentie beperkt geldig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  GELDIGHEID   Boolean   @db.TinyInt @default(false)
+
+  /// @DtoReadOnly
+  /// @description Wordt score 1-5 gegeven voor deze competentie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  SCORE        Boolean   @db.TinyInt @default(false)
+
+  /// @DtoReadOnly
+  /// @description Is de competentie gemarkeerd als verwijderd
+  VERWIJDERD   Boolean   @db.TinyInt @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  /// @description Het onderliggende object
+  Kind       RefCompetentie[] @relation("Ouder")
+
+  /// @description Het type vliegtuig
+  VliegtuigLokaal  RefVliegtuig[] @relation("BevoegdheidLokaal")
+
+  /// @description Het type vliegtuig
+  VliegtuigOverland  RefVliegtuig[] @relation("BevoegdheidOverland")
+}
+

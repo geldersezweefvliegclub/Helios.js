@@ -13,6 +13,7 @@ import { LoginModule } from './modules/login/login.module';
 import { AuthorisatieModule } from './modules/authorisatie/authorisatie.module';
 import { BrandstofModule } from './modules/brandstof/brandstof.module';
 import { VliegtuigenModule } from './modules/vliegtuigen/vliegtuigen.module';
+import { CompetentiesModule } from './modules/competenties/competenties.module';
 import config from './config/configuration';
 
 
@@ -33,6 +34,7 @@ import config from './config/configuration';
       AuthorisatieModule,
       BrandstofModule,
       VliegtuigenModule,
+      CompetentiesModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService],

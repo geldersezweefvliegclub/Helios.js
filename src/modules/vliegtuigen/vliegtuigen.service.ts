@@ -58,7 +58,7 @@ export class VliegtuigenService extends IHeliosService
          count = await this.dbService.refVliegtuig.count({ where });
       }
 
-      //TODO: journaal_aantal, bevoegdheid_lokaal, bevoegdheid_overland
+      //TODO: journaal_aantal
       const objs = await this.dbService.refVliegtuig.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "VOLGORDE, ID"),
@@ -66,6 +66,8 @@ export class VliegtuigenService extends IHeliosService
          skip: params.START,
          include: {
             VliegtuigType: true,
+            BevoegdheidLokaal: true,
+            BevoegdheidOverland: true
          },
       });
 
@@ -74,11 +76,15 @@ export class VliegtuigenService extends IHeliosService
          const retObj = {
             ...obj,
             VLIEGTUIGTYPE: obj.VliegtuigType?.OMSCHRIJVING ?? null,
+            BEVOEGDHEID_LOKAAL: obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null,
+            BEVOEGDHEID_OVERLAND: obj.BevoegdheidOverland?.OMSCHRIJVING ?? null,
             REG_CALL: obj.REGISTRATIE + (obj.CALLSIGN ?  " (" + obj.CALLSIGN + ")" : "")
          } ;
 
          // delete child objects from the response
          delete retObj.VliegtuigType;
+         delete retObj.BevoegdheidLokaal;
+         delete retObj.BevoegdheidOverland;
 
          return  retObj as GetObjectsRefVliegtuigenResponse
       });

@@ -84,11 +84,18 @@ model RefVliegtuig {
   /// @DtoUpdateOptional
   OPMERKINGEN         String?   @db.Text
 
-  //TODO: bevoegdheid_lokaal, bevoegdheid_overland link naar competentie tabel
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidLokaal       RefCompetentie? @relation("BevoegdheidLokaal", fields: [BEVOEGDHEID_LOKAAL_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
   /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   BEVOEGDHEID_LOKAAL_ID   Int?     @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidOverland     RefCompetentie? @relation("BevoegdheidOverland", fields: [BEVOEGDHEID_OVERLAND_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan
   /// @DtoCreateOptional

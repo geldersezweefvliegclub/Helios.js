@@ -58,8 +58,11 @@ model RefType {
   /// @description Het type brandstof dat kan worden getankt
   Brandstof         OperBrandstof[] @relation("BrandstofType")
 
-  /// @description Het type brandstof dat kan worden getankt
+  /// @description Het type vliegtuig
   Vliegtuig         RefVliegtuig[] @relation("VliegtuigType")
+
+  /// @description Het type vliegtuig
+  Competentie       RefCompetentie[] @relation("LeerfaseType")
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
 }

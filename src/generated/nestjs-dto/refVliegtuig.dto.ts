@@ -97,22 +97,6 @@ export class RefVliegtuigDto {
   })
   OPMERKINGEN: string | null;
   @ApiProperty({
-    description:
-      "Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen",
-    type: "integer",
-    format: "int32",
-    nullable: true,
-  })
-  BEVOEGDHEID_LOKAAL_ID: number | null;
-  @ApiProperty({
-    description:
-      "Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan",
-    type: "integer",
-    format: "int32",
-    nullable: true,
-  })
-  BEVOEGDHEID_OVERLAND_ID: number | null;
-  @ApiProperty({
     description: "Is de groep gemarkeerd als verwijderd",
     type: "boolean",
   })
