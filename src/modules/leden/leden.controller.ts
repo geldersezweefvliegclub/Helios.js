@@ -24,7 +24,6 @@ import {authenticator } from 'otplib';
 import {ConfigService} from "@nestjs/config";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
-import {CompetentiesBoomResponse} from "../competenties/CompetentiesBoomResponse";
 import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 
