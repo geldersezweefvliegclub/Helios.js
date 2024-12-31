@@ -1,9 +1,9 @@
 import {
    Body,
-   Controller,
+   Controller, Get,
    HttpException,
    HttpStatus,
-   Query
+   Query, UseGuards
 } from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
@@ -19,11 +19,14 @@ import { GetObjectsRefLedenRequest} from "./GetObjectsRefLedenRequest";
 import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
 import {authenticator } from 'otplib';
 import {ConfigService} from "@nestjs/config";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
+import {CompetentiesBoomResponse} from "../competenties/CompetentiesBoomResponse";
+import {AuthGuard} from "@nestjs/passport";
+import {VerjaardagenResponse} from "./VerjaardagenResponse";
 
 @Controller('Leden')
 @ApiTags('Leden')
@@ -264,5 +267,30 @@ export class LedenController extends HeliosController
       responseObj.ZUSTERCLUB  = responseObj.ZUSTERCLUB_ID ? obj.ZUSTERCLUB : undefined;
 
       return responseObj;
+   }
+
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+   @Get("Verjaardagen")
+   @ApiExtraModels(VerjaardagenResponse)
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiOperation({ summary: 'Komende verjaardagen.' })
+   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' })
+   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' })
+   @ApiResponse({ status: HttpStatus.OK, description: 'Data opgehaald.',   schema: {
+         type: 'object',
+         properties:
+            {
+               items: {$ref: getSchemaPath(VerjaardagenResponse)},
+
+            }
+      }})
+   async GetVerjaardagen(
+      @CurrentUser() user: RefLid,
+      @Query('AANTAL') aantal?: number): Promise<VerjaardagenResponse[]>
+   {
+      this.permissieService.heeftToegang(user, 'Leden.GetVerjaardagen');
+      return this.ledenService.GetVerjaardagen(aantal);
    }
 }

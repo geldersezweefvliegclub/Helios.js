@@ -8,6 +8,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
 import { hash } from "bcryptjs";
 import { GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
+import {VerjaardagenResponse} from "./VerjaardagenResponse";
 
 @Injectable()
 export class LedenService extends IHeliosService
@@ -41,38 +42,60 @@ export class LedenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
-      const where: Prisma.RefLidWhereInput =
-      {
+   async GetObjects(params: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
+      if(!params) {
+         params = {
+            VERWIJDERD: false,
+            CLUBLEDEN: true,
+
+            MAX: undefined,
+            START: undefined,
+            SORT: "ID",
+            HASH: undefined,
+            SELECTIE: undefined,
+            IDs: undefined,
+
+            DDWV_CREW: undefined,
+            BEHEERDERS: undefined,
+            INSTRUCTEURS: undefined,
+            STARTLEIDERS: undefined,
+            LIERISTEN: undefined,
+            LIO: undefined,
+            BRANDSTOF_PAS: undefined,
+            TYPES: undefined,
+         }
+      }
+
+      const where: Prisma.RefLidWhereInput = {
          AND:
-         [
-            { ID: params.ID },
-            { VERWIJDERD: params.VERWIJDERD ?? false },
-            { ID: { in: params.IDs }},
-            { OR: [
-                  { NAAM: { contains: params.SELECTIE }},
-                  { EMAIL: { contains: params.SELECTIE }},
-                  { TELEFOON: { contains: params.SELECTIE }},
-                  { MOBIEL: { contains: params.SELECTIE }},
-                  { NOODNUMMER: { contains: params.SELECTIE }}
-               ]
-            },
-            { DDWV_CREW: params.DDWV_CREW },
-            { BEHEERDER: params.BEHEERDERS },
-            { INSTRUCTEUR: params.INSTRUCTEURS },
-            { STARTLEIDER: params.STARTLEIDERS },
-            { LIERIST: params.LIERISTEN },
-            { LIERIST_IO: params.LIO },
-            { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? { not: null } : undefined },
-            { LIDTYPE_ID: { in: params.TYPES }},
-            { LIDTYPE_ID: params.CLUBLEDEN ? { in: [600, 601, 602, 603, 604, 605, 606] } : undefined }
-         ]
+            [
+               {ID: params.ID},
+               {VERWIJDERD: params.VERWIJDERD ?? false},
+               {ID: {in: params.IDs}},
+               {
+                  OR: [
+                     {NAAM: {contains: params.SELECTIE}},
+                     {EMAIL: {contains: params.SELECTIE}},
+                     {TELEFOON: {contains: params.SELECTIE}},
+                     {MOBIEL: {contains: params.SELECTIE}},
+                     {NOODNUMMER: {contains: params.SELECTIE}}
+                  ]
+               },
+               {DDWV_CREW: params.DDWV_CREW},
+               {BEHEERDER: params.BEHEERDERS},
+               {INSTRUCTEUR: params.INSTRUCTEURS},
+               {STARTLEIDER: params.STARTLEIDERS},
+               {LIERIST: params.LIERISTEN},
+               {LIERIST_IO: params.LIO},
+               {BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
+               {LIDTYPE_ID: {in: params.TYPES}},
+               {LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
+            ]
       };
 
       let count: number | undefined;
-      if (params.MAX !== undefined || params.START !== undefined) {
-         count = await this.dbService.refLid.count({ where });
-      }
+      if (params.MAX !== undefined || params.START !== undefined)
+         count = await this.dbService.refLid.count({where});
 
       const objs = await this.dbService.refLid.findMany({
          where: where,
@@ -161,22 +184,35 @@ export class LedenService extends IHeliosService
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
    }
 
-   async GetVerjaardagen(): Promise<RefLid[]>
+   async GetVerjaardagen(aantal:number): Promise<VerjaardagenResponse[]>
    {
-      const today = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(today.getDate() + 7);
+      const leden = await this.GetObjects(undefined)
+      let l = leden.dataset.filter((f) => f.GEBOORTE_DATUM).map((lid) =>
+      {
+         const {NAAM, GEBOORTE_DATUM,} = lid;
 
-      return this.dbService.refLid.findMany({
-         where: {
-            GEBOORTE_DATUM: {
-               gte: today,
-               lte: nextWeek,
-            },
-         },
-         orderBy: {
-            GEBOORTE_DATUM: 'asc',
-         },
-      });
+         const vandaag = new Date()
+         const dag: number = GEBOORTE_DATUM.getDate()
+         const maand: number = GEBOORTE_DATUM.getMonth()
+         let leeftijd = new Date().getFullYear() - GEBOORTE_DATUM.getFullYear();
+         let dagenTeGaan: number = (new Date(vandaag.getFullYear(), maand, dag).getTime() - vandaag.getTime()) / (1000 * 60 * 60 * 24);
+
+         // `dagenTeGaan` is negatief als de verjaardag al is geweest, dus voor volgend jaar berekenen
+         if (dagenTeGaan < 0) {
+            dagenTeGaan = (new Date(vandaag.getFullYear() + 1, maand, dag).getTime() - vandaag.getTime()) / (1000 * 60 * 60 * 24);
+            leeftijd++
+         }
+
+         return {
+            NAAM: NAAM,
+            DAG: dag,
+            MAAND: maand +1,
+            LEEFTIJD: leeftijd,
+            SORT: dagenTeGaan
+         }
+      })
+      l = l.sort((a, b) => a.SORT - b.SORT).slice(0, aantal);
+      l.forEach(item => { delete item.SORT });
+      return l as VerjaardagenResponse[];
    }
 }
