@@ -26,8 +26,15 @@ export class AuditService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>>
+   async GetObjects(params?: GetObjectsAuditRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>>
    {
+      if (params === undefined)
+      {
+         params = {
+            VERWIJDERD : false,
+            MAX: 1000
+         }
+      }
       const sort = params.SORT ? params.SORT : "ID DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
 
       const startTime = params.DATUM ? new Date(new Date(params.DATUM).setHours(0, 0, 0, 0)) : undefined;
