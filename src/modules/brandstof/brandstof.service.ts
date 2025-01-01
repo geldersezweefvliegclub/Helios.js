@@ -30,8 +30,14 @@ export class BrandstofService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofReponse>>
+   async GetObjects(params?: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofReponse>>
    {
+      if (params === undefined)
+      {
+         params = {
+            VERWIJDERD : false,
+         }
+      }
       const sort = params.SORT ? params.SORT : "TIJDSTIP DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
 
       // create the where clause

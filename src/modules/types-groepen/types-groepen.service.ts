@@ -37,8 +37,14 @@ export class TypesGroepenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
+   async GetObjects(params?: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<RefTypesGroep>>
    {
+      if(!params) {
+         params = {
+            VERWIJDERD: false
+         }
+      }
+
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
 
       // create the where clause

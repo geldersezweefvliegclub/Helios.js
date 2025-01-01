@@ -35,7 +35,7 @@ export class GetObjectsRefVliegtuigenRequest extends GetObjectsRequest
          minimum: 1,
          maximum: 2
       })
-   public ZITPLAATSEN: number;
+   public ZITPLAATSEN?: number;
 
    @IsOptional()
    @OptionalBooleanTransform()
@@ -45,7 +45,7 @@ export class GetObjectsRefVliegtuigenRequest extends GetObjectsRequest
          description: 'Als "true", dan worden alleen clubkisten opgehaald',
          type: "boolean"
       })
-   public CLUBKIST: boolean;
+   public CLUBKIST?: boolean;
 
    @IsOptional()
    @OptionalBooleanTransform()

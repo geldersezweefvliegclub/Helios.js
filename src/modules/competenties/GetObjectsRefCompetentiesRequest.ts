@@ -13,6 +13,6 @@ export class GetObjectsRefCompetentiesRequest extends GetObjectsRequest
          description: 'Leerfase, link naar types',
          type: "number",
       })
-   public LEERFASE_ID: number;
+   public LEERFASE_ID?: number;
 }
 

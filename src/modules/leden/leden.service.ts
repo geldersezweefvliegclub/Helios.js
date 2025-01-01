@@ -42,27 +42,11 @@ export class LedenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
+   async GetObjects(params?: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
       if(!params) {
          params = {
             VERWIJDERD: false,
-            CLUBLEDEN: true,
-
-            MAX: undefined,
-            START: undefined,
-            SORT: "ID",
-            HASH: undefined,
-            SELECTIE: undefined,
-            IDs: undefined,
-
-            DDWV_CREW: undefined,
-            BEHEERDERS: undefined,
-            INSTRUCTEURS: undefined,
-            STARTLEIDERS: undefined,
-            LIERISTEN: undefined,
-            LIO: undefined,
-            BRANDSTOF_PAS: undefined,
-            TYPES: undefined,
+            CLUBLEDEN: true
          }
       }
 
@@ -186,7 +170,7 @@ export class LedenService extends IHeliosService
 
    async GetVerjaardagen(aantal:number): Promise<VerjaardagenResponse[]>
    {
-      const leden = await this.GetObjects(undefined)
+      const leden = await this.GetObjects()
       let l = leden.dataset.filter((f) => f.GEBOORTE_DATUM).map((lid) =>
       {
          const {NAAM, GEBOORTE_DATUM,} = lid;

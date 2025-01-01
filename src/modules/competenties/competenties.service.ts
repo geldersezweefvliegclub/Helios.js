@@ -30,7 +30,14 @@ export class CompetentiesService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefCompetentiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefCompetentiesResponse>> {
+   async GetObjects(params?: GetObjectsRefCompetentiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefCompetentiesResponse>>
+   {
+      if (params === undefined)
+      {
+         params = {
+            VERWIJDERD : false
+         }
+      }
       const where: Prisma.RefCompetentieWhereInput =
          {
             AND:

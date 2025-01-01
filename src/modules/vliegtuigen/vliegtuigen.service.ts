@@ -30,7 +30,13 @@ export class VliegtuigenService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>> {
+   async GetObjects(params?: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>>
+   {
+      if(!params) {
+         params = {
+            VERWIJDERD: false
+         }
+      }
       const where: Prisma.RefVliegtuigWhereInput =
          {
             AND:
