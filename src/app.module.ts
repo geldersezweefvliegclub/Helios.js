@@ -14,6 +14,8 @@ import { AuthorisatieModule } from './modules/authorisatie/authorisatie.module';
 import { BrandstofModule } from './modules/brandstof/brandstof.module';
 import { VliegtuigenModule } from './modules/vliegtuigen/vliegtuigen.module';
 import { CompetentiesModule } from './modules/competenties/competenties.module';
+import { AgendaModule } from './modules/agenda/agenda.module';
+import { AgendaService } from './modules/agenda/agenda.service';
 import config from './config/configuration';
 
 
@@ -35,9 +37,10 @@ import config from './config/configuration';
       BrandstofModule,
       VliegtuigenModule,
       CompetentiesModule,
+      AgendaModule,
    ],
    controllers: [AppController, HeliosController],
-   providers: [AppService],
+   providers: [AppService, AgendaService],
 })
 export class AppModule
 {

@@ -1,0 +1,37 @@
+model OperAgenda {
+  @@map("oper_agenda")
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een agenda-item
+  ID                Int       @id @default(autoincrement())
+
+  /// @description Datum van het agenda-item
+  DATUM             DateTime
+
+  /// @description Korte beschrijving van het agenda-item
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 255
+  KORT              String?
+
+  /// @description Gedetailleerde beschrijving van het agenda-item
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OMSCHRIJVING      String?
+
+  /// @description Is het agenda-item openbaar
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPENBAAR          Boolean   @default(true)
+
+  /// @DtoReadOnly
+  /// @description Is het agenda-item gemarkeerd als verwijderd
+  VERWIJDERD        Boolean   @default(false)
+
+  /// @DtoReadOnly
+  /// @description Laatste aanpassingstijd van het agenda-item
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([DATUM], name: "DATUM")
+}
