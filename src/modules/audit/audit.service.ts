@@ -30,19 +30,13 @@ export class AuditService extends IHeliosService
    {
       if (params === undefined)
       {
-         params = {
-            VERWIJDERD : false,
-            MAX: 1000
-         }
+         params = new GetObjectsAuditRequest();
+         params.VERWIJDERD = false;
+         params.MAX = 1000;
       }
       const sort = params.SORT ? params.SORT : "ID DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
 
-      const startTime = params.DATUM ? new Date(new Date(params.DATUM).setHours(0, 0, 0, 0)) : undefined;
-      const endTime = params.DATUM ? new Date(new Date(params.DATUM).setHours(23, 59, 59, 999)) : undefined;
-
-      const startDate = params.BEGIN_DATUM ? new Date(new Date(params.BEGIN_DATUM).setHours(0, 0, 0, 0)) : undefined;
-      const endDate = params.EIND_DATUM ? new Date(new Date(params.EIND_DATUM).setHours(23, 59, 59, 999)) : undefined;
-
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.AuditWhereInput =
       {
          AND:
@@ -68,15 +62,15 @@ export class AuditService extends IHeliosService
                   {
                      DATUM:
                         {
-                           gte: startTime,
-                           lte: endTime
+                           gte: dtSpanne.startTime,
+                           lte: dtSpanne.endTime
                         }
                   },
                   {
                      DATUM:
                         {
-                           gte: startDate,
-                           lte: endDate
+                           gte: dtSpanne.startDate,
+                           lte: dtSpanne.endDate
                         }
                   }
                ]

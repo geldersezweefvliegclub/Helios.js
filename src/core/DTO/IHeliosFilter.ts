@@ -112,6 +112,14 @@ export class GetObjectsRequest
    public VELDEN?: string;
 }
 
+
+export interface IVanTotDatum {
+   startTime: Date;
+   endTime: Date;
+   startDate: Date;
+   endDate: Date;
+}
+
 // The generic class when a DATUM field is available in the object
 export class GetObjectsDateRequest extends GetObjectsRequest
 {
@@ -144,5 +152,22 @@ export class GetObjectsDateRequest extends GetObjectsRequest
          type: Date
       })
    public EIND_DATUM?: Date;
+
+   VanTot(datum: Date, beginDatum: Date, eindDatum: Date): IVanTotDatum
+   {
+      // begin en einde van het lopende jaar
+      const Jan1 = new Date(new Date().getFullYear(), 0,1,0,0,0,0)
+      const Dec31 = new Date(new Date().getFullYear(), 11,31,23,59,59,999)
+
+      // opvragen voor een specifieke datum
+      const startTime = datum ? new Date(new Date(datum).setHours(0, 0, 0, 0)) : Jan1;
+      const endTime = datum ? new Date(new Date(datum).setHours(23, 59, 59, 999)) : Dec31;
+
+      // opvragen voor een periode
+      const startDate = beginDatum ? new Date(new Date(beginDatum).setHours(0, 0, 0, 0)) : Jan1;
+      const endDate = eindDatum ? new Date(new Date(eindDatum).setHours(23, 59, 59, 999)) : Dec31;
+
+      return {startTime, endTime, startDate, endDate};
+   }
 }
 
