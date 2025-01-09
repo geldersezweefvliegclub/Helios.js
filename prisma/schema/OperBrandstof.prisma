@@ -1,56 +1,56 @@
 model OperBrandstof {
-  @@map("oper_brandstof")
-
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van het tankbeurt, andere objecten refereren naar dit ID
-  ID                Int       @id @default(autoincrement())
+  ID Int @id @default(autoincrement())
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  RefLid            RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Verwijzing naar het lid ID van de persoon die getankt heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LID_ID            Int       @db.Int
+  LID_ID Int @db.Int
 
   /// @DtoReadOnly
   /// @description De naam van het lid die de tankbeurt heeft gedaan
-  NAAM              String    @db.VarChar(255)
+  NAAM String @db.VarChar(255)
 
   /// @description Het tijdstip van de tankbeurt
-  TIJDSTIP            DateTime  @db.Date  @default(now())
+  TIJDSTIP DateTime @default(now()) @db.Date
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  BrandstofType    RefType? @relation("BrandstofType", fields: [BRANDSTOF_TYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  BrandstofType RefType? @relation("BrandstofType", fields: [BRANDSTOF_TYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BRANDSTOF_TYPE_ID     Int?  @db.Int
+  BRANDSTOF_TYPE_ID Int? @db.Int
 
   /// @description Prijs per liter van de brandstof
-  PRIJS                 Decimal?  @db.Decimal(6, 2)
+  PRIJS Decimal? @db.Decimal(6, 2)
 
   /// @description Het bedrag van de tankbeurt om te kunnen factureren
-  BEDRAG                Decimal?  @db.Decimal(6, 2)
+  BEDRAG Decimal? @db.Decimal(6, 2)
 
   /// @description Aantal liters dat getankt is
-  LITERS                Decimal?  @db.Decimal(6, 2)
+  LITERS Decimal? @db.Decimal(6, 2)
 
   /// @description Externe referentie van de tankbeurt
   /// @maxLength 50
-  EXT_REF               String?   @db.VarChar(50)
+  EXT_REF String? @db.VarChar(50)
 
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD            Boolean   @db.TinyInt @default(false)
+  VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@map("oper_brandstof")
 }

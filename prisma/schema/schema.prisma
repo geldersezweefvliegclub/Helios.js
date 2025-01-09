@@ -11,8 +11,6 @@
 // @brakebein/prisma-generator-nestjs-dto see package.json
 // See https://github.com/typestack/class-validator#validation-decorators for the validation decorators
 
-
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["prismaSchemaFolder"]

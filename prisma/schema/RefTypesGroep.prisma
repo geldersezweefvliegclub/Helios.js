@@ -1,40 +1,39 @@
-
 model RefTypesGroep {
-  @@map("ref_types_groepen")
-
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID
-  ID                Int       @id @default(autoincrement())
+  ID Int @id @default(autoincrement())
 
   /// @description De code van de groep
   /// @maxLength 10
-  CODE              String?   @db.VarChar(10)
+  CODE String? @db.VarChar(10)
 
   /// @description De externe referentie van de groep
   /// @maxLength 25
-  EXT_REF           String?   @db.VarChar(25)
+  EXT_REF String? @db.VarChar(25)
 
   /// @description De omschrijving van de groep
   /// @maxLength 75
   /// @IsNotEmpty()
-  OMSCHRIJVING      String    @db.VarChar(75)
+  OMSCHRIJVING String @db.VarChar(75)
 
   /// @description De sorteer volgorde van de groep
-  SORTEER_VOLGORDE  Int?      @db.SmallInt
+  SORTEER_VOLGORDE Int? @db.SmallInt
 
   /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY         Boolean   @db.TinyInt @default(false)
+  READ_ONLY Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
   /// @description Is de groep gemarkeerd als verwijderd
-  VERWIJDERD        Boolean   @db.TinyInt @default(false)
+  VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  RefType          RefType[]
+  RefType RefType[]
+
+  @@map("ref_types_groepen")
 }

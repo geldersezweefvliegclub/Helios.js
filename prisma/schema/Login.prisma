@@ -1,25 +1,24 @@
 model AuthUser {
-  @@map("oper_login")
-
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de gebruiker, andere objecten refereren naar dit ID
-  ID                Int       @id @default(autoincrement())
+  ID Int @id @default(autoincrement())
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  RefLid   RefLid @relation(fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  RefLid RefLid @relation(fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Verwijzing naar het lid
   /// @DtoRelationIncludeId
-  LID_ID      Int   @unique
+  LID_ID Int @unique
 
   /// @description Het referesh token om ingelogd te blijven
-  REFRESH_TOKEN      String
+  REFRESH_TOKEN String
 
   /// @description Tijdstempel met de laatste wijziging van het record
   /// @DtoReadOnly
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   @@index([LID_ID], name: "LID_ID")
+  @@map("oper_login")
 }

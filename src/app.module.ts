@@ -16,6 +16,7 @@ import { VliegtuigenModule } from './modules/vliegtuigen/vliegtuigen.module';
 import { CompetentiesModule } from './modules/competenties/competenties.module';
 import { AgendaModule } from './modules/agenda/agenda.module';
 import { AgendaService } from './modules/agenda/agenda.service';
+import { JournaalModule } from './modules/journaal/journaal.module';
 import config from './config/configuration';
 
 
@@ -38,6 +39,7 @@ import config from './config/configuration';
       VliegtuigenModule,
       CompetentiesModule,
       AgendaModule,
+      JournaalModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

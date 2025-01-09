@@ -1,69 +1,70 @@
 model RefType {
-  @@map("ref_types")
-
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van het type, andere objecten refereren naar dit ID
-  ID                Int       @id @default(autoincrement())
+  ID Int @id @default(autoincrement())
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  TypesGroep   RefTypesGroep @relation(fields: [TYPEGROEP_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  TypesGroep RefTypesGroep @relation(fields: [TYPEGROEP_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @description Verwijzing naar de RefTypesGroepen
   /// @DtoRelationIncludeId
-  TYPEGROEP_ID      Int
+  TYPEGROEP_ID Int
 
   /// @description De code van dit type
   /// @maxLength 10
-  CODE              String?   @db.VarChar(10)
+  CODE String? @db.VarChar(10)
 
   /// @description De externe referentie van dit type
   /// @maxLength 25
-  EXT_REF           String?   @db.VarChar(25)
+  EXT_REF String? @db.VarChar(25)
 
   /// @description De omschrijving van de groep
   /// @maxLength 75
   /// @IsNotEmpty()
-  OMSCHRIJVING      String    @db.VarChar(75)
+  OMSCHRIJVING String @db.VarChar(75)
 
   // @description De sorteer volgorde van de groep
-  SORTEER_VOLGORDE  Int?      @db.TinyInt
+  SORTEER_VOLGORDE Int? @db.TinyInt
 
   /// @description Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY         Boolean   @db.TinyInt @default(false)
+  READ_ONLY Boolean @default(false) @db.TinyInt
 
   /// @description Het bedrag om te kunnen factureren
-  BEDRAG            Decimal?  @db.Decimal(6, 2)
+  BEDRAG Decimal? @db.Decimal(6, 2)
 
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
-  EENHEDEN          Decimal?  @db.Decimal(6, 2)
+  EENHEDEN Decimal? @db.Decimal(6, 2)
 
   /// @DtoReadOnly
   /// @description Is de groep gemarkeerd als verwijderd
-  VERWIJDERD        Boolean   @db.TinyInt @default(false)
+  VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   /// @description De leden die dit type hebben (bijv Ereleden, Jeugdleden, etc)
-  RefLid            RefLid[] @relation("LidType")
+  RefLid RefLid[] @relation("LidType")
 
   /// @description De leden die deze vliegstatus hebben (bijv. DBO, Solist, Brevethouder, etc)
-  RefVliegStatus    RefLid[] @relation("VliegStatus")
+  RefVliegStatus RefLid[] @relation("VliegStatus")
 
   /// @description Het type brandstof dat kan worden getankt
-  Brandstof         OperBrandstof[] @relation("BrandstofType")
+  Brandstof OperBrandstof[] @relation("BrandstofType")
 
   /// @description Het type vliegtuig
-  Vliegtuig         RefVliegtuig[] @relation("VliegtuigType")
+  Vliegtuig RefVliegtuig[] @relation("VliegtuigType")
 
   /// @description Het type vliegtuig
   Competentie       RefCompetentie[] @relation("LeerfaseType")
+  JournaalStatus    OperJournaal[]   @relation("Status")
+  JournaalCategorie OperJournaal[]   @relation("Categorie")
+  JournaalRollend   OperJournaal[]   @relation("Rollend")
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
+  @@map("ref_types")
 }
-
