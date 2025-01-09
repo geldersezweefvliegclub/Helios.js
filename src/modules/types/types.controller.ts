@@ -16,9 +16,9 @@ import {
    HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {CreateRefTypesDto} from "../../generated/nestjs-dto/create-refTypes.dto";
-import {UpdateRefTypesDto} from "../../generated/nestjs-dto/update-refTypes.dto";
-import {RefTypesDto} from "../../generated/nestjs-dto/refTypes.dto";
+import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
+import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
+import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";
@@ -34,10 +34,10 @@ export class TypesController extends HeliosController
       super()
    }
 
-   @HeliosGetObject(RefTypesDto)
+   @HeliosGetObject(RefTypeDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefTypesDto>
+      @Query() queryParams: GetObjectRequest): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObject');
       const obj =  await this.typesService.GetObject(queryParams.ID);
@@ -56,10 +56,10 @@ export class TypesController extends HeliosController
       return this.typesService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateRefTypesDto, RefTypesDto)
+   @HeliosCreateObject(CreateRefTypeDto, RefTypeDto)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateRefTypesDto): Promise<RefTypesDto>
+      @Body() data: CreateRefTypeDto): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.AddObject');
       try
@@ -77,10 +77,10 @@ export class TypesController extends HeliosController
       }
    }
 
-   @HeliosUpdateObject(UpdateRefTypesDto, RefTypesDto)
+   @HeliosUpdateObject(UpdateRefTypeDto, RefTypeDto)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefTypesDto): Promise<RefType>
+      @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefType>
    {
       this.permissieService.heeftToegang(user, 'Types.UpdateObject');
       try

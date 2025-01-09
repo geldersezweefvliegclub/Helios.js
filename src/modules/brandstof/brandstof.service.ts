@@ -8,6 +8,7 @@ import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {GetObjectsOperBrandstofReponse} from "./GetObjectsOperBrandstofResponse";
+import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
 
 @Injectable()
 export class BrandstofService extends IHeliosService
@@ -34,9 +35,8 @@ export class BrandstofService extends IHeliosService
    {
       if (params === undefined)
       {
-         params = {
-            VERWIJDERD : false,
-         }
+         params = new GetObjectsOperBrandstofRequest();
+         params.VERWIJDERD = false;
       }
       const sort = params.SORT ? params.SORT : "TIJDSTIP DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
 

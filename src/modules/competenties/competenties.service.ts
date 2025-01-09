@@ -7,6 +7,7 @@ import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCom
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {GetObjectsRefCompetentiesResponse} from "../competenties/GetObjectsRefCompetentiesResponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
+import {GetObjectsAuditRequest} from "../audit/GetObjectsAuditRequest";
 
 @Injectable()
 export class CompetentiesService extends IHeliosService
@@ -34,9 +35,8 @@ export class CompetentiesService extends IHeliosService
    {
       if (params === undefined)
       {
-         params = {
-            VERWIJDERD : false
-         }
+         params = new GetObjectsRefCompetentiesRequest();
+         params.VERWIJDERD = false;
       }
       const where: Prisma.RefCompetentieWhereInput =
          {

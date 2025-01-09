@@ -14,15 +14,15 @@ import {
    HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {CreateRefTypesGroepenDto} from "../../generated/nestjs-dto/create-refTypesGroepen.dto";
-import {UpdateRefTypesGroepenDto} from "../../generated/nestjs-dto/update-refTypesGroepen.dto";
-import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto";
+import {RefTypesGroepDto} from "../../generated/nestjs-dto/refTypesGroep.dto";
 import {GetObjectsRefTypesGroepenRequest} from "./GetObjectsRefTypesGroepenRequest";
 import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResponse";
 import {PermissieService} from "../authorisatie/permissie.service";
+import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto/create-refTypesGroep.dto";
+import {UpdateRefTypesGroepDto} from "../../generated/nestjs-dto/update-refTypesGroep.dto";
 
 @Controller('TypesGroepen')
 @ApiTags('TypesGroepen')
@@ -34,10 +34,10 @@ export class TypesGroepenController extends HeliosController
       super()
    }
 
-   @HeliosGetObject(RefTypesGroepenDto)
+   @HeliosGetObject(RefTypesGroepDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefTypesGroepenDto>
+      @Query() queryParams: GetObjectRequest): Promise<RefTypesGroepDto>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.GetObject');
 
@@ -57,10 +57,10 @@ export class TypesGroepenController extends HeliosController
       return this.typesGroepenService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateRefTypesGroepenDto, RefTypesGroepenDto)
+   @HeliosCreateObject(CreateRefTypesGroepDto, RefTypesGroepDto)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateRefTypesGroepenDto): Promise<RefTypesGroepenDto>
+      @Body() data: CreateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.AddObject');
       try
@@ -73,10 +73,10 @@ export class TypesGroepenController extends HeliosController
       }
    }
 
-   @HeliosUpdateObject(UpdateRefTypesGroepenDto, RefTypesGroepenDto)
+   @HeliosUpdateObject(UpdateRefTypesGroepDto, RefTypesGroepDto)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefTypesGroepenDto): Promise<RefTypesGroep>
+      @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.UpdateObject');
       try

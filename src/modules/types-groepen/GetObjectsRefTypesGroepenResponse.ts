@@ -1,6 +1,6 @@
-import {RefTypesGroepenDto} from "../../generated/nestjs-dto/refTypesGroepen.dto";
+import {RefTypesGroepDto} from "../../generated/nestjs-dto/refTypesGroep.dto";
 
-export class GetObjectsRefTypesGroepenResponse extends RefTypesGroepenDto
+export class GetObjectsRefTypesGroepenResponse extends RefTypesGroepDto
 {
    // hier komen de specifieke velden voor GetObjects
 }

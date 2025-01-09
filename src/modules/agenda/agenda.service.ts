@@ -6,6 +6,7 @@ import {Prisma, OperAgenda} from "@prisma/client";
 import {GetObjectsOperAgendaRequest} from "../agenda/GetObjectsOperAgendaRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
+import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
 
 @Injectable()
 export class AgendaService extends IHeliosService
@@ -32,10 +33,10 @@ export class AgendaService extends IHeliosService
    // retrieve objects from the database based on the query parameters
    async GetObjects(params?: GetObjectsOperAgendaRequest): Promise<IHeliosGetObjectsResponse<OperAgenda>>
    {
-      if(!params) {
-         params = {
-            VERWIJDERD: false
-         }
+      if (params === undefined)
+      {
+         params = new GetObjectsOperAgendaRequest();
+         params.VERWIJDERD = false;
       }
 
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
