@@ -1,12 +1,12 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefType} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
+import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -29,7 +29,7 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesReponse>>
+   async GetObjects(params?: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesResponse>>
    {
       if(!params) {
          params = {
@@ -76,7 +76,7 @@ export class TypesService extends IHeliosService
          // delete child objects from the response
          delete retObj.TypesGroep;
 
-         return  retObj as GetObjectsRefTypesReponse
+         return  retObj as GetObjectsRefTypesResponse
       });
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }

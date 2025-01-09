@@ -3,10 +3,9 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {Prisma, OperAgenda} from "@prisma/client";
-import {GetObjectsOperAgendaRequest} from "../agenda/GetObjectsOperAgendaRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
-import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
 
 @Injectable()
 export class AgendaService extends IHeliosService

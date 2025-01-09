@@ -2,13 +2,12 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {OperBrandstof, Prisma} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
-import {GetObjectsOperBrandstofReponse} from "./GetObjectsOperBrandstofResponse";
-import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
+import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
 
 @Injectable()
 export class BrandstofService extends IHeliosService
@@ -31,7 +30,7 @@ export class BrandstofService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofReponse>>
+   async GetObjects(params?: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofResponse>>
    {
       if (params === undefined)
       {
@@ -76,7 +75,7 @@ export class BrandstofService extends IHeliosService
          // delete child objects from the response
          delete retObj.BrandstofType;
 
-         return  retObj as GetObjectsOperBrandstofReponse
+         return  retObj as GetObjectsOperBrandstofResponse
       });
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }

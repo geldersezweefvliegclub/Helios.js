@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefTypesGroep} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";

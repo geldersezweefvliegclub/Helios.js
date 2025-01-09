@@ -11,9 +11,9 @@ import {
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid, RefVliegtuig} from "@prisma/client";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
-import {GetObjectsRefVliegtuigenResponse} from "../vliegtuigen/GetObjectsRefVliegtuigenResponse";
-import {GetObjectsRefVliegtuigenRequest} from "../vliegtuigen/GetObjectsRefVliegtuigenRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
+import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 import {VliegtuigenService} from "./vliegtuigen.service";
 import {CreateRefVliegtuigDto} from "../../generated/nestjs-dto/create-refVliegtuig.dto";
@@ -52,8 +52,7 @@ export class VliegtuigenController extends HeliosController
       this.permissieService.heeftToegang(user, 'Vliegtuigen.GetObjects');
       
       // retrieve the objects from the database based on the query parameters
-      const objs = await this.vliegtuigenService.GetObjects (queryParams);
-      return objs;
+      return await this.vliegtuigenService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefVliegtuigDto, RefVliegtuigDto)

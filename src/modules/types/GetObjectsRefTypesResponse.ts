@@ -1,7 +1,7 @@
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {ApiProperty} from "@nestjs/swagger";
 
-export class GetObjectsRefTypesReponse extends RefTypeDto
+export class GetObjectsRefTypesResponse extends RefTypeDto
 {
    // hier komen de specifieke velden voor GetObjects
 

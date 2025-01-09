@@ -1,7 +1,6 @@
 import {Body, Controller, HttpException, HttpStatus, Query} from '@nestjs/common';
 import {ApiTags} from "@nestjs/swagger";
-import {AgendaService} from "../agenda/agenda.service";
-import {LedenService} from "../leden/leden.service";
+import {AgendaService} from "./agenda.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
    HeliosController,
@@ -13,10 +12,9 @@ import {
 import {OperAgendaDto} from "../../generated/nestjs-dto/operAgenda.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
-import {GetObjectsOperAgendaResponse} from "../agenda/GetObjectsOperAgendaResponse";
-import {GetObjectsOperAgendaRequest} from "../agenda/GetObjectsOperAgendaRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
+import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperAgendaDto} from "../../generated/nestjs-dto/create-operAgenda.dto";
 import {UpdateOperAgendaDto} from "../../generated/nestjs-dto/update-operAgenda.dto";
 

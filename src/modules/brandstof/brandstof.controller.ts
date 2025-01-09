@@ -6,7 +6,7 @@ import {
    Query
 } from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
@@ -19,7 +19,7 @@ import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {BrandstofService} from "./brandstof.service";
 import {OperBrandstofDto} from "../../generated/nestjs-dto/operBrandstof.dto";
-import {GetObjectsOperBrandstofReponse} from "./GetObjectsOperBrandstofResponse";
+import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
 import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
@@ -49,10 +49,10 @@ export class BrandstofController  extends HeliosController
       return obj;
    }
 
-   @HeliosGetObjects(GetObjectsOperBrandstofReponse)
+   @HeliosGetObjects(GetObjectsOperBrandstofResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofReponse>>
+      @Query() queryParams: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofResponse>>
    {
       this.permissieService.heeftToegang(user, 'Brandstof.GetObjects');
       return this.brandstofService.GetObjects(queryParams);

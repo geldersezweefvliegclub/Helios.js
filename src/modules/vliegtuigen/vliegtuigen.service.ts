@@ -4,9 +4,9 @@ import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {Prisma, RefVliegtuig} from "@prisma/client";
 import {DatabaseEvents} from "../../core/helpers/Events";
-import {GetObjectsRefVliegtuigenRequest} from "../vliegtuigen/GetObjectsRefVliegtuigenRequest";
-import {GetObjectsRefVliegtuigenResponse} from "../vliegtuigen/GetObjectsRefVliegtuigenResponse";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
+import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
 @Injectable()
 export class VliegtuigenService extends IHeliosService

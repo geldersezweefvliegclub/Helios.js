@@ -10,9 +10,9 @@ import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefCompetentie, RefLid} from "@prisma/client";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
-import {GetObjectsRefCompetentiesResponse} from "../competenties/GetObjectsRefCompetentiesResponse";
-import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
+import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CompetentiesService} from "./competenties.service";
 import {RefCompetentieDto} from "../../generated/nestjs-dto/refCompetentie.dto";
 import {CreateRefCompetentieDto} from "../../generated/nestjs-dto/create-refCompetentie.dto";
@@ -57,8 +57,7 @@ export class CompetentiesController extends HeliosController
       this.permissieService.heeftToegang(user, 'Competenties.GetObjects');
 
       // retrieve the objects from the database based on the query parameters
-      const objs = await this.competentiesService.GetObjects (queryParams);
-      return objs;
+      return await this.competentiesService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefCompetentieDto, RefCompetentieDto)

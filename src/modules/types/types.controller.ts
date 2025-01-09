@@ -8,7 +8,7 @@ import {
 import {TypesService} from "./types.service";
 import {Prisma, RefLid, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
@@ -20,7 +20,7 @@ import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
 import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {ApiTags} from "@nestjs/swagger";
-import {GetObjectsRefTypesReponse} from "./GetObjectsRefTypesResponse";
+import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 
@@ -47,10 +47,10 @@ export class TypesController extends HeliosController
       return obj;
    }
 
-   @HeliosGetObjects(GetObjectsRefTypesReponse)
+   @HeliosGetObjects(GetObjectsRefTypesResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesReponse>>
+      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesResponse>>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObjects');
       return this.typesService.GetObjects(queryParams);

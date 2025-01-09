@@ -3,11 +3,10 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {Prisma, RefCompetentie} from "@prisma/client";
-import {GetObjectsRefCompetentiesRequest} from "../competenties/GetObjectsRefCompetentiesRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
-import {GetObjectsRefCompetentiesResponse} from "../competenties/GetObjectsRefCompetentiesResponse";
+import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
-import {GetObjectsAuditRequest} from "../audit/GetObjectsAuditRequest";
 
 @Injectable()
 export class CompetentiesService extends IHeliosService

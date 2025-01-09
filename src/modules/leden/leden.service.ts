@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DbService } from "../../database/db-service/db.service";
 import { Prisma, RefLid } from '@prisma/client';
-import { IHeliosGetObjectsResponse } from "../../core/DTO/IHeliosGetObjectsReponse";
+import { IHeliosGetObjectsResponse } from "../../core/DTO/IHeliosGetObjectsResponse";
 import { IHeliosService } from "../../core/services/IHeliosService";
 import { DatabaseEvents } from "../../core/helpers/Events";
 import { EventEmitter2 } from "@nestjs/event-emitter";

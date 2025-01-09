@@ -1,5 +1,5 @@
-import {GetObjectsDateRequest, GetObjectsRequest} from "../../core/DTO/IHeliosFilter";
-import {CSVTransform, OptionalBooleanTransform} from "../../core/helpers/Transformers";
+import {GetObjectsDateRequest} from "../../core/DTO/IHeliosFilter";
+import {CSVTransform } from "../../core/helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
 import {IsNumber, IsOptional} from "class-validator";
 

@@ -3,7 +3,7 @@ import {ApiProperty, ApiTags} from "@nestjs/swagger";
 import {OperBrandstofDto} from "../../generated/nestjs-dto/operBrandstof.dto";
 
 @ApiTags('Brandstof')
-export class GetObjectsOperBrandstofReponse extends OperBrandstofDto
+export class GetObjectsOperBrandstofResponse extends OperBrandstofDto
 {
    // hier komen de specifieke velden voor GetObjects
 

@@ -4,7 +4,7 @@ import {
    HttpStatus,
    Query
 } from '@nestjs/common';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController,
@@ -18,7 +18,7 @@ import {OnEvent} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {ConfigService} from "@nestjs/config";
 import {ApiTags} from "@nestjs/swagger";
-import {GetObjectsAuditResponse} from "./GetObjectsAuditReponse";
+import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {RefLid} from "@prisma/client";

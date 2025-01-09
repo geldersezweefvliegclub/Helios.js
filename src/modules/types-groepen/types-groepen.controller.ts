@@ -6,7 +6,7 @@ import {
    Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "./types-groepen.service";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,

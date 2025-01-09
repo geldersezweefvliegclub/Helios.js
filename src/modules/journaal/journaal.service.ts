@@ -1,10 +1,10 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {GetObjectsOperJournaalRequest} from "../journaal/GetObjectsOperJournaalRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
-import {GetObjectsOperJournaalResponse} from "../journaal/GetObjectsOperJournaalResponse";
+import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {OperJournaal, Prisma} from "@prisma/client";
 import {GetObjectsAuditRequest} from "../audit/GetObjectsAuditRequest";

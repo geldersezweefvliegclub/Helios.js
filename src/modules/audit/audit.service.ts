@@ -1,10 +1,10 @@
 import {Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {Audit, Prisma } from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
-import {GetObjectsAuditResponse} from "./GetObjectsAuditReponse";
+import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 
 @Injectable()
 export class AuditService extends IHeliosService

@@ -8,11 +8,11 @@ import {
 import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
-import {OperJournaal, Prisma, RefLid, RefVliegtuig} from "@prisma/client";
+import {OperJournaal, Prisma, RefLid} from "@prisma/client";
 import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
-import {GetObjectsOperJournaalResponse} from "../journaal/GetObjectsOperJournaalResponse";
-import {GetObjectsOperJournaalRequest} from "../journaal/GetObjectsOperJournaalRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsReponse";
+import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
+import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {JournaalService} from "./journaal.service";
 import {ApiTags} from "@nestjs/swagger";
 import {OperJournaalDto} from "../../generated/nestjs-dto/operJournaal.dto";
@@ -52,8 +52,7 @@ export class JournaalController extends HeliosController
       this.permissieService.heeftToegang(user, 'Journaal.GetObjects');
 
       // retrieve the objects from the database based on the query parameters
-      const objs = await this.journaalService.GetObjects (queryParams);
-      return objs;
+      return await this.journaalService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateOperJournaalDto, OperJournaalDto)

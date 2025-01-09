@@ -1,4 +1,4 @@
-import {IHeliosGetObjectsResponse} from "../DTO/IHeliosGetObjectsReponse";
+import {IHeliosGetObjectsResponse} from "../DTO/IHeliosGetObjectsResponse";
 import {crc32} from "js-crc";
 import {HttpException, HttpStatus} from "@nestjs/common";
 
