@@ -21,12 +21,10 @@ export class BadRequestExceptionFilter implements ExceptionFilter {
    catch(exception: BadRequestException, host: ArgumentsHost) {
       const ctx = host.switchToHttp();
       const response = ctx.getResponse<Response>();
-      const status = exception.getStatus();
-      const message = exception.message;
 
       response
-         .status(status)
-         .header('X-Error-Message', message)
+         .status(exception.getStatus())
+         .header('X-Error-Message', exception.message)
          .json();
    }
 }

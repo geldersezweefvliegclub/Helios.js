@@ -50,8 +50,6 @@ export class AuditController extends HeliosController
       this.permissieService.heeftToegang(user, 'Audit.GetObject');
 
       const obj =  await this.auditService.GetObject(queryParams.ID);
-      if (!obj)
-         throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
 
       // record moet van de user zijn of de gebruiker moet beheerder zijn
       if (!this.permissieService.isBeheerder(user) && obj.LID_ID !== user.ID) {
@@ -139,4 +137,8 @@ export class AuditController extends HeliosController
       }
       this.auditService.AddObject(record);
    }
+
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+
 }

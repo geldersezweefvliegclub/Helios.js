@@ -1,8 +1,6 @@
 import {
    Body,
    Controller,
-   HttpException,
-   HttpStatus,
    Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "./types-groepen.service";
@@ -40,12 +38,7 @@ export class TypesGroepenController extends HeliosController
       @Query() queryParams: GetObjectRequest): Promise<RefTypesGroepDto>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.GetObject');
-
-      const obj =  await this.typesGroepenService.GetObject(queryParams.ID);
-      if (!obj)
-         throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
-
-      return obj;
+      return  await this.typesGroepenService.GetObject(queryParams.ID);
    }
 
    @HeliosGetObjects(GetObjectsRefTypesGroepenResponse)
@@ -63,14 +56,7 @@ export class TypesGroepenController extends HeliosController
       @Body() data: CreateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.AddObject');
-      try
-      {
-         return await this.typesGroepenService.AddObject(data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      return await this.typesGroepenService.AddObject(data);
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepDto, RefTypesGroepDto)
@@ -79,14 +65,7 @@ export class TypesGroepenController extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.UpdateObject');
-      try
-      {
-         return await this.typesGroepenService.UpdateObject(id, data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      return await this.typesGroepenService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
@@ -99,14 +78,7 @@ export class TypesGroepenController extends HeliosController
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: true
       }
-      try
-      {
-         await this.typesGroepenService.UpdateObject(id, data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.typesGroepenService.UpdateObject(id, data);
    }
 
    @HeliosRemoveObject()
@@ -115,14 +87,7 @@ export class TypesGroepenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.RemoveObject');
-      try
-      {
-         await this.typesGroepenService.RemoveObject(id);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.typesGroepenService.RemoveObject(id);
    }
 
    @HeliosRestoreObject()
@@ -136,4 +101,8 @@ export class TypesGroepenController extends HeliosController
       }
       await this.typesGroepenService.UpdateObject(id, data);
    }
+
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+
 }

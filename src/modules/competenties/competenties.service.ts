@@ -1,4 +1,4 @@
-import {Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -21,12 +21,15 @@ export class CompetentiesService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation:string = undefined): Promise<RefCompetentie>
    {
-      return this.dbService.refCompetentie.findUnique({
+      const db = await this.dbService.refCompetentie.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.RefCompetentieInclude>(relation)
       });
+      if (!db)
+         throw new HttpException(`Competentie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve objects from the database based on the query parameters

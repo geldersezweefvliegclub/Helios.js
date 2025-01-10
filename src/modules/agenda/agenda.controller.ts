@@ -1,4 +1,4 @@
-import {Body, Controller, HttpException, HttpStatus, Query} from '@nestjs/common';
+import {Body, Controller, Query} from '@nestjs/common';
 import {ApiTags} from "@nestjs/swagger";
 import {AgendaService} from "./agenda.service";
 import {PermissieService} from "../authorisatie/permissie.service";
@@ -34,11 +34,7 @@ async GetObject(
    @Query('ID') id: number): Promise<OperAgendaDto>
    {
       this.permissieService.heeftToegang(user, 'Agenda.GetObject');
-      const obj =  await this.agendaService.GetObject(id);
-      if (!obj)
-         throw new HttpException(`Record with ID ${id} not found`, HttpStatus.NOT_FOUND);
-
-      return obj;
+      return await this.agendaService.GetObject(id);
    }
 
 @HeliosGetObjects(GetObjectsOperAgendaResponse)
@@ -56,14 +52,7 @@ async AddObject(
    @Body() data: CreateOperAgendaDto): Promise<OperAgendaDto>
    {
       this.permissieService.heeftToegang(user, 'Agenda.AddObject');
-      try
-      {
-         return await this.agendaService.AddObject(data as Prisma.OperAgendaCreateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      return await this.agendaService.AddObject(data as Prisma.OperAgendaCreateInput);
    }
 
 @HeliosUpdateObject(UpdateOperAgendaDto, OperAgendaDto)
@@ -72,14 +61,7 @@ async UpdateObject(
    @Query('ID') id: number, @Body() data: UpdateOperAgendaDto): Promise<OperAgendaDto>
    {
       this.permissieService.heeftToegang(user, 'Agenda.UpdateObject');
-      try
-      {
-         return await this.agendaService.UpdateObject(id, data as Prisma.OperAgendaCreateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      return await this.agendaService.UpdateObject(id, data as Prisma.OperAgendaCreateInput);
    }
 
 @HeliosDeleteObject()
@@ -92,14 +74,7 @@ async DeleteObject(
       const data: Prisma.OperAgendaUpdateInput = {
          VERWIJDERD: true
       }
-      try
-      {
-         await this.agendaService.UpdateObject(id, data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.agendaService.UpdateObject(id, data);
    }
 
 @HeliosRemoveObject()
@@ -108,20 +83,13 @@ async RemoveObject(
    @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Agenda.RemoveObject');
-      try
-      {
-         await this.agendaService.RemoveObject(id);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.agendaService.RemoveObject(id);
    }
 
 @HeliosRestoreObject()
 async RestoreObject(
    @CurrentUser() user: RefLid,
-@Query('ID') id: number): Promise<void>
+   @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Agenda.RestoreObject');
 
@@ -130,4 +98,8 @@ async RestoreObject(
       }
       await this.agendaService.UpdateObject(id, data);
    }
+
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+
 }

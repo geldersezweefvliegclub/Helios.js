@@ -21,12 +21,16 @@ export class VliegtuigenService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation:string = undefined): Promise<RefVliegtuig>
    {
-      return this.dbService.refVliegtuig.findUnique({
+      const db = await this.dbService.refVliegtuig.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.RefVliegtuigInclude>(relation)
       });
+
+      if (!db)
+         throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve objects from the database based on the query parameters

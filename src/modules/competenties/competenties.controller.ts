@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Query, UseGuards} from '@nestjs/common';
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -41,11 +41,7 @@ export class CompetentiesController extends HeliosController
       @Query() queryParams: GetObjectRequest): Promise<RefCompetentieDto>
    {
       this.permissieService.heeftToegang(user, 'Competenties.GetObject');
-      const obj =  await this.competentiesService.GetObject(queryParams.ID);
-      if (!obj)
-         throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
-
-      return obj;
+      return await this.competentiesService.GetObject(queryParams.ID);
    }
 
    @HeliosGetObjects(GetObjectsRefCompetentiesResponse)
@@ -66,19 +62,13 @@ export class CompetentiesController extends HeliosController
       @Body() data: CreateRefCompetentieDto): Promise<RefCompetentieDto>
    {
       this.permissieService.heeftToegang(user, 'Competenties.AddObject');
-      try
-      {
-         // remove TYPE_ID from the data
-         // and add them as connect to the insertData object
-         const { LEERFASE_ID, ...insertData} = data;
-         (insertData as Prisma.RefCompetentieCreateInput).LeerfaseType = (LEERFASE_ID !== undefined) ? { connect: {ID: LEERFASE_ID }} : undefined;
 
-         return await this.competentiesService.AddObject(insertData as Prisma.RefCompetentieCreateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      // remove TYPE_ID from the data
+      // and add them as connect to the insertData object
+      const { LEERFASE_ID, ...insertData} = data;
+      (insertData as Prisma.RefCompetentieCreateInput).LeerfaseType = (LEERFASE_ID !== undefined) ? { connect: {ID: LEERFASE_ID }} : undefined;
+
+      return await this.competentiesService.AddObject(insertData as Prisma.RefCompetentieCreateInput);
    }
 
    @HeliosUpdateObject(UpdateRefCompetentieDto, RefCompetentieDto)
@@ -88,19 +78,12 @@ export class CompetentiesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Competenties.UpdateObject');
 
-      try
-      {
-         // remove TYPE_ID from the data
-         // and add them as connect to the updateData object
-         const { LEERFASE_ID, ...updateData} = data;
-         (updateData as Prisma.RefCompetentieCreateInput).LeerfaseType = LEERFASE_ID ? { connect: {ID: LEERFASE_ID }} : undefined;
+      // remove TYPE_ID from the data
+      // and add them as connect to the updateData object
+      const { LEERFASE_ID, ...updateData} = data;
+      (updateData as Prisma.RefCompetentieCreateInput).LeerfaseType = LEERFASE_ID ? { connect: {ID: LEERFASE_ID }} : undefined;
 
-         return await this.competentiesService.UpdateObject(id, updateData as Prisma.RefCompetentieUpdateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      return await this.competentiesService.UpdateObject(id, updateData as Prisma.RefCompetentieUpdateInput);
    }
 
    @HeliosDeleteObject()
@@ -113,14 +96,7 @@ export class CompetentiesController extends HeliosController
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: true
       }
-      try
-      {
-         await this.competentiesService.UpdateObject(id, data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.competentiesService.UpdateObject(id, data);
    }
 
    @HeliosRemoveObject()
@@ -130,14 +106,7 @@ export class CompetentiesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Competenties.RemoveObject');
 
-      try
-      {
-         await this.competentiesService.RemoveObject(id);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.competentiesService.RemoveObject(id);
    }
 
    @HeliosRestoreObject()
@@ -147,13 +116,14 @@ export class CompetentiesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Competenties.RestoreObject');
 
-      const data: Prisma.RefLidUpdateInput = {
+      const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: false
       }
       await this.competentiesService.UpdateObject(id, data);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//
+
    @Get("CompetentiesBoom")
    @ApiExtraModels(CompetentiesBoomResponse)
    @ApiBasicAuth()

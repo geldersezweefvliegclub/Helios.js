@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {Audit, Prisma } from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -17,12 +17,16 @@ export class AuditService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation: string = undefined): Promise<Audit>
    {
-      return this.dbService.audit.findUnique({
+      const db = await this.dbService.audit.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.AuditInclude>(relation)
       });
+
+      if (!db)
+         throw new HttpException(`Audit record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve objects from the database based on the query parameters
@@ -119,6 +123,7 @@ export class AuditService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.AuditUpdateInput): Promise<Audit>
    {
+      await this.GetObject(id);   // check if the record exists
       return await this.dbService.audit.update({
          where: {
             ID: id
@@ -129,6 +134,7 @@ export class AuditService extends IHeliosService
 
    async RemoveObject(id: number): Promise<void>
    {
+      await this.GetObject(id);   // check if the record exists
       await this.dbService.audit.delete({
          where: {
             ID: id

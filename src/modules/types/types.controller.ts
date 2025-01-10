@@ -1,8 +1,6 @@
 import {
    Body,
    Controller,
-   HttpException,
-   HttpStatus,
    Query
 } from '@nestjs/common';
 import {TypesService} from "./types.service";
@@ -40,11 +38,7 @@ export class TypesController extends HeliosController
       @Query() queryParams: GetObjectRequest): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObject');
-      const obj =  await this.typesService.GetObject(queryParams.ID);
-      if (!obj)
-         throw new HttpException(`Record with ID ${queryParams.ID} not found`, HttpStatus.NOT_FOUND);
-
-      return obj;
+      return await this.typesService.GetObject(queryParams.ID);
    }
 
    @HeliosGetObjects(GetObjectsRefTypesResponse)
@@ -62,19 +56,13 @@ export class TypesController extends HeliosController
       @Body() data: CreateRefTypeDto): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.AddObject');
-      try
-      {
-         // remove TYPEGROEP_ID from the data
-         // and add it to the TypesGroep property
-         const { TYPEGROEP_ID, ...insertData} = data;
-         (insertData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
 
-         return await this.typesService.AddObject(insertData as Prisma.RefTypeCreateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      // remove TYPEGROEP_ID from the data
+      // and add it to the TypesGroep property
+      const { TYPEGROEP_ID, ...insertData} = data;
+      (insertData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
+
+      return await this.typesService.AddObject(insertData as Prisma.RefTypeCreateInput);
    }
 
    @HeliosUpdateObject(UpdateRefTypeDto, RefTypeDto)
@@ -83,19 +71,13 @@ export class TypesController extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefType>
    {
       this.permissieService.heeftToegang(user, 'Types.UpdateObject');
-      try
-      {
-         // remove TYPEGROEP_ID from the data
-         // and add it to the TypesGroep property
-         const { TYPEGROEP_ID, ...updateData} = data;
-         (updateData as Prisma.RefTypeCreateInput).TypesGroep = (TYPEGROEP_ID !== undefined) ? { connect: {ID: TYPEGROEP_ID }} : undefined
 
-         return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      // remove TYPEGROEP_ID from the data
+      // and add it to the TypesGroep property
+      const { TYPEGROEP_ID, ...updateData} = data;
+      (updateData as Prisma.RefTypeCreateInput).TypesGroep = (TYPEGROEP_ID !== undefined) ? { connect: {ID: TYPEGROEP_ID }} : undefined
+
+      return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
    }
 
    @HeliosDeleteObject()
@@ -108,14 +90,7 @@ export class TypesController extends HeliosController
       const data: Prisma.RefTypeUpdateInput = {
          VERWIJDERD: true
       }
-      try
-      {
-         await this.typesService.UpdateObject(id, data);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.typesService.UpdateObject(id, data);
    }
 
    @HeliosRemoveObject()
@@ -124,14 +99,7 @@ export class TypesController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Types.RemoveObject');
-      try
-      {
-         await this.typesService.RemoveObject(id);
-      }
-      catch (e)
-      {
-         this.handlePrismaError(e)
-      }
+      await this.typesService.RemoveObject(id);
    }
 
    @HeliosRestoreObject()
@@ -146,4 +114,8 @@ export class TypesController extends HeliosController
       }
       await this.typesService.UpdateObject(id, data);
    }
+
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+
 }

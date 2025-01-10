@@ -6,8 +6,11 @@ import {utilities, WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import * as cookieParser from 'cookie-parser';
 import {SeqTransport} from "@datalust/winston-seq";
-import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosException";
+import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosHttpExceptionFilter";
 import {Prisma} from "@prisma/client";
+import {HeliosPrismaClientKnownRequestError} from "./core/helpers/HeliosPrismaClientKnownRequestError";
+import {HeliosPrismaClientDefaultError} from "./core/helpers/HeliosPrismaClientDefaultError";
+import {HeliosPrismaClientValidationError} from "./core/helpers/HeliosPrismaClientValidationError";
 
 /**
  * Create a logger for the application using Winston instead of the built-in nestjs logger.
@@ -91,7 +94,15 @@ async function bootstrap()
             return new BadRequestException(msg);
          },
       }));
-   app.useGlobalFilters(new HeliosHttpExceptionFilter(), new BadRequestExceptionFilter());
+   // HTTP Exception filters
+   app.useGlobalFilters(new HeliosHttpExceptionFilter())
+   app.useGlobalFilters(new BadRequestExceptionFilter());
+
+   // Prisma client Exception filters
+   app.useGlobalFilters(new HeliosPrismaClientDefaultError());
+   app.useGlobalFilters(new HeliosPrismaClientValidationError());
+   app.useGlobalFilters(new HeliosPrismaClientKnownRequestError());
+
    app.use(cookieParser()); // Allow the application to read cookies and add them to the request object
    await app.listen(3000);
 }

@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {Prisma, RefTypesGroep} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -28,12 +28,16 @@ export class TypesGroepenService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation: string = undefined): Promise<RefTypesGroep>
    {
-      return this.dbService.refTypesGroep.findUnique({
+      const db = await this.dbService.refTypesGroep.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.RefTypesGroepInclude>(relation)
       });
+
+      if (!db)
+         throw new HttpException(`Typegroep record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve objects from the database based on the query parameters

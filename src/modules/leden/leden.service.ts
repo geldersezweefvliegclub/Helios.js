@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import { DbService } from "../../database/db-service/db.service";
 import { Prisma, RefLid } from '@prisma/client';
 import { IHeliosGetObjectsResponse } from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -23,12 +23,15 @@ export class LedenService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation:string = undefined): Promise<RefLid>
    {
-      return this.dbService.refLid.findUnique({
+      const db = await this.dbService.refLid.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.RefLidInclude>(relation)
       });
+      if (!db)
+         throw new HttpException(`Lid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve a single object from the database based on the inlognaam
@@ -139,6 +142,8 @@ export class LedenService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.RefLidUpdateInput): Promise<RefLid>
    {
+      const db = await this.GetObject(id);
+
       // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
       data.NAAM = data.VOORNAAM
       data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
@@ -147,7 +152,6 @@ export class LedenService extends IHeliosService
       if (data.WACHTWOORD)
          data.WACHTWOORD = await hash(data.WACHTWOORD as string, 10)
 
-      const db = await this.GetObject(id);
       const obj = await this.dbService.refLid.update({
          where: {
             ID: id

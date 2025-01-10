@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -21,12 +21,15 @@ export class AgendaService extends IHeliosService
    async GetObject(id: number, relation: string = undefined): Promise<OperAgenda>
    {
       // relation is included for consistency with other services, but not used
-
-      return this.dbService.operAgenda.findUnique({
+      const db = await this.dbService.operAgenda.findUnique({
          where: {
             ID: id
          },
       });
+
+      if (!db)
+         throw new HttpException(`Agenda record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      return db;
    }
 
    // retrieve objects from the database based on the query parameters
