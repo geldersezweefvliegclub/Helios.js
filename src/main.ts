@@ -76,12 +76,6 @@ async function bootstrap()
 
    setupSwagger(app, 'docs');
 
-
-   // Otherwise decimals will be returned as strings
-   Prisma.Decimal.prototype.toJSON = function() {
-      return this.toNumber();
-   }
-
    // Enable validation and conversion of incoming data before it reaches the controller
    app.useGlobalPipes(new ValidationPipe(
       {

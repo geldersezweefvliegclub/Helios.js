@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class OperBrandstofDto {
@@ -37,24 +36,24 @@ export class OperBrandstofDto {
   @ApiProperty({
     description: "Prijs per liter van de brandstof",
     type: "number",
-    format: "double",
+    format: "float",
     nullable: true,
   })
-  PRIJS: Prisma.Decimal | null;
+  PRIJS: number | null;
   @ApiProperty({
     description: "Het bedrag van de tankbeurt om te kunnen factureren",
     type: "number",
-    format: "double",
+    format: "float",
     nullable: true,
   })
-  BEDRAG: Prisma.Decimal | null;
+  BEDRAG: number | null;
   @ApiProperty({
     description: "Aantal liters dat getankt is",
     type: "number",
-    format: "double",
+    format: "float",
     nullable: true,
   })
-  LITERS: Prisma.Decimal | null;
+  LITERS: number | null;
   @ApiProperty({
     description: "Externe referentie van de tankbeurt",
     maxLength: 50,

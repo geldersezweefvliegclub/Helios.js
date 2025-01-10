@@ -32,13 +32,13 @@ model OperBrandstof {
   BRANDSTOF_TYPE_ID Int? @db.Int
 
   /// @description Prijs per liter van de brandstof
-  PRIJS Decimal? @db.Decimal(6, 2)
+  PRIJS Float? @db.Float
 
   /// @description Het bedrag van de tankbeurt om te kunnen factureren
-  BEDRAG Decimal? @db.Decimal(6, 2)
+  BEDRAG Float? @db.Float
 
   /// @description Aantal liters dat getankt is
-  LITERS Decimal? @db.Decimal(6, 2)
+  LITERS Float? @db.Float
 
   /// @description Externe referentie van de tankbeurt
   /// @maxLength 50

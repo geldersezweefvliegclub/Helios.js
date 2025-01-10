@@ -1,6 +1,5 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDecimal, IsInt, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class UpdateOperBrandstofDto {
   @ApiProperty({
@@ -37,33 +36,33 @@ export class UpdateOperBrandstofDto {
   @ApiProperty({
     description: "Prijs per liter van de brandstof",
     type: "number",
-    format: "double",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  PRIJS?: Prisma.Decimal | null;
+  @IsNumber()
+  PRIJS?: number | null;
   @ApiProperty({
     description: "Het bedrag van de tankbeurt om te kunnen factureren",
     type: "number",
-    format: "double",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  BEDRAG?: Prisma.Decimal | null;
+  @IsNumber()
+  BEDRAG?: number | null;
   @ApiProperty({
     description: "Aantal liters dat getankt is",
     type: "number",
-    format: "double",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  LITERS?: Prisma.Decimal | null;
+  @IsNumber()
+  LITERS?: number | null;
   @ApiProperty({
     description: "Externe referentie van de tankbeurt",
     maxLength: 50,

@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class RefTypeDto {
@@ -50,17 +49,17 @@ export class RefTypeDto {
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
     type: "number",
-    format: "double",
+    format: "float",
     nullable: true,
   })
-  BEDRAG: Prisma.Decimal | null;
+  BEDRAG: number | null;
   @ApiProperty({
     description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
     type: "number",
-    format: "double",
+    format: "float",
     nullable: true,
   })
-  EENHEDEN: Prisma.Decimal | null;
+  EENHEDEN: number | null;
   @ApiProperty({
     description: "Is de groep gemarkeerd als verwijderd",
     type: "boolean",

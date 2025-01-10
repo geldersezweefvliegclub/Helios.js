@@ -34,10 +34,10 @@ model RefType {
   READ_ONLY Boolean @default(false) @db.TinyInt
 
   /// @description Het bedrag om te kunnen factureren
-  BEDRAG Decimal? @db.Decimal(6, 2)
+  BEDRAG Float? @db.Float
 
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
-  EENHEDEN Decimal? @db.Decimal(6, 2)
+  EENHEDEN Float? @db.Float
 
   /// @DtoReadOnly
   /// @description Is de groep gemarkeerd als verwijderd

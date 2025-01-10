@@ -1,9 +1,8 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsBoolean,
-  IsDecimal,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -80,21 +79,21 @@ export class UpdateRefTypeDto {
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
     type: "number",
-    format: "double",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  BEDRAG?: Prisma.Decimal | null;
+  @IsNumber()
+  BEDRAG?: number | null;
   @ApiProperty({
     description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
     type: "number",
-    format: "double",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  EENHEDEN?: Prisma.Decimal | null;
+  @IsNumber()
+  EENHEDEN?: number | null;
 }
