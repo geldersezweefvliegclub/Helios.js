@@ -33,10 +33,10 @@ export class VliegtuigenController extends HeliosController
    @HeliosGetObject(RefVliegtuigDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefVliegtuigDto>
+      @Query('ID') id: number): Promise<RefVliegtuigDto>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.GetObject');
-      return await this.vliegtuigenService.GetObject(queryParams.ID);
+      return await this.vliegtuigenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefVliegtuigenResponse)
@@ -44,10 +44,7 @@ export class VliegtuigenController extends HeliosController
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>>
    {
-      // check if the user has the right permissions
       this.permissieService.heeftToegang(user, 'Vliegtuigen.GetObjects');
-      
-      // retrieve the objects from the database based on the query parameters
       return await this.vliegtuigenService.GetObjects (queryParams);
    }
 
@@ -100,7 +97,6 @@ export class VliegtuigenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.RemoveObject');
-
       await this.vliegtuigenService.RemoveObject(id);
    }
 

@@ -1,18 +1,18 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {IHeliosService} from "../../core/services/IHeliosService";
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
+import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {Prisma, RefVliegtuig} from "@prisma/client";
 import {DatabaseEvents} from "../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
+import {Prisma, RefVliegtuig} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
 @Injectable()
 export class VliegtuigenService extends IHeliosService
 {
-   constructor(private readonly logger: Logger,
-               private readonly dbService: DbService,
+   constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
@@ -27,7 +27,6 @@ export class VliegtuigenService extends IHeliosService
          },
          include: this.SelectStringToInclude<Prisma.RefVliegtuigInclude>(relation)
       });
-
       if (!db)
          throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
@@ -36,10 +35,10 @@ export class VliegtuigenService extends IHeliosService
    // retrieve objects from the database based on the query parameters
    async GetObjects(params?: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>>
    {
-      if(!params) {
-         params = {
-            VERWIJDERD: false
-         }
+      if (params === undefined)
+      {
+         params = new GetObjectsRefVliegtuigenRequest();
+         params.VERWIJDERD = false;
       }
       const where: Prisma.RefVliegtuigWhereInput =
          {
@@ -50,8 +49,8 @@ export class VliegtuigenService extends IHeliosService
                   { ID: { in: params.IDs }},
                   { OR: [
                         { REGISTRATIE: { contains: params.SELECTIE }},
-                        { CALLSIGN: { contains: params.SELECTIE }},
-                        { FLARMCODE: { contains: params.SELECTIE }}
+                        { CALLSIGN:    { contains: params.SELECTIE }},
+                        { FLARMCODE:   { contains: params.SELECTIE }}
                      ]
                   },
                   { ZITPLAATSEN: params.ZITPLAATSEN},
@@ -61,11 +60,11 @@ export class VliegtuigenService extends IHeliosService
                   { TMG: params.TMG },
                   { TYPE_ID: { in: params.TYPES }},
                ]
-         };
-
+         }
       let count: number | undefined;
-      if (params.MAX !== undefined || params.START !== undefined) {
-         count = await this.dbService.refVliegtuig.count({ where });
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.refVliegtuig.count({ where: where });
       }
 
       //TODO: journaal_aantal
@@ -78,7 +77,7 @@ export class VliegtuigenService extends IHeliosService
             VliegtuigType: true,
             BevoegdheidLokaal: true,
             BevoegdheidOverland: true
-         },
+         }
       });
 
       const response = objs.map((obj) => {
@@ -151,7 +150,8 @@ export class VliegtuigenService extends IHeliosService
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void> {
+   async RemoveObject(id: number): Promise<void>
+   {
       const db = await this.GetObject(id);
       await this.dbService.refVliegtuig.delete({
          where: {

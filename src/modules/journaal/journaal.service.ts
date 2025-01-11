@@ -1,19 +1,18 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {IHeliosService} from "../../core/services/IHeliosService";
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
+import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
-import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {DatabaseEvents} from "../../core/helpers/Events";
-import {OperJournaal, Prisma} from "@prisma/client";
-import {GetObjectsAuditRequest} from "../audit/GetObjectsAuditRequest";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
+import {Prisma, OperJournaal} from "@prisma/client";
+import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
+import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 
 @Injectable()
 export class JournaalService extends IHeliosService
 {
-   constructor(private readonly logger: Logger,
-               private readonly dbService: DbService,
+   constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
@@ -22,13 +21,12 @@ export class JournaalService extends IHeliosService
    // retrieve a single object from the database based on the id
    async GetObject(id: number, relation:string = undefined): Promise<OperJournaal>
    {
-      const db = this.dbService.operJournaal.findUnique({
+      const db = await this.dbService.operJournaal.findUnique({
          where: {
             ID: id
          },
          include: this.SelectStringToInclude<Prisma.OperJournaalInclude>(relation)
       });
-
       if (!db)
          throw new HttpException(`Journaal record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
@@ -39,10 +37,9 @@ export class JournaalService extends IHeliosService
    {
       if (params === undefined)
       {
-         params = new GetObjectsAuditRequest();
+         params = new GetObjectsOperJournaalRequest();
          params.VERWIJDERD = false;
       }
-
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperJournaalWhereInput =
          {
@@ -88,10 +85,10 @@ export class JournaalService extends IHeliosService
          };
 
       let count: number | undefined;
-      if (params.MAX !== undefined || params.START !== undefined) {
-         count = await this.dbService.operJournaal.count({ where });
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.operJournaal.count({ where: where });
       }
-
       const objs = await this.dbService.operJournaal.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperJournaalOrderByWithRelationInput>(params.SORT ?? "DATUM DESC, ID DESC"),
@@ -159,7 +156,8 @@ export class JournaalService extends IHeliosService
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void> {
+   async RemoveObject(id: number): Promise<void>
+   {
       const db = await this.GetObject(id);
       await this.dbService.operJournaal.delete({
          where: {

@@ -35,10 +35,10 @@ export class TypesController extends HeliosController
    @HeliosGetObject(RefTypeDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefTypeDto>
+      @Query('ID') id: number): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObject');
-      return await this.typesService.GetObject(queryParams.ID);
+      return await this.typesService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefTypesResponse)

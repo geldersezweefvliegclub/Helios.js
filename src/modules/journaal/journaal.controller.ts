@@ -33,10 +33,10 @@ export class JournaalController extends HeliosController
    @HeliosGetObject(OperJournaalDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<OperJournaalDto>
+      @Query('ID') id: number): Promise<OperJournaalDto>
    {
       this.permissieService.heeftToegang(user, 'Journaal.GetObject');
-      return await this.journaalService.GetObject(queryParams.ID);
+      return await this.journaalService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperJournaalResponse)
@@ -44,10 +44,7 @@ export class JournaalController extends HeliosController
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsOperJournaalRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperJournaalResponse>>
    {
-      // check if the user has the right permissions
       this.permissieService.heeftToegang(user, 'Journaal.GetObjects');
-
-      // retrieve the objects from the database based on the query parameters
       return await this.journaalService.GetObjects (queryParams);
    }
 
@@ -103,7 +100,6 @@ export class JournaalController extends HeliosController
       const data: Prisma.OperJournaalUpdateInput = {
          VERWIJDERD: true
       }
-
       await this.journaalService.UpdateObject(id, data);
    }
 
@@ -113,7 +109,6 @@ export class JournaalController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Journaal.RemoveObject');
-
       await this.journaalService.RemoveObject(id);
    }
 

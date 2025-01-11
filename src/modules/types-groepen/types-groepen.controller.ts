@@ -35,10 +35,10 @@ export class TypesGroepenController extends HeliosController
    @HeliosGetObject(RefTypesGroepDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefTypesGroepDto>
+      @Query('ID') id: number): Promise<RefTypesGroepDto>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.GetObject');
-      return  await this.typesGroepenService.GetObject(queryParams.ID);
+      return  await this.typesGroepenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefTypesGroepenResponse)
@@ -96,6 +96,7 @@ export class TypesGroepenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'TypesGroepen.RestoreObject');
+
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: false
       }

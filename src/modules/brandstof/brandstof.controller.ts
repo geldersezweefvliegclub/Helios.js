@@ -39,10 +39,10 @@ export class BrandstofController  extends HeliosController
    @HeliosGetObject(OperBrandstofDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<OperBrandstofDto>
+      @Query('ID') id: number): Promise<OperBrandstofDto>
    {
       this.permissieService.heeftToegang(user, 'Brandstof.GetObject');
-      return await this.brandstofService.GetObject(queryParams.ID);
+      return await this.brandstofService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperBrandstofResponse)

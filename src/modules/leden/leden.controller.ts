@@ -41,10 +41,10 @@ export class LedenController extends HeliosController
    @HeliosGetObject(RefLidDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefLidDto>
+      @Query('ID') id: number): Promise<RefLidDto>
    {
       this.permissieService.heeftToegang(user, 'Leden.GetObject');
-      const obj =  await this.ledenService.GetObject(queryParams.ID);
+      const obj =  await this.ledenService.GetObject(id);
       return this.privacyMask(obj, user);
    }
 

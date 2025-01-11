@@ -38,14 +38,14 @@ export class CompetentiesController extends HeliosController
    @HeliosGetObject(RefCompetentieDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectRequest): Promise<RefCompetentieDto>
+      @Query('ID') id: number): Promise<RefCompetentieDto>
    {
       this.permissieService.heeftToegang(user, 'Competenties.GetObject');
-      return await this.competentiesService.GetObject(queryParams.ID);
+      return await this.competentiesService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefCompetentiesResponse)
-   async GetObjects(
+      GetObjects(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsRefCompetentiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefCompetentiesResponse>>
    {
@@ -53,7 +53,7 @@ export class CompetentiesController extends HeliosController
       this.permissieService.heeftToegang(user, 'Competenties.GetObjects');
 
       // retrieve the objects from the database based on the query parameters
-      return await this.competentiesService.GetObjects (queryParams);
+      return this.competentiesService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefCompetentieDto, RefCompetentieDto)
@@ -105,7 +105,6 @@ export class CompetentiesController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.permissieService.heeftToegang(user, 'Competenties.RemoveObject');
-
       await this.competentiesService.RemoveObject(id);
    }
 

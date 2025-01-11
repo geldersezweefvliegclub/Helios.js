@@ -1,18 +1,18 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
+import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import {DatabaseEvents} from "../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
 import {Prisma, RefCompetentie} from "@prisma/client";
 import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
-import {DatabaseEvents} from "../../core/helpers/Events";
 
 @Injectable()
 export class CompetentiesService extends IHeliosService
 {
-   constructor(private readonly logger: Logger,
-               private readonly dbService: DbService,
+   constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
@@ -49,13 +49,12 @@ export class CompetentiesService extends IHeliosService
                   { ID: { in: params.IDs }},
                   { LEERFASE_ID: params.LEERFASE_ID}
                ]
-         };
-
+         }
       let count: number | undefined;
-      if (params.MAX !== undefined || params.START !== undefined) {
-         count = await this.dbService.refCompetentie.count({ where });
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.refCompetentie.count({ where: where });
       }
-
       const objs = await this.dbService.refCompetentie.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefCompetentieOrderByWithRelationInput>(params.SORT ?? "VOLGORDE, ID"),
@@ -63,7 +62,7 @@ export class CompetentiesService extends IHeliosService
          skip: params.START,
          include: {
             LeerfaseType: true
-         },
+         }
       });
 
       const response = objs.map((obj) => {
@@ -104,7 +103,8 @@ export class CompetentiesService extends IHeliosService
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void> {
+   async RemoveObject(id: number): Promise<void>
+   {
       const db = await this.GetObject(id);
       await this.dbService.refCompetentie.delete({
          where: {

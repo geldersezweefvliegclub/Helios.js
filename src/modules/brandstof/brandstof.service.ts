@@ -1,11 +1,11 @@
-
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
-import {OperBrandstof, Prisma} from '@prisma/client';
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {IHeliosService} from "../../core/services/IHeliosService";
-import {DatabaseEvents} from "../../core/helpers/Events";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import {DatabaseEvents} from "../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
+import {Prisma, OperBrandstof} from '@prisma/client';
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
 
@@ -27,7 +27,6 @@ export class BrandstofService extends IHeliosService
          },
          include: this.SelectStringToInclude<Prisma.OperBrandstofInclude>(relation)
       });
-
       if (!db)
          throw new HttpException(`Brandstof record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
@@ -41,27 +40,23 @@ export class BrandstofService extends IHeliosService
          params = new GetObjectsOperBrandstofRequest();
          params.VERWIJDERD = false;
       }
-      const sort = params.SORT ? params.SORT : "TIJDSTIP DESC";         // set the sort order if not defined default to SORTEER_VOLGORDE
-
-      // create the where clause
       const where: Prisma.OperBrandstofWhereInput =
          {
             AND:
                [
-                  {ID: params.ID},
-                  {VERWIJDERD: params.VERWIJDERD ?? false},
-                  {ID: {in: params.IDs}}
+                  { ID: params.ID},
+                  { VERWIJDERD: params.VERWIJDERD ?? false},
+                  { ID: { in: params.IDs }}
                ]
          }
-
-      let count;
+      let count: number | undefined;
       if (params.MAX !== undefined || params.START !== undefined)
       {
          count = await this.dbService.operBrandstof.count({where: where});
       }
       const objs = await this.dbService.operBrandstof.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperBrandstofOrderByWithRelationInput>(sort),
+         orderBy: this.SortStringToSortObj<Prisma.OperBrandstofOrderByWithRelationInput>(params.SORT ?? "TIJDSTIP DESC"),
          take: params.MAX,
          skip: params.START,
          include: {
@@ -96,7 +91,7 @@ export class BrandstofService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.OperBrandstofUpdateInput): Promise<OperBrandstof>
    {
-      const db = this.GetObject(id);
+      const db = await this.GetObject(id);
       const obj = await this.dbService.operBrandstof.update({
          where: {
             ID: id
@@ -109,7 +104,7 @@ export class BrandstofService extends IHeliosService
 
    async RemoveObject(id: number): Promise<void>
    {
-      const db = this.GetObject(id);
+      const db = await this.GetObject(id);
       await this.dbService.operBrandstof.delete({
          where: {
             ID: id

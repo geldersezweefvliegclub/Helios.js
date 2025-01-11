@@ -1,20 +1,22 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import { DbService } from "../../database/db-service/db.service";
-import { Prisma, RefLid } from '@prisma/client';
-import { IHeliosGetObjectsResponse } from "../../core/DTO/IHeliosGetObjectsResponse";
-import { IHeliosService } from "../../core/services/IHeliosService";
-import { DatabaseEvents } from "../../core/helpers/Events";
-import { EventEmitter2 } from "@nestjs/event-emitter";
-import { GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
-import { hash } from "bcryptjs";
-import { GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {DbService} from "../../database/db-service/db.service";
+import {IHeliosService} from "../../core/services/IHeliosService";
+import {EventEmitter2} from "@nestjs/event-emitter";
+import {DatabaseEvents} from "../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
+import {Prisma, RefLid } from '@prisma/client';
+import {GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
+import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+
+import { hash } from "bcryptjs";
+import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
 
 @Injectable()
 export class LedenService extends IHeliosService
 {
-   constructor(private readonly logger: Logger,
-               private readonly dbService: DbService,
+   constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
@@ -46,47 +48,46 @@ export class LedenService extends IHeliosService
 
    // retrieve objects from the database based on the query parameters
    async GetObjects(params?: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
-      if(!params) {
-         params = {
-            VERWIJDERD: false,
-            CLUBLEDEN: true
-         }
+      if (params === undefined)
+      {
+         params = new GetObjectsRefLedenRequest();
+         params.VERWIJDERD = false;
+         params.CLUBLEDEN = true;
       }
-
       const where: Prisma.RefLidWhereInput = {
          AND:
             [
-               {ID: params.ID},
-               {VERWIJDERD: params.VERWIJDERD ?? false},
-               {ID: {in: params.IDs}},
+               { ID: params.ID},
+               { VERWIJDERD: params.VERWIJDERD ?? false},
+               { ID: { in: params.IDs }},
                {
                   OR: [
-                     {NAAM: {contains: params.SELECTIE}},
-                     {EMAIL: {contains: params.SELECTIE}},
-                     {TELEFOON: {contains: params.SELECTIE}},
-                     {MOBIEL: {contains: params.SELECTIE}},
-                     {NOODNUMMER: {contains: params.SELECTIE}}
+                     { NAAM:        { contains: params.SELECTIE}},
+                     { EMAIL:       { contains: params.SELECTIE}},
+                     { TELEFOON:    { contains: params.SELECTIE}},
+                     { MOBIEL:      { contains: params.SELECTIE}},
+                     { NOODNUMMER:  { contains: params.SELECTIE}}
                   ]
                },
-               {DDWV_CREW: params.DDWV_CREW},
-               {BEHEERDER: params.BEHEERDERS},
-               {INSTRUCTEUR: params.INSTRUCTEURS},
-               {STARTLEIDER: params.STARTLEIDERS},
-               {LIERIST: params.LIERISTEN},
+               { DDWV_CREW: params.DDWV_CREW},
+               { BEHEERDER: params.BEHEERDERS},
+               { INSTRUCTEUR: params.INSTRUCTEURS},
+               { STARTLEIDER: params.STARTLEIDERS},
+               { LIERIST: params.LIERISTEN},
                {LIERIST_IO: params.LIO},
-               {BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
-               {LIDTYPE_ID: {in: params.TYPES}},
-               {LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
+               { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
+               { LIDTYPE_ID: { in: params.TYPES}},
+               { LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
             ]
-      };
-
+      }
       let count: number | undefined;
       if (params.MAX !== undefined || params.START !== undefined)
-         count = await this.dbService.refLid.count({where});
-
+      {
+         count = await this.dbService.refLid.count({where: where});
+      }
       const objs = await this.dbService.refLid.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefLidOrderByWithRelationInput>(params.SORT ?? "ID"),
+         orderBy: this.SortStringToSortObj<Prisma.RefLidOrderByWithRelationInput>(params.SORT ?? "ACHTERNAAM"),
          take: params.MAX,
          skip: params.START,
          include: {
@@ -94,8 +95,8 @@ export class LedenService extends IHeliosService
             VliegStatus: true,
             Zusterclub: true,
             Buddy: true,
-            Buddy2: true,
-         },
+            Buddy2: true
+         }
       });
 
       const response = objs.map((obj) => {
@@ -162,7 +163,8 @@ export class LedenService extends IHeliosService
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void> {
+   async RemoveObject(id: number): Promise<void>
+   {
       const db = await this.GetObject(id);
       await this.dbService.refLid.delete({
          where: {

@@ -15,7 +15,7 @@ export class AgendaService extends IHeliosService
    {
       super();
    }
-   
+
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
    async GetObject(id: number, relation: string = undefined): Promise<OperAgenda>
@@ -40,7 +40,6 @@ export class AgendaService extends IHeliosService
          params = new GetObjectsOperAgendaRequest();
          params.VERWIJDERD = false;
       }
-
       const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
 
       // create the where clause
@@ -53,18 +52,17 @@ export class AgendaService extends IHeliosService
                   {ID: {in: params.IDs}}
                ]
          }
-
+      let count;
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         count = await this.dbService.operAgenda.count({where: where});
+      }
       const objs = await this.dbService.operAgenda.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperAgendaOrderByWithRelationInput>(sort),
          take: params.MAX,
          skip: params.START});
 
-      let count;
-      if (params.MAX !== undefined || params.START !== undefined)
-      {
-         count = await this.dbService.operAgenda.count({where: where});
-      }
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
@@ -99,7 +97,6 @@ export class AgendaService extends IHeliosService
             ID: id
          }
       });
-
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
    }
 }
