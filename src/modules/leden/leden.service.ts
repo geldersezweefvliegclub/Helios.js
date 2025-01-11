@@ -11,7 +11,6 @@ import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 
 import { hash } from "bcryptjs";
-import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
 
 @Injectable()
 export class LedenService extends IHeliosService

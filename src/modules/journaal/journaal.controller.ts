@@ -9,7 +9,6 @@ import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {OperJournaal, Prisma, RefLid} from "@prisma/client";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";

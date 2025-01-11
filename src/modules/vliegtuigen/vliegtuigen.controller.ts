@@ -10,7 +10,6 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid, RefVliegtuig} from "@prisma/client";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";

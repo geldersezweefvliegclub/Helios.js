@@ -7,7 +7,6 @@ import {TypesService} from "./types.service";
 import {Prisma, RefLid, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
    HeliosGetObject,

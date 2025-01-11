@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {
    HeliosController, HeliosCreateObject, HeliosDeleteObject,
    HeliosGetObject,

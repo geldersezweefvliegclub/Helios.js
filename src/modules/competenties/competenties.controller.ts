@@ -9,7 +9,6 @@ import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefCompetentie, RefLid} from "@prisma/client";
-import {GetObjectRequest} from "../../core/DTO/IHeliosFilter";
 import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
 import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
