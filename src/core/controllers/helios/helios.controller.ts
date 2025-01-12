@@ -26,6 +26,7 @@ export class HeliosController {
 export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(dataDto),
       ApiOperation({ summary: 'Ophalen enkel record op basis van ID.' }),
@@ -44,9 +45,9 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
 export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto) =>
     applyDecorators(
       Get("GetObjects"),
-      ApiExtraModels(dataDto),
       ApiBasicAuth,
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
+       ApiExtraModels(dataDto),
       ApiOperation({ summary: 'Ophalen records uit de database.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
       ApiResponse({ status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.' }),
@@ -73,6 +74,7 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
 export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
    applyDecorators(
       Post("AddObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Aanmaken nieuw record.' }),
@@ -88,6 +90,7 @@ export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto ext
 export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
     applyDecorators(
       Put("UpdateObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Update van bestaand record.' }),
@@ -103,6 +106,7 @@ export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto ext
 export const HeliosDeleteObject = () =>
     applyDecorators(
       Delete("DeleteObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.NO_CONTENT),
@@ -117,6 +121,7 @@ export const HeliosDeleteObject = () =>
 export const HeliosRemoveObject = () =>
     applyDecorators(
       Delete("RemoveObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiQuery({name: 'ID', required: true, type: Number}),
       HttpCode(HttpStatus.GONE),
@@ -131,6 +136,7 @@ export const HeliosRemoveObject = () =>
 export const HeliosRestoreObject = () =>
     applyDecorators(
       Patch("RestoreObject"),
+      ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiQuery({name: 'ID', required: true, type: Number}),
       ApiOperation({ summary: 'Maak de verwijdering ongedaan door VERWIJDERD op false te zetten.' }),

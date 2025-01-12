@@ -87,8 +87,24 @@ describe('API Response Comparison (e2e)', () => {
                     const phpResponse = await requestBuilder.makeRequest(PHP_API_URL, endpoint, GetPhpAuth());
 
                     // The hash will always be different across the two APIs, so we remove it from the response to compare the rest of the data
-                    const nestjsResponseDataWithoutHash = {...nestjsResponse.data, ...{hash: undefined}};
-                    const phpResponseDataWithoutHash = {...phpResponse.data, ...{hash: undefined}};
+                    const nestjsResponseDataWithoutHash = {...nestjsResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined}};
+                    const phpResponseDataWithoutHash = {...phpResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined, laatste_aanpassing: undefined}};
+
+                    if (nestjsResponseDataWithoutHash.dataset)
+                    {
+                        for (let i = 0; i < nestjsResponseDataWithoutHash.dataset.length; i++)
+                        {
+                            nestjsResponseDataWithoutHash.dataset[i] = {...nestjsResponseDataWithoutHash.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
+                        }
+                    }
+
+                    if (phpResponseDataWithoutHash.dataset)
+                    {
+                        for (let i = 0; i < nestjsResponseDataWithoutHash.dataset.length; i++)
+                        {
+                            phpResponseDataWithoutHash.dataset[i] = {...phpResponseDataWithoutHash.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
+                        }
+                    }
 
                     expect(nestjsResponse.status).toEqual(phpResponse.status);
                     logger.log('Comparison of status codes completed: success');

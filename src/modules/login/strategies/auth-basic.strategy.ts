@@ -16,7 +16,7 @@ export class BasicStrategy extends PassportStrategy(Strategy, 'basic-auth') {
 
    public validate = async (req, inlognaam, wachtwoord): Promise<boolean> => {
       const lid = await this.loginService.verifyUser(inlognaam, wachtwoord);  // verify user credentials
-      this.loginController.login(lid, req.res);  // set JWT token as cookie for subsequent requests
+      await this.loginController.login(lid, req.res);  // set JWT token as cookie for subsequent requests
       return true;
    }
 }
