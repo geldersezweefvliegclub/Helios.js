@@ -161,9 +161,9 @@ export class LedenController extends HeliosController
       }
       else {
          // remove the secret info from the response
-         obj.INLOGNAAM = undefined;
-         obj.SECRET = undefined;
-         obj.WACHTWOORD = undefined;
+         obj.INLOGNAAM = null;
+         obj.SECRET = null;
+         obj.WACHTWOORD = null;
          obj.AUTH = false;
       }
 
@@ -178,27 +178,27 @@ export class LedenController extends HeliosController
       if (!this.permissieService.isBeheerder(user) &&
           !this.permissieService.isBeheerderDDWV(user) &&
           !this.permissieService.isCIMT(user) && (obj.ID !== user.ID)) {
-         obj.BREVET_NUMMER = undefined;
-         obj.KNVVL_LIDNUMMER = undefined;
-         obj.ZUSTERCLUB_ID = undefined;
+         obj.BREVET_NUMMER = null;
+         obj.KNVVL_LIDNUMMER = null;
+         obj.ZUSTERCLUB_ID = null;
       }
 
       // tegoed is alleen intressant voor beheerders en beheerders DDWV, of het lid zelf
       if (!this.permissieService.isBeheerder(user) &&
          !this.permissieService.isBeheerderDDWV(user) && (obj.ID !== user.ID)) {
-         obj.TEGOED = undefined;
+         obj.TEGOED = null;
       }
 
       // buddy is alleen zichtbaar voor beheerders, instructeurs en CIMT, of het lid zelf
       if (!this.permissieService.isBeheerder(user) &&
           !this.permissieService.isInstructeur(user) &&
           !this.permissieService.isCIMT(user) && (obj.ID !== user.ID)) {
-         obj.BUDDY_ID = undefined;
-         obj.BUDDY_ID2 = undefined;
+         obj.BUDDY_ID = null;
+         obj.BUDDY_ID2 = null;
 
          // starttoren heeeft medical info nodig
          if (!this.permissieService.isStarttoren(user)) {
-            obj.MEDICAL = undefined
+            obj.MEDICAL = null
          }
       }
 
@@ -210,13 +210,13 @@ export class LedenController extends HeliosController
          obj.ADRES = "****";
          obj.POSTCODE = "****";
          obj.WOONPLAATS = "****";
-         obj.TELEFOON = undefined
-         obj.MOBIEL = undefined
-         obj.NOODNUMMER = undefined
-         obj.GEBOORTE_DATUM = undefined
-         obj.AVATAR = undefined;
-         obj.LIDNR = undefined;
-         obj.STATUSTYPE_ID = undefined;
+         obj.TELEFOON = null
+         obj.MOBIEL = null
+         obj.NOODNUMMER = null
+         obj.GEBOORTE_DATUM = null
+         obj.AVATAR = null;
+         obj.LIDNR = null;
+         obj.STATUSTYPE_ID = null;
       }
 
       return  obj as RefLid
@@ -226,12 +226,12 @@ export class LedenController extends HeliosController
    {
       const responseObj = this.privacyMask(obj, user) as GetObjectsRefLedenResponse;
 
-      responseObj.BUDDY       = responseObj.BUDDY_ID ? obj.BUDDY : undefined;
-      responseObj.BUDDY2      = responseObj.BUDDY_ID2 ? obj.BUDDY2 : undefined;
-      responseObj.LIDTYPE     = responseObj.LIDTYPE_ID ? obj.LIDTYPE : undefined;
-      responseObj.STATUS      = responseObj.STATUSTYPE_ID ? obj.STATUS : undefined;
-      responseObj.LIDTYPE_REF = responseObj.LIDTYPE_ID ? obj.LIDTYPE_REF : undefined;
-      responseObj.ZUSTERCLUB  = responseObj.ZUSTERCLUB_ID ? obj.ZUSTERCLUB : undefined;
+      responseObj.BUDDY       = responseObj.BUDDY_ID ? obj.BUDDY : null;
+      responseObj.BUDDY2      = responseObj.BUDDY_ID2 ? obj.BUDDY2 : null;
+      responseObj.LIDTYPE     = responseObj.LIDTYPE_ID ? obj.LIDTYPE : null;
+      responseObj.STATUS      = responseObj.STATUSTYPE_ID ? obj.STATUS : null;
+      responseObj.LIDTYPE_REF = responseObj.LIDTYPE_ID ? obj.LIDTYPE_REF : null;
+      responseObj.ZUSTERCLUB  = responseObj.ZUSTERCLUB_ID ? obj.ZUSTERCLUB : null;
 
       return responseObj;
    }

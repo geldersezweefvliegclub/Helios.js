@@ -45,27 +45,37 @@ describe('API Response Comparison (e2e)', () => {
     const NESTJS_API_URL = process.env.TESTING_NESTJS_URL;
     const PHP_API_URL = process.env.TESTING_PHP_URL;
 
-    const endpoints = [
-        new EndpointGroup('TypesGroepen', [
-            new Endpoint("GetObject", "GET", "/TypesGroepen/GetObject", {ID: 1}),
-            new Endpoint('GetObjects ID', 'GET', '/TypesGroepen/GetObjects', {ID: 1}),
-            new Endpoint('GetObjects Max', 'GET', '/TypesGroepen/GetObjects', {MAX: 2}),
-            new Endpoint('GetObjects Sort ID ASC', 'GET', '/TypesGroepen/GetObjects', {SORT: 'ID'}),
-            new Endpoint('GetObjects Sort ID DESC', 'GET', '/TypesGroepen/GetObjects', {SORT: 'ID DESC'}),
-            new Endpoint('GetObjects', 'GET', '/TypesGroepen/GetObjects'),
-            new Endpoint('GetObjects Velden', 'GET', '/TypesGroepen/GetObjects', {MAX: 2, VELDEN: 'ID, OMSCHRIJVING'}),
-        ]),
-        new EndpointGroup('Types', [
-            new Endpoint("GetObject", "GET", "/Types/GetObject", {ID: 1}),
-            new Endpoint('GetObjects ID', 'GET', '/Types/GetObjects', {ID: 601}),
-            new Endpoint('GetObjects Max', 'GET', '/Types/GetObjects', {MAX: 2}),
-            new Endpoint('GetObjects Sort ID ASC', 'GET', '/Types/GetObjects', {SORT: 'ID'}),
-            new Endpoint('GetObjects Sort ID DESC', 'GET', '/Types/GetObjects', {SORT: 'ID DESC'}),
-            new Endpoint('GetObjects GetObjects', 'GET', '/Types/GetObjects'),
-            new Endpoint('GetObjects Groep = 1', 'GET', '/Types/GetObjects', {GROEP: 1}),
-            new Endpoint('GetObjects Velden', 'GET', '/Types/GetObjects', {MAX: 2, VELDEN: 'ID, OMSCHRIJVING'}),
-        ]),
-    ];
+    const classes = [
+      //  { class: "TypesGroepen", ID: 5},
+      //  { class: "Types", ID: 601 },
+      //  { class: "Leden", ID: 10395 },
+      //   { class: "Vliegtuigen", ID: 200 },
+      //  { class: "Competenties", ID: 35 },
+        { class: "Journaal", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
+    ]
+
+    const endpoints= [];
+    classes.forEach(heliosClass =>
+    {
+        const qry = {}
+        if (heliosClass.BEGIN_DATUM)
+            qry['BEGIN_DATUM'] = heliosClass.BEGIN_DATUM
+        if (heliosClass.EIND_DATUM)
+            qry['EIND_DATUM'] = heliosClass.EIND_DATUM
+
+        endpoints.push(
+           new EndpointGroup(heliosClass.class, [
+                new Endpoint("A. GetObject", "GET", `/${heliosClass.class}/GetObject`,  {ID: heliosClass.ID}),
+                new Endpoint("B. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {ID: heliosClass.ID}),
+                new Endpoint("C. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry, MAX: 2}),
+                new Endpoint("D. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,START:4, MAX: 2}),
+                new Endpoint("E. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,SORT: 'ID'}),
+                new Endpoint("F. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,SORT: 'ID DESC'}),
+                new Endpoint("G. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,VERWIJDERD: true}),
+                new Endpoint("H. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry}),
+            ])
+        );
+    });
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -87,22 +97,143 @@ describe('API Response Comparison (e2e)', () => {
                     const phpResponse = await requestBuilder.makeRequest(PHP_API_URL, endpoint, GetPhpAuth());
 
                     // The hash will always be different across the two APIs, so we remove it from the response to compare the rest of the data
-                    const nestjsResponseDataWithoutHash = {...nestjsResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined}};
-                    const phpResponseDataWithoutHash = {...phpResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined, laatste_aanpassing: undefined}};
+                    const nestjsCompare = {...nestjsResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined}};
+                    let phpCompare = {...phpResponse.data, ...{hash: undefined, LAATSTE_AANPASSING: undefined, laatste_aanpassing: undefined}};
 
-                    if (nestjsResponseDataWithoutHash.dataset)
+                    // verwijderen van LAATSTE_AANPASSING omdat deze niet altijd hetzelfde is
+                    if (nestjsCompare.dataset)
                     {
-                        for (let i = 0; i < nestjsResponseDataWithoutHash.dataset.length; i++)
+                        for (let i = 0; i < nestjsCompare.dataset.length; i++)
                         {
-                            nestjsResponseDataWithoutHash.dataset[i] = {...nestjsResponseDataWithoutHash.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
+                            nestjsCompare.dataset[i] = {...nestjsCompare.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
                         }
                     }
 
-                    if (phpResponseDataWithoutHash.dataset)
+                    if (phpCompare.dataset)
                     {
-                        for (let i = 0; i < nestjsResponseDataWithoutHash.dataset.length; i++)
+                        for (let i = 0; i < phpCompare.dataset.length; i++)
                         {
-                            phpResponseDataWithoutHash.dataset[i] = {...phpResponseDataWithoutHash.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
+                            phpCompare.dataset[i] = {...phpCompare.dataset[i], ...{LAATSTE_AANPASSING: undefined}};
+                        }
+                    }
+                    // done
+
+                    // veld aanpassen voor
+                    switch (endpointGroup.name)
+                    {
+                        case "Types":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < nestjsCompare.dataset.length; i++)
+                                    delete nestjsCompare.dataset[i].GROEP
+
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    const { GROEP, ...record} = phpCompare.dataset[i];
+                                    record.TYPEGROEP_ID = GROEP
+                                    phpCompare.dataset[i] = record
+                                }
+                            }
+                            else
+                            {
+                                const { GROEP, ...record} = phpCompare;
+                                record.TYPEGROEP_ID = GROEP
+                                phpCompare = record;
+                            }
+                            break;
+                        }
+
+                        case "Leden":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < nestjsCompare.dataset.length; i++)
+                                {
+                                    delete nestjsCompare.dataset[i].BRANDSTOF_PAS
+                                    delete nestjsCompare.dataset[i].GEBOORTE_DATUM
+                                    delete nestjsCompare.dataset[i].MEDICAL
+                                    delete nestjsCompare.dataset[i].WACHTWOORD
+                                    delete nestjsCompare.dataset[i].SECRET
+                                }
+
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    delete phpCompare.dataset[i].GEBOORTE_DATUM
+                                    delete phpCompare.dataset[i].MEDICAL
+                                    delete phpCompare.dataset[i].WACHTWOORD
+                                    delete phpCompare.dataset[i].SECRET
+                                }
+                            }
+                            else
+                            {
+                                delete nestjsCompare.BRANDSTOF_PAS;
+                                delete nestjsCompare.GEBOORTE_DATUM
+                                delete nestjsCompare.MEDICAL
+                                delete nestjsCompare.WACHTWOORD
+                                delete nestjsCompare.SECRET
+
+                                delete phpCompare.BRANDSTOF_PAS;
+                                delete phpCompare.GEBOORTE_DATUM
+                                delete phpCompare.MEDICAL
+                                delete phpCompare.WACHTWOORD
+                                delete phpCompare.SECRET
+                            }
+                            break;
+                        }
+
+                        case "Competenties":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    const { BLOK_ID, ONDERWERP, ...record} = phpCompare.dataset[i];
+                                    record.OUDER_ID = BLOK_ID
+                                    record.OMSCHRIJVING = ONDERWERP
+                                    phpCompare.dataset[i] = record
+                                }
+                            }
+                            else
+                            {
+                                const { BLOK_ID, ONDERWERP, ...record} = phpCompare;
+                                record.OUDER_ID = BLOK_ID
+                                record.OMSCHRIJVING = ONDERWERP
+                                phpCompare = record;
+                            }
+                            break;
+                        }
+
+                        case "Journaal":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < nestjsCompare.dataset.length; i++)
+                                {
+                                    delete nestjsCompare.dataset[i].DATUM
+                                }
+
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    delete phpCompare.dataset[i].DATUM
+
+                                    // const { BLOK_ID, ONDERWERP, ...record} = phpCompare.dataset[i];
+                                    // record.OUDER_ID = BLOK_ID
+                                    // record.OMSCHRIJVING = ONDERWERP
+                                    // phpCompare.dataset[i] = record
+                                }
+                            }
+                            else
+                            {
+                                delete nestjsCompare.DATUM
+                                delete phpCompare.DATUM
+
+                                // const { BLOK_ID, ONDERWERP, ...record} = phpCompare;
+                                // record.OUDER_ID = BLOK_ID
+                                // record.OMSCHRIJVING = ONDERWERP
+                                // phpCompare = record;
+                            }
+                            break;
                         }
                     }
 
@@ -110,7 +241,7 @@ describe('API Response Comparison (e2e)', () => {
                     logger.log('Comparison of status codes completed: success');
 
                     logger.log('Comparing response bodies...');
-                    expect(nestjsResponseDataWithoutHash).toEqual(phpResponseDataWithoutHash);
+                    expect(nestjsCompare).toEqual(phpCompare);
                     logger.log('Comparison of response bodies completed: success');
                 }, 20000);
             }

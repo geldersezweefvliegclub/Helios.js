@@ -73,7 +73,7 @@ export class LedenService extends IHeliosService
                { INSTRUCTEUR: params.INSTRUCTEURS},
                { STARTLEIDER: params.STARTLEIDERS},
                { LIERIST: params.LIERISTEN},
-               {LIERIST_IO: params.LIO},
+               { LIERIST_IO: params.LIO},
                { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
                { LIDTYPE_ID: { in: params.TYPES}},
                { LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
@@ -97,6 +97,7 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
+      // TODO progressiekaart voor pax bevoegdheid
 
       const response = objs.map((obj) => {
          // copy relevant fields from child objects to the parent object

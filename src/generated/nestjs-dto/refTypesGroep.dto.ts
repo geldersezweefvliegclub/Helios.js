@@ -42,6 +42,12 @@ export class RefTypesGroepDto {
   })
   READ_ONLY: boolean;
   @ApiProperty({
+    description:
+      "De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt",
+    type: "boolean",
+  })
+  BEDRAG_EENHEDEN: boolean;
+  @ApiProperty({
     description: "Is de groep gemarkeerd als verwijderd",
     type: "boolean",
   })

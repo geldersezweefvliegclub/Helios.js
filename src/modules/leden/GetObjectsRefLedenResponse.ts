@@ -4,6 +4,13 @@ import {ApiProperty} from "@nestjs/swagger";
 export class GetObjectsRefLedenResponse extends RefLidDto
 {
    @ApiProperty({
+      type: Boolean,
+      required: true,
+      description: 'Heeft lid een passagiersbevoegdheid (progressie kaart)',
+   })
+   PAX?: boolean
+
+   @ApiProperty({
       type: String,
       required: true,
       description: 'Lidtype',

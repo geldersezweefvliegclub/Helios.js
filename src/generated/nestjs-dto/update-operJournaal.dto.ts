@@ -45,7 +45,7 @@ export class UpdateOperJournaalDto {
   ROLLEND_ID?: number | null;
   @ApiProperty({
     description: "Titel van het journaal",
-    maxLength: 50,
+    maxLength: 75,
     type: "string",
     required: false,
   })

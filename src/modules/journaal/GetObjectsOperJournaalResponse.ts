@@ -28,6 +28,13 @@ export class GetObjectsOperJournaalResponse extends OperJournaalDto
    @ApiProperty({
       type: String,
       required: true,
+      description: 'Status code van de melding',
+   })
+   STATUS_CODE: string
+
+   @ApiProperty({
+      type: String,
+      required: true,
       description: 'Categorie van de melding (Visueel, Klacht, Algemeen, Defect, etc)',
    })
    CATEGORIE: string

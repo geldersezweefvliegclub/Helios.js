@@ -58,7 +58,7 @@ export class TypesService extends IHeliosService
       }
       const objs = await this.dbService.refType.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(params.SORT ?? "SORTEER_VOLGORDE, ID"),
+         orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(params.SORT ?? "TYPEGROEP_ID, SORTEER_VOLGORDE, ID"),
          take: params.MAX,
          skip: params.START,
          include: {

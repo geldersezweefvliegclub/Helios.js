@@ -25,6 +25,11 @@ model RefTypesGroep {
   /// @DtoUpdateOptional
   READ_ONLY Boolean @default(false) @db.TinyInt
 
+  /// @description De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BEDRAG_EENHEDEN Boolean @default(false) @db.TinyInt
+
   /// @DtoReadOnly
   /// @description Is de groep gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false) @db.TinyInt

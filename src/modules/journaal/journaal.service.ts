@@ -91,7 +91,7 @@ export class JournaalService extends IHeliosService
       }
       const objs = await this.dbService.operJournaal.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperJournaalOrderByWithRelationInput>(params.SORT ?? "DATUM DESC, ID DESC"),
+         orderBy: this.SortStringToSortObj<Prisma.OperJournaalOrderByWithRelationInput>(params.SORT ?? "STATUS_ID, DATUM DESC"),
          take: params.MAX,
          skip: params.START,
          include: {
@@ -114,9 +114,10 @@ export class JournaalService extends IHeliosService
             AFGETEKEND: obj.Afgetekend?.NAAM ?? null,
             ROLLEND: obj.Rollend?.OMSCHRIJVING ?? null,
             STATUS: obj.Status?.OMSCHRIJVING ?? null,
+            STATUS_CODE: obj.Status?.CODE ?? null,
             CATEGORIE: obj.Categorie?.OMSCHRIJVING ?? null,
             CATEGORIE_CODE: obj.Categorie?.CODE ?? null,
-            REG_CALL: obj.Vliegtuig === undefined ? null : obj.Vliegtuig?.REGISTRATIE + (obj.Vliegtuig?.CALLSIGN ?  " (" + obj.Vliegtuig.CALLSIGN + ")" : "")
+            REG_CALL: obj.Vliegtuig === null ? " ()" : obj.Vliegtuig?.REGISTRATIE + (obj.Vliegtuig?.CALLSIGN ?  " (" + obj.Vliegtuig.CALLSIGN + ")" : "")
          } ;
 
          // delete child objects from the response

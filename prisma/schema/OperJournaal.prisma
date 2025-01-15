@@ -30,9 +30,9 @@ model OperJournaal {
   ROLLEND_ID Int?
 
   /// @IsNotEmpty()
-  /// @maxLength 50
+  /// @maxLength 75
   /// @description Titel van het journaal
-  TITEL String @db.VarChar(50)
+  TITEL String @db.VarChar(75)
 
   /// @DtoCreateOptional
   /// @DtoUpdateOptional

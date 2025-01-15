@@ -62,4 +62,14 @@ export class UpdateRefTypesGroepDto {
   @IsOptional()
   @IsBoolean()
   READ_ONLY?: boolean;
+  @ApiProperty({
+    description:
+      "De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  BEDRAG_EENHEDEN?: boolean;
 }
