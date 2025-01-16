@@ -110,6 +110,6 @@ export class BrandstofService extends IHeliosService
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
    }
 }

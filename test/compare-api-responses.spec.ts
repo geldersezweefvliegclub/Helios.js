@@ -51,7 +51,8 @@ describe('API Response Comparison (e2e)', () => {
       //  { class: "Leden", ID: 10395 },
       //   { class: "Vliegtuigen", ID: 200 },
       //  { class: "Competenties", ID: 35 },
-        { class: "Journaal", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
+      //  { class: "Journaal", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
+        { class: "Agenda", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
     ]
 
     const endpoints= [];
@@ -204,6 +205,29 @@ describe('API Response Comparison (e2e)', () => {
                             break;
                         }
 
+                        case "Agenda":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < nestjsCompare.dataset.length; i++)
+                                {
+                                    delete nestjsCompare.dataset[i].DATUM
+                                }
+
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    delete phpCompare.dataset[i].DATUM
+                                    delete phpCompare.dataset[i].TIJD
+                                }
+                            }
+                            else
+                            {
+                                delete nestjsCompare.DATUM
+                                delete phpCompare.DATUM
+                                delete phpCompare.TIJD
+                            }
+                            break;
+                        }
                         case "Journaal":
                         {
                             if (endpoint.name.includes("GetObjects"))
@@ -216,22 +240,12 @@ describe('API Response Comparison (e2e)', () => {
                                 for (let i = 0; i < phpCompare.dataset.length; i++)
                                 {
                                     delete phpCompare.dataset[i].DATUM
-
-                                    // const { BLOK_ID, ONDERWERP, ...record} = phpCompare.dataset[i];
-                                    // record.OUDER_ID = BLOK_ID
-                                    // record.OMSCHRIJVING = ONDERWERP
-                                    // phpCompare.dataset[i] = record
                                 }
                             }
                             else
                             {
                                 delete nestjsCompare.DATUM
                                 delete phpCompare.DATUM
-
-                                // const { BLOK_ID, ONDERWERP, ...record} = phpCompare;
-                                // record.OUDER_ID = BLOK_ID
-                                // record.OMSCHRIJVING = ONDERWERP
-                                // phpCompare = record;
                             }
                             break;
                         }

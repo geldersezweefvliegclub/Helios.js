@@ -1,11 +1,13 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {IHeliosService} from "../../core/services/IHeliosService";
 import {DbService} from "../../database/db-service/db.service";
+import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
+import {DatabaseEvents} from "../../core/helpers/Events";
+import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+
 import {Prisma, OperAgenda} from "@prisma/client";
 import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
-import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {DatabaseEvents} from "../../core/helpers/Events";
+import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
 
 @Injectable()
 export class AgendaService extends IHeliosService
@@ -40,26 +42,23 @@ export class AgendaService extends IHeliosService
          params = new GetObjectsOperAgendaRequest();
          params.VERWIJDERD = false;
       }
-      const sort = params.SORT ? params.SORT : "SORTEER_VOLGORDE, ID";         // set the sort order if not defined default to SORTEER_VOLGORDE
-
-      // create the where clause
       const where: Prisma.OperAgendaWhereInput =
          {
             AND:
                [
-                  {ID: params.ID},
-                  {VERWIJDERD: params.VERWIJDERD ?? false},
-                  {ID: {in: params.IDs}}
+                  { ID: params.ID},
+                  { VERWIJDERD: params.VERWIJDERD ?? false},
+                  { ID: {in: params.IDs }}
                ]
          }
-      let count;
+      let count: number | undefined;
       if (params.MAX !== undefined || params.START !== undefined)
       {
          count = await this.dbService.operAgenda.count({where: where});
       }
       const objs = await this.dbService.operAgenda.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperAgendaOrderByWithRelationInput>(sort),
+         orderBy: this.SortStringToSortObj<Prisma.OperAgendaOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
          skip: params.START});
 
@@ -78,7 +77,7 @@ export class AgendaService extends IHeliosService
 
    async UpdateObject(id: number, data: Prisma.OperAgendaUpdateInput): Promise<OperAgenda>
    {
-      const db = this.GetObject(id);
+      const db = await this.GetObject(id);
       const obj = await this.dbService.operAgenda.update({
          where: {
             ID: id
@@ -91,7 +90,7 @@ export class AgendaService extends IHeliosService
 
    async RemoveObject(id: number): Promise<void>
    {
-      const db = this.GetObject(id);
+      const db = await this.GetObject(id);
       await this.dbService.operAgenda.delete({
          where: {
             ID: id
