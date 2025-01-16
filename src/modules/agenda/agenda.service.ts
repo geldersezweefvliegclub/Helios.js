@@ -35,7 +35,7 @@ export class AgendaService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsOperAgendaRequest): Promise<IHeliosGetObjectsResponse<OperAgenda>>
+   async GetObjects(params?: GetObjectsOperAgendaRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperAgendaResponse>>
    {
       if (params === undefined)
       {
@@ -48,7 +48,7 @@ export class AgendaService extends IHeliosService
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: {in: params.IDs }}
+                  { ID: { in: params.IDs }}
                ]
          }
       let count: number | undefined;
