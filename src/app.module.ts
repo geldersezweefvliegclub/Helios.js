@@ -17,6 +17,7 @@ import { CompetentiesModule } from './modules/competenties/competenties.module';
 import { AgendaModule } from './modules/agenda/agenda.module';
 import { AgendaService } from './modules/agenda/agenda.service';
 import { JournaalModule } from './modules/journaal/journaal.module';
+import { DocumentenModule } from './modules/documenten/documenten.module';
 import config from './config/configuration';
 
 
@@ -40,6 +41,7 @@ import config from './config/configuration';
       CompetentiesModule,
       AgendaModule,
       JournaalModule,
+      DocumentenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

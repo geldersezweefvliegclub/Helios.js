@@ -60,10 +60,11 @@ model RefType {
   Vliegtuig RefVliegtuig[] @relation("VliegtuigType")
 
   /// @description Het type vliegtuig
-  Competentie       RefCompetentie[] @relation("LeerfaseType")
-  JournaalStatus    OperJournaal[]   @relation("Status")
-  JournaalCategorie OperJournaal[]   @relation("Categorie")
-  JournaalRollend   OperJournaal[]   @relation("Rollend")
+  Competentie       RefCompetentie[]      @relation("LeerfaseType")
+  JournaalStatus    OperJournaal[]        @relation("Status")
+  JournaalCategorie OperJournaal[]        @relation("Categorie")
+  JournaalRollend   OperJournaal[]        @relation("Rollend")
+  Documenten        HeliosDocument[]      @relation("DocumentGroep")
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
   @@map("ref_types")

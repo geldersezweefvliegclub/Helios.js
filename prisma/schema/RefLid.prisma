@@ -276,11 +276,12 @@ model RefLid {
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   Auth               AuthUser[]
-  Audit              Audit[]         @relation("RefLid")
-  Brandstof          OperBrandstof[] @relation("RefLid")
-  JournaalTechnicus  OperJournaal[]  @relation("Technicus")
-  JournaalMelder     OperJournaal[]  @relation("Melder")
-  JournaalAfgetekend OperJournaal[]  @relation("Afgetekend")
+  Audit              Audit[]              @relation("RefLid")
+  Brandstof          OperBrandstof[]      @relation("RefLid")
+  JournaalTechnicus  OperJournaal[]       @relation("Technicus")
+  JournaalMelder     OperJournaal[]       @relation("Melder")
+  JournaalAfgetekend OperJournaal[]       @relation("Afgetekend")
+  Document           HeliosDocument[]     @relation("RefLid")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

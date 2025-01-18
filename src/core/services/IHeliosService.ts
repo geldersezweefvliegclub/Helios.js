@@ -27,12 +27,23 @@ export abstract class IHeliosService
       const retVal: oType[] = [];
       if (!sort) return undefined;
 
+      const sortObj = {} as oType;
       sort.split(',').forEach(part =>  // split on comma
       {
          const [field, order] = part.trim().split(' ');
-         const sortObj = {} as oType;
-         sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
-         retVal.push(sortObj);
+
+         if (part.includes('.')) {
+            const [table, child_field] = field.split('.');
+            const sortObj = {} as oType;
+            sortObj[table] = {};
+            sortObj[table][child_field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
+            retVal.push(sortObj);
+         }
+         else
+         {
+            sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
+            retVal.push(sortObj);
+         }
       });
       return retVal;
    }

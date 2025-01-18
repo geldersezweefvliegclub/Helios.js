@@ -53,6 +53,7 @@ describe('API Response Comparison (e2e)', () => {
       //  { class: "Competenties", ID: 35 },
       //  { class: "Journaal", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
         { class: "Agenda", ID: 2, BEGIN_DATUM: "2024-01-01", EIND_DATUM: "2024-12-31" },
+        { class: "Documenten", ID: 20 },
     ]
 
     const endpoints= [];
@@ -225,6 +226,28 @@ describe('API Response Comparison (e2e)', () => {
                                 delete nestjsCompare.DATUM
                                 delete phpCompare.DATUM
                                 delete phpCompare.TIJD
+                            }
+                            break;
+                        }
+                        case "Documenten":
+                        {
+                            if (endpoint.name.includes("GetObjects"))
+                            {
+                                for (let i = 0; i < nestjsCompare.dataset.length; i++)
+                                {
+                                    delete nestjsCompare.dataset[i].DATUM
+                                    delete nestjsCompare.dataset[i].NAAM
+                                }
+
+                                for (let i = 0; i < phpCompare.dataset.length; i++)
+                                {
+                                    delete phpCompare.dataset[i].DATUM
+                                }
+                            }
+                            else
+                            {
+                                delete nestjsCompare.DATUM
+                                delete phpCompare.DATUM
                             }
                             break;
                         }
