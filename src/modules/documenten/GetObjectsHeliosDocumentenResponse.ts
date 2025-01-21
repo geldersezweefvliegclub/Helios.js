@@ -1,6 +1,5 @@
 
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
-import {OperBrandstofDto} from "../../generated/nestjs-dto/operBrandstof.dto";
 import {HeliosDocumentDto} from "../../generated/nestjs-dto/heliosDocument.dto";
 
 @ApiTags('Documenten')

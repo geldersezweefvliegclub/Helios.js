@@ -27,7 +27,6 @@ export abstract class IHeliosService
       const retVal: oType[] = [];
       if (!sort) return undefined;
 
-      const sortObj = {} as oType;
       sort.split(',').forEach(part =>  // split on comma
       {
          const [field, order] = part.trim().split(' ');
@@ -41,6 +40,7 @@ export abstract class IHeliosService
          }
          else
          {
+            const sortObj = {} as oType;
             sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
             retVal.push(sortObj);
          }
