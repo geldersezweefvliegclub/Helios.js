@@ -1,0 +1,41 @@
+model OperWinterwerk {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een agenda-item
+  ID Int @id @default(autoincrement())
+
+  /// @description Datum van de werkdag
+  DATUM DateTime   @db.Date
+
+  /// @description Begin van de werkzaamheden
+  AANVANG DateTime  @db.Time
+
+  /// @description Einde van de werkzaamheden
+  EINDE DateTime    @db.Time
+
+  /// @description Eventuele opmerkingen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN String?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van de persoon die gewerkt heeft, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int @db.Int
+
+  /// @DtoReadOnly
+  /// @description Is het agenda-item gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Laatste aanpassingstijd van het winterwerk-item
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([DATUM], name: "DATUM")
+  @@map("oper_winterwerk")
+}

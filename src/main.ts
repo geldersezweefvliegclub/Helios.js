@@ -5,9 +5,8 @@ import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {utilities, WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import * as cookieParser from 'cookie-parser';
-import {SeqTransport} from "@datalust/winston-seq";
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosHttpExceptionFilter";
-import {Prisma} from "@prisma/client";
+import { dump }             from 'js-yaml';
 import {HeliosPrismaClientKnownRequestError} from "./core/helpers/HeliosPrismaClientKnownRequestError";
 import {HeliosPrismaClientDefaultError} from "./core/helpers/HeliosPrismaClientDefaultError";
 import {HeliosPrismaClientValidationError} from "./core/helpers/HeliosPrismaClientValidationError";
@@ -39,6 +38,7 @@ const createLogger = () => WinstonModule.createLogger({
              }),
           ),
       }),
+      /*
       new SeqTransport({
          serverUrl: process.env.LOGGER_SERVER_URL || 'http://localhost:5341',
          apiKey: process.env.LOGGER_API_KEY,
@@ -46,6 +46,8 @@ const createLogger = () => WinstonModule.createLogger({
          handleExceptions: true,
          handleRejections: true,
       }),
+
+       */
    ],
 });
 
@@ -64,6 +66,14 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
          tagsSorter: 'alpha',
          operationsSorter: 'alpha',
       },
+   });
+
+   // Convert JSON spec to YAML
+   const yamlSpec = dump(document);
+
+   // swager file is downloadable via <<base_url>>/swagger.yaml
+   app.getHttpAdapter().get('/swagger.yaml', (_req, res) => {
+      res.type('application/x-yaml').send(yamlSpec);
    });
 }
 
