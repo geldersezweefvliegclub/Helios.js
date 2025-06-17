@@ -59,12 +59,32 @@ model RefType {
   /// @description Het type vliegtuig
   Vliegtuig RefVliegtuig[] @relation("VliegtuigType")
 
-  /// @description Het type vliegtuig
+  /// @description In welke leerface zitten we EVO, VVO-1, VVO-2 of GeZC specifiek
   Competentie       RefCompetentie[]      @relation("LeerfaseType")
+
+  /// @description Status van het journaal
   JournaalStatus    OperJournaal[]        @relation("Status")
+
+  /// @description Categorie van de jornaal melding
   JournaalCategorie OperJournaal[]        @relation("Categorie")
+
+  /// @description Als journaal voor rollend geschrevn is, voor welk materieel is het journaal, lier, bully, aanhanger
   JournaalRollend   OperJournaal[]        @relation("Rollend")
+
+  /// @description Soort document
   Documenten        HeliosDocument[]      @relation("DocumentGroep")
+
+  /// @description Op welk veld word gevlogen
+  Veld              OperDagInfo[]       @relation("Veld")
+  Veld2             OperDagInfo[]       @relation("Veld2")
+
+  /// @description Op welke baan is in gebruik
+  Baan              OperDagInfo[]       @relation("Baan")
+  Baan2             OperDagInfo[]       @relation("Baan2")
+
+  /// @description Op de meest gebruikte startmethode
+  StartMethode      OperDagInfo[]       @relation("StartMethode")
+  StartMethode2     OperDagInfo[]       @relation("StartMethode2")
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
   @@map("ref_types")

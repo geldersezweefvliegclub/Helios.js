@@ -19,6 +19,7 @@ import { AgendaService } from './modules/agenda/agenda.service';
 import { JournaalModule } from './modules/journaal/journaal.module';
 import { DocumentenModule } from './modules/documenten/documenten.module';
 import { WinterwerkModule } from './modules/winterwerk/winterwerk.module';
+import { DagInfoModule } from './modules/dag-info/dag-info.module';
 import config from './config/configuration';
 
 
@@ -44,6 +45,7 @@ import config from './config/configuration';
       JournaalModule,
       DocumentenModule,
       WinterwerkModule,
+      DagInfoModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],
