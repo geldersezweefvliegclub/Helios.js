@@ -11,63 +11,63 @@ model OperDagInfo {
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Veld RefType @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het veld in de type tabel
-  VELD_ID Int
+  VELD_ID Int?
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Baan RefType @relation("Baan", fields: [BAAN_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  Baan RefType? @relation("Baan", fields: [BAAN_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de baan in de type tabel
-  BAAN_ID Int
+  BAAN_ID Int?
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  StartMethode RefType @relation("StartMethode", fields: [STARTMETHODE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  StartMethode RefType? @relation("StartMethode", fields: [STARTMETHODE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de startmethode in de type tabel
-  STARTMETHODE_ID Int
+  STARTMETHODE_ID Int?
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Veld2 RefType @relation("Veld2", fields: [VELD_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  Veld2 RefType? @relation("Veld2", fields: [VELD_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het veld in de type tabel
-  VELD_ID2 Int
+  VELD_ID2 Int?
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Baan2 RefType @relation("Baan2", fields: [BAAN_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  Baan2 RefType? @relation("Baan2", fields: [BAAN_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de baan in de type tabel
-  BAAN_ID2 Int
+  BAAN_ID2 Int?
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  StartMethode2 RefType @relation("StartMethode2", fields: [STARTMETHODE_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  StartMethode2 RefType? @relation("StartMethode2", fields: [STARTMETHODE_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de startmethode in de type tabel
-  STARTMETHODE_ID2 Int
+  STARTMETHODE_ID2 Int?
 
   /// @description Is het een clubbedrijf
   /// @DtoCreateOptional

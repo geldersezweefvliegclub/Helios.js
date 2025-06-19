@@ -28,55 +28,61 @@ export class UpdateOperDagInfoDto {
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  VELD_ID?: number;
+  VELD_ID?: number | null;
   @ApiProperty({
     description: "Referentie naar de baan in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  BAAN_ID?: number;
+  BAAN_ID?: number | null;
   @ApiProperty({
     description: "Referentie naar de startmethode in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  STARTMETHODE_ID?: number;
+  STARTMETHODE_ID?: number | null;
   @ApiProperty({
     description: "Referentie naar het veld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  VELD_ID2?: number;
+  VELD_ID2?: number | null;
   @ApiProperty({
     description: "Referentie naar de baan in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  BAAN_ID2?: number;
+  BAAN_ID2?: number | null;
   @ApiProperty({
     description: "Referentie naar de startmethode in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  STARTMETHODE_ID2?: number;
+  STARTMETHODE_ID2?: number | null;
   @ApiProperty({
     description: "Is het een clubbedrijf",
     type: "boolean",

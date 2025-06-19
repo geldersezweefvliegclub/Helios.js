@@ -1,6 +1,5 @@
-
 import {Body, Controller, Query} from '@nestjs/common';
-import {DagInfoService} from "./dag-info.service";
+import {DagRapportenService} from "./dag-rapporten.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
    HeliosController,
@@ -9,56 +8,56 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperDagInfoDto} from "../../generated/nestjs-dto/operDagInfo.dto";
+import {OperDagRapportDto} from "../../generated/nestjs-dto/OperDagRapport.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
-import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
-import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
+import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenResponse";
+import {GetObjectsOperDagRapportenRequest} from "./GetObjectsOperDagRapportenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperDagInfoDto} from "../../generated/nestjs-dto/create-operDagInfo.dto";
-import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto/update-operDagInfo.dto";
+import {CreateOperDagRapportDto} from "../../generated/nestjs-dto/create-OperDagRapport.dto";
+import {UpdateOperDagRapportDto} from "../../generated/nestjs-dto/update-OperDagRapport.dto";
 
 @Controller('DagInfo')
 @Controller('dagInfo')
 export class DagInfoController  extends HeliosController
 {
-   constructor(private readonly DagInfoService: DagInfoService,
+   constructor(private readonly DagInfoService: DagRapportenService,
                private readonly permissieService:PermissieService)
    {
       super()
    }
 
-   @HeliosGetObject(OperDagInfoDto)
+   @HeliosGetObject(OperDagRapportDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number): Promise<OperDagInfoDto>
+      @Query('ID') id: number): Promise<OperDagRapportDto>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.GetObject');
       return await this.DagInfoService.GetObject(id);
    }
 
-   @HeliosGetObjects(GetObjectsOperDagInfoResponse)
+   @HeliosGetObjects(GetObjectsOperDagRapportenResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsOperDagInfoRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagInfoResponse>>
+      @Query() queryParams: GetObjectsOperDagRapportenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagRapportenResponse>>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.GetObjects');
       return this.DagInfoService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateOperDagInfoDto, OperDagInfoDto)
+   @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateOperDagInfoDto): Promise<OperDagInfoDto>
+      @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.AddObject');
-      return await this.DagInfoService.AddObject(data as Prisma.OperDagInfoCreateInput);
+      return await this.DagInfoService.AddObject(data as Prisma.OperDagRapportCreateInput);
    }
 
-   @HeliosUpdateObject(UpdateOperDagInfoDto, OperDagInfoDto)
+   @HeliosUpdateObject(UpdateOperDagRapportDto, OperDagRapportDto)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateOperDagInfoDto): Promise<OperDagInfoDto>
+      @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.UpdateObject');
       return await this.DagInfoService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);

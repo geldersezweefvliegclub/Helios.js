@@ -75,16 +75,19 @@ model RefType {
   Documenten        HeliosDocument[]      @relation("DocumentGroep")
 
   /// @description Op welk veld word gevlogen
-  Veld              OperDagInfo[]       @relation("Veld")
-  Veld2             OperDagInfo[]       @relation("Veld2")
+  DagInfoVeld              OperDagInfo[]       @relation("Veld")
+  DagInfoVeld2             OperDagInfo[]       @relation("Veld2")
 
   /// @description Op welke baan is in gebruik
-  Baan              OperDagInfo[]       @relation("Baan")
-  Baan2             OperDagInfo[]       @relation("Baan2")
+  DagInfoBaan              OperDagInfo[]       @relation("Baan")
+  DagInfoBaan2             OperDagInfo[]       @relation("Baan2")
 
   /// @description Op de meest gebruikte startmethode
-  StartMethode      OperDagInfo[]       @relation("StartMethode")
-  StartMethode2     OperDagInfo[]       @relation("StartMethode2")
+  DagInfoStartMethode      OperDagInfo[]       @relation("StartMethode")
+  DagInfoStartMethode2     OperDagInfo[]       @relation("StartMethode2")
+
+  /// @description Op welk veld word gevlogen
+  DagRapportVeld              OperDagRapport[]       @relation("Veld")
 
   @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
   @@map("ref_types")

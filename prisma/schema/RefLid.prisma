@@ -283,6 +283,7 @@ model RefLid {
   JournaalAfgetekend OperJournaal[]       @relation("Afgetekend")
   Document           HeliosDocument[]     @relation("RefLid")
   Winterwerk         OperWinterwerk[]     @relation("RefLid")
+  DagRapport         OperDagRapport[]     @relation("RefLid")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])
