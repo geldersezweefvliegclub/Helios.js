@@ -21,6 +21,7 @@ import { DocumentenModule } from './modules/documenten/documenten.module';
 import { WinterwerkModule } from './modules/winterwerk/winterwerk.module';
 import { DagInfoModule } from './modules/dag-info/dag-info.module';
 import { DagRapportenModule } from './modules/dag-rapporten/dag-rapporten.module';
+import { GastenModule } from './modules/gasten/gasten.module';
 import config from './config/configuration';
 
 
@@ -48,6 +49,7 @@ import config from './config/configuration';
       WinterwerkModule,
       DagInfoModule,
       DagRapportenModule,
+      GastenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

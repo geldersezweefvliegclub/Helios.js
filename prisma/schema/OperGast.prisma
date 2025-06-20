@@ -1,0 +1,39 @@
+model OperGast {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de gast
+  ID Int @id @default(autoincrement())
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Datum van de daginfo
+  DATUM DateTime? @default(now())
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het veld in de type tabel
+  VELD_ID Int?
+
+  /// @DtoReadOnly
+  /// @description De naam van de gast
+  NAAM String @db.VarChar(255)
+
+  /// @description Opmerkingen die bij de gast horen
+  OPMERKINGEN String? @db.Text
+
+  /// @DtoReadOnly
+  /// @description Is het journaal gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Datum van de laatste aanpassing
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([DATUM], name: "DATUM_IDX")
+  @@map("oper_gasten")
+}
