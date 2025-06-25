@@ -17,7 +17,8 @@ export class RefCompetentieDto {
   })
   VOLGORDE: number | null;
   @ApiProperty({
-    description: "Het type vliegtuig, relatie naar de types tabel",
+    description:
+      "De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)",
     type: "integer",
     format: "int32",
     nullable: true,
@@ -31,7 +32,7 @@ export class RefCompetentieDto {
   })
   OUDER_ID: number | null;
   @ApiProperty({
-    description: "Leerblok van de comptentie zoals in de syllabus",
+    description: "Leerblok van de comptentie zoals beschreven in de syllabus",
     maxLength: 7,
     type: "string",
     nullable: true,
@@ -45,7 +46,7 @@ export class RefCompetentieDto {
   })
   OMSCHRIJVING: string;
   @ApiProperty({
-    description: "Omschrijving van de competentie",
+    description: "Bijbehoordende documentatie van de competentie",
     maxLength: 75,
     type: "string",
     nullable: true,
@@ -62,7 +63,7 @@ export class RefCompetentieDto {
   })
   SCORE: boolean;
   @ApiProperty({
-    description: "Is de competentie gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

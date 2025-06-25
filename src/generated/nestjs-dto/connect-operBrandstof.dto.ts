@@ -3,8 +3,7 @@ import { IsInt, IsNotEmpty } from "class-validator";
 
 export class ConnectOperBrandstofDto {
   @ApiProperty({
-    description:
-      "De primary ID van het tankbeurt, andere objecten refereren naar dit ID",
+    description: "De primary ID van het tankbeurt",
     type: "integer",
     format: "int32",
   })

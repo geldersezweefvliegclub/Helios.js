@@ -19,7 +19,7 @@ export class UpdateOperAanwezigLidDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Datum van het dagrapport",
+    description: "Datum van de aanmelding",
     type: "string",
     format: "date-time",
     required: false,
@@ -29,7 +29,7 @@ export class UpdateOperAanwezigLidDto {
   DATUM?: Date;
   @ApiProperty({
     description:
-      "Verwijzing naar het lid ID van de persoon die gewerkt heeft, link naar de leden tabel",
+      "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
     type: "integer",
     format: "int32",
     required: false,
@@ -38,7 +38,7 @@ export class UpdateOperAanwezigLidDto {
   @IsInt()
   LID_ID?: number;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
@@ -49,7 +49,7 @@ export class UpdateOperAanwezigLidDto {
   VELD_ID?: number | null;
   @ApiProperty({
     description:
-      "Is er vooraf aangemeld? Of is de aanmelding gedaan bij het starten van de vlucht?",
+      "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
     type: "boolean",
     default: false,
     required: false,
@@ -68,7 +68,8 @@ export class UpdateOperAanwezigLidDto {
   @IsDateString()
   AANKOMST?: Date | null;
   @ApiProperty({
-    description: "Vertrek tijd, de tijd dat de persoon vertrekt van het veld",
+    description:
+      "Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat",
     type: "string",
     format: "date-time",
     required: false,
@@ -78,7 +79,7 @@ export class UpdateOperAanwezigLidDto {
   @IsDateString()
   VERTREK?: Date | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
     type: "integer",
     format: "int32",
     required: false,

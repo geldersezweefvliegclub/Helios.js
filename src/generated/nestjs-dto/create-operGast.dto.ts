@@ -24,7 +24,7 @@ export class CreateOperGastDto {
   @IsDateString()
   DATUM?: Date | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,

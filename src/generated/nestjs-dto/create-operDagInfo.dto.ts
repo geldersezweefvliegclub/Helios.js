@@ -24,7 +24,7 @@ export class CreateOperDagInfoDto {
   @IsDateString()
   DATUM?: Date | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
@@ -54,7 +54,8 @@ export class CreateOperDagInfoDto {
   @IsInt()
   STARTMETHODE_ID?: number | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description:
+      "Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp",
     type: "integer",
     format: "int32",
     required: false,
@@ -84,7 +85,7 @@ export class CreateOperDagInfoDto {
   @IsInt()
   STARTMETHODE_ID2?: number | null;
   @ApiProperty({
-    description: "Is het een clubbedrijf",
+    description: "Is het een clubbedrijf op het primaire veld",
     type: "boolean",
     default: false,
     required: false,
@@ -93,7 +94,7 @@ export class CreateOperDagInfoDto {
   @IsBoolean()
   CLUB_BEDRIJF?: boolean;
   @ApiProperty({
-    description: "Is het een DDWV bedrijf",
+    description: "Is het een DDWV bedrijf op het primaire veld",
     type: "boolean",
     default: false,
     required: false,

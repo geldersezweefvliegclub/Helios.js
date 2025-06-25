@@ -15,7 +15,7 @@ export class OperDagInfoDto {
   })
   DATUM: Date | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     nullable: true,
@@ -36,7 +36,8 @@ export class OperDagInfoDto {
   })
   STARTMETHODE_ID: number | null;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description:
+      "Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp",
     type: "integer",
     format: "int32",
     nullable: true,
@@ -57,22 +58,22 @@ export class OperDagInfoDto {
   })
   STARTMETHODE_ID2: number | null;
   @ApiProperty({
-    description: "Is het een clubbedrijf",
+    description: "Is het een clubbedrijf op het primaire veld",
     type: "boolean",
   })
   CLUB_BEDRIJF: boolean;
   @ApiProperty({
-    description: "Is het een DDWV bedrijf",
+    description: "Is het een DDWV bedrijf op het primaire veld",
     type: "boolean",
   })
   DDWV: boolean;
   @ApiProperty({
-    description: "Is het journaal gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Datum van de laatste aanpassing",
+    description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",
     format: "date-time",
   })

@@ -8,7 +8,7 @@ export class HeliosDocumentDto {
   })
   ID: number;
   @ApiProperty({
-    description: "Datum wanneer datum is aangemaakt",
+    description: "Datum wanneer document is aangemaakt",
     type: "string",
     format: "date-time",
   })
@@ -65,7 +65,7 @@ export class HeliosDocumentDto {
   })
   BOVEN: boolean;
   @ApiProperty({
-    description: "Is de groep gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

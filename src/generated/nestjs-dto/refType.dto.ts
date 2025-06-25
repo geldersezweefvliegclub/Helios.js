@@ -42,7 +42,7 @@ export class RefTypeDto {
   SORTEER_VOLGORDE: number | null;
   @ApiProperty({
     description:
-      "Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
+      "Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code",
     type: "boolean",
   })
   READ_ONLY: boolean;
@@ -61,7 +61,7 @@ export class RefTypeDto {
   })
   EENHEDEN: number | null;
   @ApiProperty({
-    description: "Is de groep gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

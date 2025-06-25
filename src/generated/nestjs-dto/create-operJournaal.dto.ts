@@ -67,7 +67,7 @@ export class CreateOperJournaalDto {
   @IsString()
   OMSCHRIJVING?: string | null;
   @ApiProperty({
-    description: "Referentie naar de categorie",
+    description: "Referentie naar de categorie defect, observatie, klacht",
     type: "integer",
     format: "int32",
     required: false,
@@ -77,7 +77,7 @@ export class CreateOperJournaalDto {
   @IsInt()
   CATEGORIE_ID?: number | null;
   @ApiProperty({
-    description: "Referentie naar de status (type tabel)",
+    description: "Referentie naar de status (type tabel),",
     type: "integer",
     format: "int32",
     required: false,

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class OperAanwezigLidDto {
+export class OperAanwezigVliegtuigDto {
   @ApiProperty({
     description: "Het unieke ID van de aanmelding",
     type: "integer",
@@ -14,25 +14,12 @@ export class OperAanwezigLidDto {
   })
   DATUM: Date;
   @ApiProperty({
-    description:
-      "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
-    type: "integer",
-    format: "int32",
-  })
-  LID_ID: number;
-  @ApiProperty({
     description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     nullable: true,
   })
   VELD_ID: number | null;
-  @ApiProperty({
-    description:
-      "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
-    type: "boolean",
-  })
-  VOORAANMELDING: boolean;
   @ApiProperty({
     description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",
@@ -52,30 +39,36 @@ export class OperAanwezigLidDto {
     description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  OVERLAND_VLIEGTUIG_ID: number | null;
+  VLIEGTUIG_ID: number;
   @ApiProperty({
-    description:
-      "Comma-separated lijst van de vliegtuigen types waarop het lid graag wil vliegen",
-    type: "string",
+    description: "Laaste bekende Latitude van het vliegtuig",
+    type: "number",
+    format: "float",
     nullable: true,
   })
-  VOORKEUR_VLIEGTUIG_TYPE: string | null;
+  LATITUDE: number | null;
   @ApiProperty({
-    description:
-      "Referentie naar de transactie als dat van toepassing is (bijv DDVD)",
-    type: "integer",
-    format: "int32",
+    description: "Laaste bekende Longitude van het vliegtuig",
+    type: "number",
+    format: "float",
     nullable: true,
   })
-  TRANSACTIE_ID: number | null;
+  LONGITUDE: number | null;
   @ApiProperty({
-    description: "Eventuele opmerkingen, zoals eerder weg gaan",
-    type: "string",
+    description: "Laaste bekende hoogte van het vliegtuig in meters",
+    type: "number",
+    format: "float",
     nullable: true,
   })
-  OPMERKINGEN: string | null;
+  HOOGTE: number | null;
+  @ApiProperty({
+    description: "Laaste bekende grond snelheid van het vliegtuig in km/h",
+    type: "number",
+    format: "float",
+    nullable: true,
+  })
+  SNELHEID: number | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

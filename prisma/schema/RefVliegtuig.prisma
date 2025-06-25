@@ -108,8 +108,9 @@ model RefVliegtuig {
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  Journaal OperJournaal[] @relation("Vliegtuig")
-  AanmwezigLeden OperAanwezigLid[] @relation("Vliegtuig")
+  Journaal            OperJournaal[]          @relation("Vliegtuig")
+  AanwezigLeden       OperAanwezigLid[]       @relation("Vliegtuig")
+  AanwezigVliegtuigen OperAanwezigVliegtuig[] @relation("Vliegtuig")
 
   @@index([VERWIJDERD])
   @@index([REGISTRATIE])

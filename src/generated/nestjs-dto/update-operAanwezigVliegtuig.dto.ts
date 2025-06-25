@@ -1,14 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsBoolean,
-  IsDateString,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { IsDateString, IsInt, IsNumber, IsOptional } from "class-validator";
 
-export class CreateOperAanwezigLidDto {
+export class UpdateOperAanwezigVliegtuigDto {
   @ApiProperty({
     description: "Het unieke ID van de aanmelding",
     type: "integer",
@@ -23,20 +16,11 @@ export class CreateOperAanwezigLidDto {
     description: "Datum van de aanmelding",
     type: "string",
     format: "date-time",
-  })
-  @IsNotEmpty()
-  @IsDateString()
-  DATUM: Date;
-  @ApiProperty({
-    description:
-      "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
-    type: "integer",
-    format: "int32",
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  LID_ID?: number;
+  @IsDateString()
+  DATUM?: Date;
   @ApiProperty({
     description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
@@ -47,16 +31,6 @@ export class CreateOperAanwezigLidDto {
   @IsOptional()
   @IsInt()
   VELD_ID?: number | null;
-  @ApiProperty({
-    description:
-      "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
-    type: "boolean",
-    default: false,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  VOORAANMELDING?: boolean;
   @ApiProperty({
     description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",
@@ -83,39 +57,48 @@ export class CreateOperAanwezigLidDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  OVERLAND_VLIEGTUIG_ID?: number | null;
+  VLIEGTUIG_ID?: number;
   @ApiProperty({
-    description:
-      "Comma-separated lijst van de vliegtuigen types waarop het lid graag wil vliegen",
-    type: "string",
+    description: "Laaste bekende Latitude van het vliegtuig",
+    type: "number",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  VOORKEUR_VLIEGTUIG_TYPE?: string | null;
+  @IsNumber()
+  LATITUDE?: number | null;
   @ApiProperty({
-    description:
-      "Referentie naar de transactie als dat van toepassing is (bijv DDVD)",
-    type: "integer",
-    format: "int32",
+    description: "Laaste bekende Longitude van het vliegtuig",
+    type: "number",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsInt()
-  TRANSACTIE_ID?: number | null;
+  @IsNumber()
+  LONGITUDE?: number | null;
   @ApiProperty({
-    description: "Eventuele opmerkingen, zoals eerder weg gaan",
-    type: "string",
+    description: "Laaste bekende hoogte van het vliegtuig in meters",
+    type: "number",
+    format: "float",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  OPMERKINGEN?: string | null;
+  @IsNumber()
+  HOOGTE?: number | null;
+  @ApiProperty({
+    description: "Laaste bekende grond snelheid van het vliegtuig in km/h",
+    type: "number",
+    format: "float",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber()
+  SNELHEID?: number | null;
 }

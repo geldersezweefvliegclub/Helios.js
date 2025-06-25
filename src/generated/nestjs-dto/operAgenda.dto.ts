@@ -32,12 +32,12 @@ export class OperAgendaDto {
   })
   OPENBAAR: boolean;
   @ApiProperty({
-    description: "Is het agenda-item gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Laatste aanpassingstijd van het agenda-item",
+    description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",
     format: "date-time",
   })

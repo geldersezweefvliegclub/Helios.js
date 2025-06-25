@@ -2,8 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class AuditDto {
   @ApiProperty({
-    description:
-      "De primary ID van de groep, andere objecten refereren naar dit ID",
+    description: "De primary ID van de audit tabel",
     type: "integer",
     format: "int32",
   })
@@ -58,7 +57,7 @@ export class AuditDto {
   })
   RESULTAAT: string | null;
   @ApiProperty({
-    description: "Is de groep gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

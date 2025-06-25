@@ -25,7 +25,8 @@ export class UpdateRefCompetentieDto {
   @IsInt()
   VOLGORDE?: number | null;
   @ApiProperty({
-    description: "Het type vliegtuig, relatie naar de types tabel",
+    description:
+      "De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)",
     type: "integer",
     format: "int32",
     required: false,
@@ -45,7 +46,7 @@ export class UpdateRefCompetentieDto {
   @IsInt()
   OUDER_ID?: number | null;
   @ApiProperty({
-    description: "Leerblok van de comptentie zoals in de syllabus",
+    description: "Leerblok van de comptentie zoals beschreven in de syllabus",
     maxLength: 7,
     type: "string",
     required: false,
@@ -65,7 +66,7 @@ export class UpdateRefCompetentieDto {
   @IsString()
   OMSCHRIJVING?: string;
   @ApiProperty({
-    description: "Omschrijving van de competentie",
+    description: "Bijbehoordende documentatie van de competentie",
     maxLength: 75,
     type: "string",
     required: false,

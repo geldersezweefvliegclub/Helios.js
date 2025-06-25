@@ -81,7 +81,7 @@ export class UpdateRefLidDto {
   @IsString()
   WOONPLAATS?: string | null;
   @ApiProperty({
-    description: "Het vaset huistelefoonnummer van het lid",
+    description: "Het vaste huistelefoonnummer van het lid",
     maxLength: 15,
     type: "string",
     required: false,
@@ -386,7 +386,7 @@ export class UpdateRefLidDto {
   @IsBoolean()
   AUTH?: boolean;
   @ApiProperty({
-    description: "Is het lid een actief lid",
+    description: "URL naar de avatar van het lid",
     type: "string",
     required: false,
     nullable: true,

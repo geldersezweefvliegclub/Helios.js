@@ -48,7 +48,7 @@ export class RefTypesGroepDto {
   })
   BEDRAG_EENHEDEN: boolean;
   @ApiProperty({
-    description: "Is de groep gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

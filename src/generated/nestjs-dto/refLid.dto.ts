@@ -57,7 +57,7 @@ export class RefLidDto {
   })
   WOONPLAATS: string | null;
   @ApiProperty({
-    description: "Het vaset huistelefoonnummer van het lid",
+    description: "Het vaste huistelefoonnummer van het lid",
     maxLength: 15,
     type: "string",
     nullable: true,
@@ -249,7 +249,7 @@ export class RefLidDto {
   })
   AUTH: boolean;
   @ApiProperty({
-    description: "Is het lid een actief lid",
+    description: "URL naar de avatar van het lid",
     type: "string",
     nullable: true,
   })
@@ -330,7 +330,7 @@ export class RefLidDto {
   })
   TEGOED: number;
   @ApiProperty({
-    description: "Is de groep gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;

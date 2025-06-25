@@ -3,8 +3,7 @@ import { IsInt, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateOperBrandstofDto {
   @ApiProperty({
-    description:
-      "De primary ID van het tankbeurt, andere objecten refereren naar dit ID",
+    description: "De primary ID van het tankbeurt",
     type: "integer",
     format: "int32",
     default: "autoincrement",
@@ -24,7 +23,7 @@ export class CreateOperBrandstofDto {
   @IsInt()
   LID_ID?: number;
   @ApiProperty({
-    description: "Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)",
+    description: "Type brandstof dat getankt is",
     type: "integer",
     format: "int32",
     required: false,

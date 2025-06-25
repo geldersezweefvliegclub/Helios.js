@@ -87,16 +87,19 @@ model RefType {
   DagInfoStartMethode2     OperDagInfo[]       @relation("StartMethode2")
 
   /// @description Op welk veld word gevlogen
-  DagRapportVeld           OperDagRapport[]   @relation("Veld")
+  DagRapportVeld           OperDagRapport[]         @relation("Veld")
 
   /// @description Welke gasten ontvangen op dit veld
-  GastVeld                 OperGast[]         @relation("Veld")
+  GastVeld                 OperGast[]               @relation("Veld")
+
+  /// @description Welke vliegers op dit veld
+  AanwezigLidVeld          OperAanwezigLid[]        @relation("Veld")
+
+  /// @description Welke vliegers op dit veld
+  AanwezigVliegtuigVeld    OperAanwezigVliegtuig[]  @relation("Veld")
 
   /// @description Welke gasten ontvangen op dit veld
-  AanwezigLidVeld          OperAanwezigLid[]  @relation("Veld")
-
-  /// @description Welke gasten ontvangen op dit veld
-  TransactieType           OperTransactie[]   @relation("RefTransactie")
+  TransactieType           OperTransactie[]         @relation("RefTransactie")
 
   @@index([VERWIJDERD])
   @@index([TYPEGROEP_ID])

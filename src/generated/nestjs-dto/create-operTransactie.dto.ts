@@ -79,7 +79,7 @@ export class CreateOperTransactieDto {
   @IsBoolean()
   DDWV?: boolean;
   @ApiProperty({
-    description: "Het bedrag wat gefactureerd wordt per eeinheid",
+    description: "Het bedrag wat gefactureerd wordt per eenheid",
     type: "number",
     format: "float",
     required: false,
@@ -130,7 +130,7 @@ export class CreateOperTransactieDto {
   @IsString()
   EXT_REF?: string | null;
   @ApiProperty({
-    description: "Eventuele opmerkingen, zoals eerder weg gaan",
+    description: "Omschrijving van de transactie, komt zo ook op de factuur",
     type: "string",
     required: false,
     nullable: true,

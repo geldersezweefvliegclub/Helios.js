@@ -24,6 +24,7 @@ import { DagRapportenModule } from './modules/dag-rapporten/dag-rapporten.module
 import { GastenModule } from './modules/gasten/gasten.module';
 import { TransactiesModule } from './modules/transacties/transacties.module';
 import { AanwezigLedenModule } from './modules/aanwezig-leden/aanwezig-leden.module';
+import { AanwezigVliegtuigenModule } from './modules/aanwezig-vliegtuigen/aanwezig-vliegtuigen.module';
 import config from './config/configuration';
 
 
@@ -54,6 +55,7 @@ import config from './config/configuration';
       GastenModule,
       TransactiesModule,
       AanwezigLedenModule,
+      AanwezigVliegtuigenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

@@ -9,7 +9,7 @@ import {
 
 export class CreateOperWinterwerkDto {
   @ApiProperty({
-    description: "Het unieke ID van een agenda-item",
+    description: "Het unieke ID van een winterwerk record",
     type: "integer",
     format: "int32",
     default: "autoincrement",

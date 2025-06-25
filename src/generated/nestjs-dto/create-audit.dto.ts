@@ -9,8 +9,7 @@ import {
 
 export class CreateAuditDto {
   @ApiProperty({
-    description:
-      "De primary ID van de groep, andere objecten refereren naar dit ID",
+    description: "De primary ID van de audit tabel",
     type: "integer",
     format: "int32",
     default: "autoincrement",

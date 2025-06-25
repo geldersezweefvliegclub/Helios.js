@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class OperWinterwerkDto {
   @ApiProperty({
-    description: "Het unieke ID van een agenda-item",
+    description: "Het unieke ID van een winterwerk record",
     type: "integer",
     format: "int32",
   })
@@ -39,12 +39,12 @@ export class OperWinterwerkDto {
   })
   LID_ID: number;
   @ApiProperty({
-    description: "Is het agenda-item gemarkeerd als verwijderd",
+    description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Laatste aanpassingstijd van het winterwerk-item",
+    description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",
     format: "date-time",
   })

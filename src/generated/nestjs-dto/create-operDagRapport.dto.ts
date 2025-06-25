@@ -27,7 +27,7 @@ export class CreateOperDagRapportDto {
   @IsDateString()
   DATUM: Date;
   @ApiProperty({
-    description: "Referentie naar het veld in de type tabel",
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,
@@ -37,7 +37,7 @@ export class CreateOperDagRapportDto {
   VELD_ID?: number;
   @ApiProperty({
     description:
-      "Verwijzing naar het lid ID van de persoon die gewerkt heeft, link naar de leden tabel",
+      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
     type: "integer",
     format: "int32",
     required: false,
@@ -92,7 +92,7 @@ export class CreateOperDagRapportDto {
   @IsString()
   ROLLENDMATERIEEL?: string | null;
   @ApiProperty({
-    description: "Bijzonderheden over de vliegtuigen",
+    description: "Bijzonderheden over de ingezette vliegtuigen",
     type: "string",
     required: false,
     nullable: true,

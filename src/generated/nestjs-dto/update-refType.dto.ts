@@ -68,7 +68,7 @@ export class UpdateRefTypeDto {
   SORTEER_VOLGORDE?: number | null;
   @ApiProperty({
     description:
-      "Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
+      "Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code",
     type: "boolean",
     default: false,
     required: false,

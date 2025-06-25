@@ -2,8 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class OperBrandstofDto {
   @ApiProperty({
-    description:
-      "De primary ID van het tankbeurt, andere objecten refereren naar dit ID",
+    description: "De primary ID van het tankbeurt",
     type: "integer",
     format: "int32",
   })
@@ -27,7 +26,7 @@ export class OperBrandstofDto {
   })
   TIJDSTIP: Date;
   @ApiProperty({
-    description: "Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)",
+    description: "Type brandstof dat getankt is",
     type: "integer",
     format: "int32",
     nullable: true,
