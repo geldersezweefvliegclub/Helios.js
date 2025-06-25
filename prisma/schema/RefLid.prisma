@@ -33,7 +33,7 @@ model RefLid {
   /// @maxLength 50
   WOONPLAATS String? @db.VarChar(50)
 
-  /// @description Het vaset huistelefoonnummer van het lid
+  /// @description Het vaste huistelefoonnummer van het lid
   /// @maxLength 15
   TELEFOON String? @db.VarChar(15)
 
@@ -213,7 +213,7 @@ model RefLid {
   /// @DtoUpdateOptional
   AUTH Boolean @default(false)
 
-  /// @description Is het lid een actief lid
+  /// @description URL naar de avatar van het lid
   AVATAR String? @db.VarChar(255)
 
   /// @description Lid mag niet meer starten, maar is nog wel lid
@@ -268,22 +268,25 @@ model RefLid {
   TEGOED Float @default(0)
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  Auth               AuthUser[]
-  Audit              Audit[]              @relation("RefLid")
-  Brandstof          OperBrandstof[]      @relation("RefLid")
-  JournaalTechnicus  OperJournaal[]       @relation("Technicus")
-  JournaalMelder     OperJournaal[]       @relation("Melder")
-  JournaalAfgetekend OperJournaal[]       @relation("Afgetekend")
-  Document           HeliosDocument[]     @relation("RefLid")
-  Winterwerk         OperWinterwerk[]     @relation("RefLid")
-  DagRapport         OperDagRapport[]     @relation("RefLid")
+  Auth                AuthUser[]
+  Audit               Audit[]              @relation("RefLid")
+  Brandstof           OperBrandstof[]      @relation("RefLid")
+  JournaalTechnicus   OperJournaal[]       @relation("Technicus")
+  JournaalMelder      OperJournaal[]       @relation("Melder")
+  JournaalAfgetekend  OperJournaal[]       @relation("Afgetekend")
+  Document            HeliosDocument[]     @relation("RefLid")
+  Winterwerk          OperWinterwerk[]     @relation("RefLid")
+  DagRapport          OperDagRapport[]     @relation("RefLid")
+  AanwezigLid         OperAanwezigLid[]    @relation("RefLid")
+  Transactie          OperTransactie[]     @relation("RefLid")
+  TransactieIngevoerd OperTransactie[]     @relation("RefIngevoerd")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

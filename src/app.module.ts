@@ -22,6 +22,8 @@ import { WinterwerkModule } from './modules/winterwerk/winterwerk.module';
 import { DagInfoModule } from './modules/dag-info/dag-info.module';
 import { DagRapportenModule } from './modules/dag-rapporten/dag-rapporten.module';
 import { GastenModule } from './modules/gasten/gasten.module';
+import { TransactiesModule } from './modules/transacties/transacties.module';
+import { AanwezigLedenModule } from './modules/aanwezig-leden/aanwezig-leden.module';
 import config from './config/configuration';
 
 
@@ -50,6 +52,8 @@ import config from './config/configuration';
       DagInfoModule,
       DagRapportenModule,
       GastenModule,
+      TransactiesModule,
+      AanwezigLedenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

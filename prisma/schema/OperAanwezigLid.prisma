@@ -1,0 +1,81 @@
+model OperAanwezigLid {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de aanmelding
+  ID Int @id @default(autoincrement())
+
+  /// @description Datum van de aanmelding
+  DATUM DateTime   @db.Date
+
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van de vlieger, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegveld in de type tabel
+  VELD_ID Int?
+
+  /// @description Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  VOORAANMELDING Boolean @default(false)
+
+  /// @description Tijd van aanwezig zijn (niet de tijd van de aanmelding)
+  AANKOMST DateTime?  @db.Time
+
+  /// @description Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat
+  VERTREK DateTime?    @db.Time
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Vliegtuig RefVliegtuig? @relation("Vliegtuig", fields: [OVERLAND_VLIEGTUIG_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegtuig in de vliegtuigen tabel
+  OVERLAND_VLIEGTUIG_ID Int?
+
+  /// @description Comma-separated lijst van de vliegtuigen types waarop het lid graag wil vliegen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  VOORKEUR_VLIEGTUIG_TYPE String?  @db.VarChar(256)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Transactie OperTransactie? @relation("Transactie", fields: [TRANSACTIE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de transactie als dat van toepassing is (bijv DDVD)
+  TRANSACTIE_ID Int?
+
+  /// @description Eventuele opmerkingen, zoals eerder weg gaan
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN String?          @db.Text
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+
+  @@map("oper_aanwezig_leden")
+}

@@ -1,7 +1,7 @@
 model OperBrandstof {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description De primary ID van het tankbeurt, andere objecten refereren naar dit ID
+  /// @description De primary ID van het tankbeurt
   ID Int @id @default(autoincrement())
 
   /// @DtoRelationCanConnectOnCreate
@@ -25,7 +25,7 @@ model OperBrandstof {
   /// @DtoReadOnly
   BrandstofType RefType? @relation("BrandstofType", fields: [BRANDSTOF_TYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
-  /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
+  /// @description Type brandstof dat getankt is
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -51,6 +51,9 @@ model OperBrandstof {
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([TIJDSTIP])
 
   @@map("oper_brandstof")
 }

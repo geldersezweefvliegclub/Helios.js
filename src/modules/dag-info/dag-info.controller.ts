@@ -62,7 +62,7 @@ export class DagInfoController  extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateOperDagInfoDto): Promise<OperDagInfoDto>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.UpdateObject');
-      return await this.DagInfoService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);
+      return await this.DagInfoService.UpdateObject(id, data as Prisma.OperDagInfoCreateInput);
    }
 
    @HeliosDeleteObject()
@@ -72,7 +72,7 @@ export class DagInfoController  extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'DagInfo.DeleteObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperDagInfoUpdateInput = {
          VERWIJDERD: true
       }
       await this.DagInfoService.UpdateObject(id, data);
@@ -94,7 +94,7 @@ export class DagInfoController  extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'DagInfo.RestoreObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperDagInfoUpdateInput = {
          VERWIJDERD: false
       }
       await this.DagInfoService.UpdateObject(id, data);

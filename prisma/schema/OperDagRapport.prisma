@@ -14,12 +14,12 @@ model OperDagRapport {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar het veld in de type tabel
+  /// @description Referentie naar het vliegveld in de type tabel
   VELD_ID Int
 
   RefLid RefLid? @relation("RefLid", fields: [INGEVOERD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
-  /// @description Verwijzing naar het lid ID van de persoon die gewerkt heeft, link naar de leden tabel
+  /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -50,19 +50,21 @@ model OperDagRapport {
   /// @DtoUpdateOptional
   ROLLENDMATERIEEL String?    @db.Text
 
-  /// @description Bijzonderheden over de vliegtuigen
+  /// @description Bijzonderheden over de ingezette vliegtuigen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   VLIEGENDMATERIEEL String?   @db.Text
 
   /// @DtoReadOnly
-  /// @description Is het dagrapport gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
-  /// @description Laatste aanpassingstijd van het winterwerk-item
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt
 
-  @@index([DATUM], name: "DATUM")
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+
   @@map("oper_dagrapporten")
 }

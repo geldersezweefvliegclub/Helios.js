@@ -22,7 +22,7 @@ import {ApiTags} from "@nestjs/swagger";
 @ApiTags('DagRapporten')
 export class DagInfoController  extends HeliosController
 {
-   constructor(private readonly DagInfoService: DagRapportenService,
+   constructor(private readonly DagRapportenService: DagRapportenService,
                private readonly permissieService:PermissieService)
    {
       super()
@@ -33,8 +33,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query('ID') id: number): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.GetObject');
-      return await this.DagInfoService.GetObject(id);
+      this.permissieService.heeftToegang(user, 'DagRapporten.GetObject');
+      return await this.DagRapportenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperDagRapportenResponse)
@@ -42,8 +42,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsOperDagRapportenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagRapportenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.GetObjects');
-      return this.DagInfoService.GetObjects(queryParams);
+      this.permissieService.heeftToegang(user, 'DagRapporten.GetObjects');
+      return this.DagRapportenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
@@ -51,8 +51,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.AddObject');
-      return await this.DagInfoService.AddObject(data as Prisma.OperDagRapportCreateInput);
+      this.permissieService.heeftToegang(user, 'DagRapporten.AddObject');
+      return await this.DagRapportenService.AddObject(data as Prisma.OperDagRapportCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperDagRapportDto, OperDagRapportDto)
@@ -60,8 +60,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.UpdateObject');
-      return await this.DagInfoService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);
+      this.permissieService.heeftToegang(user, 'DagRapporten.UpdateObject');
+      return await this.DagRapportenService.UpdateObject(id, data as Prisma.OperDagRapportCreateInput);
    }
 
    @HeliosDeleteObject()
@@ -69,12 +69,12 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.DeleteObject');
+      this.permissieService.heeftToegang(user, 'DagRapporten.DeleteObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperDagRapportUpdateInput = {
          VERWIJDERD: true
       }
-      await this.DagInfoService.UpdateObject(id, data);
+      await this.DagRapportenService.UpdateObject(id, data);
    }
 
    @HeliosRemoveObject()
@@ -82,8 +82,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.RemoveObject');
-      await this.DagInfoService.RemoveObject(id);
+      this.permissieService.heeftToegang(user, 'DagRapporten.RemoveObject');
+      await this.DagRapportenService.RemoveObject(id);
    }
 
    @HeliosRestoreObject()
@@ -91,12 +91,12 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() user: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagInfo.RestoreObject');
+      this.permissieService.heeftToegang(user, 'DagRapporten.RestoreObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperDagRapportUpdateInput = {
          VERWIJDERD: false
       }
-      await this.DagInfoService.UpdateObject(id, data);
+      await this.DagRapportenService.UpdateObject(id, data);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

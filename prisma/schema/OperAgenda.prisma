@@ -24,13 +24,14 @@ model OperAgenda {
   OPENBAAR Boolean @default(true)
 
   /// @DtoReadOnly
-  /// @description Is het agenda-item gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
-  /// @description Laatste aanpassingstijd van het agenda-item
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt
 
-  @@index([DATUM], name: "DATUM")
+  @@index([VERWIJDERD])
+  @@index([DATUM])
   @@map("oper_agenda")
 }

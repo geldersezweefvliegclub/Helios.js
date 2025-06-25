@@ -31,7 +31,7 @@ model RefTypesGroep {
   BEDRAG_EENHEDEN Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
@@ -39,6 +39,8 @@ model RefTypesGroep {
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   RefType RefType[]
+
+  @@index([VERWIJDERD])
 
   @@map("ref_types_groepen")
 }

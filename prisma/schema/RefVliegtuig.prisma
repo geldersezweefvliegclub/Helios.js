@@ -101,7 +101,7 @@ model RefVliegtuig {
   BEVOEGDHEID_OVERLAND_ID Int? @db.Int
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
@@ -109,8 +109,11 @@ model RefVliegtuig {
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
   Journaal OperJournaal[] @relation("Vliegtuig")
+  AanmwezigLeden OperAanwezigLid[] @relation("Vliegtuig")
 
+  @@index([VERWIJDERD])
   @@index([REGISTRATIE])
   @@index([CLUBKIST])
+
   @@map("ref_vliegtuigen")
 }

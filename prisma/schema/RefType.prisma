@@ -28,7 +28,7 @@ model RefType {
   // @description De sorteer volgorde van de groep
   SORTEER_VOLGORDE Int? @db.TinyInt
 
-  /// @description Is dit type readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
+  /// @description Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   READ_ONLY Boolean @default(false) @db.TinyInt
@@ -40,7 +40,7 @@ model RefType {
   EENHEDEN Float? @db.Float
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
@@ -68,7 +68,7 @@ model RefType {
   /// @description Categorie van de jornaal melding
   JournaalCategorie OperJournaal[]        @relation("Categorie")
 
-  /// @description Als journaal voor rollend geschrevn is, voor welk materieel is het journaal, lier, bully, aanhanger
+  /// @description Als journaal voor rollend geschreven is, voor welk materieel is het journaal, lier, bully, aanhanger
   JournaalRollend   OperJournaal[]        @relation("Rollend")
 
   /// @description Soort document
@@ -87,11 +87,20 @@ model RefType {
   DagInfoStartMethode2     OperDagInfo[]       @relation("StartMethode2")
 
   /// @description Op welk veld word gevlogen
-  DagRapportVeld           OperDagRapport[]       @relation("Veld")
+  DagRapportVeld           OperDagRapport[]   @relation("Veld")
 
   /// @description Welke gasten ontvangen op dit veld
-  GastVeld                 OperGast[]       @relation("Veld")
+  GastVeld                 OperGast[]         @relation("Veld")
 
-  @@index([TYPEGROEP_ID], name: "TYPEGROEP_ID")
+  /// @description Welke gasten ontvangen op dit veld
+  AanwezigLidVeld          OperAanwezigLid[]  @relation("Veld")
+
+  /// @description Welke gasten ontvangen op dit veld
+  TransactieType           OperTransactie[]   @relation("RefTransactie")
+
+  @@index([VERWIJDERD])
+  @@index([TYPEGROEP_ID])
+
   @@map("ref_types")
 }
+

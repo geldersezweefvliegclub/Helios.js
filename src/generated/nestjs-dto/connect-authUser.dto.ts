@@ -8,7 +8,6 @@ export class ConnectAuthUserDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
@@ -18,7 +17,6 @@ export class ConnectAuthUserDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()

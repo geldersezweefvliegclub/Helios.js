@@ -69,7 +69,7 @@ export class OperDagRapportDto {
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Laatste aanpassingstijd van het winterwerk-item",
+    description: "Datum van de laatste aanpassing",
     type: "string",
     format: "date-time",
   })

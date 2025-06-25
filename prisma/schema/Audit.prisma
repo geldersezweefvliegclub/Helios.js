@@ -1,7 +1,7 @@
 model Audit {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description De primary ID van de groep, andere objecten refereren naar dit ID
+  /// @description De primary ID van de audit tabel
   ID Int @id @default(autoincrement())
 
   /// @description De datum van de audit
@@ -11,7 +11,7 @@ model Audit {
   /// @DtoReadOnly
   RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
-  /// @description Verwijzing naar het ID de buddy in de leden tabel
+  /// @description Verwijzing naar het ID van het lid dat de wijziging heeft gedaan, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -41,10 +41,12 @@ model Audit {
   RESULTAAT String? @db.Text
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
 }

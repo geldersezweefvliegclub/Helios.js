@@ -30,7 +30,7 @@ export class GastenService extends IHeliosService
       });
 
       if (!db)
-         throw new HttpException(`Agenda record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+         throw new HttpException(`Gast record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
    }
 

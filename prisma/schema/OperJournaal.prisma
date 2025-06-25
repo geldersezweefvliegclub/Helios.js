@@ -46,7 +46,7 @@ model OperJournaal {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar de categorie
+  /// @description Referentie naar de categorie defect, observatie, klacht
   CATEGORIE_ID Int?
 
   /// @DtoRelationCanConnectOnCreate
@@ -56,7 +56,7 @@ model OperJournaal {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar de status (type tabel)
+  /// @description Referentie naar de status (type tabel),
   STATUS_ID Int?
 
   /// @DtoRelationCanConnectOnCreate
@@ -90,12 +90,15 @@ model OperJournaal {
   AFGETEKEND_ID Int?
 
   /// @DtoReadOnly
-  /// @description Is het journaal gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
-  /// @description Datum van de laatste aanpassing
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
 
   @@map("oper_journaal")
 }

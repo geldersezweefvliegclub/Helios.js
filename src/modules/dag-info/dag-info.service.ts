@@ -30,7 +30,7 @@ export class DagInfoService extends IHeliosService
       });
 
       if (!db)
-         throw new HttpException(`Agenda record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+         throw new HttpException(`DagInfo record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
    }
 

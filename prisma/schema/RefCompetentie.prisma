@@ -1,15 +1,3 @@
-// `ID` mediumint  UNSIGNED NOT NULL AUTO_INCREMENT,
-// `VOLGORDE` smallint UNSIGNED NULL,
-// `LEERFASE_ID` mediumint UNSIGNED NOT NULL,
-// `BLOK_ID` mediumint UNSIGNED NULL,
-// `BLOK` varchar(7) DEFAULT NULL,
-// `ONDERWERP` varchar(75) NOT NULL,
-// `DOCUMENTATIE` varchar(75) NULL,
-// `GELDIGHEID` tinyint UNSIGNED NOT NULL DEFAULT 0,
-// `SCORE` tinyint UNSIGNED NOT NULL DEFAULT 0,
-// `VERWIJDERD` tinyint UNSIGNED NOT NULL DEFAULT '0',
-// `LAATSTE_AANPASSING` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
 model RefCompetentie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -26,7 +14,7 @@ model RefCompetentie {
   /// @DtoReadOnly
   LeerfaseType RefType? @relation("LeerfaseType", fields: [LEERFASE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
-  /// @description Het type vliegtuig, relatie naar de types tabel
+  /// @description De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -42,7 +30,7 @@ model RefCompetentie {
   /// @DtoUpdateOptional
   OUDER_ID Int? @db.Int
 
-  /// @description Leerblok van de comptentie zoals in de syllabus
+  /// @description Leerblok van de comptentie zoals beschreven in de syllabus
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @maxLength 7
@@ -53,7 +41,7 @@ model RefCompetentie {
   /// @maxLength 75
   OMSCHRIJVING String @db.VarChar(75)
 
-  /// @description Omschrijving van de competentie
+  /// @description Bijbehoordende documentatie van de competentie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @maxLength 75
@@ -71,7 +59,7 @@ model RefCompetentie {
   SCORE Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly
-  /// @description Is de competentie gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false) @db.TinyInt
 
   /// @DtoReadOnly

@@ -16,7 +16,7 @@ export class UpdateOperJournaalDto {
     description: "Datum van het journaal",
     type: "string",
     format: "date-time",
-    default: "now",
+    default: new Date().toISOString(),
     required: false,
     nullable: true,
   })

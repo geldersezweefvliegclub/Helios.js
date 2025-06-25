@@ -5,12 +5,12 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperWinterwerk} from "@prisma/client";
-import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
-import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
+import {Prisma, OperAanwezigLid} from "@prisma/client";
+import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenRequest";
+import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
 
 @Injectable()
-export class WinterwerkService extends IHeliosService
+export class AanwezigLedenService extends IHeliosService
 {
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
@@ -20,29 +20,29 @@ export class WinterwerkService extends IHeliosService
 
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-   async GetObject(id: number, relation: string = undefined): Promise<OperWinterwerk>
+   async GetObject(id: number, relation: string = undefined): Promise<OperAanwezigLid>
    {
       // relation is included for consistency with other services, but not used
-      const db = await this.dbService.operWinterwerk.findUnique({
+      const db = await this.dbService.operAanwezigLid.findUnique({
          where: {
             ID: id
          },
       });
 
       if (!db)
-         throw new HttpException(`Winterwerk record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+         throw new HttpException(`AanwezigLid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       return db;
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsOperWinterwerkRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperWinterwerkResponse>>
+   async GetObjects(params?: GetObjectsOperAanwezigLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperAanwezigLedenResponse>>
    {
       if (params === undefined)
       {
-         params = new GetObjectsOperWinterwerkRequest();
+         params = new GetObjectsOperAanwezigLedenRequest();
          params.VERWIJDERD = false;
       }
-      const where: Prisma.OperWinterwerkWhereInput =
+      const where: Prisma.OperAanwezigLidWhereInput =
          {
             AND:
                [
@@ -54,20 +54,20 @@ export class WinterwerkService extends IHeliosService
       let count: number | undefined;
       if (params.MAX !== undefined || params.START !== undefined)
       {
-         count = await this.dbService.operWinterwerk.count({where: where});
+         count = await this.dbService.operAanwezigLid.count({where: where});
       }
-      const objs = await this.dbService.operWinterwerk.findMany({
+      const objs = await this.dbService.operAanwezigLid.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperWinterwerkOrderByWithRelationInput>(params.SORT ?? "DATUM"),
+         orderBy: this.SortStringToSortObj<Prisma.OperAanwezigLidOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
          skip: params.START});
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.OperWinterwerkCreateInput): Promise<OperWinterwerk>
+   async AddObject(data: Prisma.OperAanwezigLidCreateInput): Promise<OperAanwezigLid>
    {
-      const obj = await this.dbService.operWinterwerk.create({
+      const obj = await this.dbService.operAanwezigLid.create({
          data: data
       });
 
@@ -75,10 +75,10 @@ export class WinterwerkService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput): Promise<OperWinterwerk>
+   async UpdateObject(id: number, data: Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
    {
       const db = await this.GetObject(id);
-      const obj = await this.dbService.operWinterwerk.update({
+      const obj = await this.dbService.operAanwezigLid.update({
          where: {
             ID: id
          },
@@ -91,7 +91,7 @@ export class WinterwerkService extends IHeliosService
    async RemoveObject(id: number): Promise<void>
    {
       const db = await this.GetObject(id);
-      await this.dbService.operWinterwerk.delete({
+      await this.dbService.operAanwezigLid.delete({
          where: {
             ID: id
          }

@@ -16,7 +16,7 @@ export class CreateOperGastDto {
     description: "Datum van de daginfo",
     type: "string",
     format: "date-time",
-    default: "now",
+    default: new Date().toISOString(),
     required: false,
     nullable: true,
   })

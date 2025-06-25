@@ -7,7 +7,7 @@ model HeliosDocument {
   ID                  Int      @id @default(autoincrement())
 
   /// @DtoReadOnly
-  /// @description Datum wanneer datum is aangemaakt
+  /// @description Datum wanneer document is aangemaakt
   DATUM               DateTime @default(now())
 
   /// @description Sorteer volgorde
@@ -59,10 +59,12 @@ model HeliosDocument {
   BOVEN               Boolean @default(false)
 
   /// @DtoReadOnly
-  /// @description Is de groep gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
 }

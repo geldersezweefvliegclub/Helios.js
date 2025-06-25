@@ -8,7 +8,6 @@ export class ConnectRefLidDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
@@ -19,7 +18,6 @@ export class ConnectRefLidDto {
     maxLength: 10,
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()
@@ -29,7 +27,6 @@ export class ConnectRefLidDto {
     maxLength: 45,
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()

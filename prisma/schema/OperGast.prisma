@@ -16,7 +16,7 @@ model OperGast {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar het veld in de type tabel
+  /// @description Referentie naar het vliegveld in de type tabel
   VELD_ID Int?
 
   /// @DtoReadOnly
@@ -27,13 +27,15 @@ model OperGast {
   OPMERKINGEN String? @db.Text
 
   /// @DtoReadOnly
-  /// @description Is het journaal gemarkeerd als verwijderd
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
-  /// @description Datum van de laatste aanpassing
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
 
-  @@index([DATUM], name: "DATUM_IDX")
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+
   @@map("oper_gasten")
 }
