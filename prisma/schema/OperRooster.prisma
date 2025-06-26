@@ -1,0 +1,56 @@
+model OperRooster {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de dienst
+  ID Int @id @default(autoincrement())
+
+  /// @description Datum van de aanmelding
+  DATUM DateTime   @db.Date
+
+  /// @description Is het een DDWV bedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV Boolean @default(false)
+
+  /// @description Is het een Club bedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CLUB_BEDRIJF Boolean @default(false)
+
+  /// @description Voeren we winterwerk uit op deze datum?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  WINTER_WERK Boolean @default(false)
+
+  /// @description Aantal aameldingen die we nodig hebben voor een sleepbedrijf
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  /// @maximum 25
+  MIN_SLEEPSTART Int?  @db.Int
+
+  /// @description Aantal aameldingen die we nodig hebben voor een lierbedrijf
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  /// @maximum 25
+  MIN_LIERSTART Int?   @db.Int
+
+  /// @description Eventuele opmerkingen, zoals eerder weg gaan
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN String? @db.Text
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+
+  @@map("oper_rooster")
+}
