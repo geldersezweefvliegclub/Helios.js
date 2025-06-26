@@ -1,0 +1,85 @@
+model OperTransactie {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de transactie
+  ID Int @id @default(autoincrement())
+
+  /// @description Datum van het dagrapport
+  DATUM DateTime   @db.Date
+
+  /// @description Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag
+  VLIEGDAG DateTime?   @db.Date
+
+  RefLid RefLid @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van de vlieger, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int @db.Int
+
+  RefIngevoerd RefLid? @relation("RefIngevoerd", fields: [INGEVOERD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van de persoon die de transactie heeft aangemaakt, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INGEVOERD_ID Int @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  TypeTransactie RefType @relation("RefTransactie", fields: [TYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het type van de transactie, link naar type tabel
+  TYPE_ID Int
+
+  /// @description Gaat het hier om een DDWV transactie?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV Boolean @default(false)
+
+  /// @description Het bedrag wat gefactureerd wordt per eenheid
+  BEDRAG Float? @db.Float
+
+  /// @description De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen
+  EENHEDEN Float? @db.Float
+
+  /// @description Aantal strippen voordat de transcatie verwerkt is.
+  SALDO_VOOR Float? @db.Float
+
+  /// @description Aantal strippen NA de transactie, dus het nieuwe saldo
+  SALDO_NA Float? @db.Float
+
+  /// @description Referentie naar een extern system, bijv Mollie of e-boekhouden
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  EXT_REF String? @db.VarChar(25)
+
+  /// @description Omschrijving van de transactie, komt zo ook op de factuur
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OMSCHRIJVING String? @db.VarChar(250)
+
+  /// @DtoReadOnly
+  /// @description Is de transactie betaald bijv Mollie
+  BETAALD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  AanwezigLid         OperAanwezigLid[]    @relation("Transactie")
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+  @@index([VLIEGDAG])
+
+  @@map("oper_transacties")
+}

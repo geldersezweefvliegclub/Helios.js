@@ -1,0 +1,93 @@
+model OperDagInfo {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de daginfo
+  ID Int @id @default(autoincrement())
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Datum van de daginfo
+  DATUM DateTime? @default(now())
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegveld in de type tabel
+  VELD_ID Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Baan RefType? @relation("Baan", fields: [BAAN_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de baan in de type tabel
+  BAAN_ID Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartMethode RefType? @relation("StartMethode", fields: [STARTMETHODE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de startmethode in de type tabel
+  STARTMETHODE_ID Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld2 RefType? @relation("Veld2", fields: [VELD_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp
+  VELD_ID2 Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Baan2 RefType? @relation("Baan2", fields: [BAAN_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de baan in de type tabel
+  BAAN_ID2 Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartMethode2 RefType? @relation("StartMethode2", fields: [STARTMETHODE_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de startmethode in de type tabel
+  STARTMETHODE_ID2 Int?
+
+  /// @description Is het een clubbedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CLUB_BEDRIJF Boolean @default(false)
+
+  /// @description Is het een DDWV bedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+  @@map("oper_daginfo")
+}

@@ -1,0 +1,75 @@
+{
+  "logging": {
+    "sql": true,
+    "excludeAudit" : [ "table1", "table2" ]
+  },
+
+
+
+  "db_info": {
+    "dbType": "mysql",
+    "dbHost": "host",
+    "dbName": "dbname",
+    "dbUser": "user",
+    "dbPassword": "password"
+  },
+  "smtp_settings": {
+    "smtpuser": "smtpuser",
+    "smtppass": "password",
+    "smtphost": "smtp.gmail.com",
+    "smtpsecure": "tls",
+    "smtpport": 587,
+    "from": "from",
+    "name": "name"
+  },
+  "app_settings": {
+    "DbLogging": true,
+    "DbError": true,
+    "Debug": true,
+    "DocDir": "/var/www/html/documenten",
+    "LogDir": "/var/www/html/log/",
+    "Vereniging": "GeeeeeeZC",
+    "EmailVeiligheidsManager": "veiligheidsmanager@domain",
+    "DemoMode": true,
+    "ApiKeySMS": "API key here",
+    "KeyJWT": "4jwt",
+    "twoFactor": false,
+    "bypassToken": "token",
+    "PaxBevoegdheid": 271
+  },
+  "eBoekhouden_settings": {
+    "SoapBaseUrl": "https://soap.e-boekhouden.nl/soap.asmx?WSDL",
+    "Username": "username",
+    "SecurityCode1": "code1",
+    "SecurityCode2": "code",
+    "Betalingstermijn": 14,
+    "Factuursjabloon": "Factuur sjabloon",
+    "PerEmailVerzenden": false,
+    "EmailOnderwerp": "factuur testje",
+    "EmailBericht": "Nou dat is weer een factuur van de GeZC",
+    "EmailVanNaam": "penningmeester",
+    "EmailVanAdres": "ict email",
+    "AutomatischeIncasso": false,
+    "BoekhoudmutatieOmschrijving": "lidmaatschap ",
+    "IncassoMachtigingFirst": false,
+    "InBoekhoudingPlaatsen": false,
+    "TegenrekeningCode": 1800,
+    "KostenplaatsID": 0
+  },
+  "iDeal": {
+    "mollieKey": "ideal",
+    "returnUrl": "returnUrl",
+    "reportUrl": "reportUrl"
+  },
+  "ddwv": {
+    "DDWV": true,
+    "VELD_ID": 901,
+    "START": "04-01",
+    "EIND": "10-31",
+    "MAX_STRIPPEN": 100,
+    "STRIPPEN_RETOUR": 2004,
+    "STRIPPEN_RETOUR_OP_VLIEGDAG": 2005,
+    "ANNULEREN_VLIEGDAG": 2006,
+    "CREW_VERGOEDING": 2007
+  }
+}

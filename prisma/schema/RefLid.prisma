@@ -1,0 +1,302 @@
+model RefLid {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van het lid, andere objecten refereren naar dit ID
+  ID Int @id @default(autoincrement())
+
+  /// @DtoReadOnly
+  /// @description De naam van het lid, wordt gegenereerd uit de voornaam, tussenvoegsel en achternaam
+  NAAM String @db.VarChar(255)
+
+  /// @description De voornaam van het lid
+  /// @maxLength 15
+  VOORNAAM String? @db.VarChar(15)
+
+  /// @description Het tussenvoegsel van de naam
+  /// @maxLength 8
+  TUSSENVOEGSEL String? @db.VarChar(8)
+
+  /// @description De achternaam van het lid
+  /// @IsNotEmpty()
+  /// @maxLength 30
+  ACHTERNAAM String? @db.VarChar(30)
+
+  /// @description Het adres waar het lid woont
+  /// @maxLength 50
+  ADRES String? @db.VarChar(50)
+
+  /// @description De postcode van het adres
+  /// @maxLength 10
+  POSTCODE String? @db.VarChar(10)
+
+  /// @description De woonplaats van het lid
+  /// @maxLength 50
+  WOONPLAATS String? @db.VarChar(50)
+
+  /// @description Het vaste huistelefoonnummer van het lid
+  /// @maxLength 15
+  TELEFOON String? @db.VarChar(15)
+
+  /// @description Het mobiele telefoonnummer van het lid
+  /// @maxLength 15
+  MOBIEL String? @db.VarChar(15)
+
+  /// @description Het noodnummer voor calamiteiten
+  /// @maxLength 15
+  NOODNUMMER String? @db.VarChar(15)
+
+  /// @description Het email adres van het lid
+  /// @maxLength 45
+  EMAIL String? @db.VarChar(45)
+
+  /// @description Het lidnummer zoals dat in de financiele administratie wordt gebruikt
+  /// @maxLength 10
+  LIDNR String? @unique @db.VarChar(10)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LidType RefType? @relation("LidType", fields: [LIDTYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar de lidtype (bv. lid, donateur, etc.)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LIDTYPE_ID Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  VliegStatus RefType? @relation("VliegStatus", fields: [STATUSTYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  STATUSTYPE_ID Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Zusterclub      RefLid?  @relation("Zusterclub", fields: [ZUSTERCLUB_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  LedenZusterclub RefLid[] @relation("Zusterclub")
+
+  /// @description Is het lid ook lid van een zusterclub
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ZUSTERCLUB_ID Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Buddy      RefLid?  @relation("Buddy1", fields: [BUDDY_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  LedenBuddy RefLid[] @relation("Buddy1")
+
+  /// @description Verwijzing naar het ID de buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BUDDY_ID Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Buddy2      RefLid?  @relation("Buddy2", fields: [BUDDY_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  LedenBuddy2 RefLid[] @relation("Buddy2")
+
+  /// @description Verwijzing naar het ID de tweede buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BUDDY_ID2 Int? @db.Int
+
+  /// @description Kan het lid worden ingedeeld voor lierdienst
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LIERIST Boolean @default(false)
+
+  /// @description Kan het lid worden ingedeeld voor lierist in opleiding
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LIERIST_IO Boolean @default(false)
+
+  /// @description Kan het lid worden ingedeeld voor startleiderdienst
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  STARTLEIDER Boolean @default(false)
+
+  /// @description Is het lid een instructeur
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INSTRUCTEUR Boolean @default(false)
+
+  /// @description Zit het lid in de chef instructeurs groep
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CIMT Boolean @default(false)
+
+  /// @description Helpt het lid met doordeweeks vliegen als kader
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV_CREW Boolean @default(false)
+
+  /// @description Is het lid beheerder van de DDWV operatie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV_BEHEERDER Boolean @default(false)
+
+  /// @description Is het lid applicatie beheerder
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BEHEERDER Boolean @default(false)
+
+  /// @description Account wordt alleen gebruikt voor tijdschrijven
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  STARTTOREN Boolean @default(false)
+
+  /// @description Is het lid een roostermaaker
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ROOSTER Boolean @default(false)
+
+  /// @description Is het lid een sleepvlieger
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  SLEEPVLIEGER Boolean @default(false)
+
+  /// @description Is het lid een rapporteur om overzicht te maken van de vliegdagen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  RAPPORTEUR Boolean @default(false)
+
+  /// @description Vliegt het lid gasten rond
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  GASTENVLIEGER Boolean @default(false)
+
+  /// @description Is het lid een technicus
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  TECHNICUS Boolean @default(false)
+
+  /// @description Clubblad wordt per post verstuurd
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CLUBBLAD_POST Boolean @default(false)
+
+  /// @description Zelfstarts afbetaald voor lopende seizoen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ZELFSTART_ABONNEMENT Boolean @default(false)
+
+  /// @description Geldigheid medische keuring
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  MEDICAL DateTime? @db.Date
+
+  /// @description Geboortedatum van het lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  GEBOORTE_DATUM DateTime? @db.Date
+
+  /// @description Inlognaam voor de website
+  /// @maxLength 45
+  INLOGNAAM String? @unique @db.VarChar(45)
+
+  /// @description Het wachtwoord
+  /// @minLength 8
+  /// @maxLength 50
+  WACHTWOORD String? @db.VarChar(50)
+
+  /// @description Secret key voor twee traps authenticatie
+  SECRET String? @db.VarChar(255)
+
+  /// @description Is twee traps authenticatie ingeschakeld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  AUTH Boolean @default(false)
+
+  /// @description URL naar de avatar van het lid
+  AVATAR String? @db.VarChar(255)
+
+  /// @description Lid mag niet meer starten, maar is nog wel lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  STARTVERBOD Boolean @default(false)
+
+  /// @description Lid heeft lidmaatschap voor volgend jaar opgezegd, maar is nog wel lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPGEZEGD Boolean @default(false)
+
+  /// @description Privacy instelling
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  PRIVACY Boolean @default(false)
+
+  /// @description Sleutelnummer van Terlet
+  /// @maxLength 25
+  SLEUTEL1 String? @db.VarChar(25)
+
+  /// @description Sleutelnummer van Gelderse
+  /// @maxLength 25
+  SLEUTEL2 String? @db.VarChar(25)
+
+  /// @description Sleutelnummer om te kunnen tanken
+  /// @maxLength 25
+  BRANDSTOF_PAS String? @db.VarChar(25)
+
+  /// @description Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben
+  BEROEP String? @db.VarChar(50)
+
+  /// @description Lidmaatschapnummer van de KNVvL
+  /// @maxLength 25
+  KNVVL_LIDNUMMER String? @db.VarChar(25)
+
+  /// @description Brevetnummer
+  /// @maxLength 25
+  BREVET_NUMMER String? @db.VarChar(25)
+
+  /// @description Daginfo per email ontvangen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  EMAIL_DAGINFO Boolean @default(false)
+
+  /// @description Opmerkingen van het lid
+  OPMERKINGEN String? @db.Text
+
+  /// @description Aantal strippen tegoed
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  TEGOED Float @default(0)
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  Auth                AuthUser[]
+  Audit               Audit[]              @relation("RefLid")
+  Brandstof           OperBrandstof[]      @relation("RefLid")
+  JournaalTechnicus   OperJournaal[]       @relation("Technicus")
+  JournaalMelder      OperJournaal[]       @relation("Melder")
+  JournaalAfgetekend  OperJournaal[]       @relation("Afgetekend")
+  Document            HeliosDocument[]     @relation("RefLid")
+  Winterwerk          OperWinterwerk[]     @relation("RefLid")
+  DagRapport          OperDagRapport[]     @relation("RefLid")
+  AanwezigLid         OperAanwezigLid[]    @relation("RefLid")
+  Transactie          OperTransactie[]     @relation("RefLid")
+  TransactieIngevoerd OperTransactie[]     @relation("RefIngevoerd")
+  Dienst              OperDienst[]         @relation("RefLid")
+  DienstIngevoerd     OperDienst[]         @relation("RefIngevoerd")
+
+  @@index([NAAM])
+  @@index([LIDTYPE_ID])
+  @@index([STATUSTYPE_ID])
+  @@index([STARTLEIDER])
+  @@index([INSTRUCTEUR])
+  @@index([LIERIST])
+  @@index([VERWIJDERD])
+  @@index([ZUSTERCLUB_ID])
+  @@map("ref_leden")
+}

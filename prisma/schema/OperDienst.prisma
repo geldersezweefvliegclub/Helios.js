@@ -1,0 +1,67 @@
+model OperDienst {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de dienst
+  ID Int @id @default(autoincrement())
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Datum van de daginfo
+  DATUM DateTime   @db.Date
+
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van diegene die ingeroosterd is, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Rooster OperRooster? @relation("Rooster", fields: [ROOSTER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het rooster
+  ROOSTER_ID Int?
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  TypeDienst RefType? @relation("TypeDienst", fields: [TYPE_DIENST_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar hettype dienst (startleider, DDI, lietrist, etc)
+  TYPE_DIENST_ID Int?
+
+  RefIngevoerd RefLid? @relation("RefIngevoerd", fields: [INGEVOERD_DOOR_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INGEVOERD_DOOR_ID Int @db.Int
+
+  /// @DtoReadOnly
+  /// @description Is de DDWV dienst uitbetaald?
+  UITBETAALD Boolean @default(false)
+
+  /// @description Opmerkingen die bij de gast horen
+  OPMERKINGEN String? @db.Text
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([DATUM])
+
+  @@map("oper_diensten")
+}

@@ -1,0 +1,70 @@
+model HeliosDocument {
+  @@map("documenten")
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een document
+  ID                  Int      @id @default(autoincrement())
+
+  /// @DtoReadOnly
+  /// @description Datum wanneer document is aangemaakt
+  DATUM               DateTime @default(now())
+
+  /// @description Sorteer volgorde
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  VOLGORDE            Int? @db.Int
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DocumentGroep       RefType? @relation("DocumentGroep", fields: [GROEP_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Documenten worden gegroepeerd
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  GROEP_ID            Int? @db.Int
+
+  /// @description Beschrijving van het document
+  /// @minLength 4
+  TEKST               String?  @db.VarChar(250)
+
+  /// @description Link naar het document
+  URL                 String?  @db.VarChar(250)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Document behoort bij een lid, bijv kopie medical, brevet
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID              Int?
+
+  /// @description Lege regel om paragraaf te kunnen maken
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LEGE_REGEL          Boolean @default(false)
+
+  /// @description Plaats een horizontale lijn
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ONDERSTREEP         Boolean @default(false)
+
+  /// @description Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BOVEN               Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+
+  @@index([VERWIJDERD])
+}
