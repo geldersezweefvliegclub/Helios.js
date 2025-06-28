@@ -27,6 +27,7 @@ import { AanwezigLedenModule } from './modules/aanwezig-leden/aanwezig-leden.mod
 import { AanwezigVliegtuigenModule } from './modules/aanwezig-vliegtuigen/aanwezig-vliegtuigen.module';
 import { RoosterModule } from './modules/rooster/rooster.module';
 import { DienstenModule } from './modules/diensten/diensten.module';
+import { FacturenModule } from './modules/facturen/facturen.module';
 import config from './config/configuration';
 
 
@@ -60,6 +61,7 @@ import config from './config/configuration';
       AanwezigVliegtuigenModule,
       RoosterModule,
       DienstenModule,
+      FacturenModule,
    ],
    controllers: [AppController, HeliosController],
    providers: [AppService, AgendaService],

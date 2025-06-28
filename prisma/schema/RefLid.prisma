@@ -289,6 +289,7 @@ model RefLid {
   TransactieIngevoerd OperTransactie[]     @relation("RefIngevoerd")
   Dienst              OperDienst[]         @relation("RefLid")
   DienstIngevoerd     OperDienst[]         @relation("RefIngevoerd")
+  Facturen            OperFactuur[]        @relation("RefLid")
 
   @@index([NAAM])
   @@index([LIDTYPE_ID])

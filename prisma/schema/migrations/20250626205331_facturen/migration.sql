@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `oper_facturen` MODIFY `OMSCHRIJVING` VARCHAR(250) NULL;

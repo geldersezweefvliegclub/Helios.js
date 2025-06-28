@@ -1,0 +1,57 @@
+model OperFactuur {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een factuur
+  ID Int @id @default(autoincrement())
+
+  /// @description Jaar van het lidmaatschap
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 2025
+  JAAR Int? @db.Int
+
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid ID die de factuur ontvangt, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int                @db.Int
+
+  /// @DtoReadOnly
+  /// @description De naam van het lid op het moment dat de factuur aangemaakt is.
+  NAAM String               @db.VarChar(255)
+
+  /// @description Het lidnummer zoals dat in de financiele administratie wordt gebruikt
+  /// @maxLength 10
+  LIDNR String?             @db.VarChar(10)
+
+  /// @description Het factuurnummer zoals dat door de boekhouding is toegekend
+  /// @maxLength 10
+  FACTUUR_NUMMER String?    @db.VarChar(25)
+
+  /// @description Lidmaatschapscode
+  /// @maxLength 10
+  CODE String?              @db.VarChar(25)
+
+  /// @description Omschrijving van de factuurregel
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OMSCHRIJVING String?      @db.VarChar(250)
+
+  /// @description Bedrag wat gefactureerd is
+  GEFACTUREERD Float?       @db.Float
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean        @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([JAAR])
+
+  @@map("oper_facturen")
+}
