@@ -13,27 +13,27 @@ export class PermissieService {
 
    isBeheerder(user: RefLid): boolean
    {
-      return user.BEHEERDER ?? false;
+      return user.BEHEERDER;
    }
 
    isBeheerderDDWV(user: RefLid): boolean
    {
-      return user.DDWV_BEHEERDER ?? false;
+      return user.DDWV_BEHEERDER;
    }
 
    isInstructeur(user: RefLid): boolean
    {
-      return user.INSTRUCTEUR ?? false;
+      return user.INSTRUCTEUR;
    }
 
    isCIMT(user: RefLid): boolean
    {
-      return user.CIMT ?? false;
+      return user.CIMT;
    }
 
    isStarttoren(user: RefLid): boolean
    {
-      return user.STARTTOREN ?? false;
+      return user.STARTTOREN;
    }
 
    isLid(user: RefLid): boolean
@@ -59,6 +59,18 @@ export class PermissieService {
       {
          return false;
       }
-      return user.PRIVACY ?? false;
+      return user.PRIVACY;
    }
+
+   isRooster(currentUser: RefLid) {
+      return currentUser.ROOSTER
+   }
+
+    isRapporteur(currentUser: RefLid) {
+       return currentUser.RAPPORTEUR;
+    }
+
+    isDDWVCrew(currentUser: RefLid) {
+       return currentUser.DDWV_CREW;
+    }
 }
