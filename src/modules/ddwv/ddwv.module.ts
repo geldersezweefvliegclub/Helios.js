@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+import {Logger, Module} from '@nestjs/common';
 import { DdwvController } from './ddwv.controller';
 import { DdwvService } from './ddwv.service';
 
 @Module({
   controllers: [DdwvController],
-  providers: [DdwvService]
+  providers: [DdwvService, Logger]
 })
 export class DdwvModule {}
