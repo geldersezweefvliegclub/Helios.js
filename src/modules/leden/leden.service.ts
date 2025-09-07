@@ -205,4 +205,22 @@ export class LedenService extends IHeliosService
       l.forEach(item => { delete item.SORT });
       return l as VerjaardagenResponse[];
    }
+
+   /**
+    * Returns true if the given member ID is part of this club
+    */
+   GetIsClubMember(lid: RefLid): boolean{
+      // List of type ID's which are considered a member of this club.
+      // If the type ID of the member is in this list, he's considered a member of this club.
+      return [
+         601, // Erelid
+         602, // Lid,
+         603, // Jeugdlid
+         604, // Private owner (mag ook op club vliegtuigen vliegen voor trainingsvlucht)
+         605, // Donateur
+         606, // Veteraan
+         608, // 5 Rittenkaart
+         611  // Cursist
+      ].includes(lid.LIDTYPE_ID);
+   }
 }
