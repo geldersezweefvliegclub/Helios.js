@@ -25,6 +25,7 @@ import {AanwezigVliegtuigenModule} from './modules/aanwezig-vliegtuigen/aanwezig
 import {RoosterModule} from './modules/rooster/rooster.module';
 import {DienstenModule} from './modules/diensten/diensten.module';
 import {FacturenModule} from './modules/facturen/facturen.module';
+import { DdwvModule } from './modules/ddwv/ddwv.module';
 import config from './config/configuration';
 
 
@@ -59,6 +60,7 @@ import config from './config/configuration';
       RoosterModule,
       DienstenModule,
       FacturenModule,
+      DdwvModule,
    ],
    controllers: [HeliosController],
    providers: [],
