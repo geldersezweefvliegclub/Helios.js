@@ -82,7 +82,10 @@ async function bootstrap()
    const app = await NestFactory.create(AppModule, {
      logger: createLogger()  // the logger to record debug information
    });
-   app.enableCors();
+    app.enableCors({
+        credentials: true,
+        origin: "http://localhost:4200"
+    });
 
    setupSwagger(app, 'docs');
 
