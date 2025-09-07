@@ -7,3 +7,13 @@ export const GetLoginRequest  = () =>
       ApiQuery({name: 'WACHTWOORD', required: false, type: String}),
    );
 
+export interface LoginResponse {
+   Authentication: {
+      AccessToken: string,
+      ExpiresInMs: number
+   },
+   Refresh: {
+      AccessToken: string,
+      ExpiresInMs: number
+   }
+}

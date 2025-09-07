@@ -1,13 +1,13 @@
 import {Injectable, UnauthorizedException} from '@nestjs/common';
 import {LedenService} from "../leden/leden.service";
 import {ConfigService} from "@nestjs/config";
-import {JwtService } from '@nestjs/jwt';
+import {JwtService} from '@nestjs/jwt';
 import {RefLid} from "@prisma/client";
 import {compare, hash} from "bcryptjs";
 import {TokenPayload} from "./token-payload.interface";
-import {Response } from 'express';
 import {DbService} from "../../database/db-service/db.service";
 import {AuthUserDto} from "../../generated/nestjs-dto/authUser.dto";
+import {LoginResponse} from "./loginDTO";
 
 @Injectable()
 export class LoginService
@@ -17,58 +17,35 @@ export class LoginService
                private readonly configService: ConfigService,
                private readonly jwtService: JwtService)  {}
 
-   async login(lid: RefLid, response: Response, redirect = false) {
-      const expiresAccessToken = new Date();
-      expiresAccessToken.setMilliseconds(
-         expiresAccessToken.getTime() +
-         parseInt(
-            this.configService.getOrThrow<string>(
-               'JWT.JWT_ACCESS_TOKEN_EXPIRATION_MS',
-            ),
-         ),
-      );
-
-      const expiresRefreshToken = new Date();
-      expiresRefreshToken.setMilliseconds(
-         expiresRefreshToken.getTime() +
-         parseInt(
-            this.configService.getOrThrow<string>(
-               'JWT.JWT_REFRESH_TOKEN_EXPIRATION_MS',
-            ),
-         ),
-      );
+   async login(lid: RefLid): Promise<LoginResponse> {
+      const expiresAccessTokenMs =  parseInt(this.configService.getOrThrow<string>('JWT.JWT_ACCESS_TOKEN_EXPIRATION_MS'));
+      const expiresRefreshTokenMs = parseInt(this.configService.getOrThrow<string>('JWT.JWT_REFRESH_TOKEN_EXPIRATION_MS'));
 
       const tokenPayload: TokenPayload = {
          LidID: lid.ID.toString(),
       };
+
       const accessToken = this.jwtService.sign(tokenPayload, {
          secret: this.configService.getOrThrow('JWT.JWT_ACCESS_TOKEN_SECRET'),
-         expiresIn: `${this.configService.getOrThrow(
-            'JWT.JWT_ACCESS_TOKEN_EXPIRATION_MS',
-         )}ms`,
+         expiresIn: `${expiresAccessTokenMs}ms`,
       });
-      const refreshToken = this.  jwtService.sign(tokenPayload, {
+      const refreshToken = this.jwtService.sign(tokenPayload, {
          secret: this.configService.getOrThrow('JWT.JWT_REFRESH_TOKEN_SECRET'),
-         expiresIn: `${this.configService.getOrThrow(
-            'JWT.JWT_REFRESH_TOKEN_EXPIRATION_MS',
-         )}ms`,
+         expiresIn: `${expiresRefreshTokenMs}ms`,
       });
 
       await this.storeRefreshToken(lid.ID, await hash(refreshToken, 10));
 
-      response.cookie('Authentication', accessToken, {
-         httpOnly: true,
-         secure: this.configService.get('NODE_ENV') === 'production',
-         expires: expiresAccessToken,
-      });
-      response.cookie('Refresh', refreshToken, {
-         httpOnly: true,
-         secure: this.configService.get('NODE_ENV') === 'production',
-         expires: expiresRefreshToken,
-      });
 
-      if (redirect) {
-         response.redirect(this.configService.getOrThrow('AUTH_UI_REDIRECT'));
+      return {
+         Refresh: {
+            AccessToken: refreshToken,
+            ExpiresInMs: expiresRefreshTokenMs,
+         },
+         Authentication: {
+            AccessToken: accessToken,
+            ExpiresInMs: expiresAccessTokenMs,
+         }
       }
    }
 

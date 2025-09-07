@@ -12,15 +12,13 @@ import {LedenService} from "../../leden/leden.service";
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy)
 {
-  constructor(private readonly configService: ConfigService,
-              private readonly ledenService: LedenService)
+  constructor(configService: ConfigService, private readonly ledenService: LedenService)
   {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => request.cookies?.Authentication,
-      ]),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.getOrThrow('JWT.JWT_ACCESS_TOKEN_SECRET'),
     });
+
   }
 
   async validate(payload: TokenPayload) {

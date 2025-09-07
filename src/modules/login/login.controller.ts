@@ -1,11 +1,11 @@
-import {Controller, Post, Res, UseGuards} from '@nestjs/common';
+import {Controller, Post, UseGuards} from '@nestjs/common';
 import {LoginService} from "./login.service";
 import {LocalAuthGuard} from "./guards/local-auth.guard";
 import {CurrentUser} from "./current-user.decorator";
 import {RefLid} from "@prisma/client";
-import { Response } from 'express';
 import {ApiBody, ApiProperty, ApiTags} from "@nestjs/swagger";
 import {JwtRefreshAuthGuard} from "./guards/jwt-refresh-auth.guard";
+import {LoginResponse} from "./loginDTO";
 
 export class LoginDTO {
    @ApiProperty({
@@ -34,21 +34,18 @@ export class LoginController
    @Post('Login')
    @ApiBody({type: LoginDTO})
    @UseGuards(LocalAuthGuard)    // LocalAuthGuard is a guard that will be used for http requests to authenticate a user.
-   async login(
-      @CurrentUser() user: RefLid,
-      @Res({ passthrough: true }) response: Response)
+   async login(@CurrentUser() user: RefLid): Promise<LoginResponse>
    {
-      await this.loginService.login(user, response);
+      return this.loginService.login(user);
    }
 
 
    @Post('refresh')
    @UseGuards(JwtRefreshAuthGuard)
-   async refreshToken(
-      @CurrentUser() user: RefLid,
-      @Res({passthrough: true}) response: Response,
-   )
+   async refreshToken(@CurrentUser() user: RefLid): Promise<LoginResponse>
    {
-      await this.loginService.login(user, response);
+      return this.loginService.login(user);
    }
+
+
 }
