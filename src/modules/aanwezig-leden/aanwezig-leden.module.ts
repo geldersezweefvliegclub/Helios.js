@@ -8,6 +8,7 @@ import {LedenModule} from "../leden/leden.module";
 @Module({
   controllers: [AanwezigLedenController],
   imports: [AuthorisatieModule, HeliosCoreModule, LedenModule],
-  providers: [AanwezigLedenService]
+  providers: [AanwezigLedenService],
+  exports: [AanwezigLedenService]
 })
 export class AanwezigLedenModule {}

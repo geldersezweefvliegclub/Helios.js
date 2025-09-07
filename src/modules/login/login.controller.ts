@@ -1,11 +1,12 @@
-import {Controller, Post, UseGuards} from '@nestjs/common';
+import {Controller, Get, Post, UseGuards} from '@nestjs/common';
 import {LoginService} from "./login.service";
 import {LocalAuthGuard} from "./guards/local-auth.guard";
 import {CurrentUser} from "./current-user.decorator";
 import {RefLid} from "@prisma/client";
 import {ApiBody, ApiProperty, ApiTags} from "@nestjs/swagger";
 import {JwtRefreshAuthGuard} from "./guards/jwt-refresh-auth.guard";
-import {LoginResponse} from "./loginDTO";
+import {LoginResponse, UserInfo} from "./loginDTO";
+import {JwtAuthGuard} from "./guards/jwt-auth.guard";
 
 export class LoginDTO {
    @ApiProperty({
@@ -47,5 +48,10 @@ export class LoginController
       return this.loginService.login(user);
    }
 
-
+   @Get("GetUserInfo")
+   @UseGuards(JwtAuthGuard)
+   async getUserInfo(@CurrentUser() user: RefLid): Promise<UserInfo>
+   {
+      return this.loginService.GetUserInfo(user);
+   }
 }

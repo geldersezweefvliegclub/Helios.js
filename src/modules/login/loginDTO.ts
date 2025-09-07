@@ -1,5 +1,6 @@
 import {applyDecorators} from "@nestjs/common";
 import {ApiQuery} from "@nestjs/swagger";
+import {RefLid} from "@prisma/client";
 
 export const GetLoginRequest  = () =>
    applyDecorators(
@@ -15,5 +16,22 @@ export interface LoginResponse {
    Refresh: {
       AccessToken: string,
       ExpiresInMs: number
+   }
+}
+
+export class UserInfo {
+   LidData: RefLid;
+   Userinfo: {
+      isBeheerderDDWV: boolean,
+      isBeheerder: boolean,
+      isRooster: boolean,
+      isInstructeur: boolean,
+      isCIMT: boolean,
+      isStarttoren: boolean,
+      isRapporteur: boolean,
+      isDDWVCrew: boolean,
+      isAangemeld: boolean,
+      isClubVlieger: boolean,
+      isDDWV: boolean
    }
 }

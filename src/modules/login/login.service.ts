@@ -7,15 +7,21 @@ import {compare, hash} from "bcryptjs";
 import {TokenPayload} from "./token-payload.interface";
 import {DbService} from "../../database/db-service/db.service";
 import {AuthUserDto} from "../../generated/nestjs-dto/authUser.dto";
-import {LoginResponse} from "./loginDTO";
+import {LoginResponse, UserInfo} from "./loginDTO";
+import {PermissieService} from "../authorisatie/permissie.service";
+import {AanwezigLedenService} from "../aanwezig-leden/aanwezig-leden.service";
 
 @Injectable()
 export class LoginService
 {
    constructor(private readonly dbService: DbService,
                private readonly ledenService: LedenService,
+               private readonly aanwezigLedenService: AanwezigLedenService,
+               private readonly permissieService: PermissieService,
                private readonly configService: ConfigService,
-               private readonly jwtService: JwtService)  {}
+               private readonly jwtService: JwtService) {
+
+   }
 
    async login(lid: RefLid): Promise<LoginResponse> {
       const expiresAccessTokenMs =  parseInt(this.configService.getOrThrow<string>('JWT.JWT_ACCESS_TOKEN_EXPIRATION_MS'));
@@ -100,5 +106,24 @@ export class LoginService
          });
       }
    }
+
+    async GetUserInfo(currentUser: RefLid): Promise<UserInfo> {
+        return {
+            Userinfo: {
+                isAangemeld: await this.aanwezigLedenService.IsAangemeld(currentUser),
+                isBeheerder: this.permissieService.isBeheerder(currentUser),
+                isBeheerderDDWV: this.permissieService.isBeheerderDDWV(currentUser),
+                isCIMT: this.permissieService.isCIMT(currentUser),
+                isClubVlieger: this.permissieService.isLid(currentUser),
+                isDDWV: this.permissieService.isDDWVer(currentUser),
+                isRooster: this.permissieService.isRooster(currentUser),
+                isInstructeur: this.permissieService.isInstructeur(currentUser),
+                isStarttoren: this.permissieService.isStarttoren(currentUser),
+                isRapporteur: this.permissieService.isRapporteur(currentUser),
+                isDDWVCrew: this.permissieService.isDDWVCrew(currentUser)
+            },
+            LidData: currentUser
+        }
+    }
 }
 
