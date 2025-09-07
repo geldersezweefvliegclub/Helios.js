@@ -75,5 +75,8 @@ model RefCompetentie {
   /// @description Het type vliegtuig
   VliegtuigOverland RefVliegtuig[] @relation("BevoegdheidOverland")
 
+  /// @description Wie heeft de progressie gehaald
+  Progressie OperProgressie[] @relation("RefCompetentie")
+
   @@map("ref_competenties")
 }

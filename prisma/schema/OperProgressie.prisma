@@ -1,0 +1,64 @@
+model OperProgressie {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een factuur
+  ID Int @id @default(autoincrement())
+
+  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar het lid die de competentie gehaald heeft, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID Int                @db.Int
+
+  Instructeur RefLid? @relation("RefInstructeur", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar de instructeur die de progressie heeft afgetekend, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INSTRUCTEUR_ID Int                @db.Int
+
+  RefCompetentie RefCompetentie? @relation("RefCompetentie", fields: [COMPETENTIE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+
+  /// @description Verwijzing naar de competentie die het lid gehaald heeft
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  COMPETENTIE_ID Int @db.Int
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tijdstempel wanneer de progressie is afgetekend
+  INGEVOERD DateTime @default(now())
+
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tot wanneer is de progressie geldig (Bijv theorie certificaat)
+  GELDIG_TOT DateTime? @db.Date
+
+  /// @description Hoe ver is de progessie gevorderd? (1=basis,5 =volledig)
+  /// @DtoUpdateOptional
+  /// @minimum 1
+  /// @maximum 5
+  SCORE Int? @db.Int
+
+  /// @description Omschrijving van de factuurregel
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN String?         @db.Text
+
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Boolean        @default(false)
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@index([VERWIJDERD])
+  @@index([LID_ID])
+
+  @@map("oper_progressie")
+}

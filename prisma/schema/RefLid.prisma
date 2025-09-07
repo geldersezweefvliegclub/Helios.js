@@ -291,6 +291,9 @@ model RefLid {
   DienstIngevoerd     OperDienst[]         @relation("RefIngevoerd")
   Facturen            OperFactuur[]        @relation("RefLid")
 
+  Progressie              OperProgressie[]         @relation("RefLid")
+  ProgressieIngevoerd     OperProgressie[]         @relation("RefInstructeur")
+
   @@index([NAAM])
   @@index([LIDTYPE_ID])
   @@index([STATUSTYPE_ID])
