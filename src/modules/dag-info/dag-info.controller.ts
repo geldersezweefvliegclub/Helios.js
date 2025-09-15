@@ -18,6 +18,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperDagInfoDto} from "../../generated/nestjs-dto/create-operDagInfo.dto";
 import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto/update-operDagInfo.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {GetObjectOperDagInfoRequest} from "./GetObjectOperDagInfoRequest";
 
 @Controller('DagInfo')
 @ApiTags('DagInfo')
@@ -32,10 +33,11 @@ export class DagInfoController  extends HeliosController
    @HeliosGetObject(OperDagInfoDto)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number): Promise<OperDagInfoDto>
+      @Query() params: GetObjectOperDagInfoRequest
+   ): Promise<OperDagInfoDto>
    {
       this.permissieService.heeftToegang(user, 'DagInfo.GetObject');
-      return await this.DagInfoService.GetObject(id);
+      return await this.DagInfoService.GetObject(params.ID, params.DATUM);
    }
 
    @HeliosGetObjects(GetObjectsOperDagInfoResponse)

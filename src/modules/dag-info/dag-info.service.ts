@@ -20,17 +20,20 @@ export class DagInfoService extends IHeliosService
 
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-   async GetObject(id: number, relation: string = undefined): Promise<OperDagInfo>
+   async GetObject(id: number, date?: Date, relation: string = undefined): Promise<OperDagInfo>
    {
       // relation is included for consistency with other services, but not used
-      const db = await this.dbService.operDagInfo.findUnique({
+      const db = await this.dbService.operDagInfo.findFirst({
          where: {
-            ID: id
+            ID: id ? id : undefined,
+            DATUM: date ? date : undefined
          },
       });
 
-      if (!db)
+      if (!db) {
          throw new HttpException(`DagInfo record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+      }
+
       return db;
    }
 
