@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RefLid} from '@prisma/client';
 
 @Injectable()
 export class PermissieService {
+
+   constructor(private readonly logger: Logger) {
+   }
+
    heeftToegang(user: RefLid, functie:string): void
    {
       // check if the user has the right permissions
       // to access the requested
       // TODO
-      console.log(`User ${user} heeft toegang tot ${functie}`);
+      this.logger.verbose("User " + user.VOORNAAM + " " + user.ACHTERNAAM + " has access to " + functie);
    }
 
    isBeheerder(user: RefLid): boolean
