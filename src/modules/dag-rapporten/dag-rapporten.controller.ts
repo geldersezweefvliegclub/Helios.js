@@ -20,7 +20,7 @@ import {ApiTags} from "@nestjs/swagger";
 
 @Controller('DagRapporten')
 @ApiTags('DagRapporten')
-export class DagInfoController  extends HeliosController
+export class DagRapportenController extends HeliosController
 {
    constructor(private readonly DagRapportenService: DagRapportenService,
                private readonly permissieService:PermissieService)
