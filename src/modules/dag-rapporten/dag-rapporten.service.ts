@@ -43,14 +43,16 @@ export class DagRapportenService extends IHeliosService
          params.VERWIJDERD = false;
       }
       const where: Prisma.OperDagRapportWhereInput =
-         {
-            AND:
-               [
-                  { ID: params.ID},
-                  { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
-               ]
-         }
+          {
+             AND:
+                 [
+                    { ID: params.ID},
+                    { VERWIJDERD: params.VERWIJDERD ?? false},
+                    { ID: { in: params.IDs }},
+                    params.BEGIN_DATUM ? { DATUM: { gte: params.BEGIN_DATUM } } : {},
+                    params.EIND_DATUM ? { DATUM: { lte: params.EIND_DATUM } } : {}
+                 ]
+          }
       let count: number | undefined;
       if (params.MAX !== undefined || params.START !== undefined)
       {
