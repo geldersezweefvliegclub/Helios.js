@@ -48,7 +48,8 @@ export class DienstenService extends IHeliosService
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+                  { LID_ID: params.LID_ID }
                ]
          }
       let count: number | undefined;
