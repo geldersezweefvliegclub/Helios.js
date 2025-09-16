@@ -1,4 +1,4 @@
-import {IsInt, IsOptional} from "class-validator";
+import {IsDate, IsInt, IsOptional} from "class-validator";
 import {Type} from "class-transformer";
 import {
    OptionalBooleanTransform,
@@ -125,6 +125,7 @@ export class GetObjectsDateRequest extends GetObjectsRequest
 {
    @IsOptional()
    @OptionalDateTransform()
+   @IsDate()
    @ApiProperty(
       {
          name: 'DATUM',
@@ -134,6 +135,7 @@ export class GetObjectsDateRequest extends GetObjectsRequest
    public DATUM?: Date;
 
    @IsOptional()
+   @IsDate()
    @OptionalDateTransform()
    @ApiProperty(
       {
@@ -144,6 +146,7 @@ export class GetObjectsDateRequest extends GetObjectsRequest
    public BEGIN_DATUM?: Date;
 
    @IsOptional()
+   @IsDate()
    @OptionalDateTransform()
    @ApiProperty(
       {
