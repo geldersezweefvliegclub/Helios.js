@@ -48,7 +48,8 @@ export class AanwezigVliegtuigenService extends IHeliosService
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+                  params.NIET_VERTROKKEN ? { VERTREK: null } : {},
                ]
          }
       let count: number | undefined;
