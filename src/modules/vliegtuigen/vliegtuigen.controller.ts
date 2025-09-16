@@ -1,12 +1,15 @@
 import {Body, Controller, Query} from '@nestjs/common';
 import {ApiTags} from "@nestjs/swagger";
-import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
    HeliosController,
-   HeliosCreateObject, HeliosDeleteObject,
+   HeliosCreateObject,
+   HeliosDeleteObject,
    HeliosGetObject,
-   HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject, HeliosUpdateObject
+   HeliosGetObjects,
+   HeliosRemoveObject,
+   HeliosRestoreObject,
+   HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid, RefVliegtuig} from "@prisma/client";
@@ -22,8 +25,7 @@ import {UpdateRefVliegtuigDto} from "../../generated/nestjs-dto/update-refVliegt
 @ApiTags('Vliegtuigen')
 export class VliegtuigenController extends HeliosController
 {
-   constructor(private readonly configService: ConfigService,
-               private readonly vliegtuigenService: VliegtuigenService,
+   constructor(private readonly vliegtuigenService: VliegtuigenService,
                private readonly permissieService:PermissieService)
    {
       super()

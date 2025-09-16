@@ -1,11 +1,14 @@
 import {Body, Controller, Query} from '@nestjs/common';
 import {
    HeliosController,
-   HeliosCreateObject, HeliosDeleteObject,
+   HeliosCreateObject,
+   HeliosDeleteObject,
    HeliosGetObject,
-   HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject, HeliosUpdateObject
+   HeliosGetObjects,
+   HeliosRemoveObject,
+   HeliosRestoreObject,
+   HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {OperJournaal, Prisma, RefLid} from "@prisma/client";
@@ -22,8 +25,7 @@ import {UpdateOperJournaalDto} from "../../generated/nestjs-dto/update-operJourn
 @ApiTags('Journaal')
 export class JournaalController extends HeliosController
 {
-   constructor(private readonly configService: ConfigService,
-               private readonly journaalService: JournaalService,
+   constructor(private readonly journaalService: JournaalService,
                private readonly permissieService:PermissieService)
    {
       super()
