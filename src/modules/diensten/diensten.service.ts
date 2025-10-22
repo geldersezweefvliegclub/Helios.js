@@ -48,6 +48,8 @@ export class DienstenService extends IHeliosService
          params = new GetObjectsOperDienstenRequest();
          params.VERWIJDERD = false;
       }
+
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperDienstWhereInput =
          {
             AND:
@@ -55,7 +57,26 @@ export class DienstenService extends IHeliosService
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
-                  { LID_ID: params.LID_ID }
+                  { LID_ID: params.LID_ID },
+
+                  {
+                     OR: [
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startTime,
+                                  lte: dtSpanne.endTime
+                               }
+                        },
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startDate,
+                                  lte: dtSpanne.endDate
+                               }
+                        }
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
