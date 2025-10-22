@@ -42,13 +42,32 @@ export class RoosterService extends IHeliosService
          params = new GetObjectsOperRoosterRequest();
          params.VERWIJDERD = false;
       }
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperRoosterWhereInput =
          {
             AND:
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+                  {
+                     OR: [
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startTime,
+                                  lte: dtSpanne.endTime
+                               }
+                        },
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startDate,
+                                  lte: dtSpanne.endDate
+                               }
+                        }
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
