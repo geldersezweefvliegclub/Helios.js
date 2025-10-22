@@ -5,9 +5,10 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperDienst} from "@prisma/client";
+import {Prisma} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetObjectsOperDienstenResponse} from "./GetObjectsOperDienstenResponse";
+import {OperDienstDto} from "../../generated/nestjs-dto/operDienst.dto";
 
 @Injectable()
 export class DienstenService extends IHeliosService
@@ -20,18 +21,23 @@ export class DienstenService extends IHeliosService
 
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-   async GetObject(id: number, relation: string = undefined): Promise<OperDienst>
+   async GetObject(id: number, relation: string = undefined): Promise<OperDienstDto>
    {
       // relation is included for consistency with other services, but not used
       const db = await this.dbService.operDienst.findUnique({
          where: {
             ID: id
          },
+         include: {
+            TypeDienst: true
+         }
       });
 
-      if (!db)
+      if (!db) {
          throw new HttpException(`DagRapport record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      }
+
+      return new OperDienstDto(db);
    }
 
    // retrieve objects from the database based on the query parameters
@@ -57,36 +63,51 @@ export class DienstenService extends IHeliosService
       {
          count = await this.dbService.operDienst.count({where: where});
       }
-      const objs = await this.dbService.operDienst.findMany({
+      const rawObjs = await this.dbService.operDienst.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperDienstOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            TypeDienst: true
+         }
+      });
+
+      const objs = rawObjs.map((o) => new OperDienstDto(o))
+
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.OperDienstCreateInput): Promise<OperDienst>
+   async AddObject(data: Prisma.OperDienstCreateInput): Promise<OperDienstDto>
    {
       const obj = await this.dbService.operDienst.create({
-         data: data
+         data: data,
+         include: {
+            TypeDienst: true
+         }
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      return new OperDienstDto(obj);
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<OperDienst>
+   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<OperDienstDto>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDienst.update({
          where: {
             ID: id
          },
-         data: data
+         data: data,
+         include: {
+            TypeDienst: true
+         }
       });
+
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+
+      return new OperDienstDto(obj);
    }
 
    async RemoveObject(id: number): Promise<void>
