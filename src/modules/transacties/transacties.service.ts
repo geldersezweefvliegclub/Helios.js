@@ -42,13 +42,34 @@ export class TransactiesService extends IHeliosService
          params = new GetObjectsOperTransactiesRequest();
          params.VERWIJDERD = false;
       }
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperTransactieWhereInput =
          {
             AND:
                [
                   { ID: params.ID},
+                  { LID_ID: params.LID_ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+
+                  {
+                     OR: [
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startTime,
+                                  lte: dtSpanne.endTime
+                               }
+                        },
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.startDate,
+                                  lte: dtSpanne.endDate
+                               }
+                        }
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
