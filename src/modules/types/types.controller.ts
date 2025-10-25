@@ -1,17 +1,17 @@
-import {
-   Body,
-   Controller,
-   Query
-} from '@nestjs/common';
+import {Body, Controller, Query} from '@nestjs/common';
 import {TypesService} from "./types.service";
-import {Prisma, RefLid, RefType} from '@prisma/client';
+import {Prisma, RefLid} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {
-   HeliosController, HeliosCreateObject, HeliosDeleteObject,
+   HeliosController,
+   HeliosCreateObject,
+   HeliosDeleteObject,
    HeliosGetObject,
-   HeliosGetObjects, HeliosRemoveObject,
-   HeliosRestoreObject, HeliosUpdateObject
+   HeliosGetObjects,
+   HeliosRemoveObject,
+   HeliosRestoreObject,
+   HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
 import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
 import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
@@ -67,7 +67,7 @@ export class TypesController extends HeliosController
    @HeliosUpdateObject(UpdateRefTypeDto, RefTypeDto)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefType>
+      @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefTypeDto>
    {
       this.permissieService.heeftToegang(user, 'Types.UpdateObject');
 

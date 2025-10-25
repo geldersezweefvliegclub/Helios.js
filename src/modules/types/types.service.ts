@@ -9,6 +9,7 @@ import {Prisma, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
 import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
+import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -20,7 +21,7 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number, relation :string = undefined): Promise<RefType>
+   async GetObject(id: number, relation :string = undefined): Promise<RefTypeDto>
    {
       const db = await this.dbService.refType.findUnique({
          where: {
@@ -30,7 +31,7 @@ export class TypesService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Type record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      return new RefTypeDto(db);
    }
 
    // retrieve objects from the database based on the query parameters
@@ -66,32 +67,21 @@ export class TypesService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
-         const retObj = {
-            ...obj,
-            GROEP: obj.TypesGroep?.OMSCHRIJVING ?? null,
-         } ;
-
-         // delete child objects from the response
-         delete retObj.TypesGroep;
-
-         return  retObj as GetObjectsRefTypesResponse
-      });
+      const response = objs.map((obj) => new RefTypeDto(obj));
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefType>
+   async AddObject(data: Prisma.RefTypeCreateInput ): Promise<RefTypeDto>
    {
       const obj = await this.dbService.refType.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      return new RefTypeDto(obj);
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypeUpdateInput): Promise<RefType>
+   async UpdateObject(id: number, data: Prisma.RefTypeUpdateInput): Promise<RefTypeDto>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.refType.update({
@@ -101,7 +91,8 @@ export class TypesService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+
+      return new RefTypeDto(obj);
    }
 
    async RemoveObject(id: number): Promise<void>
