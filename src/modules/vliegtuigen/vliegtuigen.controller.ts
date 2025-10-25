@@ -12,7 +12,7 @@ import {
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
 import {CurrentUser} from "../login/current-user.decorator";
-import {Prisma, RefLid, RefVliegtuig} from "@prisma/client";
+import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -67,7 +67,7 @@ export class VliegtuigenController extends HeliosController
    @HeliosUpdateObject(UpdateRefVliegtuigDto, RefVliegtuigDto)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<RefVliegtuig>
+      @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<RefVliegtuigDto>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.UpdateObject');
 

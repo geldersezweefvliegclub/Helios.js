@@ -8,6 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, RefVliegtuig} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 
 @Injectable()
 export class VliegtuigenService extends IHeliosService
@@ -19,7 +20,7 @@ export class VliegtuigenService extends IHeliosService
    }
 
    // retrieve a single object from the database based on the id
-   async GetObject(id: number, relation:string = undefined): Promise<RefVliegtuig>
+   async GetObject(id: number, relation:string = undefined): Promise<RefVliegtuigDto>
    {
       const db = await this.dbService.refVliegtuig.findUnique({
          where: {
@@ -27,9 +28,11 @@ export class VliegtuigenService extends IHeliosService
          },
          include: this.SelectStringToInclude<Prisma.RefVliegtuigInclude>(relation)
       });
-      if (!db)
+      if (!db) {
          throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      }
+
+      return new RefVliegtuigDto(db);
    }
 
    // retrieve objects from the database based on the query parameters
@@ -70,7 +73,7 @@ export class VliegtuigenService extends IHeliosService
       //TODO: journaal_aantal
       const objs = await this.dbService.refVliegtuig.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "VOLGORDE, ID"),
+         orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "CLUBKIST DESC, VOLGORDE, ID"),
          take: params.MAX,
          skip: params.START,
          include: {
@@ -81,22 +84,9 @@ export class VliegtuigenService extends IHeliosService
       });
 
       const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
-         const retObj = {
-            ...obj,
-            VLIEGTUIGTYPE: obj.VliegtuigType?.OMSCHRIJVING ?? null,
-            BEVOEGDHEID_LOKAAL: obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null,
-            BEVOEGDHEID_OVERLAND: obj.BevoegdheidOverland?.OMSCHRIJVING ?? null,
-            REG_CALL: obj.REGISTRATIE + (obj.CALLSIGN ?  " (" + obj.CALLSIGN + ")" : "")
-         } ;
-
-         // delete child objects from the response
-         delete retObj.VliegtuigType;
-         delete retObj.BevoegdheidLokaal;
-         delete retObj.BevoegdheidOverland;
-
-         return  retObj as GetObjectsRefVliegtuigenResponse
+         return new RefVliegtuigDto(obj);
       });
+
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
@@ -121,7 +111,7 @@ export class VliegtuigenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<RefVliegtuig>
+   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<RefVliegtuigDto>
    {
       const db = await this.GetObject(id);
 
@@ -147,7 +137,7 @@ export class VliegtuigenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return obj;
+      return new RefVliegtuigDto(obj);
    }
 
    async RemoveObject(id: number): Promise<void>
