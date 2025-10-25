@@ -42,15 +42,33 @@ export class DagRapportenService extends IHeliosService
          params = new GetObjectsOperDagRapportenRequest();
          params.VERWIJDERD = false;
       }
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperDagRapportWhereInput =
           {
              AND:
                  [
-                    { ID: params.ID},
-                    { VERWIJDERD: params.VERWIJDERD ?? false},
-                    { ID: { in: params.IDs }},
-                    params.BEGIN_DATUM ? { DATUM: { gte: params.BEGIN_DATUM } } : {},
-                    params.EIND_DATUM ? { DATUM: { lte: params.EIND_DATUM } } : {}
+                    {ID: params.ID},
+                    {VERWIJDERD: params.VERWIJDERD ?? false},
+                    {ID: {in: params.IDs}},
+
+                    {
+                       OR: [
+                          {
+                             DATUM:
+                                 {
+                                    gte: dtSpanne.startTime,
+                                    lte: dtSpanne.endTime
+                                 }
+                          },
+                          {
+                             DATUM:
+                                 {
+                                    gte: dtSpanne.startDate,
+                                    lte: dtSpanne.endDate
+                                 }
+                          }
+                       ]
+                    }
                  ]
           }
       let count: number | undefined;
