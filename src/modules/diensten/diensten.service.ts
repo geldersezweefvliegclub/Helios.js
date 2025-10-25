@@ -64,15 +64,8 @@ export class DienstenService extends IHeliosService
                         {
                            DATUM:
                                {
-                                  gte: dtSpanne.startTime,
-                                  lte: dtSpanne.endTime
-                               }
-                        },
-                        {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.startDate,
-                                  lte: dtSpanne.endDate
+                                  gte: dtSpanne.start,
+                                  lte: dtSpanne.eind
                                }
                         }
                      ]
