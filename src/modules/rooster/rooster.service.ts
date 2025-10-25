@@ -5,9 +5,10 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperRooster} from "@prisma/client";
+import {Prisma} from "@prisma/client";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
+import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 
 @Injectable()
 export class RoosterService extends IHeliosService
@@ -20,7 +21,7 @@ export class RoosterService extends IHeliosService
 
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-   async GetObject(id: number, relation: string = undefined): Promise<OperRooster>
+   async GetObject(id: number, relation: string = undefined): Promise<OperRoosterDto>
    {
       // relation is included for consistency with other services, but not used
       const db = await this.dbService.operRooster.findUnique({
@@ -84,7 +85,7 @@ export class RoosterService extends IHeliosService
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.OperRoosterCreateInput): Promise<OperRooster>
+   async AddObject(data: Prisma.OperRoosterCreateInput): Promise<OperRoosterDto>
    {
       const obj = await this.dbService.operRooster.create({
          data: data
@@ -94,7 +95,7 @@ export class RoosterService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput): Promise<OperRooster>
+   async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput): Promise<OperRoosterDto>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.operRooster.update({
