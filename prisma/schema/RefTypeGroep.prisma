@@ -1,0 +1,14 @@
+model RefTypeGroep {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  CODE               String?  @db.VarChar(10)
+  EXT_REF            String?  @db.VarChar(25)
+  OMSCHRIJVING       String   @db.VarChar(75)
+  SORTEER_VOLGORDE   Int?     @db.UnsignedTinyInt
+  READ_ONLY          Int      @default(0) @db.UnsignedTinyInt
+  BEDRAG_EENHEDEN    Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("ref_types_groepen")
+}

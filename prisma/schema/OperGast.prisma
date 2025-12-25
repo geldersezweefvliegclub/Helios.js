@@ -1,0 +1,12 @@
+model OperGast {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  NAAM               String   @db.VarChar(75)
+  DATUM              DateTime @db.Date
+  OPMERKINGEN        String?  @db.Text
+  VELD_ID            Int?     @db.UnsignedMediumInt
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("oper_gasten")
+}

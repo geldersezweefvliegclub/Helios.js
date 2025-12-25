@@ -1,0 +1,44 @@
+model OperStartlijst {
+  ID                                                            Int           @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                                         DateTime      @db.Date
+  DAGNUMMER                                                     Int           @default(0) @db.UnsignedTinyInt
+  VLIEGTUIG_ID                                                  Int           @db.UnsignedMediumInt
+  STARTTIJD                                                     DateTime?     @db.Time(0)
+  LANDINGSTIJD                                                  DateTime?     @db.Time(0)
+  STARTMETHODE_ID                                               Int?          @db.UnsignedMediumInt
+  VLIEGER_ID                                                    Int?          @db.UnsignedMediumInt
+  INZITTENDE_ID                                                 Int?          @db.UnsignedMediumInt
+  VLIEGERNAAM                                                   String?       @db.VarChar(50)
+  INZITTENDENAAM                                                String?       @db.VarChar(50)
+  SLEEPKIST_ID                                                  Int?          @db.UnsignedMediumInt
+  SLEEP_HOOGTE                                                  Int?          @db.UnsignedSmallInt
+  VELD_ID                                                       Int?          @db.UnsignedMediumInt
+  BAAN_ID                                                       Int?          @db.UnsignedMediumInt
+  OPMERKINGEN                                                   String?       @db.Text
+  EXTERNAL_ID                                                   String?       @db.Text
+  PAX                                                           Int           @default(0) @db.UnsignedTinyInt
+  CHECKSTART                                                    Int           @default(0) @db.UnsignedTinyInt
+  INSTRUCTIEVLUCHT                                              Int           @default(0) @db.UnsignedTinyInt
+  VERWIJDERD                                                    Int           @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                            DateTime      @default(now()) @db.Timestamp(0)
+  ref_vliegtuigen_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
+  ref_types_oper_startlijst_STARTMETHODE_IDToref_types          RefType?      @relation("oper_startlijst_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_2")
+  ref_leden_oper_startlijst_VLIEGER_IDToref_leden               RefLid?       @relation("oper_startlijst_VLIEGER_IDToref_leden", fields: [VLIEGER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_3")
+  ref_leden_oper_startlijst_INZITTENDE_IDToref_leden            RefLid?       @relation("oper_startlijst_INZITTENDE_IDToref_leden", fields: [INZITTENDE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_4")
+  ref_vliegtuigen_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen RefVliegtuig? @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen", fields: [SLEEPKIST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_5")
+  ref_types_oper_startlijst_VELD_IDToref_types                  RefType?      @relation("oper_startlijst_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_6")
+  ref_types_oper_startlijst_BAAN_IDToref_types                  RefType?      @relation("oper_startlijst_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_7")
+  oper_tracks                                                   OperTrack[]
+
+  @@index([BAAN_ID], map: "BAAN_ID")
+  @@index([DATUM], map: "DATUM")
+  @@index([DATUM, VLIEGER_ID, VERWIJDERD], map: "DATUM_VLIEGER_ID_VERWIJDERD")
+  @@index([INZITTENDE_ID], map: "INZITTENDE_ID")
+  @@index([SLEEPKIST_ID], map: "SLEEPKIST_ID")
+  @@index([STARTMETHODE_ID], map: "STARTMETHODE_ID")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGER_ID], map: "VLIEGER_ID")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+  @@map("oper_startlijst")
+}

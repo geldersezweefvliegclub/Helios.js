@@ -1,0 +1,33 @@
+model OperJournaal {
+  ID                                               Int           @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                            DateTime      @default(now()) @db.DateTime(0)
+  VLIEGTUIG_ID                                     Int?          @db.UnsignedMediumInt
+  ROLLEND_ID                                       Int?          @db.UnsignedMediumInt
+  TITEL                                            String?       @db.VarChar(250)
+  OMSCHRIJVING                                     String?       @db.Text
+  CATEGORIE_ID                                     Int?          @db.UnsignedMediumInt
+  STATUS_ID                                        Int?          @db.UnsignedMediumInt
+  MELDER_ID                                        Int?          @db.UnsignedMediumInt
+  TECHNICUS_ID                                     Int?          @db.UnsignedMediumInt
+  AFGETEKEND_ID                                    Int?          @db.UnsignedMediumInt
+  VERWIJDERD                                       Int           @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                               DateTime      @default(now()) @db.Timestamp(0)
+  ref_types_oper_journaal_ROLLEND_IDToref_types    RefType?      @relation("oper_journaal_ROLLEND_IDToref_types", fields: [ROLLEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_1")
+  ref_types_oper_journaal_CATEGORIE_IDToref_types  RefType?      @relation("oper_journaal_CATEGORIE_IDToref_types", fields: [CATEGORIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_2")
+  ref_types_oper_journaal_STATUS_IDToref_types     RefType?      @relation("oper_journaal_STATUS_IDToref_types", fields: [STATUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_3")
+  ref_vliegtuigen                                  RefVliegtuig? @relation(fields: [VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_4")
+  ref_leden_oper_journaal_MELDER_IDToref_leden     RefLid?       @relation("oper_journaal_MELDER_IDToref_leden", fields: [MELDER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_5")
+  ref_leden_oper_journaal_TECHNICUS_IDToref_leden  RefLid?       @relation("oper_journaal_TECHNICUS_IDToref_leden", fields: [TECHNICUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_6")
+  ref_leden_oper_journaal_AFGETEKEND_IDToref_leden RefLid?       @relation("oper_journaal_AFGETEKEND_IDToref_leden", fields: [AFGETEKEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_7")
+
+  @@index([AFGETEKEND_ID], map: "AFGETEKEND_ID")
+  @@index([CATEGORIE_ID], map: "CATEGORIE_ID")
+  @@index([DATUM], map: "DATUM")
+  @@index([MELDER_ID], map: "MELDER_ID")
+  @@index([ROLLEND_ID], map: "ROLLEND_ID")
+  @@index([STATUS_ID], map: "STATUS_ID")
+  @@index([TECHNICUS_ID], map: "TECHNICUS_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+  @@map("oper_journaal")
+}

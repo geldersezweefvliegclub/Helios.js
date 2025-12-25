@@ -1,0 +1,25 @@
+model OperProgressie {
+  ID                                                  Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  LID_ID                                              Int              @db.UnsignedMediumInt
+  COMPETENTIE_ID                                      Int              @db.UnsignedMediumInt
+  INSTRUCTEUR_ID                                      Int              @db.UnsignedMediumInt
+  OPMERKINGEN                                         String?          @db.Text
+  INGEVOERD                                           DateTime?        @default(now()) @db.DateTime(0)
+  LINK_ID                                             Int?             @db.UnsignedMediumInt
+  GELDIG_TOT                                          DateTime?        @db.Date
+  SCORE                                               Int?             @db.UnsignedSmallInt
+  VERWIJDERD                                          Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                  DateTime         @default(now()) @db.Timestamp(0)
+  ref_leden_oper_progressie_LID_IDToref_leden         RefLid           @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
+  ref_leden_oper_progressie_INSTRUCTEUR_IDToref_leden RefLid           @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")
+  ref_competenties                                    RefCompetentie   @relation(fields: [COMPETENTIE_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_3")
+  oper_progressie                                     OperProgressie?  @relation("oper_progressieTooper_progressie", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_progressie_ibfk_4")
+  other_oper_progressie                               OperProgressie[] @relation("oper_progressieTooper_progressie")
+
+  @@index([COMPETENTIE_ID], map: "COMPETENTIE_ID")
+  @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([LINK_ID], map: "LINK_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("oper_progressie")
+}

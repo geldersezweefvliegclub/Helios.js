@@ -1,0 +1,19 @@
+model HeliosDocument {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime @default(now()) @db.DateTime(0)
+  VOLGORDE           Int?     @db.UnsignedTinyInt
+  GROEP_ID           Int      @db.UnsignedMediumInt
+  TEKST              String?  @db.VarChar(250)
+  URL                String?  @db.VarChar(250)
+  LID_ID             Int?     @db.UnsignedMediumInt
+  LEGE_REGEL         Int      @default(0) @db.UnsignedTinyInt
+  ONDERSTREEP        Int      @default(0) @db.UnsignedTinyInt
+  BOVEN              Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  ref_types          RefType  @relation(fields: [GROEP_ID], references: [ID], onUpdate: Restrict, map: "documenten_ibfk_1")
+
+  @@index([GROEP_ID], map: "GROEP_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("documenten")
+}

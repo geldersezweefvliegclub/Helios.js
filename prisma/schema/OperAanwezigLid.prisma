@@ -1,0 +1,27 @@
+model OperAanwezigLid {
+  ID                      Int             @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                   DateTime        @db.Date
+  POSITIE                 Int?            @db.UnsignedTinyInt
+  LID_ID                  Int             @db.UnsignedMediumInt
+  VOORAANMELDING          Int             @default(0) @db.UnsignedTinyInt
+  AANKOMST                DateTime?       @db.Time(0)
+  VERTREK                 DateTime?       @db.Time(0)
+  OVERLAND_VLIEGTUIG_ID   Int?            @db.UnsignedMediumInt
+  VOORKEUR_VLIEGTUIG_TYPE String?         @db.Text
+  TRANSACTIE_ID           Int?            @db.UnsignedMediumInt
+  VELD_ID                 Int?            @db.UnsignedMediumInt
+  OPMERKINGEN             String?         @db.Text
+  VERWIJDERD              Int             @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING      DateTime        @default(now()) @db.Timestamp(0)
+  ref_leden               RefLid          @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_1")
+  ref_vliegtuigen         RefVliegtuig?   @relation(fields: [OVERLAND_VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_2")
+  oper_transacties        OperTransactie? @relation(fields: [TRANSACTIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_3")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([DATUM, LID_ID, VERWIJDERD], map: "DATUM_LIDID_VERWIJDERD")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([OVERLAND_VLIEGTUIG_ID], map: "OVERLAND_VLIEGTUIG_ID")
+  @@index([TRANSACTIE_ID], map: "TRANSACTIE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("oper_aanwezig_leden")
+}

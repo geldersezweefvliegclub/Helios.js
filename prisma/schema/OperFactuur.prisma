@@ -1,0 +1,17 @@
+model OperFactuur {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  JAAR               Int      @db.SmallInt
+  LID_ID             Int?     @db.UnsignedMediumInt
+  NAAM               String?  @db.VarChar(255)
+  LIDNR              String?  @db.VarChar(10)
+  FACTUUR_NUMMER     String?  @db.VarChar(50)
+  CODE               String?  @db.VarChar(10)
+  OMSCHRIJVING       String?  @db.VarChar(50)
+  GEFACTUREERD       Decimal? @db.Decimal(50, 0)
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  ref_leden          RefLid?  @relation(fields: [LID_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_facturen_ibfk_1")
+
+  @@index([LID_ID], map: "LID_ID")
+  @@map("oper_facturen")
+}

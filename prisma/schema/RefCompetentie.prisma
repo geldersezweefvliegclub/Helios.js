@@ -1,0 +1,24 @@
+model RefCompetentie {
+  ID                                                                        Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  VOLGORDE                                                                  Int?             @db.UnsignedSmallInt
+  LEERFASE_ID                                                               Int              @db.UnsignedMediumInt
+  BLOK_ID                                                                   Int?             @db.UnsignedMediumInt
+  BLOK                                                                      String?          @db.VarChar(7)
+  ONDERWERP                                                                 String           @db.VarChar(75)
+  DOCUMENTATIE                                                              String?          @db.VarChar(75)
+  GELDIGHEID                                                                Int              @default(0) @db.UnsignedTinyInt
+  SCORE                                                                     Int              @default(0) @db.UnsignedTinyInt
+  VERWIJDERD                                                                Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                                        DateTime         @default(now()) @db.Timestamp(0)
+  oper_progressie                                                           OperProgressie[]
+  ref_types                                                                 RefType          @relation(fields: [LEERFASE_ID], references: [ID], onUpdate: Restrict, map: "ref_competenties_ibfk_1")
+  ref_competenties                                                          RefCompetentie?  @relation("ref_competentiesToref_competenties", fields: [BLOK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_competenties_ibfk_2")
+  other_ref_competenties                                                    RefCompetentie[] @relation("ref_competentiesToref_competenties")
+  ref_vliegtuigen_ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties   RefVliegtuig[]   @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties")
+  ref_vliegtuigen_ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties RefVliegtuig[]   @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties")
+
+  @@index([BLOK_ID], map: "BLOK_ID")
+  @@index([LEERFASE_ID], map: "LEERFASE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("ref_competenties")
+}

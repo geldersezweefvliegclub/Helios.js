@@ -1,0 +1,20 @@
+model OperAanwezigVliegtuig {
+  ID                 Int          @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime     @db.Date
+  VLIEGTUIG_ID       Int          @db.UnsignedMediumInt
+  AANKOMST           DateTime?    @db.Time(0)
+  VERTREK            DateTime?    @db.Time(0)
+  LATITUDE           Decimal?     @db.Decimal(8, 5)
+  LONGITUDE          Decimal?     @db.Decimal(8, 5)
+  HOOGTE             Int?         @db.SmallInt
+  SNELHEID           Int?         @db.SmallInt
+  VELD_ID            Int?         @db.UnsignedMediumInt
+  VERWIJDERD         Int          @default(0) @db.TinyInt
+  LAATSTE_AANPASSING DateTime     @default(now()) @db.Timestamp(0)
+  ref_vliegtuigen    RefVliegtuig @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_vliegtuigen_ibfk_1")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+  @@map("oper_aanwezig_vliegtuigen")
+}

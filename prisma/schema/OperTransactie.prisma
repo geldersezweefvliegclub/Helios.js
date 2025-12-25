@@ -1,0 +1,29 @@
+model OperTransactie {
+  ID                                                 Int               @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                              DateTime          @default(now()) @db.DateTime(0)
+  VLIEGDAG                                           DateTime?         @db.Date
+  LID_ID                                             Int               @db.UnsignedMediumInt
+  INGEVOERD_ID                                       Int               @db.UnsignedMediumInt
+  TYPE_ID                                            Int               @db.UnsignedMediumInt
+  DDWV                                               Int               @default(0) @db.UnsignedTinyInt
+  BEDRAG                                             Decimal?          @db.Decimal(10, 2)
+  EENHEDEN                                           Decimal?          @db.Decimal(10, 0)
+  SALDO_VOOR                                         Decimal?          @db.Decimal(8, 2)
+  SALDO_NA                                           Decimal?          @db.Decimal(8, 2)
+  REFERENTIE                                         String?           @db.VarChar(50)
+  EXT_REF                                            String?           @db.VarChar(50)
+  OMSCHRIJVING                                       String            @db.VarChar(150)
+  BETAALD                                            Int               @default(0) @db.UnsignedTinyInt
+  BETAAL_URL                                         String?           @db.VarChar(250)
+  VERWIJDERD                                         Int               @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                 DateTime          @default(now()) @db.Timestamp(0)
+  oper_aanwezig_leden                                OperAanwezigLid[]
+  ref_leden_oper_transacties_LID_IDToref_leden       RefLid            @relation("oper_transacties_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_1")
+  ref_leden_oper_transacties_INGEVOERD_IDToref_leden RefLid            @relation("oper_transacties_INGEVOERD_IDToref_leden", fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_2")
+  ref_types                                          RefType           @relation(fields: [TYPE_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_3")
+
+  @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([TYPE_ID], map: "TYPE_ID")
+  @@map("oper_transacties")
+}

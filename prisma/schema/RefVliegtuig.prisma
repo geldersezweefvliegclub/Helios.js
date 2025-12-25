@@ -1,0 +1,40 @@
+model RefVliegtuig {
+  ID                                                                         Int                     @id @default(autoincrement()) @db.UnsignedMediumInt
+  REGISTRATIE                                                                String                  @db.VarChar(8)
+  CALLSIGN                                                                   String?                 @db.VarChar(6)
+  ZITPLAATSEN                                                                Int                     @default(1) @db.UnsignedTinyInt
+  CLUBKIST                                                                   Int                     @default(0) @db.UnsignedTinyInt
+  FLARMCODE                                                                  String?                 @db.VarChar(30)
+  TYPE_ID                                                                    Int?                    @db.UnsignedMediumInt
+  TMG                                                                        Int                     @default(0) @db.UnsignedTinyInt
+  ZELFSTART                                                                  Int                     @default(0) @db.UnsignedTinyInt
+  SLEEPKIST                                                                  Int                     @default(0) @db.UnsignedTinyInt
+  VOLGORDE                                                                   Int?                    @db.UnsignedTinyInt
+  INZETBAAR                                                                  Int                     @default(1) @db.UnsignedTinyInt
+  TRAINER                                                                    Int                     @default(0) @db.TinyInt
+  URL                                                                        String?                 @db.VarChar(1024)
+  BEVOEGDHEID_LOKAAL_ID                                                      Int?                    @db.UnsignedMediumInt
+  BEVOEGDHEID_OVERLAND_ID                                                    Int?                    @db.UnsignedMediumInt
+  OPMERKINGEN                                                                String?                 @db.Text
+  VERWIJDERD                                                                 Int                     @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                                         DateTime                @default(now()) @db.Timestamp(0)
+  oper_aanwezig_leden                                                        OperAanwezigLid[]
+  oper_aanwezig_vliegtuigen                                                  OperAanwezigVliegtuig[]
+  oper_journaal                                                              OperJournaal[]
+  oper_reservering                                                           OperReservering[]
+  oper_startlijst_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen              OperStartlijst[]        @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen")
+  oper_startlijst_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen              OperStartlijst[]        @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen")
+  ref_types                                                                  RefType?                @relation(fields: [TYPE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_1")
+  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties   RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties", fields: [BEVOEGDHEID_LOKAAL_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_2")
+  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties", fields: [BEVOEGDHEID_OVERLAND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_3")
+
+  @@index([BEVOEGDHEID_LOKAAL_ID], map: "BEVOEGDHEID_LOKAAL_ID")
+  @@index([BEVOEGDHEID_OVERLAND_ID], map: "BEVOEGDHEID_OVERLAND_ID")
+  @@index([CALLSIGN], map: "CALLSIGN")
+  @@index([CLUBKIST], map: "CLUBKIST")
+  @@index([REGISTRATIE], map: "REGISTRATIE")
+  @@index([TYPE_ID], map: "TYPE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VOLGORDE], map: "VOLGORDE")
+  @@map("ref_vliegtuigen")
+}

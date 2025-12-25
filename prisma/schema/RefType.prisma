@@ -1,0 +1,39 @@
+model RefType {
+  ID                                                         Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  GROEP                                                      Int              @db.UnsignedSmallInt
+  CODE                                                       String?          @db.VarChar(10)
+  EXT_REF                                                    String?          @db.VarChar(25)
+  OMSCHRIJVING                                               String           @db.VarChar(75)
+  SORTEER_VOLGORDE                                           Int?             @db.UnsignedTinyInt
+  READ_ONLY                                                  Int              @default(0) @db.UnsignedTinyInt
+  BEDRAG                                                     Decimal?         @db.Decimal(6, 2)
+  EENHEDEN                                                   Decimal?         @db.Decimal(6, 2)
+  VERWIJDERD                                                 Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                         DateTime         @default(now()) @db.Timestamp(0)
+  documenten                                                 Documenten[]
+  oper_daginfo_oper_daginfo_VELD_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
+  oper_daginfo_oper_daginfo_BAAN_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_BAAN_IDToref_types")
+  oper_daginfo_oper_daginfo_STARTMETHODE_IDToref_types       OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_IDToref_types")
+  oper_daginfo_oper_daginfo_VELD_ID2Toref_types              OperDagInfo[]    @relation("oper_daginfo_VELD_ID2Toref_types")
+  oper_daginfo_oper_daginfo_BAAN_ID2Toref_types              OperDagInfo[]    @relation("oper_daginfo_BAAN_ID2Toref_types")
+  oper_daginfo_oper_daginfo_STARTMETHODE_ID2Toref_types      OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
+  oper_dagrapporten                                          OperDagrapport[]
+  oper_diensten                                              OperDienst[]
+  oper_journaal_oper_journaal_ROLLEND_IDToref_types          OperJournaal[]   @relation("oper_journaal_ROLLEND_IDToref_types")
+  oper_journaal_oper_journaal_CATEGORIE_IDToref_types        OperJournaal[]   @relation("oper_journaal_CATEGORIE_IDToref_types")
+  oper_journaal_oper_journaal_STATUS_IDToref_types           OperJournaal[]   @relation("oper_journaal_STATUS_IDToref_types")
+  oper_startlijst_oper_startlijst_STARTMETHODE_IDToref_types OperStartlijst[] @relation("oper_startlijst_STARTMETHODE_IDToref_types")
+  oper_startlijst_oper_startlijst_VELD_IDToref_types         OperStartlijst[] @relation("oper_startlijst_VELD_IDToref_types")
+  oper_startlijst_oper_startlijst_BAAN_IDToref_types         OperStartlijst[] @relation("oper_startlijst_BAAN_IDToref_types")
+  oper_transacties                                           OperTransactie[]
+  ref_competenties                                           RefCompetentie[]
+  ref_leden                                                  RefLid[]
+  ref_vliegtuigen                                            RefVliegtuig[]
+
+  /// @description Het type brandstof dat kan worden getankt
+  Brandstof OperBrandstof[] @relation("BrandstofType")
+
+  @@index([GROEP], map: "GROEP")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("ref_types")
+}

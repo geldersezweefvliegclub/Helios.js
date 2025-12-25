@@ -1,0 +1,92 @@
+model RefLid {
+  ID                                                        Int               @id @default(autoincrement()) @db.UnsignedMediumInt
+  NAAM                                                      String            @db.VarChar(255)
+  VOORNAAM                                                  String?           @db.VarChar(15)
+  TUSSENVOEGSEL                                             String?           @db.VarChar(8)
+  ACHTERNAAM                                                String?           @db.VarChar(30)
+  ADRES                                                     String?           @db.VarChar(50)
+  POSTCODE                                                  String?           @db.VarChar(10)
+  WOONPLAATS                                                String?           @db.VarChar(50)
+  TELEFOON                                                  String?           @db.VarChar(255)
+  MOBIEL                                                    String?           @db.VarChar(255)
+  NOODNUMMER                                                String?           @db.VarChar(255)
+  EMAIL                                                     String?           @db.VarChar(45)
+  LIDNR                                                     String?           @db.VarChar(10)
+  LIDTYPE_ID                                                Int               @db.UnsignedMediumInt
+  STATUSTYPE_ID                                             Int?              @db.UnsignedMediumInt
+  ZUSTERCLUB_ID                                             Int?              @db.UnsignedMediumInt
+  BUDDY_ID                                                  Int?              @db.UnsignedMediumInt
+  BUDDY_ID2                                                 Int?              @db.MediumInt
+  LIERIST                                                   Int               @default(0) @db.UnsignedTinyInt
+  LIERIST_IO                                                Int               @default(0) @db.UnsignedTinyInt
+  STARTLEIDER                                               Int               @default(0) @db.UnsignedTinyInt
+  INSTRUCTEUR                                               Int               @default(0) @db.UnsignedTinyInt
+  CIMT                                                      Int               @default(0) @db.UnsignedTinyInt
+  DDWV_CREW                                                 Int               @default(0) @db.UnsignedTinyInt
+  DDWV_BEHEERDER                                            Int               @default(0) @db.UnsignedTinyInt
+  BEHEERDER                                                 Int               @default(0) @db.UnsignedTinyInt
+  STARTTOREN                                                Int               @default(0) @db.UnsignedTinyInt
+  ROOSTER                                                   Int               @default(0) @db.UnsignedTinyInt
+  SLEEPVLIEGER                                              Int               @default(0) @db.UnsignedTinyInt
+  RAPPORTEUR                                                Int               @default(0) @db.UnsignedTinyInt
+  GASTENVLIEGER                                             Int               @default(0) @db.UnsignedTinyInt
+  TECHNICUS                                                 Int               @default(0) @db.UnsignedTinyInt
+  CLUBBLAD_POST                                             Int               @default(0) @db.UnsignedTinyInt
+  ZELFSTART_ABONNEMENT                                      Int               @default(0) @db.UnsignedTinyInt
+  MEDICAL                                                   DateTime?         @db.Date
+  GEBOORTE_DATUM                                            DateTime?         @db.Date
+  INLOGNAAM                                                 String?           @db.VarChar(45)
+  WACHTWOORD                                                String?           @db.VarChar(255)
+  SECRET                                                    String?           @db.VarChar(255)
+  AUTH                                                      Int               @default(0) @db.UnsignedTinyInt
+  AVATAR                                                    String?           @db.VarChar(255)
+  STARTVERBOD                                               Int               @default(0) @db.UnsignedTinyInt
+  OPGEZEGD                                                  Int               @default(0) @db.UnsignedTinyInt
+  PRIVACY                                                   Int               @default(0) @db.UnsignedTinyInt
+  SLEUTEL1                                                  String?           @db.VarChar(25)
+  SLEUTEL2                                                  String?           @db.VarChar(25)
+  BEROEP                                                    String?           @db.VarChar(50)
+  KNVVL_LIDNUMMER                                           String?           @db.VarChar(25)
+  BREVET_NUMMER                                             String?           @db.VarChar(25)
+  EMAIL_DAGINFO                                             Int               @default(0) @db.UnsignedTinyInt
+  OPMERKINGEN                                               String?           @db.Text
+  TEGOED                                                    Float             @default(0) @db.Float
+  VERWIJDERD                                                Int               @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                        DateTime          @default(now()) @db.Timestamp(0)
+  audit                                                     Audit[]
+  oper_aanwezig_leden                                       OperAanwezigLid[]
+  oper_dagrapporten                                         OperDagrapport[]
+  oper_diensten_oper_diensten_LID_IDToref_leden             OperDienst[]      @relation("oper_diensten_LID_IDToref_leden")
+  oper_diensten_oper_diensten_INGEVOERD_DOOR_IDToref_leden  OperDienst[]      @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden")
+  oper_facturen                                             OperFactuur[]
+  oper_journaal_oper_journaal_MELDER_IDToref_leden          OperJournaal[]    @relation("oper_journaal_MELDER_IDToref_leden")
+  oper_journaal_oper_journaal_TECHNICUS_IDToref_leden       OperJournaal[]    @relation("oper_journaal_TECHNICUS_IDToref_leden")
+  oper_journaal_oper_journaal_AFGETEKEND_IDToref_leden      OperJournaal[]    @relation("oper_journaal_AFGETEKEND_IDToref_leden")
+  oper_progressie_oper_progressie_LID_IDToref_leden         OperProgressie[]  @relation("oper_progressie_LID_IDToref_leden")
+  oper_progressie_oper_progressie_INSTRUCTEUR_IDToref_leden OperProgressie[]  @relation("oper_progressie_INSTRUCTEUR_IDToref_leden")
+  oper_reservering                                          OperReservering[]
+  oper_startlijst_oper_startlijst_VLIEGER_IDToref_leden     OperStartlijst[]  @relation("oper_startlijst_VLIEGER_IDToref_leden")
+  oper_startlijst_oper_startlijst_INZITTENDE_IDToref_leden  OperStartlijst[]  @relation("oper_startlijst_INZITTENDE_IDToref_leden")
+  oper_tracks_oper_tracks_LID_IDToref_leden                 OperTrack[]       @relation("oper_tracks_LID_IDToref_leden")
+  oper_tracks_oper_tracks_INSTRUCTEUR_IDToref_leden         OperTrack[]       @relation("oper_tracks_INSTRUCTEUR_IDToref_leden")
+  oper_transacties_oper_transacties_LID_IDToref_leden       OperTransactie[]  @relation("oper_transacties_LID_IDToref_leden")
+  oper_transacties_oper_transacties_INGEVOERD_IDToref_leden OperTransactie[]  @relation("oper_transacties_INGEVOERD_IDToref_leden")
+  ref_types                                                 RefType           @relation(fields: [LIDTYPE_ID], references: [ID], onUpdate: Restrict, map: "ref_leden_ibfk_1")
+  ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden              RefLid?           @relation("ref_leden_ZUSTERCLUB_IDToref_leden", fields: [ZUSTERCLUB_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_2")
+  other_ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden        RefLid[]          @relation("ref_leden_ZUSTERCLUB_IDToref_leden")
+  ref_leden_ref_leden_BUDDY_IDToref_leden                   RefLid?           @relation("ref_leden_BUDDY_IDToref_leden", fields: [BUDDY_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_3")
+  other_ref_leden_ref_leden_BUDDY_IDToref_leden             RefLid[]          @relation("ref_leden_BUDDY_IDToref_leden")
+
+  Brandstof  OperBrandstof[]  @relation("RefLid")
+  Winterwerk OperWinterwerk[] @relation("RefLid")
+
+  @@index([INSTRUCTEUR], map: "INSTRUCTEUR")
+  @@index([LIDTYPE_ID], map: "LIDTYPE_ID")
+  @@index([LIERIST], map: "LIERIST")
+  @@index([NAAM(length: 191)], map: "NAAM")
+  @@index([STARTLEIDER], map: "STARTLEIDER")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([ZUSTERCLUB_ID], map: "ZUSTERCLUB_ID")
+  @@index([BUDDY_ID], map: "ref_leden_ibfk_3")
+  @@map("ref_leden")
+}

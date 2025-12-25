@@ -1,0 +1,23 @@
+model OperDagrapport {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime @db.Date
+  VELD_ID            Int      @db.UnsignedMediumInt
+  INGEVOERD_ID       Int      @db.UnsignedMediumInt
+  INCIDENTEN         String?  @db.Text
+  VLIEGBEDRIJF       String?  @db.Text
+  METEO              String?  @db.Text
+  DIENSTEN           String?  @db.Text
+  VERSLAG            String?  @db.Text
+  ROLLENDMATERIEEL   String?  @db.Text
+  VLIEGENDMATERIEEL  String?  @db.Text
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  ref_types          RefType  @relation(fields: [VELD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_1")
+  ref_leden          RefLid   @relation(fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_2")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("oper_dagrapporten")
+}

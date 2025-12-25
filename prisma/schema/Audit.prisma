@@ -1,0 +1,18 @@
+model Audit {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime @db.Date
+  LID_ID             Int      @db.UnsignedMediumInt
+  TABEL              String?  @db.VarChar(25)
+  TABEL_NAAM         String?  @db.VarChar(25)
+  ACTIE              String?  @db.VarChar(15)
+  OBJECT_ID          Int?     @db.UnsignedMediumInt
+  VOOR               String?  @db.Text
+  DATA               String?  @db.Text
+  RESULTAAT          String?  @db.Text
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  ref_leden          RefLid   @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "audit_ibfk_1")
+
+  @@index([LID_ID], map: "LID_ID")
+  @@map("audit")
+}
