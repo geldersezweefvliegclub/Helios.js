@@ -1,25 +1,15 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsDateString,
+  IsDecimal,
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
 } from "class-validator";
 
 export class CreateOperAanwezigVliegtuigDto {
   @ApiProperty({
-    description: "Het unieke ID van de aanmelding",
-    type: "integer",
-    format: "int32",
-    default: "autoincrement",
-    required: false,
-  })
-  @IsOptional()
-  @IsInt()
-  ID?: number;
-  @ApiProperty({
-    description: "Datum van de aanmelding",
     type: "string",
     format: "date-time",
   })
@@ -27,17 +17,6 @@ export class CreateOperAanwezigVliegtuigDto {
   @IsDateString()
   DATUM: Date;
   @ApiProperty({
-    description: "Referentie naar het vliegveld in de type tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  VELD_ID?: number | null;
-  @ApiProperty({
-    description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",
     format: "date-time",
     required: false,
@@ -47,8 +26,6 @@ export class CreateOperAanwezigVliegtuigDto {
   @IsDateString()
   AANKOMST?: Date | null;
   @ApiProperty({
-    description:
-      "Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat",
     type: "string",
     format: "date-time",
     required: false,
@@ -58,52 +35,48 @@ export class CreateOperAanwezigVliegtuigDto {
   @IsDateString()
   VERTREK?: Date | null;
   @ApiProperty({
-    description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
+    type: "string",
+    format: "Decimal.js",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDecimal()
+  LATITUDE?: Prisma.Decimal | null;
+  @ApiProperty({
+    type: "string",
+    format: "Decimal.js",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDecimal()
+  LONGITUDE?: Prisma.Decimal | null;
+  @ApiProperty({
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  VLIEGTUIG_ID?: number;
-  @ApiProperty({
-    description: "Laaste bekende Latitude van het vliegtuig",
-    type: "number",
-    format: "float",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsNumber()
-  LATITUDE?: number | null;
-  @ApiProperty({
-    description: "Laaste bekende Longitude van het vliegtuig",
-    type: "number",
-    format: "float",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsNumber()
-  LONGITUDE?: number | null;
-  @ApiProperty({
-    description: "Laaste bekende hoogte van het vliegtuig in meters",
-    type: "number",
-    format: "float",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsNumber()
   HOOGTE?: number | null;
   @ApiProperty({
-    description: "Laaste bekende grond snelheid van het vliegtuig in km/h",
-    type: "number",
-    format: "float",
+    type: "integer",
+    format: "int32",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   SNELHEID?: number | null;
+  @ApiProperty({
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  VELD_ID?: number | null;
 }

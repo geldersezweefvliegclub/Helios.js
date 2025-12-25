@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDateString, IsOptional, IsString } from "class-validator";
 
-export class UpdateOperDaginfoDto {
+export class UpdateOperDagInfoDto {
   @ApiProperty({
     type: "string",
     format: "date-time",

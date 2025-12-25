@@ -1,17 +1,11 @@
-import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
-export class RefTypeDto {
+export class RefTypeGroepDto {
   @ApiProperty({
     type: "integer",
     format: "int32",
   })
   ID: number;
-  @ApiProperty({
-    type: "integer",
-    format: "int32",
-  })
-  GROEP: number;
   @ApiProperty({
     type: "string",
     nullable: true,
@@ -38,17 +32,10 @@ export class RefTypeDto {
   })
   READ_ONLY: number;
   @ApiProperty({
-    type: "string",
-    format: "Decimal.js",
-    nullable: true,
+    type: "integer",
+    format: "int32",
   })
-  BEDRAG: Prisma.Decimal | null;
-  @ApiProperty({
-    type: "string",
-    format: "Decimal.js",
-    nullable: true,
-  })
-  EENHEDEN: Prisma.Decimal | null;
+  BEDRAG_EENHEDEN: number;
   @ApiProperty({
     type: "integer",
     format: "int32",

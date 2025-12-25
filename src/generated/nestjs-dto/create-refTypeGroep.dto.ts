@@ -1,22 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class UpdateOperGastDto {
-  @ApiProperty({
-    type: "string",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  NAAM?: string;
-  @ApiProperty({
-    type: "string",
-    format: "date-time",
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  DATUM?: Date;
+export class CreateRefTypeGroepDto {
   @ApiProperty({
     type: "string",
     required: false,
@@ -24,7 +9,21 @@ export class UpdateOperGastDto {
   })
   @IsOptional()
   @IsString()
-  OPMERKINGEN?: string | null;
+  CODE?: string | null;
+  @ApiProperty({
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  EXT_REF?: string | null;
+  @ApiProperty({
+    type: "string",
+  })
+  @IsNotEmpty()
+  @IsString()
+  OMSCHRIJVING: string;
   @ApiProperty({
     type: "integer",
     format: "int32",
@@ -33,5 +32,5 @@ export class UpdateOperGastDto {
   })
   @IsOptional()
   @IsInt()
-  VELD_ID?: number | null;
+  SORTEER_VOLGORDE?: number | null;
 }

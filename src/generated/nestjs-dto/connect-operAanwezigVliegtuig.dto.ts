@@ -3,7 +3,6 @@ import { IsInt, IsNotEmpty } from "class-validator";
 
 export class ConnectOperAanwezigVliegtuigDto {
   @ApiProperty({
-    description: "Het unieke ID van de aanmelding",
     type: "integer",
     format: "int32",
   })

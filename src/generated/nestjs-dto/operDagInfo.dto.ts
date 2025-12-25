@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class OperDaginfoDto {
+export class OperDagInfoDto {
   @ApiProperty({
     type: "integer",
     format: "int32",

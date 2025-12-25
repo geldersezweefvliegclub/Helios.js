@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class OperDienstDto {
+export class OperTrackDto {
   @ApiProperty({
     type: "integer",
     format: "int32",
@@ -8,26 +8,15 @@ export class OperDienstDto {
   ID: number;
   @ApiProperty({
     type: "string",
+    nullable: true,
+  })
+  TEKST: string | null;
+  @ApiProperty({
+    type: "string",
     format: "date-time",
-  })
-  DATUM: Date;
-  @ApiProperty({
-    type: "integer",
-    format: "int32",
     nullable: true,
   })
-  AANWEZIG: number | null;
-  @ApiProperty({
-    type: "integer",
-    format: "int32",
-  })
-  UITBETAALD: number;
-  @ApiProperty({
-    type: "integer",
-    format: "int32",
-    nullable: true,
-  })
-  AFWEZIG: number | null;
+  INGEVOERD: Date | null;
   @ApiProperty({
     type: "integer",
     format: "int32",

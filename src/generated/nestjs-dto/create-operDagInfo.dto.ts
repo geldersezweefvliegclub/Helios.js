@@ -6,7 +6,7 @@ import {
   IsString,
 } from "class-validator";
 
-export class CreateOperDaginfoDto {
+export class CreateOperDagInfoDto {
   @ApiProperty({
     type: "string",
     format: "date-time",
