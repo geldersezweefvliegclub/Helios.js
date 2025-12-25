@@ -17,9 +17,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.config.json",
     "postinstall": "npx prisma generate"
   },
-  "prisma": {
-    "schema": "prisma/schema/"
-  },
   "dependencies": {
     "@datalust/winston-seq": "^3.0.1",
     "@nestjs/common": "^11.1.6",
