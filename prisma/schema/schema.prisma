@@ -191,7 +191,7 @@ model OperDagrapport {
   @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
   @@index([VELD_ID], map: "VELD_ID")
   @@index([VERWIJDERD], map: "VERWIJDERD")
-  @@map("oper_dagrapport")
+  @@map("oper_dagrapporten")
 }
 
 model OperDienst {
@@ -551,9 +551,8 @@ model RefLid {
   ref_leden_ref_leden_BUDDY_IDToref_leden                   RefLid?           @relation("ref_leden_BUDDY_IDToref_leden", fields: [BUDDY_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_3")
   other_ref_leden_ref_leden_BUDDY_IDToref_leden             RefLid[]          @relation("ref_leden_BUDDY_IDToref_leden")
 
-  Brandstof  OperBrandstof[]  @relation("RefLid")
-  Winterwerk OperWinterwerk[] @relation("RefLid")
-
+  // Brandstof  OperBrandstof[]  @relation("RefLid")
+  // Winterwerk OperWinterwerk[] @relation("RefLid")
   @@index([INSTRUCTEUR], map: "INSTRUCTEUR")
   @@index([LIDTYPE_ID], map: "LIDTYPE_ID")
   @@index([LIERIST], map: "LIERIST")
@@ -598,8 +597,7 @@ model RefType {
   ref_vliegtuigen                                            RefVliegtuig[]
 
   /// @description Het type brandstof dat kan worden getankt
-  Brandstof OperBrandstof[] @relation("BrandstofType")
-  
+  // Brandstof OperBrandstof[] @relation("BrandstofType")
   @@index([GROEP], map: "GROEP")
   @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("ref_types")
