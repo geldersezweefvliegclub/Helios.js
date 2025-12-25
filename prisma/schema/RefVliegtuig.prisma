@@ -111,10 +111,11 @@ model RefVliegtuig {
   Journaal            OperJournaal[]          @relation("Vliegtuig")
   AanwezigLeden       OperAanwezigLid[]       @relation("Vliegtuig")
   AanwezigVliegtuigen OperAanwezigVliegtuig[] @relation("Vliegtuig")
+  VluchtVliegtuig     OperStartlijst[]        @relation("vluchten_vliegtuig")
+  VluchtSleepkist     OperStartlijst[]        @relation("vluchten_sleepkist")
 
   @@index([VERWIJDERD])
   @@index([REGISTRATIE])
   @@index([CLUBKIST])
-
   @@map("ref_vliegtuigen")
 }

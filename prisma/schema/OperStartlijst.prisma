@@ -1,0 +1,40 @@
+model OperStartlijst {
+  ID                 Int       @id @default(autoincrement())
+  DATUM              DateTime  @db.Date
+  DAGNUMMER          Int       @default(0) @db.UnsignedTinyInt
+  VLIEGTUIG_ID       Int
+  STARTTIJD          DateTime? @db.Time(0)
+  LANDINGSTIJD       DateTime? @db.Time(0)
+  STARTMETHODE_ID    Int?
+  VLIEGER_ID         Int?
+  INZITTENDE_ID      Int?
+  VLIEGERNAAM        String?   @db.VarChar(50)
+  INZITTENDENAAM     String?   @db.VarChar(50)
+  SLEEPKIST_ID       Int?
+  SLEEP_HOOGTE       Int?
+  VELD_ID            Int?
+  BAAN_ID            Int?
+  OPMERKINGEN        String?   @db.Text
+  EXTERNAL_ID        String?   @db.Text
+  PAX                Int       @default(0) @db.UnsignedTinyInt
+  CHECKSTART         Int       @default(0) @db.UnsignedTinyInt
+  INSTRUCTIEVLUCHT   Int       @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+
+  // Relations (FKs)
+  vliegtuig    RefVliegtuig  @relation("vluchten_vliegtuig", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  startmethode RefType?      @relation("vluchten_startmethode", fields: [STARTMETHODE_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  vlieger      RefLid?       @relation("vluchten_vlieger", fields: [VLIEGER_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  inzittende   RefLid?       @relation("vluchten_inzittende", fields: [INZITTENDE_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  sleepkist    RefVliegtuig? @relation("vluchten_sleepkist", fields: [SLEEPKIST_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  veld         RefType?      @relation("vluchten_veld", fields: [VELD_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+  baan         RefType?      @relation("vluchten_baan", fields: [BAAN_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict)
+
+  @@index([DATUM])
+  @@index([VLIEGTUIG_ID])
+  @@index([VLIEGER_ID])
+  @@index([INZITTENDE_ID])
+  @@index([VERWIJDERD])
+  @@map("OperStartlijst")
+}
