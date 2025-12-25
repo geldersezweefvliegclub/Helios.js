@@ -1,44 +1,643 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-//  npx prisma migrate dev  --name new_helios
-
-// triple / are used to control the generation of the DTO classes
-// the DTO classes are generated in the src/generated/nestjs-dto folder by using
-// @brakebein/prisma-generator-nestjs-dto see package.json
-// See https://github.com/typestack/class-validator#validation-decorators for the validation decorators
-
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 generator nestjsDto {
   provider                        = "prisma-generator-nestjs-dto"
   output                          = "../../src/generated/nestjs-dto"
-  outputToNestJsResourceStructure = "false"
-  flatResourceStructure           = "false"
-  exportRelationModifierClasses   = "true"
-  reExport                        = "false"
-  generateFileTypes               = "dto"
+  classValidation                 = "true"
   createDtoPrefix                 = "Create"
-  updateDtoPrefix                 = "Update"
+  definiteAssignmentAssertion     = "false"
   dtoSuffix                       = "Dto"
   entityPrefix                    = ""
   entitySuffix                    = ""
-  classValidation                 = "true"
+  exportRelationModifierClasses   = "true"
   fileNamingStyle                 = "camel"
+  flatResourceStructure           = "false"
+  generateFileTypes               = "dto"
   noDependencies                  = "false"
-  outputType                      = "class"
-  definiteAssignmentAssertion     = "false"
-  requiredResponseApiProperty     = "true"
-  prettier                        = "true"
   outputApiPropertyType           = "true"
+  outputToNestJsResourceStructure = "false"
+  outputType                      = "class"
+  prettier                        = "true"
+  reExport                        = "false"
+  requiredResponseApiProperty     = "true"
+  updateDtoPrefix                 = "Update"
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model audit {
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime  @db.Date
+  LID_ID             Int       @db.UnsignedMediumInt
+  TABEL              String?   @db.VarChar(25)
+  TABEL_NAAM         String?   @db.VarChar(25)
+  ACTIE              String?   @db.VarChar(15)
+  OBJECT_ID          Int?      @db.UnsignedMediumInt
+  VOOR               String?   @db.Text
+  DATA               String?   @db.Text
+  RESULTAAT          String?   @db.Text
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  ref_leden          ref_leden @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "audit_ibfk_1")
+
+  @@index([LID_ID], map: "LID_ID")
+}
+
+model documenten {
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime  @default(now()) @db.DateTime(0)
+  VOLGORDE           Int?      @db.UnsignedTinyInt
+  GROEP_ID           Int       @db.UnsignedMediumInt
+  TEKST              String?   @db.VarChar(250)
+  URL                String?   @db.VarChar(250)
+  LID_ID             Int?      @db.UnsignedMediumInt
+  LEGE_REGEL         Int       @default(0) @db.UnsignedTinyInt
+  ONDERSTREEP        Int       @default(0) @db.UnsignedTinyInt
+  BOVEN              Int       @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  ref_types          ref_types @relation(fields: [GROEP_ID], references: [ID], onUpdate: Restrict, map: "documenten_ibfk_1")
+
+  @@index([GROEP_ID], map: "GROEP_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_aanwezig_leden {
+  ID                      Int               @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                   DateTime          @db.Date
+  POSITIE                 Int?              @db.UnsignedTinyInt
+  LID_ID                  Int               @db.UnsignedMediumInt
+  VOORAANMELDING          Int               @default(0) @db.UnsignedTinyInt
+  AANKOMST                DateTime?         @db.Time(0)
+  VERTREK                 DateTime?         @db.Time(0)
+  OVERLAND_VLIEGTUIG_ID   Int?              @db.UnsignedMediumInt
+  VOORKEUR_VLIEGTUIG_TYPE String?           @db.Text
+  TRANSACTIE_ID           Int?              @db.UnsignedMediumInt
+  VELD_ID                 Int?              @db.UnsignedMediumInt
+  OPMERKINGEN             String?           @db.Text
+  VERWIJDERD              Int               @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING      DateTime          @default(now()) @db.Timestamp(0)
+  ref_leden               ref_leden         @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_1")
+  ref_vliegtuigen         ref_vliegtuigen?  @relation(fields: [OVERLAND_VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_2")
+  oper_transacties        oper_transacties? @relation(fields: [TRANSACTIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_3")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([DATUM, LID_ID, VERWIJDERD], map: "DATUM_LIDID_VERWIJDERD")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([OVERLAND_VLIEGTUIG_ID], map: "OVERLAND_VLIEGTUIG_ID")
+  @@index([TRANSACTIE_ID], map: "TRANSACTIE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_aanwezig_vliegtuigen {
+  ID                 Int             @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime        @db.Date
+  VLIEGTUIG_ID       Int             @db.UnsignedMediumInt
+  AANKOMST           DateTime?       @db.Time(0)
+  VERTREK            DateTime?       @db.Time(0)
+  LATITUDE           Decimal?        @db.Decimal(8, 5)
+  LONGITUDE          Decimal?        @db.Decimal(8, 5)
+  HOOGTE             Int?            @db.SmallInt
+  SNELHEID           Int?            @db.SmallInt
+  VELD_ID            Int?            @db.UnsignedMediumInt
+  VERWIJDERD         Int             @default(0) @db.TinyInt
+  LAATSTE_AANPASSING DateTime        @default(now()) @db.Timestamp(0)
+  ref_vliegtuigen    ref_vliegtuigen @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_vliegtuigen_ibfk_1")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+}
+
+model oper_agenda {
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime  @db.Date
+  TIJD               DateTime? @db.Time(0)
+  KORT               String?   @db.Text
+  OMSCHRIJVING       String?   @db.Text
+  OPENBAAR           Int       @default(1) @db.UnsignedTinyInt
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+
+  @@index([DATUM], map: "DATUM")
+}
+
+model oper_daginfo {
+  ID                                                 Int        @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                              DateTime   @db.Date
+  VELD_ID                                            Int?       @db.UnsignedMediumInt
+  BAAN_ID                                            Int?       @db.UnsignedMediumInt
+  STARTMETHODE_ID                                    Int?       @db.UnsignedMediumInt
+  VELD_ID2                                           Int?       @db.UnsignedMediumInt
+  BAAN_ID2                                           Int?       @db.UnsignedMediumInt
+  STARTMETHODE_ID2                                   Int?       @db.UnsignedMediumInt
+  INCIDENTEN                                         String?    @db.Text
+  VLIEGBEDRIJF                                       String?    @db.Text
+  METEO                                              String?    @db.Text
+  DIENSTEN                                           String?    @db.Text
+  VERSLAG                                            String?    @db.Text
+  ROLLENDMATERIEEL                                   String?    @db.Text
+  VLIEGENDMATERIEEL                                  String?    @db.Text
+  DDWV                                               Int        @default(0) @db.UnsignedTinyInt
+  CLUB_BEDRIJF                                       Int        @default(0) @db.UnsignedTinyInt
+  VERWIJDERD                                         Int        @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                 DateTime   @default(now()) @db.Timestamp(0)
+  ref_types_oper_daginfo_VELD_IDToref_types          ref_types? @relation("oper_daginfo_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_1")
+  ref_types_oper_daginfo_BAAN_IDToref_types          ref_types? @relation("oper_daginfo_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_2")
+  ref_types_oper_daginfo_STARTMETHODE_IDToref_types  ref_types? @relation("oper_daginfo_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_3")
+  ref_types_oper_daginfo_VELD_ID2Toref_types         ref_types? @relation("oper_daginfo_VELD_ID2Toref_types", fields: [VELD_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_4")
+  ref_types_oper_daginfo_BAAN_ID2Toref_types         ref_types? @relation("oper_daginfo_BAAN_ID2Toref_types", fields: [BAAN_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_5")
+  ref_types_oper_daginfo_STARTMETHODE_ID2Toref_types ref_types? @relation("oper_daginfo_STARTMETHODE_ID2Toref_types", fields: [STARTMETHODE_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_6")
+
+  @@index([BAAN_ID], map: "BAAN_ID")
+  @@index([BAAN_ID2], map: "BAAN_ID2")
+  @@index([DATUM], map: "DATUM")
+  @@index([STARTMETHODE_ID], map: "STARTMETHODE_ID")
+  @@index([STARTMETHODE_ID2], map: "STARTMETHODE_ID2")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VELD_ID2], map: "VELD_ID2")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_dagrapporten {
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime  @db.Date
+  VELD_ID            Int       @db.UnsignedMediumInt
+  INGEVOERD_ID       Int       @db.UnsignedMediumInt
+  INCIDENTEN         String?   @db.Text
+  VLIEGBEDRIJF       String?   @db.Text
+  METEO              String?   @db.Text
+  DIENSTEN           String?   @db.Text
+  VERSLAG            String?   @db.Text
+  ROLLENDMATERIEEL   String?   @db.Text
+  VLIEGENDMATERIEEL  String?   @db.Text
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  ref_types          ref_types @relation(fields: [VELD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_1")
+  ref_leden          ref_leden @relation(fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_2")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_diensten {
+  ID                                                   Int          @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                                DateTime     @db.Date
+  ROOSTER_ID                                           Int          @db.UnsignedMediumInt
+  LID_ID                                               Int          @db.UnsignedMediumInt
+  TYPE_DIENST_ID                                       Int?         @db.UnsignedMediumInt
+  INGEVOERD_DOOR_ID                                    Int?         @db.UnsignedMediumInt
+  AANWEZIG                                             Int?         @db.UnsignedTinyInt
+  UITBETAALD                                           Int          @default(0) @db.UnsignedTinyInt
+  AFWEZIG                                              Int?         @db.UnsignedTinyInt
+  VERWIJDERD                                           Int          @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                   DateTime     @default(now()) @db.Timestamp(0)
+  ref_types                                            ref_types?   @relation(fields: [TYPE_DIENST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_diensten_ibfk_1")
+  ref_leden_oper_diensten_LID_IDToref_leden            ref_leden    @relation("oper_diensten_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_diensten_ibfk_2")
+  ref_leden_oper_diensten_INGEVOERD_DOOR_IDToref_leden ref_leden?   @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden", fields: [INGEVOERD_DOOR_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_diensten_ibfk_3")
+  oper_rooster                                         oper_rooster @relation(fields: [ROOSTER_ID], references: [ID], onUpdate: Restrict, map: "oper_diensten_ibfk_4")
+
+  @@index([DATUM], map: "DATUM")
+  @@index([INGEVOERD_DOOR_ID], map: "INGEVOERD_DOOR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([ROOSTER_ID], map: "ROOSTER_ID")
+  @@index([TYPE_DIENST_ID], map: "TYPE_DIENST_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_facturen {
+  ID                 Int        @id @default(autoincrement()) @db.UnsignedMediumInt
+  JAAR               Int        @db.SmallInt
+  LID_ID             Int?       @db.UnsignedMediumInt
+  NAAM               String?    @db.VarChar(255)
+  LIDNR              String?    @db.VarChar(10)
+  FACTUUR_NUMMER     String?    @db.VarChar(50)
+  CODE               String?    @db.VarChar(10)
+  OMSCHRIJVING       String?    @db.VarChar(50)
+  GEFACTUREERD       Decimal?   @db.Decimal(50, 0)
+  VERWIJDERD         Int        @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime   @default(now()) @db.Timestamp(0)
+  ref_leden          ref_leden? @relation(fields: [LID_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_facturen_ibfk_1")
+
+  @@index([LID_ID], map: "LID_ID")
+}
+
+model oper_gasten {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  NAAM               String   @db.VarChar(75)
+  DATUM              DateTime @db.Date
+  OPMERKINGEN        String?  @db.Text
+  VELD_ID            Int?     @db.UnsignedMediumInt
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_journaal {
+  ID                                               Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                            DateTime         @default(now()) @db.DateTime(0)
+  VLIEGTUIG_ID                                     Int?             @db.UnsignedMediumInt
+  ROLLEND_ID                                       Int?             @db.UnsignedMediumInt
+  TITEL                                            String?          @db.VarChar(250)
+  OMSCHRIJVING                                     String?          @db.Text
+  CATEGORIE_ID                                     Int?             @db.UnsignedMediumInt
+  STATUS_ID                                        Int?             @db.UnsignedMediumInt
+  MELDER_ID                                        Int?             @db.UnsignedMediumInt
+  TECHNICUS_ID                                     Int?             @db.UnsignedMediumInt
+  AFGETEKEND_ID                                    Int?             @db.UnsignedMediumInt
+  VERWIJDERD                                       Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                               DateTime         @default(now()) @db.Timestamp(0)
+  ref_types_oper_journaal_ROLLEND_IDToref_types    ref_types?       @relation("oper_journaal_ROLLEND_IDToref_types", fields: [ROLLEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_1")
+  ref_types_oper_journaal_CATEGORIE_IDToref_types  ref_types?       @relation("oper_journaal_CATEGORIE_IDToref_types", fields: [CATEGORIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_2")
+  ref_types_oper_journaal_STATUS_IDToref_types     ref_types?       @relation("oper_journaal_STATUS_IDToref_types", fields: [STATUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_3")
+  ref_vliegtuigen                                  ref_vliegtuigen? @relation(fields: [VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_4")
+  ref_leden_oper_journaal_MELDER_IDToref_leden     ref_leden?       @relation("oper_journaal_MELDER_IDToref_leden", fields: [MELDER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_5")
+  ref_leden_oper_journaal_TECHNICUS_IDToref_leden  ref_leden?       @relation("oper_journaal_TECHNICUS_IDToref_leden", fields: [TECHNICUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_6")
+  ref_leden_oper_journaal_AFGETEKEND_IDToref_leden ref_leden?       @relation("oper_journaal_AFGETEKEND_IDToref_leden", fields: [AFGETEKEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_7")
+
+  @@index([AFGETEKEND_ID], map: "AFGETEKEND_ID")
+  @@index([CATEGORIE_ID], map: "CATEGORIE_ID")
+  @@index([DATUM], map: "DATUM")
+  @@index([MELDER_ID], map: "MELDER_ID")
+  @@index([ROLLEND_ID], map: "ROLLEND_ID")
+  @@index([STATUS_ID], map: "STATUS_ID")
+  @@index([TECHNICUS_ID], map: "TECHNICUS_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+}
+
+model oper_progressie {
+  ID                                                  Int               @id @default(autoincrement()) @db.UnsignedMediumInt
+  LID_ID                                              Int               @db.UnsignedMediumInt
+  COMPETENTIE_ID                                      Int               @db.UnsignedMediumInt
+  INSTRUCTEUR_ID                                      Int               @db.UnsignedMediumInt
+  OPMERKINGEN                                         String?           @db.Text
+  INGEVOERD                                           DateTime?         @default(now()) @db.DateTime(0)
+  LINK_ID                                             Int?              @db.UnsignedMediumInt
+  GELDIG_TOT                                          DateTime?         @db.Date
+  SCORE                                               Int?              @db.UnsignedSmallInt
+  VERWIJDERD                                          Int               @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                  DateTime          @default(now()) @db.Timestamp(0)
+  ref_leden_oper_progressie_LID_IDToref_leden         ref_leden         @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
+  ref_leden_oper_progressie_INSTRUCTEUR_IDToref_leden ref_leden         @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")
+  ref_competenties                                    ref_competenties  @relation(fields: [COMPETENTIE_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_3")
+  oper_progressie                                     oper_progressie?  @relation("oper_progressieTooper_progressie", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_progressie_ibfk_4")
+  other_oper_progressie                               oper_progressie[] @relation("oper_progressieTooper_progressie")
+
+  @@index([COMPETENTIE_ID], map: "COMPETENTIE_ID")
+  @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([LINK_ID], map: "LINK_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_reservering {
+  ID                 Int             @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime        @db.Date
+  VLIEGTUIG_ID       Int             @db.UnsignedMediumInt
+  LID_ID             Int             @db.UnsignedMediumInt
+  INGEVOERD_ID       Int             @db.UnsignedMediumInt
+  IS_GEBOEKT         Int             @default(0) @db.UnsignedTinyInt
+  OPMERKINGEN        String?         @db.Text
+  VERWIJDERD         Int             @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime        @default(now()) @db.Timestamp(0)
+  ref_leden          ref_leden       @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_1")
+  ref_vliegtuigen    ref_vliegtuigen @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_2")
+
+  @@index([LID_ID], map: "LID_ID")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+}
+
+model oper_rooster {
+  ID                 Int             @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM              DateTime        @db.Date
+  DDWV               Int             @default(0) @db.UnsignedTinyInt
+  CLUB_BEDRIJF       Int             @default(1) @db.UnsignedTinyInt
+  WINTER_WERK        Boolean         @default(false)
+  MIN_SLEEPSTART     Int             @default(3) @db.UnsignedTinyInt
+  MIN_LIERSTART      Int             @default(10) @db.UnsignedTinyInt
+  OPMERKINGEN        String?         @db.Text
+  VERWIJDERD         Int             @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime        @default(now()) @db.Timestamp(0)
+  oper_diensten      oper_diensten[]
+
+  @@index([DATUM], map: "DATUM")
+  @@index([DDWV], map: "DDWV")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_startlijst {
+  ID                                                            Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                                         DateTime         @db.Date
+  DAGNUMMER                                                     Int              @default(0) @db.UnsignedTinyInt
+  VLIEGTUIG_ID                                                  Int              @db.UnsignedMediumInt
+  STARTTIJD                                                     DateTime?        @db.Time(0)
+  LANDINGSTIJD                                                  DateTime?        @db.Time(0)
+  STARTMETHODE_ID                                               Int?             @db.UnsignedMediumInt
+  VLIEGER_ID                                                    Int?             @db.UnsignedMediumInt
+  INZITTENDE_ID                                                 Int?             @db.UnsignedMediumInt
+  VLIEGERNAAM                                                   String?          @db.VarChar(50)
+  INZITTENDENAAM                                                String?          @db.VarChar(50)
+  SLEEPKIST_ID                                                  Int?             @db.UnsignedMediumInt
+  SLEEP_HOOGTE                                                  Int?             @db.UnsignedSmallInt
+  VELD_ID                                                       Int?             @db.UnsignedMediumInt
+  BAAN_ID                                                       Int?             @db.UnsignedMediumInt
+  OPMERKINGEN                                                   String?          @db.Text
+  EXTERNAL_ID                                                   String?          @db.Text
+  PAX                                                           Int              @default(0) @db.UnsignedTinyInt
+  CHECKSTART                                                    Int              @default(0) @db.UnsignedTinyInt
+  INSTRUCTIEVLUCHT                                              Int              @default(0) @db.UnsignedTinyInt
+  VERWIJDERD                                                    Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                            DateTime         @default(now()) @db.Timestamp(0)
+  ref_vliegtuigen_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen ref_vliegtuigen  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
+  ref_types_oper_startlijst_STARTMETHODE_IDToref_types          ref_types?       @relation("oper_startlijst_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_2")
+  ref_leden_oper_startlijst_VLIEGER_IDToref_leden               ref_leden?       @relation("oper_startlijst_VLIEGER_IDToref_leden", fields: [VLIEGER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_3")
+  ref_leden_oper_startlijst_INZITTENDE_IDToref_leden            ref_leden?       @relation("oper_startlijst_INZITTENDE_IDToref_leden", fields: [INZITTENDE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_4")
+  ref_vliegtuigen_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen ref_vliegtuigen? @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen", fields: [SLEEPKIST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_5")
+  ref_types_oper_startlijst_VELD_IDToref_types                  ref_types?       @relation("oper_startlijst_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_6")
+  ref_types_oper_startlijst_BAAN_IDToref_types                  ref_types?       @relation("oper_startlijst_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_7")
+  oper_tracks                                                   oper_tracks[]
+
+  @@index([BAAN_ID], map: "BAAN_ID")
+  @@index([DATUM], map: "DATUM")
+  @@index([DATUM, VLIEGER_ID, VERWIJDERD], map: "DATUM_VLIEGER_ID_VERWIJDERD")
+  @@index([INZITTENDE_ID], map: "INZITTENDE_ID")
+  @@index([SLEEPKIST_ID], map: "SLEEPKIST_ID")
+  @@index([STARTMETHODE_ID], map: "STARTMETHODE_ID")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGER_ID], map: "VLIEGER_ID")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+}
+
+model oper_tracks {
+  ID                                              Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  LID_ID                                          Int              @db.UnsignedMediumInt
+  INSTRUCTEUR_ID                                  Int?             @db.UnsignedMediumInt
+  TEKST                                           String?          @db.Text
+  START_ID                                        Int?             @db.UnsignedMediumInt
+  INGEVOERD                                       DateTime?        @default(now()) @db.DateTime(0)
+  LINK_ID                                         Int?             @db.UnsignedMediumInt
+  VERWIJDERD                                      Int              @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                              DateTime         @default(now()) @db.Timestamp(0)
+  ref_leden_oper_tracks_LID_IDToref_leden         ref_leden        @relation("oper_tracks_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_tracks_ibfk_1")
+  ref_leden_oper_tracks_INSTRUCTEUR_IDToref_leden ref_leden?       @relation("oper_tracks_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_2")
+  oper_startlijst                                 oper_startlijst? @relation(fields: [START_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_3")
+  oper_tracks                                     oper_tracks?     @relation("oper_tracksTooper_tracks", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_4")
+  other_oper_tracks                               oper_tracks[]    @relation("oper_tracksTooper_tracks")
+
+  @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([LINK_ID], map: "LINK_ID")
+  @@index([START_ID], map: "START_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model oper_transacties {
+  ID                                                 Int                   @id @default(autoincrement()) @db.UnsignedMediumInt
+  DATUM                                              DateTime              @default(now()) @db.DateTime(0)
+  VLIEGDAG                                           DateTime?             @db.Date
+  LID_ID                                             Int                   @db.UnsignedMediumInt
+  INGEVOERD_ID                                       Int                   @db.UnsignedMediumInt
+  TYPE_ID                                            Int                   @db.UnsignedMediumInt
+  DDWV                                               Int                   @default(0) @db.UnsignedTinyInt
+  BEDRAG                                             Decimal?              @db.Decimal(10, 2)
+  EENHEDEN                                           Decimal?              @db.Decimal(10, 0)
+  SALDO_VOOR                                         Decimal?              @db.Decimal(8, 2)
+  SALDO_NA                                           Decimal?              @db.Decimal(8, 2)
+  REFERENTIE                                         String?               @db.VarChar(50)
+  EXT_REF                                            String?               @db.VarChar(50)
+  OMSCHRIJVING                                       String                @db.VarChar(150)
+  BETAALD                                            Int                   @default(0) @db.UnsignedTinyInt
+  BETAAL_URL                                         String?               @db.VarChar(250)
+  VERWIJDERD                                         Int                   @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                 DateTime              @default(now()) @db.Timestamp(0)
+  oper_aanwezig_leden                                oper_aanwezig_leden[]
+  ref_leden_oper_transacties_LID_IDToref_leden       ref_leden             @relation("oper_transacties_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_1")
+  ref_leden_oper_transacties_INGEVOERD_IDToref_leden ref_leden             @relation("oper_transacties_INGEVOERD_IDToref_leden", fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_2")
+  ref_types                                          ref_types             @relation(fields: [TYPE_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_3")
+
+  @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([TYPE_ID], map: "TYPE_ID")
+}
+
+model ref_competenties {
+  ID                                                                        Int                @id @default(autoincrement()) @db.UnsignedMediumInt
+  VOLGORDE                                                                  Int?               @db.UnsignedSmallInt
+  LEERFASE_ID                                                               Int                @db.UnsignedMediumInt
+  BLOK_ID                                                                   Int?               @db.UnsignedMediumInt
+  BLOK                                                                      String?            @db.VarChar(7)
+  ONDERWERP                                                                 String             @db.VarChar(75)
+  DOCUMENTATIE                                                              String?            @db.VarChar(75)
+  GELDIGHEID                                                                Int                @default(0) @db.UnsignedTinyInt
+  SCORE                                                                     Int                @default(0) @db.UnsignedTinyInt
+  VERWIJDERD                                                                Int                @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                                        DateTime           @default(now()) @db.Timestamp(0)
+  oper_progressie                                                           oper_progressie[]
+  ref_types                                                                 ref_types          @relation(fields: [LEERFASE_ID], references: [ID], onUpdate: Restrict, map: "ref_competenties_ibfk_1")
+  ref_competenties                                                          ref_competenties?  @relation("ref_competentiesToref_competenties", fields: [BLOK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_competenties_ibfk_2")
+  other_ref_competenties                                                    ref_competenties[] @relation("ref_competentiesToref_competenties")
+  ref_vliegtuigen_ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties   ref_vliegtuigen[]  @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties")
+  ref_vliegtuigen_ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties ref_vliegtuigen[]  @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties")
+
+  @@index([BLOK_ID], map: "BLOK_ID")
+  @@index([LEERFASE_ID], map: "LEERFASE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model ref_leden {
+  ID                                                        Int                   @id @default(autoincrement()) @db.UnsignedMediumInt
+  NAAM                                                      String                @db.VarChar(255)
+  VOORNAAM                                                  String?               @db.VarChar(15)
+  TUSSENVOEGSEL                                             String?               @db.VarChar(8)
+  ACHTERNAAM                                                String?               @db.VarChar(30)
+  ADRES                                                     String?               @db.VarChar(50)
+  POSTCODE                                                  String?               @db.VarChar(10)
+  WOONPLAATS                                                String?               @db.VarChar(50)
+  TELEFOON                                                  String?               @db.VarChar(255)
+  MOBIEL                                                    String?               @db.VarChar(255)
+  NOODNUMMER                                                String?               @db.VarChar(255)
+  EMAIL                                                     String?               @db.VarChar(45)
+  LIDNR                                                     String?               @db.VarChar(10)
+  LIDTYPE_ID                                                Int                   @db.UnsignedMediumInt
+  STATUSTYPE_ID                                             Int?                  @db.UnsignedMediumInt
+  ZUSTERCLUB_ID                                             Int?                  @db.UnsignedMediumInt
+  BUDDY_ID                                                  Int?                  @db.UnsignedMediumInt
+  BUDDY_ID2                                                 Int?                  @db.MediumInt
+  LIERIST                                                   Int                   @default(0) @db.UnsignedTinyInt
+  LIERIST_IO                                                Int                   @default(0) @db.UnsignedTinyInt
+  STARTLEIDER                                               Int                   @default(0) @db.UnsignedTinyInt
+  INSTRUCTEUR                                               Int                   @default(0) @db.UnsignedTinyInt
+  CIMT                                                      Int                   @default(0) @db.UnsignedTinyInt
+  DDWV_CREW                                                 Int                   @default(0) @db.UnsignedTinyInt
+  DDWV_BEHEERDER                                            Int                   @default(0) @db.UnsignedTinyInt
+  BEHEERDER                                                 Int                   @default(0) @db.UnsignedTinyInt
+  STARTTOREN                                                Int                   @default(0) @db.UnsignedTinyInt
+  ROOSTER                                                   Int                   @default(0) @db.UnsignedTinyInt
+  SLEEPVLIEGER                                              Int                   @default(0) @db.UnsignedTinyInt
+  RAPPORTEUR                                                Int                   @default(0) @db.UnsignedTinyInt
+  GASTENVLIEGER                                             Int                   @default(0) @db.UnsignedTinyInt
+  TECHNICUS                                                 Int                   @default(0) @db.UnsignedTinyInt
+  CLUBBLAD_POST                                             Int                   @default(0) @db.UnsignedTinyInt
+  ZELFSTART_ABONNEMENT                                      Int                   @default(0) @db.UnsignedTinyInt
+  MEDICAL                                                   DateTime?             @db.Date
+  GEBOORTE_DATUM                                            DateTime?             @db.Date
+  INLOGNAAM                                                 String?               @db.VarChar(45)
+  WACHTWOORD                                                String?               @db.VarChar(255)
+  SECRET                                                    String?               @db.VarChar(255)
+  AUTH                                                      Int                   @default(0) @db.UnsignedTinyInt
+  AVATAR                                                    String?               @db.VarChar(255)
+  STARTVERBOD                                               Int                   @default(0) @db.UnsignedTinyInt
+  OPGEZEGD                                                  Int                   @default(0) @db.UnsignedTinyInt
+  PRIVACY                                                   Int                   @default(0) @db.UnsignedTinyInt
+  SLEUTEL1                                                  String?               @db.VarChar(25)
+  SLEUTEL2                                                  String?               @db.VarChar(25)
+  BEROEP                                                    String?               @db.VarChar(50)
+  KNVVL_LIDNUMMER                                           String?               @db.VarChar(25)
+  BREVET_NUMMER                                             String?               @db.VarChar(25)
+  EMAIL_DAGINFO                                             Int                   @default(0) @db.UnsignedTinyInt
+  OPMERKINGEN                                               String?               @db.Text
+  TEGOED                                                    Float                 @default(0) @db.Float
+  VERWIJDERD                                                Int                   @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                        DateTime              @default(now()) @db.Timestamp(0)
+  audit                                                     audit[]
+  oper_aanwezig_leden                                       oper_aanwezig_leden[]
+  oper_dagrapporten                                         oper_dagrapporten[]
+  oper_diensten_oper_diensten_LID_IDToref_leden             oper_diensten[]       @relation("oper_diensten_LID_IDToref_leden")
+  oper_diensten_oper_diensten_INGEVOERD_DOOR_IDToref_leden  oper_diensten[]       @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden")
+  oper_facturen                                             oper_facturen[]
+  oper_journaal_oper_journaal_MELDER_IDToref_leden          oper_journaal[]       @relation("oper_journaal_MELDER_IDToref_leden")
+  oper_journaal_oper_journaal_TECHNICUS_IDToref_leden       oper_journaal[]       @relation("oper_journaal_TECHNICUS_IDToref_leden")
+  oper_journaal_oper_journaal_AFGETEKEND_IDToref_leden      oper_journaal[]       @relation("oper_journaal_AFGETEKEND_IDToref_leden")
+  oper_progressie_oper_progressie_LID_IDToref_leden         oper_progressie[]     @relation("oper_progressie_LID_IDToref_leden")
+  oper_progressie_oper_progressie_INSTRUCTEUR_IDToref_leden oper_progressie[]     @relation("oper_progressie_INSTRUCTEUR_IDToref_leden")
+  oper_reservering                                          oper_reservering[]
+  oper_startlijst_oper_startlijst_VLIEGER_IDToref_leden     oper_startlijst[]     @relation("oper_startlijst_VLIEGER_IDToref_leden")
+  oper_startlijst_oper_startlijst_INZITTENDE_IDToref_leden  oper_startlijst[]     @relation("oper_startlijst_INZITTENDE_IDToref_leden")
+  oper_tracks_oper_tracks_LID_IDToref_leden                 oper_tracks[]         @relation("oper_tracks_LID_IDToref_leden")
+  oper_tracks_oper_tracks_INSTRUCTEUR_IDToref_leden         oper_tracks[]         @relation("oper_tracks_INSTRUCTEUR_IDToref_leden")
+  oper_transacties_oper_transacties_LID_IDToref_leden       oper_transacties[]    @relation("oper_transacties_LID_IDToref_leden")
+  oper_transacties_oper_transacties_INGEVOERD_IDToref_leden oper_transacties[]    @relation("oper_transacties_INGEVOERD_IDToref_leden")
+  ref_types                                                 ref_types             @relation(fields: [LIDTYPE_ID], references: [ID], onUpdate: Restrict, map: "ref_leden_ibfk_1")
+  ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden              ref_leden?            @relation("ref_leden_ZUSTERCLUB_IDToref_leden", fields: [ZUSTERCLUB_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_2")
+  other_ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden        ref_leden[]           @relation("ref_leden_ZUSTERCLUB_IDToref_leden")
+  ref_leden_ref_leden_BUDDY_IDToref_leden                   ref_leden?            @relation("ref_leden_BUDDY_IDToref_leden", fields: [BUDDY_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_3")
+  other_ref_leden_ref_leden_BUDDY_IDToref_leden             ref_leden[]           @relation("ref_leden_BUDDY_IDToref_leden")
+
+  @@index([INSTRUCTEUR], map: "INSTRUCTEUR")
+  @@index([LIDTYPE_ID], map: "LIDTYPE_ID")
+  @@index([LIERIST], map: "LIERIST")
+  @@index([NAAM(length: 191)], map: "NAAM")
+  @@index([STARTLEIDER], map: "STARTLEIDER")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([ZUSTERCLUB_ID], map: "ZUSTERCLUB_ID")
+  @@index([BUDDY_ID], map: "ref_leden_ibfk_3")
+}
+
+model ref_types {
+  ID                                                         Int                 @id @default(autoincrement()) @db.UnsignedMediumInt
+  GROEP                                                      Int                 @db.UnsignedSmallInt
+  CODE                                                       String?             @db.VarChar(10)
+  EXT_REF                                                    String?             @db.VarChar(25)
+  OMSCHRIJVING                                               String              @db.VarChar(75)
+  SORTEER_VOLGORDE                                           Int?                @db.UnsignedTinyInt
+  READ_ONLY                                                  Int                 @default(0) @db.UnsignedTinyInt
+  BEDRAG                                                     Decimal?            @db.Decimal(6, 2)
+  EENHEDEN                                                   Decimal?            @db.Decimal(6, 2)
+  VERWIJDERD                                                 Int                 @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                         DateTime            @default(now()) @db.Timestamp(0)
+  documenten                                                 documenten[]
+  oper_daginfo_oper_daginfo_VELD_IDToref_types               oper_daginfo[]      @relation("oper_daginfo_VELD_IDToref_types")
+  oper_daginfo_oper_daginfo_BAAN_IDToref_types               oper_daginfo[]      @relation("oper_daginfo_BAAN_IDToref_types")
+  oper_daginfo_oper_daginfo_STARTMETHODE_IDToref_types       oper_daginfo[]      @relation("oper_daginfo_STARTMETHODE_IDToref_types")
+  oper_daginfo_oper_daginfo_VELD_ID2Toref_types              oper_daginfo[]      @relation("oper_daginfo_VELD_ID2Toref_types")
+  oper_daginfo_oper_daginfo_BAAN_ID2Toref_types              oper_daginfo[]      @relation("oper_daginfo_BAAN_ID2Toref_types")
+  oper_daginfo_oper_daginfo_STARTMETHODE_ID2Toref_types      oper_daginfo[]      @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
+  oper_dagrapporten                                          oper_dagrapporten[]
+  oper_diensten                                              oper_diensten[]
+  oper_journaal_oper_journaal_ROLLEND_IDToref_types          oper_journaal[]     @relation("oper_journaal_ROLLEND_IDToref_types")
+  oper_journaal_oper_journaal_CATEGORIE_IDToref_types        oper_journaal[]     @relation("oper_journaal_CATEGORIE_IDToref_types")
+  oper_journaal_oper_journaal_STATUS_IDToref_types           oper_journaal[]     @relation("oper_journaal_STATUS_IDToref_types")
+  oper_startlijst_oper_startlijst_STARTMETHODE_IDToref_types oper_startlijst[]   @relation("oper_startlijst_STARTMETHODE_IDToref_types")
+  oper_startlijst_oper_startlijst_VELD_IDToref_types         oper_startlijst[]   @relation("oper_startlijst_VELD_IDToref_types")
+  oper_startlijst_oper_startlijst_BAAN_IDToref_types         oper_startlijst[]   @relation("oper_startlijst_BAAN_IDToref_types")
+  oper_transacties                                           oper_transacties[]
+  ref_competenties                                           ref_competenties[]
+  ref_leden                                                  ref_leden[]
+  ref_vliegtuigen                                            ref_vliegtuigen[]
+
+  @@index([GROEP], map: "GROEP")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model ref_types_groepen {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  CODE               String?  @db.VarChar(10)
+  EXT_REF            String?  @db.VarChar(25)
+  OMSCHRIJVING       String   @db.VarChar(75)
+  SORTEER_VOLGORDE   Int?     @db.UnsignedTinyInt
+  READ_ONLY          Int      @default(0) @db.UnsignedTinyInt
+  BEDRAG_EENHEDEN    Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+}
+
+model ref_vliegtuigen {
+  ID                                                                         Int                         @id @default(autoincrement()) @db.UnsignedMediumInt
+  REGISTRATIE                                                                String                      @db.VarChar(8)
+  CALLSIGN                                                                   String?                     @db.VarChar(6)
+  ZITPLAATSEN                                                                Int                         @default(1) @db.UnsignedTinyInt
+  CLUBKIST                                                                   Int                         @default(0) @db.UnsignedTinyInt
+  FLARMCODE                                                                  String?                     @db.VarChar(30)
+  TYPE_ID                                                                    Int?                        @db.UnsignedMediumInt
+  TMG                                                                        Int                         @default(0) @db.UnsignedTinyInt
+  ZELFSTART                                                                  Int                         @default(0) @db.UnsignedTinyInt
+  SLEEPKIST                                                                  Int                         @default(0) @db.UnsignedTinyInt
+  VOLGORDE                                                                   Int?                        @db.UnsignedTinyInt
+  INZETBAAR                                                                  Int                         @default(1) @db.UnsignedTinyInt
+  TRAINER                                                                    Int                         @default(0) @db.TinyInt
+  URL                                                                        String?                     @db.VarChar(1024)
+  BEVOEGDHEID_LOKAAL_ID                                                      Int?                        @db.UnsignedMediumInt
+  BEVOEGDHEID_OVERLAND_ID                                                    Int?                        @db.UnsignedMediumInt
+  OPMERKINGEN                                                                String?                     @db.Text
+  VERWIJDERD                                                                 Int                         @default(0) @db.UnsignedTinyInt
+  LAATSTE_AANPASSING                                                         DateTime                    @default(now()) @db.Timestamp(0)
+  oper_aanwezig_leden                                                        oper_aanwezig_leden[]
+  oper_aanwezig_vliegtuigen                                                  oper_aanwezig_vliegtuigen[]
+  oper_journaal                                                              oper_journaal[]
+  oper_reservering                                                           oper_reservering[]
+  oper_startlijst_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen              oper_startlijst[]           @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen")
+  oper_startlijst_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen              oper_startlijst[]           @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen")
+  ref_types                                                                  ref_types?                  @relation(fields: [TYPE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_1")
+  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties   ref_competenties?           @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties", fields: [BEVOEGDHEID_LOKAAL_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_2")
+  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties ref_competenties?           @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties", fields: [BEVOEGDHEID_OVERLAND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_3")
+
+  @@index([BEVOEGDHEID_LOKAAL_ID], map: "BEVOEGDHEID_LOKAAL_ID")
+  @@index([BEVOEGDHEID_OVERLAND_ID], map: "BEVOEGDHEID_OVERLAND_ID")
+  @@index([CALLSIGN], map: "CALLSIGN")
+  @@index([CLUBKIST], map: "CLUBKIST")
+  @@index([REGISTRATIE], map: "REGISTRATIE")
+  @@index([TYPE_ID], map: "TYPE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VOLGORDE], map: "VOLGORDE")
+}
+
+model sys_sync {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  LID_ID             Int?     @db.UnsignedMediumInt
+  STARTLIJST_ID      Int?     @db.UnsignedMediumInt
+  VLIEGTUIG_ID       Int?     @db.UnsignedMediumInt
+  DATA               String?  @db.Text
+  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
 }
