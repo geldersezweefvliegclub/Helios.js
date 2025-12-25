@@ -10,7 +10,7 @@ model RefType {
   EENHEDEN                                                   Decimal?         @db.Decimal(6, 2)
   VERWIJDERD                                                 Int              @default(0) @db.UnsignedTinyInt
   LAATSTE_AANPASSING                                         DateTime         @default(now()) @db.Timestamp(0)
-  documenten                                                 Documenten[]
+  documenten                                                 HeliosDocument[]
   oper_daginfo_oper_daginfo_VELD_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
   oper_daginfo_oper_daginfo_BAAN_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_BAAN_IDToref_types")
   oper_daginfo_oper_daginfo_STARTMETHODE_IDToref_types       OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_IDToref_types")

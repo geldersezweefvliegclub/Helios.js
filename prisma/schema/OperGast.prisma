@@ -1,11 +1,32 @@
 model OperGast {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de gast
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @DtoReadOnly
+  /// @description De naam van de gast
   NAAM               String   @db.VarChar(75)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Datum van de daginfo
   DATUM              DateTime @db.Date
+  /// @description Opmerkingen die bij de gast horen
   OPMERKINGEN        String?  @db.Text
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegveld in de type tabel
   VELD_ID            Int?     @db.UnsignedMediumInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_gasten")

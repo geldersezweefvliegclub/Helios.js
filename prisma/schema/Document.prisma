@@ -1,17 +1,55 @@
 model HeliosDocument {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een document
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @DtoReadOnly
+  /// @description Datum wanneer document is aangemaakt
   DATUM              DateTime @default(now()) @db.DateTime(0)
+  /// @description Sorteer volgorde
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
   VOLGORDE           Int?     @db.UnsignedTinyInt
+  /// @description Documenten worden gegroepeerd
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   GROEP_ID           Int      @db.UnsignedMediumInt
+  /// @description Beschrijving van het document
+  /// @minLength 4
   TEKST              String?  @db.VarChar(250)
+  /// @description Link naar het document
   URL                String?  @db.VarChar(250)
+  /// @description Document behoort bij een lid, bijv kopie medical, brevet
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LID_ID             Int?     @db.UnsignedMediumInt
+  /// @description Lege regel om paragraaf te kunnen maken
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LEGE_REGEL         Int      @default(0) @db.UnsignedTinyInt
+  /// @description Plaats een horizontale lijn
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   ONDERSTREEP        Int      @default(0) @db.UnsignedTinyInt
+  /// @description Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BOVEN              Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
-  ref_types          RefType  @relation(fields: [GROEP_ID], references: [ID], onUpdate: Restrict, map: "documenten_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DocumentGroep      RefType  @relation(fields: [GROEP_ID], references: [ID], onUpdate: Restrict, map: "documenten_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid             RefLid?  @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   @@index([GROEP_ID], map: "GROEP_ID")
   @@index([VERWIJDERD], map: "VERWIJDERD")

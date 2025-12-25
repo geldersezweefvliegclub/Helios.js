@@ -1,17 +1,41 @@
 model Audit {
-  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
-  DATUM              DateTime @db.Date
-  LID_ID             Int      @db.UnsignedMediumInt
-  TABEL              String?  @db.VarChar(25)
-  TABEL_NAAM         String?  @db.VarChar(25)
-  ACTIE              String?  @db.VarChar(15)
-  OBJECT_ID          Int?     @db.UnsignedMediumInt
-  VOOR               String?  @db.Text
-  DATA               String?  @db.Text
-  RESULTAAT          String?  @db.Text
-  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van de audit tabel
+  ID    Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description De datum van de audit
+  DATUM DateTime @db.Date
+
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Lid dat de wijziging heeft gedaan
+  LID_ID     Int     @db.UnsignedMediumInt
+  /// @description De database tabel waar de wijziging is gedaan
+  TABEL      String? @db.VarChar(25)
+  /// @description De naam van de tabel waar de wijziging is gedaan
+  TABEL_NAAM String? @db.VarChar(25)
+  /// @description De actie die is uitgevoerd
+  ACTIE      String? @db.VarChar(15)
+  /// @description Het object ID waar de wijziging is gedaan
+  OBJECT_ID  Int?    @db.UnsignedMediumInt
+  /// @description De data voordat de wijziging is gedaan
+  VOOR       String? @db.Text
+  /// @description De data die ten grondslag ligt aan de wijziging
+  DATA       String? @db.Text
+  /// @description Het resultaat van de wijziging
+  RESULTAAT  String? @db.Text
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD Int     @default(0) @db.UnsignedTinyInt
+
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
-  ref_leden          RefLid   @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "audit_ibfk_1")
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid RefLid @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "audit_ibfk_1")
 
   @@index([LID_ID], map: "LID_ID")
   @@map("audit")

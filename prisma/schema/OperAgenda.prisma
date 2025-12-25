@@ -1,11 +1,30 @@
 model OperAgenda {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een agenda-item
   ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Datum van het agenda-item
   DATUM              DateTime  @db.Date
+  /// @description Tijd van het agenda-item, indien van toepassing (kan leeg zijn als hele dag)
   TIJD               DateTime? @db.Time(0)
+  /// @description Korte beschrijving van het agenda-item
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 255
   KORT               String?   @db.Text
+  /// @description Gedetailleerde beschrijving van het agenda-item
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   OMSCHRIJVING       String?   @db.Text
+  /// @description Is het agenda-item openbaar
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   OPENBAAR           Int       @default(1) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
 
   @@index([DATUM], map: "DATUM")

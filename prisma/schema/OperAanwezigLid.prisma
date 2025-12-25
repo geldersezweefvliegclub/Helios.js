@@ -1,21 +1,66 @@
 model OperAanwezigLid {
-  ID                      Int             @id @default(autoincrement()) @db.UnsignedMediumInt
-  DATUM                   DateTime        @db.Date
-  POSITIE                 Int?            @db.UnsignedTinyInt
-  LID_ID                  Int             @db.UnsignedMediumInt
-  VOORAANMELDING          Int             @default(0) @db.UnsignedTinyInt
-  AANKOMST                DateTime?       @db.Time(0)
-  VERTREK                 DateTime?       @db.Time(0)
-  OVERLAND_VLIEGTUIG_ID   Int?            @db.UnsignedMediumInt
-  VOORKEUR_VLIEGTUIG_TYPE String?         @db.Text
-  TRANSACTIE_ID           Int?            @db.UnsignedMediumInt
-  VELD_ID                 Int?            @db.UnsignedMediumInt
-  OPMERKINGEN             String?         @db.Text
-  VERWIJDERD              Int             @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING      DateTime        @default(now()) @db.Timestamp(0)
-  ref_leden               RefLid          @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_1")
-  ref_vliegtuigen         RefVliegtuig?   @relation(fields: [OVERLAND_VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_2")
-  oper_transacties        OperTransactie? @relation(fields: [TRANSACTIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_3")
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de aanmelding
+  ID                      Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Datum waarop het lid aanwezig is / zal zijn
+  DATUM                   DateTime  @db.Date
+  POSITIE                 Int?      @db.UnsignedTinyInt
+  /// @description Verwijzing naar het lid ID van de vlieger, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID                  Int       @db.UnsignedMediumInt
+  /// @description Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  VOORAANMELDING          Int       @default(0) @db.UnsignedTinyInt
+  /// @description Tijd van aanwezig zijn (niet de tijd van de aanmelding)
+  AANKOMST                DateTime? @db.Time(0)
+  /// @description Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat
+  VERTREK                 DateTime? @db.Time(0)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegtuig in de vliegtuigen tabel
+  OVERLAND_VLIEGTUIG_ID   Int?      @db.UnsignedMediumInt
+  /// @description Comma-separated lijst van de vliegtuigen types waarop het lid graag wil vliegen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  VOORKEUR_VLIEGTUIG_TYPE String?   @db.Text
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de transactie als dat van toepassing is (bijv DDVD)
+  TRANSACTIE_ID           Int?      @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegveld in de type tabel
+  VELD_ID                 Int?      @db.UnsignedMediumInt
+  /// @description Eventuele opmerkingen, zoals eerder weg gaan
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN             String?   @db.Text
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD              Int       @default(0) @db.TinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING      DateTime  @default(now()) @db.Timestamp(0)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid       RefLid          @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefVliegtuig RefVliegtuig?   @relation(fields: [OVERLAND_VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Transactie   OperTransactie? @relation(fields: [TRANSACTIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_aanwezig_leden_ibfk_3")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld         RefType?        @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
   @@index([DATUM], map: "DATUM")
   @@index([DATUM, LID_ID, VERWIJDERD], map: "DATUM_LIDID_VERWIJDERD")
