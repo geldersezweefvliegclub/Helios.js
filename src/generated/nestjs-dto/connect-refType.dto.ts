@@ -3,6 +3,8 @@ import { IsInt, IsNotEmpty } from "class-validator";
 
 export class ConnectRefTypeDto {
   @ApiProperty({
+    description:
+      "De primary ID van het type, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
   })

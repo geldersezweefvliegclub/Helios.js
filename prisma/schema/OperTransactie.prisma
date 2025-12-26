@@ -1,26 +1,69 @@
 model OperTransactie {
-  ID                                                 Int               @id @default(autoincrement()) @db.UnsignedMediumInt
-  DATUM                                              DateTime          @default(now()) @db.DateTime(0)
-  VLIEGDAG                                           DateTime?         @db.Date
-  LID_ID                                             Int               @db.UnsignedMediumInt
-  INGEVOERD_ID                                       Int               @db.UnsignedMediumInt
-  TYPE_ID                                            Int               @db.UnsignedMediumInt
-  DDWV                                               Int               @default(0) @db.UnsignedTinyInt
-  BEDRAG                                             Decimal?          @db.Decimal(10, 2)
-  EENHEDEN                                           Decimal?          @db.Decimal(10, 0)
-  SALDO_VOOR                                         Decimal?          @db.Decimal(8, 2)
-  SALDO_NA                                           Decimal?          @db.Decimal(8, 2)
-  REFERENTIE                                         String?           @db.VarChar(50)
-  EXT_REF                                            String?           @db.VarChar(50)
-  OMSCHRIJVING                                       String            @db.VarChar(150)
-  BETAALD                                            Int               @default(0) @db.UnsignedTinyInt
-  BETAAL_URL                                         String?           @db.VarChar(250)
-  VERWIJDERD                                         Int               @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                 DateTime          @default(now()) @db.Timestamp(0)
-  oper_aanwezig_leden                                OperAanwezigLid[]
-  ref_leden_oper_transacties_LID_IDToref_leden       RefLid            @relation("oper_transacties_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_1")
-  ref_leden_oper_transacties_INGEVOERD_IDToref_leden RefLid            @relation("oper_transacties_INGEVOERD_IDToref_leden", fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_2")
-  ref_types                                          RefType           @relation(fields: [TYPE_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_3")
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van de transactie
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Datum van aanmaken van de transactie
+  DATUM              DateTime  @default(now()) @db.DateTime(0)
+  /// @description Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag
+  VLIEGDAG           DateTime? @db.Date
+  /// @description Verwijzing naar het lid ID van de vlieger, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID             Int       @db.UnsignedMediumInt
+  /// @description Verwijzing naar het lid ID van de persoon die de transactie heeft aangemaakt, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INGEVOERD_ID       Int       @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het type van de transactie, link naar type tabel
+  TYPE_ID            Int       @db.UnsignedMediumInt
+  /// @description Gaat het hier om een DDWV transactie?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DDWV               Int       @default(0) @db.UnsignedTinyInt
+  /// @description Het bedrag wat gefactureerd wordt per eenheid
+  BEDRAG             Decimal?  @db.Decimal(10, 2)
+  /// @description De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen
+  EENHEDEN           Decimal?  @db.Decimal(10, 0)
+  /// @description Aantal strippen voordat de transcatie verwerkt is.
+  SALDO_VOOR         Decimal?  @db.Decimal(8, 2)
+  /// @description Aantal strippen NA de transactie, dus het nieuwe saldo
+  SALDO_NA           Decimal?  @db.Decimal(8, 2)
+  /// @description Response van een extern systeem bijv Mollie of e-boekhouden
+  REFERENTIE         String?   @db.VarChar(50)
+  /// @description Referentie naar een extern system, bijv Mollie of e-boekhouden
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  EXT_REF            String?   @db.VarChar(50)
+  /// @description Omschrijving van de transactie, komt zo ook op de factuur
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OMSCHRIJVING       String    @db.VarChar(150)
+  /// @DtoReadOnly
+  /// @description Is de transactie betaald bijv Mollie
+  BETAALD            Int       @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid             RefLid    @relation("oper_transacties_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefIngevoerd       RefLid    @relation("oper_transacties_INGEVOERD_IDToref_leden", fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  TypeTransactie     RefType   @relation(fields: [TYPE_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_3")
+
+  AanwezigLid OperAanwezigLid[]
 
   @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
   @@index([LID_ID], map: "LID_ID")

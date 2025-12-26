@@ -25,9 +25,8 @@ export class HeliosDocumentDto {
     description: "Documenten worden gegroepeerd",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  GROEP_ID: number | null;
+  GROEP_ID: number;
   @ApiProperty({
     description: "Beschrijving van het document",
     minLength: 4,
@@ -50,25 +49,29 @@ export class HeliosDocumentDto {
   LID_ID: number | null;
   @ApiProperty({
     description: "Lege regel om paragraaf te kunnen maken",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  LEGE_REGEL: boolean;
+  LEGE_REGEL: number;
   @ApiProperty({
     description: "Plaats een horizontale lijn",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  ONDERSTREEP: boolean;
+  ONDERSTREEP: number;
   @ApiProperty({
     description:
       "Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  BOVEN: boolean;
+  BOVEN: number;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  VERWIJDERD: boolean;
+  VERWIJDERD: number;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

@@ -1,32 +1,107 @@
 model RefVliegtuig {
-  ID                                                                         Int                     @id @default(autoincrement()) @db.UnsignedMediumInt
-  REGISTRATIE                                                                String                  @db.VarChar(8)
-  CALLSIGN                                                                   String?                 @db.VarChar(6)
-  ZITPLAATSEN                                                                Int                     @default(1) @db.UnsignedTinyInt
-  CLUBKIST                                                                   Int                     @default(0) @db.UnsignedTinyInt
-  FLARMCODE                                                                  String?                 @db.VarChar(30)
-  TYPE_ID                                                                    Int?                    @db.UnsignedMediumInt
-  TMG                                                                        Int                     @default(0) @db.UnsignedTinyInt
-  ZELFSTART                                                                  Int                     @default(0) @db.UnsignedTinyInt
-  SLEEPKIST                                                                  Int                     @default(0) @db.UnsignedTinyInt
-  VOLGORDE                                                                   Int?                    @db.UnsignedTinyInt
-  INZETBAAR                                                                  Int                     @default(1) @db.UnsignedTinyInt
-  TRAINER                                                                    Int                     @default(0) @db.TinyInt
-  URL                                                                        String?                 @db.VarChar(1024)
-  BEVOEGDHEID_LOKAAL_ID                                                      Int?                    @db.UnsignedMediumInt
-  BEVOEGDHEID_OVERLAND_ID                                                    Int?                    @db.UnsignedMediumInt
-  OPMERKINGEN                                                                String?                 @db.Text
-  VERWIJDERD                                                                 Int                     @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                                         DateTime                @default(now()) @db.Timestamp(0)
-  oper_aanwezig_leden                                                        OperAanwezigLid[]
-  oper_aanwezig_vliegtuigen                                                  OperAanwezigVliegtuig[]
-  oper_journaal                                                              OperJournaal[]
-  oper_reservering                                                           OperReservering[]
-  oper_startlijst_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen              OperStartlijst[]        @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen")
-  oper_startlijst_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen              OperStartlijst[]        @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen")
-  ref_types                                                                  RefType?                @relation(fields: [TYPE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_1")
-  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties   RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties", fields: [BEVOEGDHEID_LOKAAL_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_2")
-  ref_competenties_ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties", fields: [BEVOEGDHEID_OVERLAND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_3")
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van het vliegtuig, andere objecten refereren naar dit ID
+  ID                      Int                     @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Registratie van het vliegtuig
+  /// @minLength 4
+  /// @maxLength 8
+  REGISTRATIE             String                  @db.VarChar(8)
+  /// @description Callsign van het vliegtuig
+  /// @maxLength 6
+  CALLSIGN                String?                 @db.VarChar(6)
+  /// @description Aantal zitplaatsen in het vliegtuig
+  /// @DtoUpdateOptional
+  /// @minimum 1
+  /// @maximum 2
+  ZITPLAATSEN             Int                     @default(1) @db.UnsignedTinyInt
+  /// @description Is het vliegtuig eigendom van de club
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CLUBKIST                Int                     @default(0) @db.UnsignedTinyInt
+  /// @description Flarmcode van het vliegtuig. Indien meerdere codes, dan CSV met comma's als scheidingsteken
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 50
+  FLARMCODE               String?                 @db.VarChar(30)
+  /// @description Het type vliegtuig, relatie naar de types tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  TYPE_ID                 Int?                    @db.UnsignedMediumInt
+  /// @description Is het een Touring Motor Glider (TMG)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  TMG                     Int                     @default(0) @db.UnsignedTinyInt
+  /// @description Kan het vliegtuig zelfstarten
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ZELFSTART               Int                     @default(0) @db.UnsignedTinyInt
+  /// @description Is het een motorvliegtuig die sleept
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  SLEEPKIST               Int                     @default(0) @db.UnsignedTinyInt
+  /// @description Sorteer volgorde
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  VOLGORDE                Int?                    @db.UnsignedTinyInt
+  /// @description Is het vliegtuig inzetbaar in het vliegbedrijf
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INZETBAAR               Int                     @default(1) @db.UnsignedTinyInt
+  /// @description Is het vliegtuig een instructievliegtuig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  TRAINER                 Int                     @default(0) @db.TinyInt
+  /// @description De URL naar de handleiding van het vliegtuig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @maxLength 1024
+  URL                     String?                 @db.VarChar(1024)
+  /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BEVOEGDHEID_LOKAAL_ID   Int?                    @db.UnsignedMediumInt
+  /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  BEVOEGDHEID_OVERLAND_ID Int?                    @db.UnsignedMediumInt
+  /// @description Opmerkingen over het vliegtuig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN             String?                 @db.Text
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD              Int                     @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING      DateTime                @default(now()) @db.Timestamp(0)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigLeden           OperAanwezigLid[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigVliegtuigen     OperAanwezigVliegtuig[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Journaal                OperJournaal[]
+  Reserveringen           OperReservering[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Vluchten                OperStartlijst[]        @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Sleepvluchten           OperStartlijst[]        @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  VliegtuigType           RefType?                @relation(fields: [TYPE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidLokaal       RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties", fields: [BEVOEGDHEID_LOKAAL_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidOverland     RefCompetentie?         @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties", fields: [BEVOEGDHEID_OVERLAND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_vliegtuigen_ibfk_3")
 
   @@index([BEVOEGDHEID_LOKAAL_ID], map: "BEVOEGDHEID_LOKAAL_ID")
   @@index([BEVOEGDHEID_OVERLAND_ID], map: "BEVOEGDHEID_OVERLAND_ID")

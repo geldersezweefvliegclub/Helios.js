@@ -3,6 +3,8 @@ import { IsInt, IsNotEmpty } from "class-validator";
 
 export class ConnectRefLidDto {
   @ApiProperty({
+    description:
+      "De primary ID van het lid, andere objecten refereren naar dit ID",
     type: "integer",
     format: "int32",
   })

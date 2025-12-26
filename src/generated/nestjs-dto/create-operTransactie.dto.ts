@@ -3,13 +3,25 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   IsDateString,
   IsDecimal,
-  IsNotEmpty,
+  IsInt,
   IsOptional,
   IsString,
 } from "class-validator";
 
 export class CreateOperTransactieDto {
   @ApiProperty({
+    description: "Het unieke ID van de transactie",
+    type: "integer",
+    format: "int32",
+    default: "autoincrement",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  ID?: number;
+  @ApiProperty({
+    description:
+      "Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag",
     type: "string",
     format: "date-time",
     required: false,
@@ -19,6 +31,47 @@ export class CreateOperTransactieDto {
   @IsDateString()
   VLIEGDAG?: Date | null;
   @ApiProperty({
+    description:
+      "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  LID_ID?: number;
+  @ApiProperty({
+    description:
+      "Verwijzing naar het lid ID van de persoon die de transactie heeft aangemaakt, link naar de leden tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  INGEVOERD_ID?: number;
+  @ApiProperty({
+    description:
+      "Referentie naar het type van de transactie, link naar type tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  TYPE_ID?: number;
+  @ApiProperty({
+    description: "Gaat het hier om een DDWV transactie?",
+    type: "integer",
+    format: "int32",
+    default: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  DDWV?: number;
+  @ApiProperty({
+    description: "Het bedrag wat gefactureerd wordt per eenheid",
     type: "string",
     format: "Decimal.js",
     required: false,
@@ -28,6 +81,8 @@ export class CreateOperTransactieDto {
   @IsDecimal()
   BEDRAG?: Prisma.Decimal | null;
   @ApiProperty({
+    description:
+      "De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen",
     type: "string",
     format: "Decimal.js",
     required: false,
@@ -37,6 +92,7 @@ export class CreateOperTransactieDto {
   @IsDecimal()
   EENHEDEN?: Prisma.Decimal | null;
   @ApiProperty({
+    description: "Aantal strippen voordat de transcatie verwerkt is.",
     type: "string",
     format: "Decimal.js",
     required: false,
@@ -46,6 +102,7 @@ export class CreateOperTransactieDto {
   @IsDecimal()
   SALDO_VOOR?: Prisma.Decimal | null;
   @ApiProperty({
+    description: "Aantal strippen NA de transactie, dus het nieuwe saldo",
     type: "string",
     format: "Decimal.js",
     required: false,
@@ -55,6 +112,7 @@ export class CreateOperTransactieDto {
   @IsDecimal()
   SALDO_NA?: Prisma.Decimal | null;
   @ApiProperty({
+    description: "Response van een extern systeem bijv Mollie of e-boekhouden",
     type: "string",
     required: false,
     nullable: true,
@@ -63,6 +121,8 @@ export class CreateOperTransactieDto {
   @IsString()
   REFERENTIE?: string | null;
   @ApiProperty({
+    description:
+      "Referentie naar een extern system, bijv Mollie of e-boekhouden",
     type: "string",
     required: false,
     nullable: true,
@@ -71,17 +131,11 @@ export class CreateOperTransactieDto {
   @IsString()
   EXT_REF?: string | null;
   @ApiProperty({
-    type: "string",
-  })
-  @IsNotEmpty()
-  @IsString()
-  OMSCHRIJVING: string;
-  @ApiProperty({
+    description: "Omschrijving van de transactie, komt zo ook op de factuur",
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()
-  BETAAL_URL?: string | null;
+  OMSCHRIJVING?: string;
 }

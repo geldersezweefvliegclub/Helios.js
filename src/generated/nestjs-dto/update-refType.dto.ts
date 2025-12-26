@@ -4,6 +4,18 @@ import { IsDecimal, IsInt, IsOptional, IsString } from "class-validator";
 
 export class UpdateRefTypeDto {
   @ApiProperty({
+    description:
+      "De primary ID van het type, andere objecten refereren naar dit ID",
+    type: "integer",
+    format: "int32",
+    default: "autoincrement",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  ID?: number;
+  @ApiProperty({
+    description: "Verwijzing naar de RefTypesGroepen",
     type: "integer",
     format: "int32",
     required: false,
@@ -12,6 +24,8 @@ export class UpdateRefTypeDto {
   @IsInt()
   GROEP?: number;
   @ApiProperty({
+    description: "De code van dit type",
+    maxLength: 10,
     type: "string",
     required: false,
     nullable: true,
@@ -20,6 +34,8 @@ export class UpdateRefTypeDto {
   @IsString()
   CODE?: string | null;
   @ApiProperty({
+    description: "De externe referentie van dit type",
+    maxLength: 25,
     type: "string",
     required: false,
     nullable: true,
@@ -28,6 +44,8 @@ export class UpdateRefTypeDto {
   @IsString()
   EXT_REF?: string | null;
   @ApiProperty({
+    description: "De omschrijving van de groep",
+    maxLength: 75,
     type: "string",
     required: false,
   })
@@ -44,6 +62,18 @@ export class UpdateRefTypeDto {
   @IsInt()
   SORTEER_VOLGORDE?: number | null;
   @ApiProperty({
+    description:
+      "Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code",
+    type: "integer",
+    format: "int32",
+    default: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  READ_ONLY?: number;
+  @ApiProperty({
+    description: "Het bedrag om te kunnen factureren",
     type: "string",
     format: "Decimal.js",
     required: false,
@@ -53,6 +83,7 @@ export class UpdateRefTypeDto {
   @IsDecimal()
   BEDRAG?: Prisma.Decimal | null;
   @ApiProperty({
+    description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
     type: "string",
     format: "Decimal.js",
     required: false,

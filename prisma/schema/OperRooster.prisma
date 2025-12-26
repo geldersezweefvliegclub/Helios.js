@@ -1,15 +1,45 @@
 model OperRooster {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van het rooster record
   ID                 Int          @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Datum van de vliegdag
   DATUM              DateTime     @db.Date
+  /// @description Is het een DDWV bedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   DDWV               Int          @default(0) @db.UnsignedTinyInt
+  /// @description Is het een Club bedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   CLUB_BEDRIJF       Int          @default(1) @db.UnsignedTinyInt
+  /// @description Voeren we winterwerk uit op deze datum?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   WINTER_WERK        Boolean      @default(false)
+  /// @description Aantal aameldingen die we nodig hebben voor een sleepbedrijf (alleen DDWV)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  /// @maximum 25
   MIN_SLEEPSTART     Int          @default(3) @db.UnsignedTinyInt
+  /// @description Aantal aameldingen die we nodig hebben voor een lierbedrijf (alleen DDWV)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @minimum 0
+  /// @maximum 25
   MIN_LIERSTART      Int          @default(10) @db.UnsignedTinyInt
+  /// @description Eventuele opmerkingen voor deze dag
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   OPMERKINGEN        String?      @db.Text
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   VERWIJDERD         Int          @default(0) @db.UnsignedTinyInt
   LAATSTE_AANPASSING DateTime     @default(now()) @db.Timestamp(0)
-  oper_diensten      OperDienst[]
+  Diensten           OperDienst[]
 
   @@index([DATUM], map: "DATUM")
   @@index([DDWV], map: "DDWV")

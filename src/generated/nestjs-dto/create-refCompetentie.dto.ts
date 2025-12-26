@@ -3,6 +3,19 @@ import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateRefCompetentieDto {
   @ApiProperty({
+    description:
+      "De primary ID van de competentie, andere objecten refereren naar dit ID",
+    type: "integer",
+    format: "int32",
+    default: "autoincrement",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  ID?: number;
+  @ApiProperty({
+    description: "Sorteer volgorde",
+    minimum: 0,
     type: "integer",
     format: "int32",
     required: false,
@@ -12,6 +25,28 @@ export class CreateRefCompetentieDto {
   @IsInt()
   VOLGORDE?: number | null;
   @ApiProperty({
+    description:
+      "De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  LEERFASE_ID?: number;
+  @ApiProperty({
+    description: "Bovenliggende competentie",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  OUDER_ID?: number | null;
+  @ApiProperty({
+    description: "Leerblok van de comptentie zoals beschreven in de syllabus",
+    maxLength: 7,
     type: "string",
     required: false,
     nullable: true,
@@ -20,12 +55,17 @@ export class CreateRefCompetentieDto {
   @IsString()
   BLOK?: string | null;
   @ApiProperty({
+    description: "Omschrijving van de competentie",
+    minLength: 3,
+    maxLength: 75,
     type: "string",
   })
   @IsNotEmpty()
   @IsString()
-  ONDERWERP: string;
+  OMSCHRIJVING: string;
   @ApiProperty({
+    description: "Bijbehoordende documentatie van de competentie",
+    maxLength: 75,
     type: "string",
     required: false,
     nullable: true,
@@ -33,4 +73,14 @@ export class CreateRefCompetentieDto {
   @IsOptional()
   @IsString()
   DOCUMENTATIE?: string | null;
+  @ApiProperty({
+    description: "Is deze competentie beperkt geldig",
+    type: "integer",
+    format: "int32",
+    default: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  GELDIGHEID?: number;
 }

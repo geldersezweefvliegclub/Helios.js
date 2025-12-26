@@ -1,27 +1,28 @@
 import { ApiProperty } from "@nestjs/swagger";
-import {
-  IsDateString,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
 
 export class CreateOperGastDto {
   @ApiProperty({
-    type: "string",
+    description: "Het unieke ID van de gast",
+    type: "integer",
+    format: "int32",
+    default: "autoincrement",
+    required: false,
   })
-  @IsNotEmpty()
-  @IsString()
-  NAAM: string;
+  @IsOptional()
+  @IsInt()
+  ID?: number;
   @ApiProperty({
+    description: "Datum van de daginfo",
     type: "string",
     format: "date-time",
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsDateString()
-  DATUM: Date;
+  DATUM?: Date;
   @ApiProperty({
+    description: "Opmerkingen die bij de gast horen",
     type: "string",
     required: false,
     nullable: true,
@@ -30,6 +31,7 @@ export class CreateOperGastDto {
   @IsString()
   OPMERKINGEN?: string | null;
   @ApiProperty({
+    description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
     format: "int32",
     required: false,

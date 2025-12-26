@@ -35,8 +35,12 @@ model OperReservering {
   /// @description Tijdstempel met de laatste wijziging van het record
   /// @DtoReadOnly
   LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid             RefLid   @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_1")
 
-  RefLid       RefLid       @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
   RefVliegtuig RefVliegtuig @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_2")
 
   @@index([LID_ID], map: "LID_ID")

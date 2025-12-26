@@ -1,7 +1,7 @@
 model OperProgressie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Het unieke ID van een factuur
+  /// @description Het unieke ID van een progressie
   ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid die de competentie gehaald heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
@@ -18,7 +18,7 @@ model OperProgressie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   INSTRUCTEUR_ID     Int       @db.UnsignedMediumInt
-  /// @description Omschrijving van de factuurregel
+  /// @description Opmerkingen bij de progressie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OPMERKINGEN        String?   @db.Text

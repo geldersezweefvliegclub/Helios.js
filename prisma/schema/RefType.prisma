@@ -1,37 +1,113 @@
 model RefType {
-  ID                                                         Int              @id @default(autoincrement()) @db.UnsignedMediumInt
-  GROEP                                                      Int              @db.UnsignedSmallInt
-  CODE                                                       String?          @db.VarChar(10)
-  EXT_REF                                                    String?          @db.VarChar(25)
-  OMSCHRIJVING                                               String           @db.VarChar(75)
-  SORTEER_VOLGORDE                                           Int?             @db.UnsignedTinyInt
-  READ_ONLY                                                  Int              @default(0) @db.UnsignedTinyInt
-  BEDRAG                                                     Decimal?         @db.Decimal(6, 2)
-  EENHEDEN                                                   Decimal?         @db.Decimal(6, 2)
-  VERWIJDERD                                                 Int              @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                         DateTime         @default(now()) @db.Timestamp(0)
-  documenten                                                 HeliosDocument[]
-  oper_daginfo_oper_daginfo_VELD_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
-  oper_daginfo_oper_daginfo_BAAN_IDToref_types               OperDagInfo[]    @relation("oper_daginfo_BAAN_IDToref_types")
-  oper_daginfo_oper_daginfo_STARTMETHODE_IDToref_types       OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_IDToref_types")
-  oper_daginfo_oper_daginfo_VELD_ID2Toref_types              OperDagInfo[]    @relation("oper_daginfo_VELD_ID2Toref_types")
-  oper_daginfo_oper_daginfo_BAAN_ID2Toref_types              OperDagInfo[]    @relation("oper_daginfo_BAAN_ID2Toref_types")
-  oper_daginfo_oper_daginfo_STARTMETHODE_ID2Toref_types      OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
-  oper_dagrapporten                                          OperDagrapport[]
-  oper_diensten                                              OperDienst[]
-  oper_journaal_oper_journaal_ROLLEND_IDToref_types          OperJournaal[]   @relation("oper_journaal_ROLLEND_IDToref_types")
-  oper_journaal_oper_journaal_CATEGORIE_IDToref_types        OperJournaal[]   @relation("oper_journaal_CATEGORIE_IDToref_types")
-  oper_journaal_oper_journaal_STATUS_IDToref_types           OperJournaal[]   @relation("oper_journaal_STATUS_IDToref_types")
-  oper_startlijst_oper_startlijst_STARTMETHODE_IDToref_types OperStartlijst[] @relation("oper_startlijst_STARTMETHODE_IDToref_types")
-  oper_startlijst_oper_startlijst_VELD_IDToref_types         OperStartlijst[] @relation("oper_startlijst_VELD_IDToref_types")
-  oper_startlijst_oper_startlijst_BAAN_IDToref_types         OperStartlijst[] @relation("oper_startlijst_BAAN_IDToref_types")
-  oper_transacties                                           OperTransactie[]
-  ref_competenties                                           RefCompetentie[]
-  ref_leden                                                  RefLid[]
-  ref_vliegtuigen                                            RefVliegtuig[]
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van het type, andere objecten refereren naar dit ID
+  ID                     Int              @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Verwijzing naar de RefTypesGroepen
+  /// @DtoRelationIncludeId
+  GROEP                  Int              @db.UnsignedSmallInt
+  /// @description De code van dit type
+  /// @maxLength 10
+  CODE                   String?          @db.VarChar(10)
+  /// @description De externe referentie van dit type
+  /// @maxLength 25
+  EXT_REF                String?          @db.VarChar(25)
+  /// @description De omschrijving van de groep
+  /// @maxLength 75
+  /// @IsNotEmpty()
+  OMSCHRIJVING           String           @db.VarChar(75)
+  // @description De sorteer volgorde van de groep
+  SORTEER_VOLGORDE       Int?             @db.UnsignedTinyInt
+  /// @description Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  READ_ONLY              Int              @default(0) @db.UnsignedTinyInt
+  /// @description Het bedrag om te kunnen factureren
+  BEDRAG                 Decimal?         @db.Decimal(6, 2)
+  /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
+  EENHEDEN               Decimal?         @db.Decimal(6, 2)
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD             Int              @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING     DateTime         @default(now()) @db.Timestamp(0)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Documenten             HeliosDocument[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  TypesGroep             RefTypeGroep     @relation(fields: [GROEP], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoVeld            OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoBaan            OperDagInfo[]    @relation("oper_daginfo_BAAN_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoStartmethode    OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoVeld2           OperDagInfo[]    @relation("oper_daginfo_VELD_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoBaan2           OperDagInfo[]    @relation("oper_daginfo_BAAN_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoStartmethode2   OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Dagrapporten           OperDagrapport[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Diensten               OperDienst[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalRollend        OperJournaal[]   @relation("oper_journaal_ROLLEND_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalCategorie      OperJournaal[]   @relation("oper_journaal_CATEGORIE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalStatus         OperJournaal[]   @relation("oper_journaal_STATUS_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstStartmethode OperStartlijst[] @relation("oper_startlijst_STARTMETHODE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstVeld         OperStartlijst[] @relation("oper_startlijst_VELD_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstBaan         OperStartlijst[] @relation("oper_startlijst_BAAN_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Transacties            OperTransactie[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Competenties           RefCompetentie[]
+  /// @description De leden die dit type hebben (bijv Ereleden, Jeugdleden, etc)
+  Leden                  RefLid[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Vliegtuigen            RefVliegtuig[]
 
   /// @description Het type brandstof dat kan worden getankt
-  Brandstof OperBrandstof[] @relation("BrandstofType")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Brandstof           OperBrandstof[]         @relation("BrandstofType")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigLeden       OperAanwezigLid[]       @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigVliegtuigen OperAanwezigVliegtuig[] @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Gasten              OperGast[]              @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LedenVliegstatus    RefLid[]                @relation("VliegStatus")
 
   @@index([GROEP], map: "GROEP")
   @@index([VERWIJDERD], map: "VERWIJDERD")

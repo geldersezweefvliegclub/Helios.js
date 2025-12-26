@@ -1,85 +1,244 @@
 model RefLid {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van het lid, andere objecten refereren naar dit ID
   ID                   Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @DtoReadOnly
+  /// @description De naam van het lid, wordt gegenereerd uit de voornaam, tussenvoegsel en achternaam
   NAAM                 String    @db.VarChar(255)
+  /// @description De voornaam van het lid
+  /// @maxLength 15
   VOORNAAM             String?   @db.VarChar(15)
+  /// @description Het tussenvoegsel van de naam
+  /// @maxLength 8
   TUSSENVOEGSEL        String?   @db.VarChar(8)
+  /// @description De achternaam van het lid
+  /// @IsNotEmpty()
+  /// @maxLength 30
   ACHTERNAAM           String?   @db.VarChar(30)
+  /// @description Het adres waar het lid woont
+  /// @maxLength 50
   ADRES                String?   @db.VarChar(50)
+  /// @description De postcode van het adres
+  /// @maxLength 10
   POSTCODE             String?   @db.VarChar(10)
+  /// @description De woonplaats van het lid
+  /// @maxLength 50
   WOONPLAATS           String?   @db.VarChar(50)
+  /// @description Het vaste huistelefoonnummer van het lid
+  /// @maxLength 15
   TELEFOON             String?   @db.VarChar(255)
+  /// @description Het mobiele telefoonnummer van het lid
+  /// @maxLength 15
   MOBIEL               String?   @db.VarChar(255)
+  /// @description Het noodnummer voor calamiteiten
+  /// @maxLength 15
   NOODNUMMER           String?   @db.VarChar(255)
+  /// @description Het email adres van het lid
+  /// @maxLength 45
   EMAIL                String?   @db.VarChar(45)
+  /// @description Het lidnummer zoals dat in de financiele administratie wordt gebruikt
+  /// @maxLength 10
   LIDNR                String?   @db.VarChar(10)
+  /// @description Verwijzing naar de lidtype (bv. lid, donateur, etc.)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LIDTYPE_ID           Int       @db.UnsignedMediumInt
+  /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   STATUSTYPE_ID        Int?      @db.UnsignedMediumInt
+  /// @description Is het lid ook lid van een zusterclub
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   ZUSTERCLUB_ID        Int?      @db.UnsignedMediumInt
+  /// @description Verwijzing naar het ID de buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BUDDY_ID             Int?      @db.UnsignedMediumInt
+  /// @description Verwijzing naar het ID de tweede buddy in de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BUDDY_ID2            Int?      @db.MediumInt
+  /// @description Kan het lid worden ingedeeld voor lierdienst
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LIERIST              Int       @default(0) @db.UnsignedTinyInt
+  /// @description Kan het lid worden ingedeeld voor lierist in opleiding
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LIERIST_IO           Int       @default(0) @db.UnsignedTinyInt
+  /// @description Kan het lid worden ingedeeld voor startleiderdienst
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   STARTLEIDER          Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid een instructeur
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   INSTRUCTEUR          Int       @default(0) @db.UnsignedTinyInt
+  /// @description Zit het lid in de chef instructeurs groep
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   CIMT                 Int       @default(0) @db.UnsignedTinyInt
+  /// @description Helpt het lid met doordeweeks vliegen als kader
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   DDWV_CREW            Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid beheerder van de DDWV operatie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   DDWV_BEHEERDER       Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid applicatie beheerder
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BEHEERDER            Int       @default(0) @db.UnsignedTinyInt
+  /// @description Account wordt alleen gebruikt voor tijdschrijven
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   STARTTOREN           Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid een roostermaaker
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   ROOSTER              Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid een sleepvlieger
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   SLEEPVLIEGER         Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid een rapporteur om overzicht te maken van de vliegdagen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   RAPPORTEUR           Int       @default(0) @db.UnsignedTinyInt
+  /// @description Vliegt het lid gasten rond
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   GASTENVLIEGER        Int       @default(0) @db.UnsignedTinyInt
+  /// @description Is het lid een technicus
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   TECHNICUS            Int       @default(0) @db.UnsignedTinyInt
+  /// @description Clubblad wordt per post verstuurd
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   CLUBBLAD_POST        Int       @default(0) @db.UnsignedTinyInt
+  /// @description Zelfstarts afbetaald voor lopende seizoen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   ZELFSTART_ABONNEMENT Int       @default(0) @db.UnsignedTinyInt
+  /// @description Geldigheid medische keuring
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   MEDICAL              DateTime? @db.Date
+  /// @description Geboortedatum van het lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   GEBOORTE_DATUM       DateTime? @db.Date
+  /// @description Inlognaam voor de website
+  /// @maxLength 45
   INLOGNAAM            String?   @db.VarChar(45)
+  /// @description Het wachtwoord
+  /// @minLength 8
+  /// @maxLength 50
   WACHTWOORD           String?   @db.VarChar(255)
+  /// @description Secret key voor twee traps authenticatie
   SECRET               String?   @db.VarChar(255)
+  /// @description Is twee traps authenticatie ingeschakeld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   AUTH                 Int       @default(0) @db.UnsignedTinyInt
+  /// @description URL naar de avatar van het lid
   AVATAR               String?   @db.VarChar(255)
+  /// @description Lid mag niet meer starten, maar is nog wel lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   STARTVERBOD          Int       @default(0) @db.UnsignedTinyInt
+  /// @description Lid heeft lidmaatschap voor volgend jaar opgezegd, maar is nog wel lid
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   OPGEZEGD             Int       @default(0) @db.UnsignedTinyInt
+  /// @description Privacy instelling
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   PRIVACY              Int       @default(0) @db.UnsignedTinyInt
+  /// @description Sleutelnummer van Terlet
+  /// @maxLength 25
   SLEUTEL1             String?   @db.VarChar(25)
+  /// @description Sleutelnummer van Gelderse
+  /// @maxLength 25
   SLEUTEL2             String?   @db.VarChar(25)
+  /// @description Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben
   BEROEP               String?   @db.VarChar(50)
+  /// @description Lidmaatschapnummer van de KNVvL
+  /// @maxLength 25
   KNVVL_LIDNUMMER      String?   @db.VarChar(25)
+  /// @description Brevetnummer
+  /// @maxLength 25
   BREVET_NUMMER        String?   @db.VarChar(25)
+  /// @description Daginfo per email ontvangen
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   EMAIL_DAGINFO        Int       @default(0) @db.UnsignedTinyInt
+  /// @description Opmerkingen van het lid
   OPMERKINGEN          String?   @db.Text
+  /// @description Aantal strippen tegoed
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   TEGOED               Float     @default(0) @db.Float
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD           Int       @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING   DateTime  @default(now()) @db.Timestamp(0)
+  /// @description Sleutelnummer om te kunnen tanken
+  /// @maxLength 25
+  BRANDSTOF_PAS        String?   @db.VarChar(25)
 
-  Audit                                                     Audit[]
-  oper_aanwezig_leden                                       OperAanwezigLid[]
-  oper_dagrapporten                                         OperDagrapport[]
-  oper_diensten_oper_diensten_LID_IDToref_leden             OperDienst[]      @relation("oper_diensten_LID_IDToref_leden")
-  oper_diensten_oper_diensten_INGEVOERD_DOOR_IDToref_leden  OperDienst[]      @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden")
-  oper_facturen                                             OperFactuur[]
-  oper_journaal_oper_journaal_MELDER_IDToref_leden          OperJournaal[]    @relation("oper_journaal_MELDER_IDToref_leden")
-  oper_journaal_oper_journaal_TECHNICUS_IDToref_leden       OperJournaal[]    @relation("oper_journaal_TECHNICUS_IDToref_leden")
-  oper_journaal_oper_journaal_AFGETEKEND_IDToref_leden      OperJournaal[]    @relation("oper_journaal_AFGETEKEND_IDToref_leden")
-  oper_progressie_oper_progressie_LID_IDToref_leden         OperProgressie[]  @relation("oper_progressie_LID_IDToref_leden")
-  oper_progressie_oper_progressie_INSTRUCTEUR_IDToref_leden OperProgressie[]  @relation("oper_progressie_INSTRUCTEUR_IDToref_leden")
-  oper_reservering                                          OperReservering[]
-  oper_startlijst_oper_startlijst_VLIEGER_IDToref_leden     OperStartlijst[]  @relation("oper_startlijst_VLIEGER_IDToref_leden")
-  oper_startlijst_oper_startlijst_INZITTENDE_IDToref_leden  OperStartlijst[]  @relation("oper_startlijst_INZITTENDE_IDToref_leden")
-  oper_tracks_oper_tracks_LID_IDToref_leden                 OperTrack[]       @relation("oper_tracks_LID_IDToref_leden")
-  oper_tracks_oper_tracks_INSTRUCTEUR_IDToref_leden         OperTrack[]       @relation("oper_tracks_INSTRUCTEUR_IDToref_leden")
-  oper_transacties_oper_transacties_LID_IDToref_leden       OperTransactie[]  @relation("oper_transacties_LID_IDToref_leden")
-  oper_transacties_oper_transacties_INGEVOERD_IDToref_leden OperTransactie[]  @relation("oper_transacties_INGEVOERD_IDToref_leden")
-  ref_types                                                 RefType           @relation(fields: [LIDTYPE_ID], references: [ID], onUpdate: Restrict, map: "ref_leden_ibfk_1")
-  ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden              RefLid?           @relation("ref_leden_ZUSTERCLUB_IDToref_leden", fields: [ZUSTERCLUB_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_2")
-  other_ref_leden_ref_leden_ZUSTERCLUB_IDToref_leden        RefLid[]          @relation("ref_leden_ZUSTERCLUB_IDToref_leden")
-  ref_leden_ref_leden_BUDDY_IDToref_leden                   RefLid?           @relation("ref_leden_BUDDY_IDToref_leden", fields: [BUDDY_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_3")
-  other_ref_leden_ref_leden_BUDDY_IDToref_leden             RefLid[]          @relation("ref_leden_BUDDY_IDToref_leden")
-
-  Brandstof  OperBrandstof[]  @relation("RefLid")
-  Winterwerk OperWinterwerk[] @relation("RefLid")
+  Audit                Audit[]
+  AanwezigLid          OperAanwezigLid[]
+  DagRapport           OperDagrapport[]
+  Diensten             OperDienst[]      @relation("oper_diensten_LID_IDToref_leden")
+  DienstenIngevoerd    OperDienst[]      @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden")
+  Facturen             OperFactuur[]
+  JournaalMelder       OperJournaal[]    @relation("oper_journaal_MELDER_IDToref_leden")
+  JournaalTechnicus    OperJournaal[]    @relation("oper_journaal_TECHNICUS_IDToref_leden")
+  JournaalAfgetekend   OperJournaal[]    @relation("oper_journaal_AFGETEKEND_IDToref_leden")
+  Document             HeliosDocument[]  @relation("RefLid")
+  Progressie           OperProgressie[]  @relation("oper_progressie_LID_IDToref_leden")
+  ProgressieIngevoerd  OperProgressie[]  @relation("oper_progressie_INSTRUCTEUR_IDToref_leden")
+  Reserveringen        OperReservering[]
+  Vlieger              OperStartlijst[]  @relation("oper_startlijst_VLIEGER_IDToref_leden")
+  Inzittende           OperStartlijst[]  @relation("oper_startlijst_INZITTENDE_IDToref_leden")
+  Tracks               OperTrack[]       @relation("oper_tracks_LID_IDToref_leden")
+  TracksIngevoerd      OperTrack[]       @relation("oper_tracks_INSTRUCTEUR_IDToref_leden")
+  Transacties          OperTransactie[]  @relation("oper_transacties_LID_IDToref_leden")
+  TransactiesIngevoerd OperTransactie[]  @relation("oper_transacties_INGEVOERD_IDToref_leden")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LidType              RefType           @relation(fields: [LIDTYPE_ID], references: [ID], onUpdate: Restrict, map: "ref_leden_ibfk_1")
+  Zusterclub           RefLid?           @relation("ref_leden_ZUSTERCLUB_IDToref_leden", fields: [ZUSTERCLUB_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_2")
+  LedenZusterclub      RefLid[]          @relation("ref_leden_ZUSTERCLUB_IDToref_leden")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Buddy                RefLid?           @relation("ref_leden_BUDDY_IDToref_leden", fields: [BUDDY_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_3")
+  Ledenbuddy           RefLid[]          @relation("ref_leden_BUDDY_IDToref_leden")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Buddy2               RefLid?           @relation("ref_leden_BUDDY_ID2Toref_leden", fields: [BUDDY_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "ref_leden_ibfk_4")
+  Ledenbuddy2          RefLid[]          @relation("ref_leden_BUDDY_ID2Toref_leden")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  VliegStatus          RefType?          @relation("VliegStatus", fields: [STATUSTYPE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Brandstof            OperBrandstof[]   @relation("RefLid")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Winterwerk           OperWinterwerk[]  @relation("RefLid")
 
   @@index([INSTRUCTEUR], map: "INSTRUCTEUR")
   @@index([LIDTYPE_ID], map: "LIDTYPE_ID")

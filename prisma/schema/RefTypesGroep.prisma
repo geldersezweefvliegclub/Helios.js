@@ -1,13 +1,38 @@
 model RefTypeGroep {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van de groep, andere objecten refereren naar dit ID
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description De code van de groep
+  /// @maxLength 10
   CODE               String?  @db.VarChar(10)
+  /// @description De externe referentie van de groep
+  /// @maxLength 25
   EXT_REF            String?  @db.VarChar(25)
+  /// @description De omschrijving van de groep
+  /// @maxLength 75
+  /// @IsNotEmpty()
   OMSCHRIJVING       String   @db.VarChar(75)
+  /// @description De sorteer volgorde van de groep
   SORTEER_VOLGORDE   Int?     @db.UnsignedTinyInt
+  /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   READ_ONLY          Int      @default(0) @db.UnsignedTinyInt
+  /// @description De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   BEDRAG_EENHEDEN    Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefType RefType[]
 
   @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("ref_types_groepen")
