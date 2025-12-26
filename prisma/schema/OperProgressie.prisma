@@ -1,20 +1,58 @@
 model OperProgressie {
-  ID                                                  Int              @id @default(autoincrement()) @db.UnsignedMediumInt
-  LID_ID                                              Int              @db.UnsignedMediumInt
-  COMPETENTIE_ID                                      Int              @db.UnsignedMediumInt
-  INSTRUCTEUR_ID                                      Int              @db.UnsignedMediumInt
-  OPMERKINGEN                                         String?          @db.Text
-  INGEVOERD                                           DateTime?        @default(now()) @db.DateTime(0)
-  LINK_ID                                             Int?             @db.UnsignedMediumInt
-  GELDIG_TOT                                          DateTime?        @db.Date
-  SCORE                                               Int?             @db.UnsignedSmallInt
-  VERWIJDERD                                          Int              @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                  DateTime         @default(now()) @db.Timestamp(0)
-  ref_leden_oper_progressie_LID_IDToref_leden         RefLid           @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
-  ref_leden_oper_progressie_INSTRUCTEUR_IDToref_leden RefLid           @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")
-  ref_competenties                                    RefCompetentie   @relation(fields: [COMPETENTIE_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_3")
-  oper_progressie                                     OperProgressie?  @relation("oper_progressieTooper_progressie", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_progressie_ibfk_4")
-  other_oper_progressie                               OperProgressie[] @relation("oper_progressieTooper_progressie")
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van een factuur
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Verwijzing naar het lid die de competentie gehaald heeft, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID             Int       @db.UnsignedMediumInt
+  /// @description Verwijzing naar de competentie die het lid gehaald heeft
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  COMPETENTIE_ID     Int       @db.UnsignedMediumInt
+  /// @description Verwijzing naar de instructeur die de progressie heeft afgetekend, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INSTRUCTEUR_ID     Int       @db.UnsignedMediumInt
+  /// @description Omschrijving van de factuurregel
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN        String?   @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tijdstempel wanneer de progressie is afgetekend
+  INGEVOERD          DateTime? @default(now()) @db.DateTime(0)
+  /// @description TODO
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LINK_ID            Int?      @db.UnsignedMediumInt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tot wanneer is de progressie geldig (Bijv theorie certificaat)
+  GELDIG_TOT         DateTime? @db.Date
+  /// @description Hoe ver is de progessie gevorderd? (1=basis,5 =volledig)
+  /// @DtoUpdateOptional
+  /// @minimum 1
+  /// @maximum 5
+  SCORE              Int?      @db.UnsignedSmallInt
+  /// @DtoReadOnly
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  /// @DtoReadOnly
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+
+  RefLid             RefLid           @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
+  Instructeur        RefLid           @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")
+  RefCompetentie     RefCompetentie   @relation(fields: [COMPETENTIE_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_3")
+  // todo why has self relation?
+  ParentProgressie   OperProgressie?  @relation("oper_progressieTooper_progressie", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_progressie_ibfk_4")
+  ChildrenProgressie OperProgressie[] @relation("oper_progressieTooper_progressie")
 
   @@index([COMPETENTIE_ID], map: "COMPETENTIE_ID")
   @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
