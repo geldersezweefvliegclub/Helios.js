@@ -7,7 +7,7 @@ import {
   IsString,
 } from "class-validator";
 
-export class CreateOperDagrapportDto {
+export class CreateOperDagRapportDto {
   @ApiProperty({
     description: "Het unieke ID van een dagrapport",
     type: "integer",

@@ -1,4 +1,4 @@
-model OperDagrapport {
+model OperDagRapport {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van een dagrapport

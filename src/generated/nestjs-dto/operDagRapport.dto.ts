@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class OperDagrapportDto {
+export class OperDagRapportDto {
   @ApiProperty({
     description: "Het unieke ID van een dagrapport",
     type: "integer",

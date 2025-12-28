@@ -37,7 +37,7 @@ model RefType {
   Documenten             HeliosDocument[]
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  TypesGroep             RefTypeGroep     @relation(fields: [GROEP], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  TypesGroep             RefTypesGroep    @relation(fields: [GROEP], references: [ID], onUpdate: Cascade, onDelete: NoAction)
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   DaginfoVeld            OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
@@ -58,7 +58,7 @@ model RefType {
   DaginfoStartmethode2   OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Dagrapporten           OperDagrapport[]
+  Dagrapporten           OperDagRapport[]
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   Diensten               OperDienst[]

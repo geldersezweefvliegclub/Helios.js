@@ -200,7 +200,7 @@ model RefLid {
 
   Audit                Audit[]
   AanwezigLid          OperAanwezigLid[]
-  DagRapport           OperDagrapport[]
+  DagRapport           OperDagRapport[]
   Diensten             OperDienst[]      @relation("oper_diensten_LID_IDToref_leden")
   DienstenIngevoerd    OperDienst[]      @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden")
   Facturen             OperFactuur[]

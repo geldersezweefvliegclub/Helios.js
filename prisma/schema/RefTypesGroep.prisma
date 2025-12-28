@@ -1,4 +1,4 @@
-model RefTypeGroep {
+model RefTypesGroep {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID

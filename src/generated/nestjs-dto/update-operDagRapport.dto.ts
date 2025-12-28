@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
 
-export class UpdateOperDagrapportDto {
+export class UpdateOperDagRapportDto {
   @ApiProperty({
     description: "Het unieke ID van een dagrapport",
     type: "integer",

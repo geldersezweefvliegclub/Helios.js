@@ -5,7 +5,7 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, RefType} from '@prisma/client';
+import {Prisma} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
 import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
@@ -49,7 +49,7 @@ export class TypesService extends IHeliosService
             { ID: params.ID},
             { VERWIJDERD: params.VERWIJDERD ?? false},
             { ID: { in: params.IDs }},
-            { TYPEGROEP_ID: params.GROEP},
+            { GROEP: params.GROEP},
          ]
       }
       let count;

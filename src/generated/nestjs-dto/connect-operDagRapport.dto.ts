@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsNotEmpty } from "class-validator";
 
-export class ConnectOperDagrapportDto {
+export class ConnectOperDagRapportDto {
   @ApiProperty({
     description: "Het unieke ID van een dagrapport",
     type: "integer",

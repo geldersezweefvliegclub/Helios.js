@@ -56,10 +56,10 @@ export class TypesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Types.AddObject');
 
-      // remove TYPEGROEP_ID from the data
+      // remove GROEP from the data
       // and add it to the TypesGroep property
-      const { TYPEGROEP_ID, ...insertData} = data;
-      (insertData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
+      const { GROEP, ...insertData} = data;
+      (insertData as Prisma.RefTypeCreateInput).TypesGroep = GROEP ? { connect: {ID: GROEP }} : undefined
 
       return await this.typesService.AddObject(insertData as Prisma.RefTypeCreateInput);
    }
@@ -71,10 +71,10 @@ export class TypesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Types.UpdateObject');
 
-      // remove TYPEGROEP_ID from the data
+      // remove GROEP from the data
       // and add it to the TypesGroep property
-      const { TYPEGROEP_ID, ...updateData} = data;
-      (updateData as Prisma.RefTypeCreateInput).TypesGroep = (TYPEGROEP_ID !== undefined) ? { connect: {ID: TYPEGROEP_ID }} : undefined
+      const { GROEP, ...updateData} = data;
+      (updateData as Prisma.RefTypeCreateInput).TypesGroep = (GROEP !== undefined) ? { connect: {ID: GROEP }} : undefined
 
       return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
    }
