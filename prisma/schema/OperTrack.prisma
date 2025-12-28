@@ -36,7 +36,7 @@ model OperTrack {
   VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime  @updatedAt
 
   Lid         RefLid          @relation("oper_tracks_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_tracks_ibfk_1")
   Instructeur RefLid?         @relation("oper_tracks_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_2")

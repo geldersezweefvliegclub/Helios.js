@@ -29,21 +29,21 @@ model HeliosDocument {
   /// @description Lege regel om paragraaf te kunnen maken
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LEGE_REGEL         Int      @default(0) @db.UnsignedTinyInt
+  LEGE_REGEL         Boolean  @default(false) @db.UnsignedTinyInt
   /// @description Plaats een horizontale lijn
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ONDERSTREEP        Int      @default(0) @db.UnsignedTinyInt
+  ONDERSTREEP        Boolean  @default(false) @db.UnsignedTinyInt
   /// @description Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BOVEN              Int      @default(0) @db.UnsignedTinyInt
+  BOVEN              Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   DocumentGroep      RefType  @relation(fields: [GROEP_ID], references: [ID], onUpdate: Restrict, map: "documenten_ibfk_1")

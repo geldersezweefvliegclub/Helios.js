@@ -38,7 +38,7 @@ model OperRooster {
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   VERWIJDERD         Int          @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING DateTime     @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime     @updatedAt
   Diensten           OperDienst[]
 
   @@index([DATUM], map: "DATUM")

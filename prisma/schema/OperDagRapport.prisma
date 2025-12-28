@@ -47,7 +47,7 @@ model OperDagrapport {
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   Veld               RefType  @relation(fields: [VELD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_1")

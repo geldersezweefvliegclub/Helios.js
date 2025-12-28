@@ -36,7 +36,7 @@ model OperDienst {
   AFWEZIG            Int?        @db.UnsignedTinyInt
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Int         @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING DateTime    @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime    @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   TypeDienst         RefType?    @relation(fields: [TYPE_DIENST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_diensten_ibfk_1")

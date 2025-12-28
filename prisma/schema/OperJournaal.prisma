@@ -54,7 +54,7 @@ model OperJournaal {
   VERWIJDERD         Int           @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime      @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime      @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   Rollend            RefType?      @relation("oper_journaal_ROLLEND_IDToref_types", fields: [ROLLEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_1")

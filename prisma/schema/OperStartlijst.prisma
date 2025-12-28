@@ -20,7 +20,7 @@ model OperStartlijst {
   CHECKSTART                                                    Int           @default(0) @db.UnsignedTinyInt
   INSTRUCTIEVLUCHT                                              Int           @default(0) @db.UnsignedTinyInt
   VERWIJDERD                                                    Int           @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                            DateTime      @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING                                            DateTime      @updatedAt
   ref_vliegtuigen_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
   ref_types_oper_startlijst_STARTMETHODE_IDToref_types          RefType?      @relation("oper_startlijst_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_2")
   ref_leden_oper_startlijst_VLIEGER_IDToref_leden               RefLid?       @relation("oper_startlijst_VLIEGER_IDToref_leden", fields: [VLIEGER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_3")

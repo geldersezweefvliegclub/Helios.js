@@ -4,7 +4,7 @@ model SysSync {
   STARTLIJST_ID      Int?     @db.UnsignedMediumInt
   VLIEGTUIG_ID       Int?     @db.UnsignedMediumInt
   DATA               String?  @db.Text
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
 
   @@map("sys_sync")
 }

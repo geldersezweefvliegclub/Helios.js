@@ -193,7 +193,7 @@ model RefLid {
   VERWIJDERD           Int       @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING   DateTime  @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING   DateTime  @updatedAt
   /// @description Sleutelnummer om te kunnen tanken
   /// @maxLength 25
   BRANDSTOF_PAS        String?   @db.VarChar(25)

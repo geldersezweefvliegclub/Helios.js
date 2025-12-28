@@ -27,11 +27,11 @@ model Audit {
   RESULTAAT  String? @db.Text
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Int     @default(0) @db.UnsignedTinyInt
+  VERWIJDERD Boolean @default(false) @db.UnsignedTinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly

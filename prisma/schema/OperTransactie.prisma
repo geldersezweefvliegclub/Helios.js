@@ -52,7 +52,7 @@ model OperTransactie {
   VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime  @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   RefLid             RefLid    @relation("oper_transacties_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_transacties_ibfk_1")

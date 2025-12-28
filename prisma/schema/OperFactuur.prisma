@@ -36,7 +36,7 @@ model OperFactuur {
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
   RefLid             RefLid?  @relation(fields: [LID_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_facturen_ibfk_1")
 
   @@index([LID_ID], map: "LID_ID")

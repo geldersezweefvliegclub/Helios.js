@@ -45,7 +45,7 @@ model OperProgressie {
   VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime  @updatedAt
 
   RefLid             RefLid           @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
   Instructeur        RefLid           @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")

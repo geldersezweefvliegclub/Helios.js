@@ -41,7 +41,7 @@ model OperAanwezigVliegtuig {
   VERWIJDERD         Int      @default(0) @db.TinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
 
   Vliegtuig RefVliegtuig @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_vliegtuigen_ibfk_1")
   /// @DtoReadOnly

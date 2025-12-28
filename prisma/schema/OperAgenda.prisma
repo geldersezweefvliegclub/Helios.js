@@ -19,13 +19,13 @@ model OperAgenda {
   /// @description Is het agenda-item openbaar
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  OPENBAAR           Int       @default(1) @db.UnsignedTinyInt
+  OPENBAAR           Boolean   @default(true) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean   @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime  @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime  @updatedAt
 
   @@index([DATUM], map: "DATUM")
   @@map("oper_agenda")

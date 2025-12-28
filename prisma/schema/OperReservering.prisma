@@ -34,7 +34,7 @@ model OperReservering {
   VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
   /// @description Tijdstempel met de laatste wijziging van het record
   /// @DtoReadOnly
-  LAATSTE_AANPASSING DateTime @default(now()) @db.Timestamp(0)
+  LAATSTE_AANPASSING DateTime @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   RefLid             RefLid   @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_1")
