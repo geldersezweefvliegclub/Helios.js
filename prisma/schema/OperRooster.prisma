@@ -8,11 +8,11 @@ model OperRooster {
   /// @description Is het een DDWV bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV               Int          @default(0) @db.UnsignedTinyInt
+  DDWV               Boolean      @default(false) @db.UnsignedTinyInt
   /// @description Is het een Club bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUB_BEDRIJF       Int          @default(1) @db.UnsignedTinyInt
+  CLUB_BEDRIJF       Boolean      @default(true) @db.UnsignedTinyInt
   /// @description Voeren we winterwerk uit op deze datum?
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -37,7 +37,7 @@ model OperRooster {
   /// @description Is het record gemarkeerd als verwijderd
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  VERWIJDERD         Int          @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean      @default(false) @db.UnsignedTinyInt
   LAATSTE_AANPASSING DateTime     @updatedAt
   Diensten           OperDienst[]
 

@@ -98,10 +98,9 @@ export class OperDagInfoDto {
   DDWV: boolean;
   @ApiProperty({
     description: "Is het een clubbedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  CLUB_BEDRIJF: number;
+  CLUB_BEDRIJF: boolean;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

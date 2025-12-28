@@ -68,7 +68,7 @@ model OperDagInfo {
   /// @description Is het een clubbedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUB_BEDRIJF       Int      @default(0) @db.UnsignedTinyInt
+  CLUB_BEDRIJF       Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt

@@ -33,7 +33,7 @@ model OperFactuur {
   GEFACTUREERD       Decimal? @db.Decimal(50, 0)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt

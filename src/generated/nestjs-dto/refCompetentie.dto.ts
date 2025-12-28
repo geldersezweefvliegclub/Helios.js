@@ -53,10 +53,9 @@ export class RefCompetentieDto {
   DOCUMENTATIE: string | null;
   @ApiProperty({
     description: "Is deze competentie beperkt geldig",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  GELDIGHEID: number;
+  GELDIGHEID: boolean;
   @ApiProperty({
     description: "Wordt score 1-5 gegeven voor deze competentie",
     type: "integer",
@@ -65,10 +64,9 @@ export class RefCompetentieDto {
   SCORE: number;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

@@ -152,12 +152,11 @@ export class UpdateOperDagInfoDto {
   DDWV?: boolean;
   @ApiProperty({
     description: "Is het een clubbedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  CLUB_BEDRIJF?: number;
+  @IsBoolean()
+  CLUB_BEDRIJF?: boolean;
 }

@@ -44,10 +44,9 @@ export class RefTypeDto {
   @ApiProperty({
     description:
       "Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  READ_ONLY: number;
+  READ_ONLY: boolean;
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
     type: "string",
@@ -64,10 +63,9 @@ export class RefTypeDto {
   EENHEDEN: Prisma.Decimal | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

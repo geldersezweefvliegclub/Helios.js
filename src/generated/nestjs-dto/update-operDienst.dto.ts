@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional } from "class-validator";
+import { IsBoolean, IsDateString, IsInt, IsOptional } from "class-validator";
 
 export class UpdateOperDienstDto {
   @ApiProperty({
@@ -64,22 +64,20 @@ export class UpdateOperDienstDto {
   INGEVOERD_DOOR_ID?: number | null;
   @ApiProperty({
     description: "True als het lid aanwezig was tijdens deze dienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsInt()
-  AANWEZIG?: number | null;
+  @IsBoolean()
+  AANWEZIG?: boolean | null;
   @ApiProperty({
     description: "True als het lid afwezig was tijdens deze dienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsInt()
-  AFWEZIG?: number | null;
+  @IsBoolean()
+  AFWEZIG?: boolean | null;
 }

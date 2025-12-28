@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateOperReserveringDto {
   @ApiProperty({
@@ -52,14 +58,13 @@ export class CreateOperReserveringDto {
   @ApiProperty({
     description:
       "Is kist geboekt voor een langere periode. Toekenning door beheerder",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  IS_GEBOEKT?: number;
+  @IsBoolean()
+  IS_GEBOEKT?: boolean;
   @ApiProperty({
     description: "Eventuele opmerkingen bij de reservering",
     type: "string",

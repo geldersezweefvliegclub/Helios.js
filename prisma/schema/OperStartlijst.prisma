@@ -1,34 +1,58 @@
 model OperStartlijst {
-  ID                                                            Int           @id @default(autoincrement()) @db.UnsignedMediumInt
-  DATUM                                                         DateTime      @db.Date
-  DAGNUMMER                                                     Int           @default(0) @db.UnsignedTinyInt
-  VLIEGTUIG_ID                                                  Int           @db.UnsignedMediumInt
-  STARTTIJD                                                     DateTime?     @db.Time(0)
-  LANDINGSTIJD                                                  DateTime?     @db.Time(0)
-  STARTMETHODE_ID                                               Int?          @db.UnsignedMediumInt
-  VLIEGER_ID                                                    Int?          @db.UnsignedMediumInt
-  INZITTENDE_ID                                                 Int?          @db.UnsignedMediumInt
-  VLIEGERNAAM                                                   String?       @db.VarChar(50)
-  INZITTENDENAAM                                                String?       @db.VarChar(50)
-  SLEEPKIST_ID                                                  Int?          @db.UnsignedMediumInt
-  SLEEP_HOOGTE                                                  Int?          @db.UnsignedSmallInt
-  VELD_ID                                                       Int?          @db.UnsignedMediumInt
-  BAAN_ID                                                       Int?          @db.UnsignedMediumInt
-  OPMERKINGEN                                                   String?       @db.Text
-  EXTERNAL_ID                                                   String?       @db.Text
-  PAX                                                           Int           @default(0) @db.UnsignedTinyInt
-  CHECKSTART                                                    Int           @default(0) @db.UnsignedTinyInt
-  INSTRUCTIEVLUCHT                                              Int           @default(0) @db.UnsignedTinyInt
-  VERWIJDERD                                                    Int           @default(0) @db.UnsignedTinyInt
-  LAATSTE_AANPASSING                                            DateTime      @updatedAt
-  ref_vliegtuigen_oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
-  ref_types_oper_startlijst_STARTMETHODE_IDToref_types          RefType?      @relation("oper_startlijst_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_2")
-  ref_leden_oper_startlijst_VLIEGER_IDToref_leden               RefLid?       @relation("oper_startlijst_VLIEGER_IDToref_leden", fields: [VLIEGER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_3")
-  ref_leden_oper_startlijst_INZITTENDE_IDToref_leden            RefLid?       @relation("oper_startlijst_INZITTENDE_IDToref_leden", fields: [INZITTENDE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_4")
-  ref_vliegtuigen_oper_startlijst_SLEEPKIST_IDToref_vliegtuigen RefVliegtuig? @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen", fields: [SLEEPKIST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_5")
-  ref_types_oper_startlijst_VELD_IDToref_types                  RefType?      @relation("oper_startlijst_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_6")
-  ref_types_oper_startlijst_BAAN_IDToref_types                  RefType?      @relation("oper_startlijst_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_7")
-  oper_tracks                                                   OperTrack[]
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Het unieke ID van het startlijst record
+  ID                 Int           @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description De datum van de vlucht
+  DATUM              DateTime      @db.Date
+  /// @description Het volgnummer van de vlucht op die dag. Begint bij 1 voor de eerste vlucht van die dag.
+  DAGNUMMER          Boolean       @default(false) @db.UnsignedTinyInt
+  /// @description Het vliegtuig dat gebruikt is voor de vlucht
+  VLIEGTUIG_ID       Int           @db.UnsignedMediumInt
+  /// @description De starttijd van de vlucht
+  STARTTIJD          DateTime?     @db.Time(0)
+  /// @description De landingtijd van de vlucht
+  LANDINGSTIJD       DateTime?     @db.Time(0)
+  /// @description De startmethode die gebruikt is voor de vlucht
+  STARTMETHODE_ID    Int?          @db.UnsignedMediumInt
+  /// @description De piloot die de vlucht heeft uitgevoerd
+  VLIEGER_ID         Int?          @db.UnsignedMediumInt
+  /// @description De inzittende die meegevlogen heeft
+  INZITTENDE_ID      Int?          @db.UnsignedMediumInt
+  /// @description Naam van de vlieger op het moment van de vlucht (voor historische doeleinden)
+  VLIEGERNAAM        String?       @db.VarChar(50)
+  /// @description Naam van de inzittende op het moment van de vlucht (voor historische doeleinden)
+  INZITTENDENAAM     String?       @db.VarChar(50)
+  /// @description Het sleepvliegtuig dat gebruikt is voor de vlucht
+  SLEEPKIST_ID       Int?          @db.UnsignedMediumInt
+  /// @description De hoogte waarop is losgekoppeld tijdens de sleep
+  SLEEP_HOOGTE       Int?          @db.UnsignedSmallInt
+  /// @description Het veld van waaruit is gestart
+  VELD_ID            Int?          @db.UnsignedMediumInt
+  /// @description De baan waarop is gestart
+  BAAN_ID            Int?          @db.UnsignedMediumInt
+  /// @description Eventuele opmerkingen bij de vlucht
+  OPMERKINGEN        String?       @db.Text
+  /// @description Externe referentie ID voor koppelingen met externe systemen
+  EXTERNAL_ID        String?       @db.Text
+  /// @description Was de vlucht een passagiersvlucht
+  PAX                Boolean       @default(false) @db.UnsignedTinyInt
+  /// @description Was de vlucht een check-start (eerste vlucht van het seizoen voor de vlieger)
+  CHECKSTART         Boolean       @default(false) @db.UnsignedTinyInt
+  /// @description Was de vlucht een instructievlucht
+  INSTRUCTIEVLUCHT   Boolean       @default(false) @db.UnsignedTinyInt
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD         Boolean       @default(false) @db.UnsignedTinyInt
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime      @updatedAt
+  Vliegtuig          RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
+  Startmethode       RefType?      @relation("oper_startlijst_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_2")
+  Vlieger            RefLid?       @relation("oper_startlijst_VLIEGER_IDToref_leden", fields: [VLIEGER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_3")
+  Inzittende         RefLid?       @relation("oper_startlijst_INZITTENDE_IDToref_leden", fields: [INZITTENDE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_4")
+  Sleepkist          RefVliegtuig? @relation("oper_startlijst_SLEEPKIST_IDToref_vliegtuigen", fields: [SLEEPKIST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_5")
+  Veld               RefType?      @relation("oper_startlijst_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_6")
+  Baan               RefType?      @relation("oper_startlijst_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_startlijst_ibfk_7")
+  Tracks             OperTrack[]
 
   @@index([BAAN_ID], map: "BAAN_ID")
   @@index([DATUM], map: "DATUM")

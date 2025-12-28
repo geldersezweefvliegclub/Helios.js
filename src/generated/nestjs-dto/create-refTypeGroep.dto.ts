@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateRefTypeGroepDto {
   @ApiProperty({
@@ -54,23 +60,21 @@ export class CreateRefTypeGroepDto {
   @ApiProperty({
     description:
       "Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  READ_ONLY?: number;
+  @IsBoolean()
+  READ_ONLY?: boolean;
   @ApiProperty({
     description:
       "De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  BEDRAG_EENHEDEN?: number;
+  @IsBoolean()
+  BEDRAG_EENHEDEN?: boolean;
 }

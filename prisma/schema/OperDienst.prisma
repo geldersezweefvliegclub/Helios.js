@@ -28,14 +28,14 @@ model OperDienst {
   /// @DtoUpdateOptional
   INGEVOERD_DOOR_ID  Int?        @db.UnsignedMediumInt
   /// @description True als het lid aanwezig was tijdens deze dienst
-  AANWEZIG           Int?        @db.UnsignedTinyInt
+  AANWEZIG           Boolean?    @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is de DDWV dienst uitbetaald?
-  UITBETAALD         Int         @default(0) @db.UnsignedTinyInt
+  UITBETAALD         Boolean     @default(false) @db.UnsignedTinyInt
   /// @description True als het lid afwezig was tijdens deze dienst
-  AFWEZIG            Int?        @db.UnsignedTinyInt
+  AFWEZIG            Boolean?    @db.UnsignedTinyInt
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int         @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean     @default(false) @db.UnsignedTinyInt
   LAATSTE_AANPASSING DateTime    @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly

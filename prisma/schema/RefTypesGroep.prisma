@@ -18,14 +18,14 @@ model RefTypeGroep {
   /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY          Int      @default(0) @db.UnsignedTinyInt
+  READ_ONLY          Boolean  @default(false) @db.UnsignedTinyInt
   /// @description De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BEDRAG_EENHEDEN    Int      @default(0) @db.UnsignedTinyInt
+  BEDRAG_EENHEDEN    Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int      @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt

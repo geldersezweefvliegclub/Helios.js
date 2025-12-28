@@ -32,10 +32,9 @@ export class RefVliegtuigDto {
   ZITPLAATSEN: number;
   @ApiProperty({
     description: "Is het vliegtuig eigendom van de club",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  CLUBKIST: number;
+  CLUBKIST: boolean;
   @ApiProperty({
     description:
       "Flarmcode van het vliegtuig. Indien meerdere codes, dan CSV met comma's als scheidingsteken",
@@ -53,22 +52,19 @@ export class RefVliegtuigDto {
   TYPE_ID: number | null;
   @ApiProperty({
     description: "Is het een Touring Motor Glider (TMG)",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  TMG: number;
+  TMG: boolean;
   @ApiProperty({
     description: "Kan het vliegtuig zelfstarten",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  ZELFSTART: number;
+  ZELFSTART: boolean;
   @ApiProperty({
     description: "Is het een motorvliegtuig die sleept",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  SLEEPKIST: number;
+  SLEEPKIST: boolean;
   @ApiProperty({
     description: "Sorteer volgorde",
     minimum: 0,
@@ -79,16 +75,14 @@ export class RefVliegtuigDto {
   VOLGORDE: number | null;
   @ApiProperty({
     description: "Is het vliegtuig inzetbaar in het vliegbedrijf",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  INZETBAAR: number;
+  INZETBAAR: boolean;
   @ApiProperty({
     description: "Is het vliegtuig een instructievliegtuig",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  TRAINER: number;
+  TRAINER: boolean;
   @ApiProperty({
     description: "De URL naar de handleiding van het vliegtuig",
     maxLength: 1024,
@@ -104,10 +98,9 @@ export class RefVliegtuigDto {
   OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

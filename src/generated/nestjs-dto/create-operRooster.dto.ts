@@ -29,24 +29,22 @@ export class CreateOperRoosterDto {
   DATUM: Date;
   @ApiProperty({
     description: "Is het een DDWV bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  DDWV?: number;
+  @IsBoolean()
+  DDWV?: boolean;
   @ApiProperty({
     description: "Is het een Club bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
-    default: 1,
+    type: "boolean",
+    default: true,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  CLUB_BEDRIJF?: number;
+  @IsBoolean()
+  CLUB_BEDRIJF?: boolean;
   @ApiProperty({
     description: "Voeren we winterwerk uit op deze datum?",
     type: "boolean",

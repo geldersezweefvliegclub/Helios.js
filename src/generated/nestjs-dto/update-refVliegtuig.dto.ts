@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsInt, IsOptional, IsString } from "class-validator";
 
 export class UpdateRefVliegtuigDto {
   @ApiProperty({
@@ -47,14 +47,13 @@ export class UpdateRefVliegtuigDto {
   ZITPLAATSEN?: number;
   @ApiProperty({
     description: "Is het vliegtuig eigendom van de club",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  CLUBKIST?: number;
+  @IsBoolean()
+  CLUBKIST?: boolean;
   @ApiProperty({
     description:
       "Flarmcode van het vliegtuig. Indien meerdere codes, dan CSV met comma's als scheidingsteken",
@@ -78,34 +77,31 @@ export class UpdateRefVliegtuigDto {
   TYPE_ID?: number | null;
   @ApiProperty({
     description: "Is het een Touring Motor Glider (TMG)",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  TMG?: number;
+  @IsBoolean()
+  TMG?: boolean;
   @ApiProperty({
     description: "Kan het vliegtuig zelfstarten",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  ZELFSTART?: number;
+  @IsBoolean()
+  ZELFSTART?: boolean;
   @ApiProperty({
     description: "Is het een motorvliegtuig die sleept",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  SLEEPKIST?: number;
+  @IsBoolean()
+  SLEEPKIST?: boolean;
   @ApiProperty({
     description: "Sorteer volgorde",
     minimum: 0,
@@ -119,24 +115,22 @@ export class UpdateRefVliegtuigDto {
   VOLGORDE?: number | null;
   @ApiProperty({
     description: "Is het vliegtuig inzetbaar in het vliegbedrijf",
-    type: "integer",
-    format: "int32",
-    default: 1,
+    type: "boolean",
+    default: true,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  INZETBAAR?: number;
+  @IsBoolean()
+  INZETBAAR?: boolean;
   @ApiProperty({
     description: "Is het vliegtuig een instructievliegtuig",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  TRAINER?: number;
+  @IsBoolean()
+  TRAINER?: boolean;
   @ApiProperty({
     description: "De URL naar de handleiding van het vliegtuig",
     maxLength: 1024,

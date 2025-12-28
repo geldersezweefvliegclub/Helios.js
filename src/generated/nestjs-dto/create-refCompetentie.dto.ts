@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateRefCompetentieDto {
   @ApiProperty({
@@ -75,12 +81,11 @@ export class CreateRefCompetentieDto {
   DOCUMENTATIE?: string | null;
   @ApiProperty({
     description: "Is deze competentie beperkt geldig",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  GELDIGHEID?: number;
+  @IsBoolean()
+  GELDIGHEID?: boolean;
 }

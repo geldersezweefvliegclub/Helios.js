@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDecimal,
   IsInt,
   IsNotEmpty,
@@ -68,14 +69,13 @@ export class CreateRefTypeDto {
   @ApiProperty({
     description:
       "Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  READ_ONLY?: number;
+  @IsBoolean()
+  READ_ONLY?: boolean;
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
     type: "string",

@@ -35,10 +35,9 @@ export class OperReserveringDto {
   @ApiProperty({
     description:
       "Is kist geboekt voor een langere periode. Toekenning door beheerder",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  IS_GEBOEKT: number;
+  IS_GEBOEKT: boolean;
   @ApiProperty({
     description: "Eventuele opmerkingen bij de reservering",
     type: "string",
@@ -47,10 +46,9 @@ export class OperReserveringDto {
   OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

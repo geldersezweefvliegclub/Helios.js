@@ -15,16 +15,14 @@ export class OperRoosterDto {
   DATUM: Date;
   @ApiProperty({
     description: "Is het een DDWV bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  DDWV: number;
+  DDWV: boolean;
   @ApiProperty({
     description: "Is het een Club bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  CLUB_BEDRIJF: number;
+  CLUB_BEDRIJF: boolean;
   @ApiProperty({
     description: "Voeren we winterwerk uit op deze datum?",
     type: "boolean",
@@ -56,10 +54,9 @@ export class OperRoosterDto {
   OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     type: "string",
     format: "date-time",

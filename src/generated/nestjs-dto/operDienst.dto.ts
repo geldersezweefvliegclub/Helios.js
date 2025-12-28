@@ -44,30 +44,26 @@ export class OperDienstDto {
   INGEVOERD_DOOR_ID: number | null;
   @ApiProperty({
     description: "True als het lid aanwezig was tijdens deze dienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
     nullable: true,
   })
-  AANWEZIG: number | null;
+  AANWEZIG: boolean | null;
   @ApiProperty({
     description: "Is de DDWV dienst uitbetaald?",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  UITBETAALD: number;
+  UITBETAALD: boolean;
   @ApiProperty({
     description: "True als het lid afwezig was tijdens deze dienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
     nullable: true,
   })
-  AFWEZIG: number | null;
+  AFWEZIG: boolean | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     type: "string",
     format: "date-time",
