@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsInt, IsOptional, IsString } from "class-validator";
 
 export class UpdateHeliosDocumentDto {
   @ApiProperty({
@@ -63,33 +63,30 @@ export class UpdateHeliosDocumentDto {
   LID_ID?: number | null;
   @ApiProperty({
     description: "Lege regel om paragraaf te kunnen maken",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  LEGE_REGEL?: number;
+  @IsBoolean()
+  LEGE_REGEL?: boolean;
   @ApiProperty({
     description: "Plaats een horizontale lijn",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  ONDERSTREEP?: number;
+  @IsBoolean()
+  ONDERSTREEP?: boolean;
   @ApiProperty({
     description:
       "Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  BOVEN?: number;
+  @IsBoolean()
+  BOVEN?: boolean;
 }

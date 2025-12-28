@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsNumber,
@@ -181,165 +182,149 @@ export class CreateRefLidDto {
   BUDDY_ID2?: number | null;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierdienst",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  LIERIST?: number;
+  @IsBoolean()
+  LIERIST?: boolean;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierist in opleiding",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  LIERIST_IO?: number;
+  @IsBoolean()
+  LIERIST_IO?: boolean;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor startleiderdienst",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  STARTLEIDER?: number;
+  @IsBoolean()
+  STARTLEIDER?: boolean;
   @ApiProperty({
     description: "Is het lid een instructeur",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  INSTRUCTEUR?: number;
+  @IsBoolean()
+  INSTRUCTEUR?: boolean;
   @ApiProperty({
     description: "Zit het lid in de chef instructeurs groep",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  CIMT?: number;
+  @IsBoolean()
+  CIMT?: boolean;
   @ApiProperty({
     description: "Helpt het lid met doordeweeks vliegen als kader",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  DDWV_CREW?: number;
+  @IsBoolean()
+  DDWV_CREW?: boolean;
   @ApiProperty({
     description: "Is het lid beheerder van de DDWV operatie",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  DDWV_BEHEERDER?: number;
+  @IsBoolean()
+  DDWV_BEHEERDER?: boolean;
   @ApiProperty({
     description: "Is het lid applicatie beheerder",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  BEHEERDER?: number;
+  @IsBoolean()
+  BEHEERDER?: boolean;
   @ApiProperty({
     description: "Account wordt alleen gebruikt voor tijdschrijven",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  STARTTOREN?: number;
+  @IsBoolean()
+  STARTTOREN?: boolean;
   @ApiProperty({
     description: "Is het lid een roostermaaker",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  ROOSTER?: number;
+  @IsBoolean()
+  ROOSTER?: boolean;
   @ApiProperty({
     description: "Is het lid een sleepvlieger",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  SLEEPVLIEGER?: number;
+  @IsBoolean()
+  SLEEPVLIEGER?: boolean;
   @ApiProperty({
     description:
       "Is het lid een rapporteur om overzicht te maken van de vliegdagen",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  RAPPORTEUR?: number;
+  @IsBoolean()
+  RAPPORTEUR?: boolean;
   @ApiProperty({
     description: "Vliegt het lid gasten rond",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  GASTENVLIEGER?: number;
+  @IsBoolean()
+  GASTENVLIEGER?: boolean;
   @ApiProperty({
     description: "Is het lid een technicus",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  TECHNICUS?: number;
+  @IsBoolean()
+  TECHNICUS?: boolean;
   @ApiProperty({
     description: "Clubblad wordt per post verstuurd",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  CLUBBLAD_POST?: number;
+  @IsBoolean()
+  CLUBBLAD_POST?: boolean;
   @ApiProperty({
     description: "Zelfstarts afbetaald voor lopende seizoen",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  ZELFSTART_ABONNEMENT?: number;
+  @IsBoolean()
+  ZELFSTART_ABONNEMENT?: boolean;
   @ApiProperty({
     description: "Geldigheid medische keuring",
     type: "string",
@@ -392,14 +377,13 @@ export class CreateRefLidDto {
   SECRET?: string | null;
   @ApiProperty({
     description: "Is twee traps authenticatie ingeschakeld",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  AUTH?: number;
+  @IsBoolean()
+  AUTH?: boolean;
   @ApiProperty({
     description: "URL naar de avatar van het lid",
     type: "string",
@@ -411,35 +395,32 @@ export class CreateRefLidDto {
   AVATAR?: string | null;
   @ApiProperty({
     description: "Lid mag niet meer starten, maar is nog wel lid",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  STARTVERBOD?: number;
+  @IsBoolean()
+  STARTVERBOD?: boolean;
   @ApiProperty({
     description:
       "Lid heeft lidmaatschap voor volgend jaar opgezegd, maar is nog wel lid",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  OPGEZEGD?: number;
+  @IsBoolean()
+  OPGEZEGD?: boolean;
   @ApiProperty({
     description: "Privacy instelling",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  PRIVACY?: number;
+  @IsBoolean()
+  PRIVACY?: boolean;
   @ApiProperty({
     description: "Sleutelnummer van Terlet",
     maxLength: 25,
@@ -492,14 +473,13 @@ export class CreateRefLidDto {
   BREVET_NUMMER?: string | null;
   @ApiProperty({
     description: "Daginfo per email ontvangen",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  EMAIL_DAGINFO?: number;
+  @IsBoolean()
+  EMAIL_DAGINFO?: boolean;
   @ApiProperty({
     description: "Opmerkingen van het lid",
     type: "string",

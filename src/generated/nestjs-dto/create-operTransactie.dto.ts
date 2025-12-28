@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDateString,
   IsDecimal,
   IsInt,
@@ -62,14 +63,13 @@ export class CreateOperTransactieDto {
   TYPE_ID?: number;
   @ApiProperty({
     description: "Gaat het hier om een DDWV transactie?",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  DDWV?: number;
+  @IsBoolean()
+  DDWV?: boolean;
   @ApiProperty({
     description: "Het bedrag wat gefactureerd wordt per eenheid",
     type: "string",

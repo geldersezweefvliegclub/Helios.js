@@ -128,101 +128,85 @@ export class RefLidDto {
   BUDDY_ID2: number | null;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierdienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  LIERIST: number;
+  LIERIST: boolean;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor lierist in opleiding",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  LIERIST_IO: number;
+  LIERIST_IO: boolean;
   @ApiProperty({
     description: "Kan het lid worden ingedeeld voor startleiderdienst",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  STARTLEIDER: number;
+  STARTLEIDER: boolean;
   @ApiProperty({
     description: "Is het lid een instructeur",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  INSTRUCTEUR: number;
+  INSTRUCTEUR: boolean;
   @ApiProperty({
     description: "Zit het lid in de chef instructeurs groep",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  CIMT: number;
+  CIMT: boolean;
   @ApiProperty({
     description: "Helpt het lid met doordeweeks vliegen als kader",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  DDWV_CREW: number;
+  DDWV_CREW: boolean;
   @ApiProperty({
     description: "Is het lid beheerder van de DDWV operatie",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  DDWV_BEHEERDER: number;
+  DDWV_BEHEERDER: boolean;
   @ApiProperty({
     description: "Is het lid applicatie beheerder",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  BEHEERDER: number;
+  BEHEERDER: boolean;
   @ApiProperty({
     description: "Account wordt alleen gebruikt voor tijdschrijven",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  STARTTOREN: number;
+  STARTTOREN: boolean;
   @ApiProperty({
     description: "Is het lid een roostermaaker",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  ROOSTER: number;
+  ROOSTER: boolean;
   @ApiProperty({
     description: "Is het lid een sleepvlieger",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  SLEEPVLIEGER: number;
+  SLEEPVLIEGER: boolean;
   @ApiProperty({
     description:
       "Is het lid een rapporteur om overzicht te maken van de vliegdagen",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  RAPPORTEUR: number;
+  RAPPORTEUR: boolean;
   @ApiProperty({
     description: "Vliegt het lid gasten rond",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  GASTENVLIEGER: number;
+  GASTENVLIEGER: boolean;
   @ApiProperty({
     description: "Is het lid een technicus",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  TECHNICUS: number;
+  TECHNICUS: boolean;
   @ApiProperty({
     description: "Clubblad wordt per post verstuurd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  CLUBBLAD_POST: number;
+  CLUBBLAD_POST: boolean;
   @ApiProperty({
     description: "Zelfstarts afbetaald voor lopende seizoen",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  ZELFSTART_ABONNEMENT: number;
+  ZELFSTART_ABONNEMENT: boolean;
   @ApiProperty({
     description: "Geldigheid medische keuring",
     type: "string",
@@ -260,10 +244,9 @@ export class RefLidDto {
   SECRET: string | null;
   @ApiProperty({
     description: "Is twee traps authenticatie ingeschakeld",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  AUTH: number;
+  AUTH: boolean;
   @ApiProperty({
     description: "URL naar de avatar van het lid",
     type: "string",
@@ -272,23 +255,20 @@ export class RefLidDto {
   AVATAR: string | null;
   @ApiProperty({
     description: "Lid mag niet meer starten, maar is nog wel lid",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  STARTVERBOD: number;
+  STARTVERBOD: boolean;
   @ApiProperty({
     description:
       "Lid heeft lidmaatschap voor volgend jaar opgezegd, maar is nog wel lid",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  OPGEZEGD: number;
+  OPGEZEGD: boolean;
   @ApiProperty({
     description: "Privacy instelling",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  PRIVACY: number;
+  PRIVACY: boolean;
   @ApiProperty({
     description: "Sleutelnummer van Terlet",
     maxLength: 25,
@@ -326,10 +306,9 @@ export class RefLidDto {
   BREVET_NUMMER: string | null;
   @ApiProperty({
     description: "Daginfo per email ontvangen",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  EMAIL_DAGINFO: number;
+  EMAIL_DAGINFO: boolean;
   @ApiProperty({
     description: "Opmerkingen van het lid",
     type: "string",
@@ -344,10 +323,9 @@ export class RefLidDto {
   TEGOED: number;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

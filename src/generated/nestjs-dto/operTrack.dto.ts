@@ -52,10 +52,9 @@ export class OperTrackDto {
   LINK_ID: number | null;
   @ApiProperty({
     description: "Is de track gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

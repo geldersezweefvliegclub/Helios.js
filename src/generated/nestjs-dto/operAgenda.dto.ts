@@ -36,16 +36,14 @@ export class OperAgendaDto {
   OMSCHRIJVING: string | null;
   @ApiProperty({
     description: "Is het agenda-item openbaar",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  OPENBAAR: number;
+  OPENBAAR: boolean;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

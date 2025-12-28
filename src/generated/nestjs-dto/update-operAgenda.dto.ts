@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class UpdateOperAgendaDto {
   @ApiProperty({
@@ -53,12 +59,11 @@ export class UpdateOperAgendaDto {
   OMSCHRIJVING?: string | null;
   @ApiProperty({
     description: "Is het agenda-item openbaar",
-    type: "integer",
-    format: "int32",
-    default: 1,
+    type: "boolean",
+    default: true,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  OPENBAAR?: number;
+  @IsBoolean()
+  OPENBAAR?: boolean;
 }

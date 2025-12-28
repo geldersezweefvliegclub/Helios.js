@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsNotEmpty,
@@ -48,14 +49,13 @@ export class CreateOperAanwezigLidDto {
   @ApiProperty({
     description:
       "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  VOORAANMELDING?: number;
+  @IsBoolean()
+  VOORAANMELDING?: boolean;
   @ApiProperty({
     description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",

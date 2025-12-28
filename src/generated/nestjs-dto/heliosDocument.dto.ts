@@ -49,29 +49,25 @@ export class HeliosDocumentDto {
   LID_ID: number | null;
   @ApiProperty({
     description: "Lege regel om paragraaf te kunnen maken",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  LEGE_REGEL: number;
+  LEGE_REGEL: boolean;
   @ApiProperty({
     description: "Plaats een horizontale lijn",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  ONDERSTREEP: number;
+  ONDERSTREEP: boolean;
   @ApiProperty({
     description:
       "Plaats een horizontale lijn aan de bovenkant (true) / onderkant (false)",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  BOVEN: number;
+  BOVEN: boolean;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

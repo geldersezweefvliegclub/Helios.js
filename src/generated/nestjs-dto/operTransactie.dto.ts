@@ -45,10 +45,9 @@ export class OperTransactieDto {
   TYPE_ID: number;
   @ApiProperty({
     description: "Gaat het hier om een DDWV transactie?",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  DDWV: number;
+  DDWV: boolean;
   @ApiProperty({
     description: "Het bedrag wat gefactureerd wordt per eenheid",
     type: "string",
@@ -98,16 +97,14 @@ export class OperTransactieDto {
   OMSCHRIJVING: string;
   @ApiProperty({
     description: "Is de transactie betaald bijv Mollie",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  BETAALD: number;
+  BETAALD: boolean;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

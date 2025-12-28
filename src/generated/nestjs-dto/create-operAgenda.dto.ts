@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsNotEmpty,
@@ -58,12 +59,11 @@ export class CreateOperAgendaDto {
   OMSCHRIJVING?: string | null;
   @ApiProperty({
     description: "Is het agenda-item openbaar",
-    type: "integer",
-    format: "int32",
-    default: 1,
+    type: "boolean",
+    default: true,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  OPENBAAR?: number;
+  @IsBoolean()
+  OPENBAAR?: boolean;
 }

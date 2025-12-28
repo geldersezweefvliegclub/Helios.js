@@ -29,10 +29,9 @@ export class OperAanwezigLidDto {
   @ApiProperty({
     description:
       "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VOORAANMELDING: number;
+  VOORAANMELDING: boolean;
   @ApiProperty({
     description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",
@@ -85,10 +84,9 @@ export class OperAanwezigLidDto {
   OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

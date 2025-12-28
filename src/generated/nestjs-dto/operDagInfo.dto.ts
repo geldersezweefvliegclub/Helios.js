@@ -93,10 +93,9 @@ export class OperDagInfoDto {
   VLIEGENDMATERIEEL: string | null;
   @ApiProperty({
     description: "Is het een DDWV bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  DDWV: number;
+  DDWV: boolean;
   @ApiProperty({
     description: "Is het een clubbedrijf op het primaire veld",
     type: "integer",
@@ -105,10 +104,9 @@ export class OperDagInfoDto {
   CLUB_BEDRIJF: number;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
-    type: "integer",
-    format: "int32",
+    type: "boolean",
   })
-  VERWIJDERD: number;
+  VERWIJDERD: boolean;
   @ApiProperty({
     description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",

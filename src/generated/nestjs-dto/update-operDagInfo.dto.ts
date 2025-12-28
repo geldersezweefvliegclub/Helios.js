@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class UpdateOperDagInfoDto {
   @ApiProperty({
@@ -137,14 +143,13 @@ export class UpdateOperDagInfoDto {
   VLIEGENDMATERIEEL?: string | null;
   @ApiProperty({
     description: "Is het een DDWV bedrijf op het primaire veld",
-    type: "integer",
-    format: "int32",
-    default: 0,
+    type: "boolean",
+    default: false,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  DDWV?: number;
+  @IsBoolean()
+  DDWV?: boolean;
   @ApiProperty({
     description: "Is het een clubbedrijf op het primaire veld",
     type: "integer",
