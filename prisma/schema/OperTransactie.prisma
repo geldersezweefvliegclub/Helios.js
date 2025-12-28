@@ -25,7 +25,7 @@ model OperTransactie {
   /// @description Gaat het hier om een DDWV transactie?
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV               Int       @default(0) @db.UnsignedTinyInt
+  DDWV               Boolean   @default(false) @db.UnsignedTinyInt
   /// @description Het bedrag wat gefactureerd wordt per eenheid
   BEDRAG             Decimal?  @db.Decimal(10, 2)
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen
@@ -46,10 +46,10 @@ model OperTransactie {
   OMSCHRIJVING       String    @db.VarChar(150)
   /// @DtoReadOnly
   /// @description Is de transactie betaald bijv Mollie
-  BETAALD            Int       @default(0) @db.UnsignedTinyInt
+  BETAALD            Boolean   @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Int       @default(0) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean   @default(false) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt

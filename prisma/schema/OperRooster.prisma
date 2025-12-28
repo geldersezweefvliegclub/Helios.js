@@ -16,7 +16,7 @@ model OperRooster {
   /// @description Voeren we winterwerk uit op deze datum?
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  WINTER_WERK        Boolean      @default(false)
+  WINTER_WERK        Boolean      @default(false) @db.UnsignedTinyInt
   /// @description Aantal aameldingen die we nodig hebben voor een sleepbedrijf (alleen DDWV)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional

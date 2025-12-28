@@ -46,7 +46,7 @@ model OperBrandstof {
 
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.TinyInt
+  VERWIJDERD Boolean @default(false) @db.UnsignedTinyInt
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
