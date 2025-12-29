@@ -239,6 +239,7 @@ model RefLid {
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   Winterwerk           OperWinterwerk[]  @relation("RefLid")
+  Login                AuthUser?
 
   @@index([INSTRUCTEUR], map: "INSTRUCTEUR")
   @@index([LIDTYPE_ID], map: "LIDTYPE_ID")
