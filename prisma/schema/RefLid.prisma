@@ -64,7 +64,7 @@ model RefLid {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BUDDY_ID2            Int?      @db.MediumInt
+  BUDDY_ID2            Int?      @db.UnsignedMediumInt
   /// @description Kan het lid worden ingedeeld voor lierdienst
   /// @DtoCreateOptional
   /// @DtoUpdateOptional

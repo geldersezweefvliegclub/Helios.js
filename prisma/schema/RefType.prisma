@@ -5,7 +5,7 @@ model RefType {
   ID                     Int              @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Verwijzing naar de RefTypesGroepen
   /// @DtoRelationIncludeId
-  GROEP                  Int              @db.UnsignedSmallInt
+  GROEP                  Int              @db.UnsignedMediumInt
   /// @description De code van dit type
   /// @maxLength 10
   CODE                   String?          @db.VarChar(10)
