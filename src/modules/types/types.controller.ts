@@ -17,7 +17,7 @@ import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
 import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {ApiTags} from "@nestjs/swagger";
-import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
+import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 
@@ -40,10 +40,10 @@ export class TypesController extends HeliosController
       return await this.typesService.GetObject(id);
    }
 
-   @HeliosGetObjects(GetObjectsRefTypesResponse)
+   @HeliosGetObjects(GetRefTypesResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesResponse>>
+      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetRefTypesResponse>>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObjects');
       return this.typesService.GetObjects(queryParams);

@@ -7,7 +7,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 
 import {Prisma} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
-import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
+import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 
@@ -35,7 +35,7 @@ export class TypesService extends IHeliosService
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesResponse>>
+   async GetObjects(params?: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetRefTypesResponse>>
    {
       if (params === undefined)
       {
