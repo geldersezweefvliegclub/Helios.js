@@ -17,7 +17,7 @@ model RefCompetentie {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  OUDER_ID            Int?             @db.Int
+  OUDER_ID            Int?             @db.UnsignedMediumInt
   /// @description Leerblok van de comptentie zoals beschreven in de syllabus
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
