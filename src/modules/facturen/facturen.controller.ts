@@ -14,8 +14,8 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";
 import {GetObjectsOperFacturenRequest} from "./GetObjectsOperFacturenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperFactuurDto} from "../../generated/nestjs-dto/create-OperFactuur.dto";
-import {UpdateOperFactuurDto} from "../../generated/nestjs-dto/update-OperFactuur.dto";
+import {CreateOperFactuurDto} from "../../generated/nestjs-dto/create-operFactuur.dto";
+import {UpdateOperFactuurDto} from "../../generated/nestjs-dto/update-operFactuur.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Facturen')

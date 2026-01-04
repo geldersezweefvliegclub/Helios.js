@@ -14,8 +14,8 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperRoosterDto} from "../../generated/nestjs-dto/create-OperRooster.dto";
-import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-OperRooster.dto";
+import {CreateOperRoosterDto} from "../../generated/nestjs-dto/create-operRooster.dto";
+import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-operRooster.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Rooster')

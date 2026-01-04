@@ -14,8 +14,8 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
 import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-OperAanwezigLid.dto";
-import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-OperAanwezigLid.dto";
+import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
+import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('AanwezigLeden')

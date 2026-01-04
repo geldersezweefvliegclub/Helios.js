@@ -14,8 +14,8 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenResponse";
 import {GetObjectsOperDagRapportenRequest} from "./GetObjectsOperDagRapportenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperDagRapportDto} from "../../generated/nestjs-dto/create-OperDagRapport.dto";
-import {UpdateOperDagRapportDto} from "../../generated/nestjs-dto/update-OperDagRapport.dto";
+import {CreateOperDagRapportDto} from "../../generated/nestjs-dto/create-operDagRapport.dto";
+import {UpdateOperDagRapportDto} from "../../generated/nestjs-dto/update-operDagRapport.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('DagRapporten')
