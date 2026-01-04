@@ -7,7 +7,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 
 import {Prisma} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
-import {GetObjectsOperDienstenResponse} from "./GetObjectsOperDienstenResponse";
+import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {OperDienstDto} from "../../generated/nestjs-dto/operDienst.dto";
 
 @Injectable()
@@ -21,7 +21,7 @@ export class DienstenService extends IHeliosService
 
    // retrieve a single object from the database based on the id
    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-   async GetObject(id: number, relation: string = undefined): Promise<OperDienstDto>
+   async GetObject(id: number, relation: string = undefined): Promise<GetOperDienstenResponse>
    {
       // relation is included for consistency with other services, but not used
       const db = await this.dbService.operDienst.findUnique({
@@ -37,11 +37,11 @@ export class DienstenService extends IHeliosService
          throw new HttpException(`DagRapport record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
-      return new OperDienstDto(db);
+      return new GetOperDienstenResponse(db);
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDienstenResponse>>
+   async GetObjects(params?: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
    {
       if (params === undefined)
       {
@@ -87,13 +87,13 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      const objs = rawObjs.map((o) => new OperDienstDto(o))
+      const objs = rawObjs.map((o) => new GetOperDienstenResponse(o))
 
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.OperDienstCreateInput): Promise<OperDienstDto>
+   async AddObject(data: Prisma.OperDienstCreateInput): Promise<GetOperDienstenResponse>
    {
       const obj = await this.dbService.operDienst.create({
          data: data,
@@ -103,10 +103,10 @@ export class DienstenService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return new OperDienstDto(obj);
+      return new GetOperDienstenResponse(obj);
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<OperDienstDto>
+   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<GetOperDienstenResponse>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDienst.update({
@@ -121,7 +121,7 @@ export class DienstenService extends IHeliosService
 
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
 
-      return new OperDienstDto(obj);
+      return new GetOperDienstenResponse(obj);
    }
 
    async RemoveObject(id: number): Promise<void>

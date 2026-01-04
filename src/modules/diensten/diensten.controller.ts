@@ -3,15 +3,17 @@ import {DienstenService} from "./diensten.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
    HeliosController,
-   HeliosCreateObject, HeliosDeleteObject,
+   HeliosCreateObject,
+   HeliosDeleteObject,
    HeliosGetObject,
-   HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
+   HeliosGetObjects,
+   HeliosRemoveObject,
+   HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperDienstDto} from "../../generated/nestjs-dto/OperDienst.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
-import {GetObjectsOperDienstenResponse} from "./GetObjectsOperDienstenResponse";
+import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperDienstDto} from "../../generated/nestjs-dto/create-OperDienst.dto";
@@ -28,37 +30,37 @@ export class DienstenController  extends HeliosController
       super()
    }
 
-   @HeliosGetObject(OperDienstDto)
+   @HeliosGetObject(GetOperDienstenResponse)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number): Promise<OperDienstDto>
+      @Query('ID') id: number): Promise<GetOperDienstenResponse>
    {
       this.permissieService.heeftToegang(user, 'Diensten.GetObject');
       return await this.DienstenService.GetObject(id);
    }
 
-   @HeliosGetObjects(GetObjectsOperDienstenResponse)
+   @HeliosGetObjects(GetOperDienstenResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDienstenResponse>>
+      @Query() queryParams: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
    {
       this.permissieService.heeftToegang(user, 'Diensten.GetObjects');
       return this.DienstenService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateOperDienstDto, OperDienstDto)
+   @HeliosCreateObject(CreateOperDienstDto, GetOperDienstenResponse)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateOperDienstDto): Promise<OperDienstDto>
+      @Body() data: CreateOperDienstDto): Promise<GetOperDienstenResponse>
    {
       this.permissieService.heeftToegang(user, 'Diensten.AddObject');
       return await this.DienstenService.AddObject(data as Prisma.OperDienstCreateInput);
    }
 
-   @HeliosUpdateObject(UpdateOperDienstDto, OperDienstDto)
+   @HeliosUpdateObject(UpdateOperDienstDto, GetOperDienstenResponse)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateOperDienstDto): Promise<OperDienstDto>
+      @Query('ID') id: number, @Body() data: UpdateOperDienstDto): Promise<GetOperDienstenResponse>
    {
       this.permissieService.heeftToegang(user, 'Diensten.UpdateObject');
       return await this.DienstenService.UpdateObject(id, data as Prisma.OperDienstCreateInput);
