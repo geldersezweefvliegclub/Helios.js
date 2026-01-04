@@ -8,7 +8,7 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperDagRapportDto} from "../../generated/nestjs-dto/OperDagRapport.dto";
+import {OperDagRapportDto} from "../../generated/nestjs-dto/operDagRapport.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenResponse";

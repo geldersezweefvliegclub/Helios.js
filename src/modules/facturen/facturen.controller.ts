@@ -8,7 +8,7 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperFactuurDto} from "../../generated/nestjs-dto/OperFactuur.dto";
+import {OperFactuurDto} from "../../generated/nestjs-dto/operFactuur.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";

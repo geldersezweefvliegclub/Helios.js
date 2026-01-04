@@ -8,7 +8,7 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperRoosterDto} from "../../generated/nestjs-dto/OperRooster.dto";
+import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";

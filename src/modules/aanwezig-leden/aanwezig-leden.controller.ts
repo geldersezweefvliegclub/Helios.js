@@ -8,7 +8,7 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperAanwezigLidDto} from "../../generated/nestjs-dto/OperAanwezigLid.dto";
+import {OperAanwezigLidDto} from "../../generated/nestjs-dto/operAanwezigLid.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
