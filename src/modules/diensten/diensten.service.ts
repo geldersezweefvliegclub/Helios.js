@@ -8,7 +8,6 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
-import {OperDienstDto} from "../../generated/nestjs-dto/operDienst.dto";
 
 @Injectable()
 export class DienstenService extends IHeliosService

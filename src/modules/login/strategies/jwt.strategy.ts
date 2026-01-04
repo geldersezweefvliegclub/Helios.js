@@ -1,9 +1,8 @@
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
-import { Request } from 'express';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { TokenPayload } from '../token-payload.interface';
-import { Injectable } from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+import {PassportStrategy} from '@nestjs/passport';
+import {ExtractJwt, Strategy} from 'passport-jwt';
+import {TokenPayload} from '../token-payload.interface';
+import {Injectable} from '@nestjs/common';
 import {LedenService} from "../../leden/leden.service";
 
 
