@@ -42,13 +42,26 @@ export class AgendaService extends IHeliosService
          params = new GetObjectsOperAgendaRequest();
          params.VERWIJDERD = false;
       }
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperAgendaWhereInput =
          {
             AND:
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+
+                  {
+                     OR: [
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.start,
+                                  lte: dtSpanne.eind
+                               }
+                        }
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
