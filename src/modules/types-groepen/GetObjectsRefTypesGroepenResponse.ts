@@ -1,4 +1,4 @@
-import {RefTypesGroepDto} from "../../generated/nestjs-dto-test/refTypesGroep.dto";
+import {RefTypesGroepDto} from "../../generated/nestjs-dto/refTypesGroep.dto";
 
 export class GetObjectsRefTypesGroepenResponse extends RefTypesGroepDto
 {

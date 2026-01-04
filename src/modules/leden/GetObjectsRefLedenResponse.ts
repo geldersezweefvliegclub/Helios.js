@@ -1,4 +1,4 @@
-import {RefLidDto} from "../../generated/nestjs-dto-test/refLid.dto";
+import {RefLidDto} from "../../generated/nestjs-dto/refLid.dto";
 import {ApiProperty} from "@nestjs/swagger";
 
 export class GetObjectsRefLedenResponse extends RefLidDto

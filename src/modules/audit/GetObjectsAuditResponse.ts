@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger";
-import {AuditDto} from "../../generated/nestjs-dto-test/audit.dto";
+import {AuditDto} from "../../generated/nestjs-dto/audit.dto";
 
 export class GetObjectsAuditResponse extends AuditDto
 {

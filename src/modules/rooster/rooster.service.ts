@@ -8,7 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma} from "@prisma/client";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
-import {OperRoosterDto} from "../../generated/nestjs-dto-test/operRooster.dto";
+import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 
 @Injectable()
 export class RoosterService extends IHeliosService

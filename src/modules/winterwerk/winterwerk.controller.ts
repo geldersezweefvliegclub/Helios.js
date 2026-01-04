@@ -10,14 +10,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperWinterwerkDto} from "../../generated/nestjs-dto-test/operWinterwerk.dto";
+import {OperWinterwerkDto} from "../../generated/nestjs-dto/operWinterwerk.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
 import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto-test/create-operWinterwerk.dto";
-import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto-test/update-operWinterwerk.dto";
+import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto/create-operWinterwerk.dto";
+import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto/update-operWinterwerk.dto";
 
 @Controller('Winterwerk')
 @ApiTags('Winterwerk')

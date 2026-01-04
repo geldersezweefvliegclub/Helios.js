@@ -1,6 +1,6 @@
 
 import {ApiTags} from "@nestjs/swagger";
-import {OperAanwezigLidDto} from "../../generated/nestjs-dto-test/operAanwezigLid.dto";
+import {OperAanwezigLidDto} from "../../generated/nestjs-dto/operAanwezigLid.dto";
 
 @ApiTags('AanwezigLeden')
 export class GetObjectsOperAanwezigLedenResponse extends OperAanwezigLidDto

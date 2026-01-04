@@ -9,14 +9,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperAgendaDto} from "../../generated/nestjs-dto-test/operAgenda.dto";
+import {OperAgendaDto} from "../../generated/nestjs-dto/operAgenda.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
 import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperAgendaDto} from "../../generated/nestjs-dto-test/create-operAgenda.dto";
-import {UpdateOperAgendaDto} from "../../generated/nestjs-dto-test/update-operAgenda.dto";
+import {CreateOperAgendaDto} from "../../generated/nestjs-dto/create-operAgenda.dto";
+import {UpdateOperAgendaDto} from "../../generated/nestjs-dto/update-operAgenda.dto";
 
 @Controller('Agenda')
 @ApiTags('Agenda')

@@ -13,9 +13,9 @@ import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResp
 import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CompetentiesService} from "./competenties.service";
-import {RefCompetentieDto} from "../../generated/nestjs-dto-test/refCompetentie.dto";
-import {CreateRefCompetentieDto} from "../../generated/nestjs-dto-test/create-refCompetentie.dto";
-import {UpdateRefCompetentieDto} from "../../generated/nestjs-dto-test/update-refCompetentie.dto";
+import {RefCompetentieDto} from "../../generated/nestjs-dto/refCompetentie.dto";
+import {CreateRefCompetentieDto} from "../../generated/nestjs-dto/create-refCompetentie.dto";
+import {UpdateRefCompetentieDto} from "../../generated/nestjs-dto/update-refCompetentie.dto";
 import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
 import {CompetentiesBoomResponse} from "./CompetentiesBoomResponse";
 import {AuthGuard} from "@nestjs/passport";

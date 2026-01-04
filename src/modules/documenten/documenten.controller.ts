@@ -11,9 +11,9 @@ import {HeliosDocument, Prisma, RefLid} from "@prisma/client";
 import {GetObjectsHeliosDocumentenResponse} from "./GetObjectsHeliosDocumentenResponse";
 import {GetObjectsHeliosDocumentenRequest} from "./GetObjectsHeliosDocumentenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {HeliosDocumentDto} from "../../generated/nestjs-dto-test/heliosDocument.dto";
-import {CreateHeliosDocumentDto} from "../../generated/nestjs-dto-test/create-heliosDocument.dto";
-import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto-test/update-heliosDocument.dto";
+import {HeliosDocumentDto} from "../../generated/nestjs-dto/heliosDocument.dto";
+import {CreateHeliosDocumentDto} from "../../generated/nestjs-dto/create-heliosDocument.dto";
+import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto/update-heliosDocument.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {DocumentenService} from "./documenten.service";
 

@@ -6,7 +6,7 @@ import {RefLid} from "@prisma/client";
 import {compare, hash} from "bcryptjs";
 import {TokenPayload} from "./token-payload.interface";
 import {DbService} from "../../database/db-service/db.service";
-import {AuthUserDto} from "../../generated/nestjs-dto-test/authUser.dto";
+import {AuthUserDto} from "../../generated/nestjs-dto/authUser.dto";
 import {LoginResponse, UserInfo} from "./loginDTO";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AanwezigLedenService} from "../aanwezig-leden/aanwezig-leden.service";

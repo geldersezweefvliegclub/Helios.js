@@ -1,5 +1,5 @@
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
-import {OperDienstDto} from "../../generated/nestjs-dto-test/operDienst.dto";
+import {OperDienstDto} from "../../generated/nestjs-dto/operDienst.dto";
 import {OperDienst, RefType} from "@prisma/client";
 
 @ApiTags('DagRapporten')

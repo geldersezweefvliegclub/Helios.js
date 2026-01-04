@@ -1,6 +1,6 @@
 
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
-import {HeliosDocumentDto} from "../../generated/nestjs-dto-test/heliosDocument.dto";
+import {HeliosDocumentDto} from "../../generated/nestjs-dto/heliosDocument.dto";
 
 @ApiTags('Documenten')
 export class GetObjectsHeliosDocumentenResponse extends HeliosDocumentDto

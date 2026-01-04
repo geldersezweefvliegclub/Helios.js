@@ -9,14 +9,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperDagInfoDto} from "../../generated/nestjs-dto-test/operDagInfo.dto";
+import {OperDagInfoDto} from "../../generated/nestjs-dto/operDagInfo.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperDagInfoDto} from "../../generated/nestjs-dto-test/create-operDagInfo.dto";
-import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto-test/update-operDagInfo.dto";
+import {CreateOperDagInfoDto} from "../../generated/nestjs-dto/create-operDagInfo.dto";
+import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto/update-operDagInfo.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectOperDagInfoRequest} from "./GetObjectOperDagInfoRequest";
 
