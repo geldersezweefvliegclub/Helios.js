@@ -8,14 +8,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperRoosterDto} from "../../generated/nestjs-dto/OperRooster.dto";
+import {OperRoosterDto} from "../../generated/nestjs-dto-test/OperRooster.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperRoosterDto} from "../../generated/nestjs-dto/create-OperRooster.dto";
-import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-OperRooster.dto";
+import {CreateOperRoosterDto} from "../../generated/nestjs-dto-test/create-OperRooster.dto";
+import {UpdateOperRoosterDto} from "../../generated/nestjs-dto-test/update-OperRooster.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Rooster')

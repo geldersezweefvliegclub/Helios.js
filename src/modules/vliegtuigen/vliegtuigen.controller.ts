@@ -16,10 +16,10 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto-test/refVliegtuig.dto";
 import {VliegtuigenService} from "./vliegtuigen.service";
-import {CreateRefVliegtuigDto} from "../../generated/nestjs-dto/create-refVliegtuig.dto";
-import {UpdateRefVliegtuigDto} from "../../generated/nestjs-dto/update-refVliegtuig.dto";
+import {CreateRefVliegtuigDto} from "../../generated/nestjs-dto-test/create-refVliegtuig.dto";
+import {UpdateRefVliegtuigDto} from "../../generated/nestjs-dto-test/update-refVliegtuig.dto";
 
 @Controller('Vliegtuigen')
 @ApiTags('Vliegtuigen')

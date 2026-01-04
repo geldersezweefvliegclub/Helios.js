@@ -11,15 +11,15 @@ import {
    HeliosGetObjects, HeliosRemoveObject,
    HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {RefTypesGroepDto} from "../../generated/nestjs-dto/refTypesGroep.dto";
+import {RefTypesGroepDto} from "../../generated/nestjs-dto-test/refTypesGroep.dto";
 import {GetObjectsRefTypesGroepenRequest} from "./GetObjectsRefTypesGroepenRequest";
 import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResponse";
 import {PermissieService} from "../authorisatie/permissie.service";
-import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto/create-refTypesGroep.dto";
-import {UpdateRefTypesGroepDto} from "../../generated/nestjs-dto/update-refTypesGroep.dto";
+import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto-test/create-refTypesGroep.dto";
+import {UpdateRefTypesGroepDto} from "../../generated/nestjs-dto-test/update-refTypesGroep.dto";
 
 @Controller('TypesGroepen')
 @ApiTags('TypesGroepen')

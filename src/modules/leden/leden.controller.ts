@@ -13,10 +13,10 @@ import {
    HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
 import {LedenService} from "./leden.service";
-import {RefLidDto} from "../../generated/nestjs-dto/refLid.dto";
+import {RefLidDto} from "../../generated/nestjs-dto-test/refLid.dto";
 import { GetObjectsRefLedenRequest} from "./GetObjectsRefLedenRequest";
-import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
-import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
+import {CreateRefLidDto} from "../../generated/nestjs-dto-test/create-refLid.dto";
+import {UpdateRefLidDto} from "../../generated/nestjs-dto-test/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
 import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
 import {authenticator } from 'otplib';

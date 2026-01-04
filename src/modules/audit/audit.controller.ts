@@ -12,7 +12,7 @@ import {
     HeliosGetObjects
 } from "../../core/controllers/helios/helios.controller";
 import {AuditService} from "./audit.service";
-import {AuditDto} from "../../generated/nestjs-dto/audit.dto";
+import {AuditDto} from "../../generated/nestjs-dto-test/audit.dto";
 import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
 import {OnEvent} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";

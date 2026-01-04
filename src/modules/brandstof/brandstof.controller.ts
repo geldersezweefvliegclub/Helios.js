@@ -17,10 +17,10 @@ import {ApiTags} from "@nestjs/swagger";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {BrandstofService} from "./brandstof.service";
-import {OperBrandstofDto} from "../../generated/nestjs-dto/operBrandstof.dto";
+import {OperBrandstofDto} from "../../generated/nestjs-dto-test/operBrandstof.dto";
 import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
-import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
-import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
+import {CreateOperBrandstofDto} from "../../generated/nestjs-dto-test/create-operBrandstof.dto";
+import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto-test/update-operBrandstof.dto";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {LedenService} from "../leden/leden.service";
 

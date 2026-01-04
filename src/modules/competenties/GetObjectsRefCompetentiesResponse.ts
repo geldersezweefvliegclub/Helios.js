@@ -1,6 +1,6 @@
 
 import {ApiProperty} from "@nestjs/swagger";
-import {RefCompetentieDto} from "../../generated/nestjs-dto/refCompetentie.dto";
+import {RefCompetentieDto} from "../../generated/nestjs-dto-test/refCompetentie.dto";
 
 export class GetObjectsRefCompetentiesResponse extends RefCompetentieDto
 {

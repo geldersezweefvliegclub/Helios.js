@@ -9,14 +9,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperGastDto} from "../../generated/nestjs-dto/operGast.dto";
+import {OperGastDto} from "../../generated/nestjs-dto-test/operGast.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
 import {GetObjectsOperGastenRequest} from "./GetObjectsOperGastenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperGastDto} from "../../generated/nestjs-dto/create-operGast.dto";
-import {UpdateOperGastDto} from "../../generated/nestjs-dto/update-operGast.dto";
+import {CreateOperGastDto} from "../../generated/nestjs-dto-test/create-operGast.dto";
+import {UpdateOperGastDto} from "../../generated/nestjs-dto-test/update-operGast.dto";
 
 @Controller('Gasten')
 @ApiTags('Gasten')

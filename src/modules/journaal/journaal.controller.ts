@@ -17,9 +17,9 @@ import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {JournaalService} from "./journaal.service";
 import {ApiTags} from "@nestjs/swagger";
-import {OperJournaalDto} from "../../generated/nestjs-dto/operJournaal.dto";
-import {CreateOperJournaalDto} from "../../generated/nestjs-dto/create-operJournaal.dto";
-import {UpdateOperJournaalDto} from "../../generated/nestjs-dto/update-operJournaal.dto";
+import {OperJournaalDto} from "../../generated/nestjs-dto-test/operJournaal.dto";
+import {CreateOperJournaalDto} from "../../generated/nestjs-dto-test/create-operJournaal.dto";
+import {UpdateOperJournaalDto} from "../../generated/nestjs-dto-test/update-operJournaal.dto";
 
 @Controller('Journaal')
 @ApiTags('Journaal')

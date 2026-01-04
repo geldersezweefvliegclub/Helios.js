@@ -1,6 +1,6 @@
 
 import {ApiProperty} from "@nestjs/swagger";
-import {OperJournaalDto} from "../../generated/nestjs-dto/operJournaal.dto";
+import {OperJournaalDto} from "../../generated/nestjs-dto-test/operJournaal.dto";
 
 export class GetObjectsOperJournaalResponse extends OperJournaalDto
 {

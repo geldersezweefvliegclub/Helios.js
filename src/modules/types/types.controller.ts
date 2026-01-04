@@ -13,9 +13,9 @@ import {
    HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
-import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
-import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
+import {CreateRefTypeDto} from "../../generated/nestjs-dto-test/create-refType.dto";
+import {UpdateRefTypeDto} from "../../generated/nestjs-dto-test/update-refType.dto";
+import {RefTypeDto} from "../../generated/nestjs-dto-test/refType.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";

@@ -1,4 +1,4 @@
-import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
+import {RefTypeDto} from "../../generated/nestjs-dto-test/refType.dto";
 import {RefType} from "@prisma/client";
 
 export class GetRefTypesResponse extends RefTypeDto

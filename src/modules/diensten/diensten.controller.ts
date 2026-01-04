@@ -16,8 +16,8 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperDienstDto} from "../../generated/nestjs-dto/create-OperDienst.dto";
-import {UpdateOperDienstDto} from "../../generated/nestjs-dto/update-OperDienst.dto";
+import {CreateOperDienstDto} from "../../generated/nestjs-dto-test/create-OperDienst.dto";
+import {UpdateOperDienstDto} from "../../generated/nestjs-dto-test/update-OperDienst.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Diensten')

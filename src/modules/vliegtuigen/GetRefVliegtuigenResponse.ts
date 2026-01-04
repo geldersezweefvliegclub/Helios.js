@@ -1,4 +1,4 @@
-import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto-test/refVliegtuig.dto";
 import {RefCompetentie, RefType, RefVliegtuig} from "@prisma/client";
 import {ApiProperty} from "@nestjs/swagger";
 

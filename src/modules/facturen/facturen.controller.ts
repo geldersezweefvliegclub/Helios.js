@@ -8,14 +8,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperFactuurDto} from "../../generated/nestjs-dto/OperFactuur.dto";
+import {OperFactuurDto} from "../../generated/nestjs-dto-test/OperFactuur.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";
 import {GetObjectsOperFacturenRequest} from "./GetObjectsOperFacturenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperFactuurDto} from "../../generated/nestjs-dto/create-OperFactuur.dto";
-import {UpdateOperFactuurDto} from "../../generated/nestjs-dto/update-OperFactuur.dto";
+import {CreateOperFactuurDto} from "../../generated/nestjs-dto-test/create-OperFactuur.dto";
+import {UpdateOperFactuurDto} from "../../generated/nestjs-dto-test/update-OperFactuur.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('Facturen')

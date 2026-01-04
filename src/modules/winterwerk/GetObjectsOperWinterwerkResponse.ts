@@ -1,6 +1,6 @@
 
 import {ApiTags} from "@nestjs/swagger";
-import {OperWinterwerkDto} from "../../generated/nestjs-dto/operWinterwerk.dto";
+import {OperWinterwerkDto} from "../../generated/nestjs-dto-test/operWinterwerk.dto";
 
 @ApiTags('Winterwerk')
 export class GetObjectsOperWinterwerkResponse extends OperWinterwerkDto

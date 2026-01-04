@@ -8,7 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
-import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto-test/refVliegtuig.dto";
 
 @Injectable()
 export class VliegtuigenService extends IHeliosService

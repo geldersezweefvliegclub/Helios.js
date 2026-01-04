@@ -8,15 +8,15 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperTransactieDto} from "../../generated/nestjs-dto/OperTransactie.dto";
+import {OperTransactieDto} from "../../generated/nestjs-dto-test/OperTransactie.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {ApiTags} from "@nestjs/swagger";
-import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTransactie.dto";
-import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
+import {CreateOperTransactieDto} from "../../generated/nestjs-dto-test/create-operTransactie.dto";
+import {UpdateOperTransactieDto} from "../../generated/nestjs-dto-test/update-operTransactie.dto";
 
 @Controller('Transacties')
 @ApiTags('Transacties')

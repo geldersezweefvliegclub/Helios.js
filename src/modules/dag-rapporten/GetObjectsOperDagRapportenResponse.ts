@@ -1,6 +1,6 @@
 
 import {ApiTags} from "@nestjs/swagger";
-import {OperDagRapportDto} from "../../generated/nestjs-dto/operDagRapport.dto";
+import {OperDagRapportDto} from "../../generated/nestjs-dto-test/operDagRapport.dto";
 
 @ApiTags('DagRapporten')
 export class GetObjectsOperDagRapportenResponse extends OperDagRapportDto
