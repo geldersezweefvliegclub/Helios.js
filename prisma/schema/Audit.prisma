@@ -27,7 +27,7 @@ model Audit {
   RESULTAAT  String? @db.Text
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.UnsignedTinyInt
+  VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record

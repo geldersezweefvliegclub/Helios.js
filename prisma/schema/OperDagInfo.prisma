@@ -64,14 +64,14 @@ model OperDagInfo {
   /// @description Is het een DDWV bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV               Boolean  @default(false) @db.UnsignedTinyInt
+  DDWV               Boolean  @default(false)
   /// @description Is het een clubbedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUB_BEDRIJF       Boolean  @default(false) @db.UnsignedTinyInt
+  CLUB_BEDRIJF       Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt

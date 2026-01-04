@@ -18,7 +18,7 @@ model RefVliegtuig {
   /// @description Is het vliegtuig eigendom van de club
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUBKIST                Boolean                 @default(false) @db.UnsignedTinyInt
+  CLUBKIST                Boolean                 @default(false)
   /// @description Flarmcode van het vliegtuig. Indien meerdere codes, dan CSV met comma's als scheidingsteken
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -32,15 +32,15 @@ model RefVliegtuig {
   /// @description Is het een Touring Motor Glider (TMG)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  TMG                     Boolean                 @default(false) @db.UnsignedTinyInt
+  TMG                     Boolean                 @default(false)
   /// @description Kan het vliegtuig zelfstarten
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ZELFSTART               Boolean                 @default(false) @db.UnsignedTinyInt
+  ZELFSTART               Boolean                 @default(false)
   /// @description Is het een motorvliegtuig die sleept
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  SLEEPKIST               Boolean                 @default(false) @db.UnsignedTinyInt
+  SLEEPKIST               Boolean                 @default(false)
   /// @description Sorteer volgorde
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -49,11 +49,11 @@ model RefVliegtuig {
   /// @description Is het vliegtuig inzetbaar in het vliegbedrijf
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  INZETBAAR               Boolean                 @default(true) @db.UnsignedTinyInt
+  INZETBAAR               Boolean                 @default(true)
   /// @description Is het vliegtuig een instructievliegtuig
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  TRAINER                 Boolean                 @default(false) @db.UnsignedTinyInt
+  TRAINER                 Boolean                 @default(false)
   /// @description De URL naar de handleiding van het vliegtuig
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -73,7 +73,7 @@ model RefVliegtuig {
   OPMERKINGEN             String?                 @db.Text
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD              Boolean                 @default(false) @db.UnsignedTinyInt
+  VERWIJDERD              Boolean                 @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING      DateTime                @updatedAt

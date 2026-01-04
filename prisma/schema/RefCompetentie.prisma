@@ -35,7 +35,7 @@ model RefCompetentie {
   /// @description Is deze competentie beperkt geldig
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  GELDIGHEID          Boolean          @default(false) @db.UnsignedTinyInt
+  GELDIGHEID          Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Wordt score 1-5 gegeven voor deze competentie
   /// @DtoCreateOptional
@@ -43,7 +43,7 @@ model RefCompetentie {
   SCORE               Int              @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD          Boolean          @default(false) @db.UnsignedTinyInt
+  VERWIJDERD          Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING  DateTime         @updatedAt

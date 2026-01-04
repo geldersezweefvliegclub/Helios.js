@@ -16,9 +16,10 @@ export class OperStartlijstDto {
   @ApiProperty({
     description:
       "Het volgnummer van de vlucht op die dag. Begint bij 1 voor de eerste vlucht van die dag.",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  DAGNUMMER: boolean;
+  DAGNUMMER: number;
   @ApiProperty({
     description: "De starttijd van de vlucht",
     type: "string",

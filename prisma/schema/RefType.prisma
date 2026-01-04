@@ -21,14 +21,14 @@ model RefType {
   /// @description Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY              Boolean          @default(false) @db.UnsignedTinyInt
+  READ_ONLY              Boolean          @default(false)
   /// @description Het bedrag om te kunnen factureren
   BEDRAG                 Decimal?         @db.Decimal(6, 2)
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
   EENHEDEN               Decimal?         @db.Decimal(6, 2)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD             Boolean          @default(false) @db.UnsignedTinyInt
+  VERWIJDERD             Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING     DateTime         @updatedAt

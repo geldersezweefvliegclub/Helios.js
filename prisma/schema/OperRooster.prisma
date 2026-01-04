@@ -8,15 +8,15 @@ model OperRooster {
   /// @description Is het een DDWV bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV               Boolean      @default(false) @db.UnsignedTinyInt
+  DDWV               Boolean      @default(false)
   /// @description Is het een Club bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUB_BEDRIJF       Boolean      @default(true) @db.UnsignedTinyInt
+  CLUB_BEDRIJF       Boolean      @default(true)
   /// @description Voeren we winterwerk uit op deze datum?
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  WINTER_WERK        Boolean      @default(false) @db.UnsignedTinyInt
+  WINTER_WERK        Boolean      @default(false)
   /// @description Aantal aameldingen die we nodig hebben voor een sleepbedrijf (alleen DDWV)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -37,7 +37,7 @@ model OperRooster {
   /// @description Is het record gemarkeerd als verwijderd
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  VERWIJDERD         Boolean      @default(false) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean      @default(false)
   LAATSTE_AANPASSING DateTime     @updatedAt
   Diensten           OperDienst[]
 

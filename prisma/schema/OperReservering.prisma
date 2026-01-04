@@ -24,14 +24,14 @@ model OperReservering {
   /// @description Is kist geboekt voor een langere periode. Toekenning door beheerder
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  IS_GEBOEKT         Boolean  @default(false) @db.UnsignedTinyInt
+  IS_GEBOEKT         Boolean  @default(false)
   /// @description Eventuele opmerkingen bij de reservering
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OPMERKINGEN        String?  @db.Text
   /// @description Is het record gemarkeerd als verwijderd
   /// @DtoReadOnly
-  VERWIJDERD         Boolean  @default(false) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean  @default(false)
   /// @description Tijdstempel met de laatste wijziging van het record
   /// @DtoReadOnly
   LAATSTE_AANPASSING DateTime @updatedAt

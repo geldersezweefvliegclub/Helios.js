@@ -68,67 +68,67 @@ model RefLid {
   /// @description Kan het lid worden ingedeeld voor lierdienst
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LIERIST              Boolean   @default(false) @db.UnsignedTinyInt
+  LIERIST              Boolean   @default(false)
   /// @description Kan het lid worden ingedeeld voor lierist in opleiding
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LIERIST_IO           Boolean   @default(false) @db.UnsignedTinyInt
+  LIERIST_IO           Boolean   @default(false)
   /// @description Kan het lid worden ingedeeld voor startleiderdienst
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  STARTLEIDER          Boolean   @default(false) @db.UnsignedTinyInt
+  STARTLEIDER          Boolean   @default(false)
   /// @description Is het lid een instructeur
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  INSTRUCTEUR          Boolean   @default(false) @db.UnsignedTinyInt
+  INSTRUCTEUR          Boolean   @default(false)
   /// @description Zit het lid in de chef instructeurs groep
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CIMT                 Boolean   @default(false) @db.UnsignedTinyInt
+  CIMT                 Boolean   @default(false)
   /// @description Helpt het lid met doordeweeks vliegen als kader
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV_CREW            Boolean   @default(false) @db.UnsignedTinyInt
+  DDWV_CREW            Boolean   @default(false)
   /// @description Is het lid beheerder van de DDWV operatie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV_BEHEERDER       Boolean   @default(false) @db.UnsignedTinyInt
+  DDWV_BEHEERDER       Boolean   @default(false)
   /// @description Is het lid applicatie beheerder
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BEHEERDER            Boolean   @default(false) @db.UnsignedTinyInt
+  BEHEERDER            Boolean   @default(false)
   /// @description Account wordt alleen gebruikt voor tijdschrijven
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  STARTTOREN           Boolean   @default(false) @db.UnsignedTinyInt
+  STARTTOREN           Boolean   @default(false)
   /// @description Is het lid een roostermaaker
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ROOSTER              Boolean   @default(false) @db.UnsignedTinyInt
+  ROOSTER              Boolean   @default(false)
   /// @description Is het lid een sleepvlieger
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  SLEEPVLIEGER         Boolean   @default(false) @db.UnsignedTinyInt
+  SLEEPVLIEGER         Boolean   @default(false)
   /// @description Is het lid een rapporteur om overzicht te maken van de vliegdagen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  RAPPORTEUR           Boolean   @default(false) @db.UnsignedTinyInt
+  RAPPORTEUR           Boolean   @default(false)
   /// @description Vliegt het lid gasten rond
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  GASTENVLIEGER        Boolean   @default(false) @db.UnsignedTinyInt
+  GASTENVLIEGER        Boolean   @default(false)
   /// @description Is het lid een technicus
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  TECHNICUS            Boolean   @default(false) @db.UnsignedTinyInt
+  TECHNICUS            Boolean   @default(false)
   /// @description Clubblad wordt per post verstuurd
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUBBLAD_POST        Boolean   @default(false) @db.UnsignedTinyInt
+  CLUBBLAD_POST        Boolean   @default(false)
   /// @description Zelfstarts afbetaald voor lopende seizoen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ZELFSTART_ABONNEMENT Boolean   @default(false) @db.UnsignedTinyInt
+  ZELFSTART_ABONNEMENT Boolean   @default(false)
   /// @description Geldigheid medische keuring
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
@@ -149,21 +149,21 @@ model RefLid {
   /// @description Is twee traps authenticatie ingeschakeld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  AUTH                 Boolean   @default(false) @db.UnsignedTinyInt
+  AUTH                 Boolean   @default(false)
   /// @description URL naar de avatar van het lid
   AVATAR               String?   @db.VarChar(255)
   /// @description Lid mag niet meer starten, maar is nog wel lid
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  STARTVERBOD          Boolean   @default(false) @db.UnsignedTinyInt
+  STARTVERBOD          Boolean   @default(false)
   /// @description Lid heeft lidmaatschap voor volgend jaar opgezegd, maar is nog wel lid
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  OPGEZEGD             Boolean   @default(false) @db.UnsignedTinyInt
+  OPGEZEGD             Boolean   @default(false)
   /// @description Privacy instelling
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  PRIVACY              Boolean   @default(false) @db.UnsignedTinyInt
+  PRIVACY              Boolean   @default(false)
   /// @description Sleutelnummer van Terlet
   /// @maxLength 25
   SLEUTEL1             String?   @db.VarChar(25)
@@ -181,7 +181,7 @@ model RefLid {
   /// @description Daginfo per email ontvangen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  EMAIL_DAGINFO        Boolean   @default(false) @db.UnsignedTinyInt
+  EMAIL_DAGINFO        Boolean   @default(false)
   /// @description Opmerkingen van het lid
   OPMERKINGEN          String?   @db.Text
   /// @description Aantal strippen tegoed
@@ -190,7 +190,7 @@ model RefLid {
   TEGOED               Float     @default(0) @db.Float
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD           Boolean   @default(false) @db.UnsignedTinyInt
+  VERWIJDERD           Boolean   @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING   DateTime  @updatedAt

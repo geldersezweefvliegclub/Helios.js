@@ -6,7 +6,7 @@ model OperStartlijst {
   /// @description De datum van de vlucht
   DATUM              DateTime      @db.Date
   /// @description Het volgnummer van de vlucht op die dag. Begint bij 1 voor de eerste vlucht van die dag.
-  DAGNUMMER          Boolean       @default(false) @db.UnsignedTinyInt
+  DAGNUMMER          Int           @default(0) @db.UnsignedTinyInt
   /// @description Het vliegtuig dat gebruikt is voor de vlucht
   VLIEGTUIG_ID       Int           @db.UnsignedMediumInt
   /// @description De starttijd van de vlucht
@@ -36,13 +36,13 @@ model OperStartlijst {
   /// @description Externe referentie ID voor koppelingen met externe systemen
   EXTERNAL_ID        String?       @db.Text
   /// @description Was de vlucht een passagiersvlucht
-  PAX                Boolean       @default(false) @db.UnsignedTinyInt
+  PAX                Boolean       @default(false)
   /// @description Was de vlucht een check-start (eerste vlucht van het seizoen voor de vlieger)
-  CHECKSTART         Boolean       @default(false) @db.UnsignedTinyInt
+  CHECKSTART         Boolean       @default(false)
   /// @description Was de vlucht een instructievlucht
-  INSTRUCTIEVLUCHT   Boolean       @default(false) @db.UnsignedTinyInt
+  INSTRUCTIEVLUCHT   Boolean       @default(false)
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD         Boolean       @default(false) @db.UnsignedTinyInt
+  VERWIJDERD         Boolean       @default(false)
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime      @updatedAt
   Vliegtuig          RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")
