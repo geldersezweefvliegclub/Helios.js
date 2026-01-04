@@ -14,6 +14,14 @@ export class OperAgendaDto {
   })
   DATUM: Date;
   @ApiProperty({
+    description:
+      "Tijd van het agenda-item, indien van toepassing (kan leeg zijn als hele dag)",
+    type: "string",
+    format: "date-time",
+    nullable: true,
+  })
+  TIJD: Date | null;
+  @ApiProperty({
     description: "Korte beschrijving van het agenda-item",
     maxLength: 255,
     type: "string",

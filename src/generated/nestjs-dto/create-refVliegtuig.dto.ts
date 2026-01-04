@@ -69,15 +69,6 @@ export class CreateRefVliegtuigDto {
   @IsInt()
   TYPE_ID?: number | null;
   @ApiProperty({
-    description: "Kan het vliegtuig zelfstarten",
-    type: "boolean",
-    default: false,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  ZELFSTART?: boolean;
-  @ApiProperty({
     description: "Is het een Touring Motor Glider (TMG)",
     type: "boolean",
     default: false,
@@ -87,6 +78,15 @@ export class CreateRefVliegtuigDto {
   @IsBoolean()
   TMG?: boolean;
   @ApiProperty({
+    description: "Kan het vliegtuig zelfstarten",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  ZELFSTART?: boolean;
+  @ApiProperty({
     description: "Is het een motorvliegtuig die sleept",
     type: "boolean",
     default: false,
@@ -95,15 +95,6 @@ export class CreateRefVliegtuigDto {
   @IsOptional()
   @IsBoolean()
   SLEEPKIST?: boolean;
-  @ApiProperty({
-    description: "Is het vliegtuig inzetbaar in het vliegbedrijf",
-    type: "boolean",
-    default: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  INZETBAAR?: boolean;
   @ApiProperty({
     description: "Sorteer volgorde",
     minimum: 0,
@@ -115,6 +106,15 @@ export class CreateRefVliegtuigDto {
   @IsOptional()
   @IsInt()
   VOLGORDE?: number | null;
+  @ApiProperty({
+    description: "Is het vliegtuig inzetbaar in het vliegbedrijf",
+    type: "boolean",
+    default: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  INZETBAAR?: boolean;
   @ApiProperty({
     description: "Is het vliegtuig een instructievliegtuig",
     type: "boolean",

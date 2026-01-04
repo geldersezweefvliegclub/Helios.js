@@ -19,7 +19,7 @@ export class UpdateOperAanwezigLidDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Datum van de aanmelding",
+    description: "Datum waarop het lid aanwezig is / zal zijn",
     type: "string",
     format: "date-time",
     required: false,
@@ -27,6 +27,15 @@ export class UpdateOperAanwezigLidDto {
   @IsOptional()
   @IsDateString()
   DATUM?: Date;
+  @ApiProperty({
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  POSITIE?: number | null;
   @ApiProperty({
     description:
       "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
@@ -37,16 +46,6 @@ export class UpdateOperAanwezigLidDto {
   @IsOptional()
   @IsInt()
   LID_ID?: number;
-  @ApiProperty({
-    description: "Referentie naar het vliegveld in de type tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  VELD_ID?: number | null;
   @ApiProperty({
     description:
       "Is er vooraf aangemeld (true)? Of is de aanmelding gedaan bij het starten van de vlucht (false)?",
@@ -109,6 +108,16 @@ export class UpdateOperAanwezigLidDto {
   @IsOptional()
   @IsInt()
   TRANSACTIE_ID?: number | null;
+  @ApiProperty({
+    description: "Referentie naar het vliegveld in de type tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  VELD_ID?: number | null;
   @ApiProperty({
     description: "Eventuele opmerkingen, zoals eerder weg gaan",
     type: "string",

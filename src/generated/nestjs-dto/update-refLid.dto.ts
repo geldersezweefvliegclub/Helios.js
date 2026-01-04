@@ -136,11 +136,10 @@ export class UpdateRefLidDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  LIDTYPE_ID?: number | null;
+  LIDTYPE_ID?: number;
   @ApiProperty({
     description: "Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)",
     type: "integer",
@@ -443,16 +442,6 @@ export class UpdateRefLidDto {
   @IsString()
   SLEUTEL2?: string | null;
   @ApiProperty({
-    description: "Sleutelnummer om te kunnen tanken",
-    maxLength: 25,
-    type: "string",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsString()
-  BRANDSTOF_PAS?: string | null;
-  @ApiProperty({
     description:
       "Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben",
     type: "string",
@@ -510,4 +499,14 @@ export class UpdateRefLidDto {
   @IsOptional()
   @IsNumber()
   TEGOED?: number;
+  @ApiProperty({
+    description: "Sleutelnummer om te kunnen tanken",
+    maxLength: 25,
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  BRANDSTOF_PAS?: string | null;
 }

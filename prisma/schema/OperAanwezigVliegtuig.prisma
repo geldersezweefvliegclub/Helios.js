@@ -2,67 +2,53 @@ model OperAanwezigVliegtuig {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de aanmelding
-  ID Int @id @default(autoincrement())
-
+  ID           Int       @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Datum van de aanmelding
-  DATUM DateTime   @db.Date
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  DATUM        DateTime  @db.Date
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar het vliegtuig in de vliegtuigen tabel
+  VLIEGTUIG_ID Int       @db.UnsignedMediumInt
+  /// @description Tijd van aanwezig zijn (niet de tijd van de aanmelding)
+  AANKOMST     DateTime? @db.Time(0)
+  /// @description Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat
+  VERTREK      DateTime? @db.Time(0)
+  /// @description Laaste bekende Latitude van het vliegtuig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LATITUDE     Decimal?  @db.Decimal(8, 5)
+  /// @description Laaste bekende Longitude van het vliegtuig
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LONGITUDE    Decimal?  @db.Decimal(8, 5)
+  /// @description Laaste bekende hoogte van het vliegtuig in meters
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  HOOGTE       Int?      @db.SmallInt
+  /// @description Laaste bekende grond snelheid van het vliegtuig in km/h
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  SNELHEID     Int?      @db.SmallInt
 
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het vliegveld in de type tabel
-  VELD_ID Int?
-
-  /// @description Tijd van aanwezig zijn (niet de tijd van de aanmelding)
-  AANKOMST DateTime?  @db.Time
-
-  /// @description Vertrek tijd, de tijd dat de persoon vertrekt van het veld en naar huis gaat
-  VERTREK DateTime?    @db.Time
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Vliegtuig RefVliegtuig @relation("Vliegtuig", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
-  /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  /// @description Referentie naar het vliegtuig in de vliegtuigen tabel
-  VLIEGTUIG_ID Int
-
-  /// @description Laaste bekende Latitude van het vliegtuig
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  LATITUDE Float? @db.Double
-
-  /// @description Laaste bekende Longitude van het vliegtuig
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  LONGITUDE Float? @db.Double
-
-  /// @description Laaste bekende hoogte van het vliegtuig in meters
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  HOOGTE Float? @db.Double
-
-  /// @description Laaste bekende grond snelheid van het vliegtuig in km/h
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  SNELHEID Float? @db.Double
-
+  VELD_ID            Int?     @db.UnsignedMediumInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false)
-
+  VERWIJDERD         Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt
 
-  @@index([VERWIJDERD])
-  @@index([DATUM])
+  Vliegtuig RefVliegtuig @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_aanwezig_vliegtuigen_ibfk_1")
+  /// @DtoReadOnly
+  Veld      RefType?     @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
 
+  @@index([DATUM], map: "DATUM")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
   @@map("oper_aanwezig_vliegtuigen")
 }

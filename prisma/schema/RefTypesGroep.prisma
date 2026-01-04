@@ -2,45 +2,38 @@ model RefTypesGroep {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de groep, andere objecten refereren naar dit ID
-  ID Int @id @default(autoincrement())
-
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description De code van de groep
   /// @maxLength 10
-  CODE String? @db.VarChar(10)
-
+  CODE               String?  @db.VarChar(10)
   /// @description De externe referentie van de groep
   /// @maxLength 25
-  EXT_REF String? @db.VarChar(25)
-
+  EXT_REF            String?  @db.VarChar(25)
   /// @description De omschrijving van de groep
   /// @maxLength 75
   /// @IsNotEmpty()
-  OMSCHRIJVING String @db.VarChar(75)
-
+  OMSCHRIJVING       String   @db.VarChar(75)
   /// @description De sorteer volgorde van de groep
-  SORTEER_VOLGORDE Int? @db.SmallInt
-
+  SORTEER_VOLGORDE   Int?     @db.UnsignedTinyInt
   /// @description Is de groep readonly. Indien readonly kan de groep niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY Boolean @default(false) @db.TinyInt
-
+  READ_ONLY          Boolean  @default(false)
   /// @description De onderliggende type tabel bevat EENHEDEN en BEDRAG. Deze boolean geeft aan of dat gebruikt wordt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BEDRAG_EENHEDEN Boolean @default(false) @db.TinyInt
-
+  BEDRAG_EENHEDEN    Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.TinyInt
-
+  VERWIJDERD         Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+  LAATSTE_AANPASSING DateTime @updatedAt
 
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
   RefType RefType[]
 
-  @@index([VERWIJDERD])
-
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("ref_types_groepen")
 }

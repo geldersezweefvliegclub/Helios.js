@@ -30,11 +30,10 @@ export class UpdateRefCompetentieDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  LEERFASE_ID?: number | null;
+  LEERFASE_ID?: number;
   @ApiProperty({
     description: "Bovenliggende competentie",
     type: "integer",

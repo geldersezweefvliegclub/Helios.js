@@ -38,9 +38,9 @@ export class LedenService extends IHeliosService
    // retrieve a single object from the database based on the inlognaam
    async GetObjectByInlognaam(loginname: string): Promise<RefLid>
    {
-      return this.dbService.refLid.findUnique({
+      return this.dbService.refLid.findFirstOrThrow({
          where: {
-            INLOGNAAM: loginname.toLowerCase()
+            INLOGNAAM: loginname
          }
       });
    }

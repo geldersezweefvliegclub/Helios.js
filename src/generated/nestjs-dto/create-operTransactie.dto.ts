@@ -1,10 +1,10 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsBoolean,
   IsDateString,
+  IsDecimal,
   IsInt,
-  IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -20,14 +20,6 @@ export class CreateOperTransactieDto {
   @IsOptional()
   @IsInt()
   ID?: number;
-  @ApiProperty({
-    description: "Datum van het dagrapport",
-    type: "string",
-    format: "date-time",
-  })
-  @IsNotEmpty()
-  @IsDateString()
-  DATUM: Date;
   @ApiProperty({
     description:
       "Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag",
@@ -80,45 +72,54 @@ export class CreateOperTransactieDto {
   DDWV?: boolean;
   @ApiProperty({
     description: "Het bedrag wat gefactureerd wordt per eenheid",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  BEDRAG?: number | null;
+  @IsDecimal()
+  BEDRAG?: Prisma.Decimal | null;
   @ApiProperty({
     description:
       "De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  EENHEDEN?: number | null;
+  @IsDecimal()
+  EENHEDEN?: Prisma.Decimal | null;
   @ApiProperty({
     description: "Aantal strippen voordat de transcatie verwerkt is.",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  SALDO_VOOR?: number | null;
+  @IsDecimal()
+  SALDO_VOOR?: Prisma.Decimal | null;
   @ApiProperty({
     description: "Aantal strippen NA de transactie, dus het nieuwe saldo",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  SALDO_NA?: number | null;
+  @IsDecimal()
+  SALDO_NA?: Prisma.Decimal | null;
+  @ApiProperty({
+    description: "Response van een extern systeem bijv Mollie of e-boekhouden",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  REFERENTIE?: string | null;
   @ApiProperty({
     description:
       "Referentie naar een extern system, bijv Mollie of e-boekhouden",
@@ -133,9 +134,8 @@ export class CreateOperTransactieDto {
     description: "Omschrijving van de transactie, komt zo ook op de factuur",
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()
-  OMSCHRIJVING?: string | null;
+  OMSCHRIJVING?: string;
 }

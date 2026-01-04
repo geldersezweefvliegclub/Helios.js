@@ -5,9 +5,9 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, RefVliegtuig} from "@prisma/client";
+import {Prisma} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
-import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
+import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 
 @Injectable()
@@ -32,11 +32,11 @@ export class VliegtuigenService extends IHeliosService
          throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
-      return new RefVliegtuigDto(db);
+      return new GetRefVliegtuigenResponse(db);
    }
 
    // retrieve objects from the database based on the query parameters
-   async GetObjects(params?: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>>
+   async GetObjects(params?: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetRefVliegtuigenResponse>>
    {
       if (params === undefined)
       {
@@ -84,13 +84,13 @@ export class VliegtuigenService extends IHeliosService
       });
 
       const response = objs.map((obj) => {
-         return new RefVliegtuigDto(obj);
+         return new GetRefVliegtuigenResponse(obj);
       });
 
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<RefVliegtuig>
+   async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<GetRefVliegtuigenResponse>
    {
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
          where: {
@@ -108,10 +108,10 @@ export class VliegtuigenService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      return new GetRefVliegtuigenResponse(obj);
    }
 
-   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<RefVliegtuigDto>
+   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<GetRefVliegtuigenResponse>
    {
       const db = await this.GetObject(id);
 
@@ -137,7 +137,7 @@ export class VliegtuigenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return new RefVliegtuigDto(obj);
+      return new GetRefVliegtuigenResponse(obj);
    }
 
    async RemoveObject(id: number): Promise<void>

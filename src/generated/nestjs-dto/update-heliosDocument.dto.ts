@@ -28,11 +28,10 @@ export class UpdateHeliosDocumentDto {
     type: "integer",
     format: "int32",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  GROEP_ID?: number | null;
+  GROEP_ID?: number;
   @ApiProperty({
     description: "Beschrijving van het document",
     minLength: 4,

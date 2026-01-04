@@ -8,12 +8,22 @@ export class OperGastDto {
   })
   ID: number;
   @ApiProperty({
+    description: "De naam van de gast",
+    type: "string",
+  })
+  NAAM: string;
+  @ApiProperty({
     description: "Datum van de daginfo",
     type: "string",
     format: "date-time",
+  })
+  DATUM: Date;
+  @ApiProperty({
+    description: "Opmerkingen die bij de gast horen",
+    type: "string",
     nullable: true,
   })
-  DATUM: Date | null;
+  OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
@@ -21,17 +31,6 @@ export class OperGastDto {
     nullable: true,
   })
   VELD_ID: number | null;
-  @ApiProperty({
-    description: "De naam van de gast",
-    type: "string",
-  })
-  NAAM: string;
-  @ApiProperty({
-    description: "Opmerkingen die bij de gast horen",
-    type: "string",
-    nullable: true,
-  })
-  OPMERKINGEN: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

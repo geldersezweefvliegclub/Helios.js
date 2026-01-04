@@ -2,66 +2,59 @@ model OperDienst {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de dienst
-  ID Int @id @default(autoincrement())
-
+  ID                 Int         @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Datum van de daginfo
-  DATUM DateTime   @db.Date
-
-  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
-  /// @description Verwijzing naar het lid ID van diegene die ingeroosterd is, link naar de leden tabel
-  /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  LID_ID Int @db.Int
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Rooster OperRooster? @relation("Rooster", fields: [ROOSTER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  DATUM              DateTime    @db.Date
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het rooster
-  ROOSTER_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  TypeDienst RefType? @relation("TypeDienst", fields: [TYPE_DIENST_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  ROOSTER_ID         Int         @db.UnsignedMediumInt
+  /// @description Verwijzing naar het lid ID van diegene die ingeroosterd is, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID             Int         @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar hettype dienst (startleider, DDI, lietrist, etc)
-  TYPE_DIENST_ID Int?
-
-  RefIngevoerd RefLid? @relation("RefIngevoerd", fields: [INGEVOERD_DOOR_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  TYPE_DIENST_ID     Int?        @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  INGEVOERD_DOOR_ID Int @db.Int
-
+  INGEVOERD_DOOR_ID  Int?        @db.UnsignedMediumInt
+  /// @description True als het lid aanwezig was tijdens deze dienst
+  AANWEZIG           Boolean?
   /// @DtoReadOnly
   /// @description Is de DDWV dienst uitbetaald?
-  UITBETAALD Boolean @default(false)
-
-  /// @description Opmerkingen die bij de gast horen
-  OPMERKINGEN String? @db.Text
-
-  /// @DtoReadOnly
+  UITBETAALD         Boolean     @default(false)
+  /// @description True als het lid afwezig was tijdens deze dienst
+  AFWEZIG            Boolean?
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false)
-
+  VERWIJDERD         Boolean     @default(false)
+  LAATSTE_AANPASSING DateTime    @updatedAt
+  /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+  TypeDienst         RefType?    @relation(fields: [TYPE_DIENST_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_diensten_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid             RefLid      @relation("oper_diensten_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_diensten_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefIngevoerd       RefLid?     @relation("oper_diensten_INGEVOERD_DOOR_IDToref_leden", fields: [INGEVOERD_DOOR_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_diensten_ibfk_3")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Rooster            OperRooster @relation(fields: [ROOSTER_ID], references: [ID], onUpdate: Restrict, map: "oper_diensten_ibfk_4")
 
-  @@index([VERWIJDERD])
-  @@index([DATUM])
-
+  @@index([DATUM], map: "DATUM")
+  @@index([INGEVOERD_DOOR_ID], map: "INGEVOERD_DOOR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([ROOSTER_ID], map: "ROOSTER_ID")
+  @@index([TYPE_DIENST_ID], map: "TYPE_DIENST_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_diensten")
 }

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class OperAanwezigVliegtuigDto {
@@ -14,12 +15,11 @@ export class OperAanwezigVliegtuigDto {
   })
   DATUM: Date;
   @ApiProperty({
-    description: "Referentie naar het vliegveld in de type tabel",
+    description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  VELD_ID: number | null;
+  VLIEGTUIG_ID: number;
   @ApiProperty({
     description: "Tijd van aanwezig zijn (niet de tijd van de aanmelding)",
     type: "string",
@@ -36,39 +36,40 @@ export class OperAanwezigVliegtuigDto {
   })
   VERTREK: Date | null;
   @ApiProperty({
-    description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
-    type: "integer",
-    format: "int32",
-  })
-  VLIEGTUIG_ID: number;
-  @ApiProperty({
     description: "Laaste bekende Latitude van het vliegtuig",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  LATITUDE: number | null;
+  LATITUDE: Prisma.Decimal | null;
   @ApiProperty({
     description: "Laaste bekende Longitude van het vliegtuig",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  LONGITUDE: number | null;
+  LONGITUDE: Prisma.Decimal | null;
   @ApiProperty({
     description: "Laaste bekende hoogte van het vliegtuig in meters",
-    type: "number",
-    format: "float",
+    type: "integer",
+    format: "int32",
     nullable: true,
   })
   HOOGTE: number | null;
   @ApiProperty({
     description: "Laaste bekende grond snelheid van het vliegtuig in km/h",
-    type: "number",
-    format: "float",
+    type: "integer",
+    format: "int32",
     nullable: true,
   })
   SNELHEID: number | null;
+  @ApiProperty({
+    description: "Referentie naar het vliegveld in de type tabel",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  VELD_ID: number | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

@@ -2,81 +2,72 @@ model RefCompetentie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van de competentie, andere objecten refereren naar dit ID
-  ID Int @id @default(autoincrement())
-
+  ID                  Int              @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Sorteer volgorde
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @minimum 0
-  VOLGORDE Int? @db.Int
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  LeerfaseType RefType? @relation("LeerfaseType", fields: [LEERFASE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  VOLGORDE            Int?             @db.UnsignedSmallInt
   /// @description De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LEERFASE_ID Int? @db.Int
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Ouder RefCompetentie? @relation("Ouder", fields: [OUDER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  LEERFASE_ID         Int              @db.UnsignedMediumInt
   /// @description Bovenliggende competentie
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  OUDER_ID Int? @db.Int
-
+  OUDER_ID            Int?             @db.UnsignedMediumInt
   /// @description Leerblok van de comptentie zoals beschreven in de syllabus
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @maxLength 7
-  BLOK String? @db.VarChar(7)
-
+  BLOK                String?          @db.VarChar(7)
   /// @description Omschrijving van de competentie
   /// @minLength 3
   /// @maxLength 75
-  OMSCHRIJVING String @db.VarChar(75)
-
+  OMSCHRIJVING        String           @db.VarChar(75)
   /// @description Bijbehoordende documentatie van de competentie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @maxLength 75
-  DOCUMENTATIE String? @db.VarChar(75)
-
+  DOCUMENTATIE        String?          @db.VarChar(75)
   /// @description Is deze competentie beperkt geldig
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  GELDIGHEID Boolean @default(false) @db.TinyInt
-
+  GELDIGHEID          Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Wordt score 1-5 gegeven voor deze competentie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  SCORE Boolean @default(false) @db.TinyInt
-
+  SCORE               Int              @default(0) @db.UnsignedTinyInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.TinyInt
-
+  VERWIJDERD          Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+  LAATSTE_AANPASSING  DateTime         @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Progressie          OperProgressie[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LeerfaseType        RefType          @relation(fields: [LEERFASE_ID], references: [ID], onUpdate: Restrict, map: "ref_competenties_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidLokaal   RefVliegtuig[]   @relation("ref_vliegtuigen_BEVOEGDHEID_LOKAAL_IDToref_competenties")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  BevoegdheidOverland RefVliegtuig[]   @relation("ref_vliegtuigen_BEVOEGDHEID_OVERLAND_IDToref_competenties")
 
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Ouder RefCompetentie?  @relation("Ouder", fields: [OUDER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
   /// @description Het onderliggende object
-  Kind RefCompetentie[] @relation("Ouder")
+  Kind  RefCompetentie[] @relation("Ouder")
 
-  /// @description Het type vliegtuig
-  VliegtuigLokaal RefVliegtuig[] @relation("BevoegdheidLokaal")
-
-  /// @description Het type vliegtuig
-  VliegtuigOverland RefVliegtuig[] @relation("BevoegdheidOverland")
-
-  /// @description Wie heeft de progressie gehaald
-  Progressie OperProgressie[] @relation("RefCompetentie")
-
+  @@index([OUDER_ID], map: "OUDER_ID")
+  @@index([LEERFASE_ID], map: "LEERFASE_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("ref_competenties")
 }

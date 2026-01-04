@@ -1,0 +1,49 @@
+model OperReservering {
+  /// @description Het unieke ID van een reservering
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description Datum waarvoor een persoon een vliegtuig heeft gereserveerd (niet de datum van invoer)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  DATUM              DateTime @db.Date
+  /// @description Verwijzing naar het vliegtuig dat gereserveerd is
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  VLIEGTUIG_ID       Int      @db.UnsignedMediumInt
+  /// @description Verwijzing naar het lid die de reservering heeft gemaakt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LID_ID             Int      @db.UnsignedMediumInt
+  /// @description Tijdstip wanneer de reservering is ingevoerd
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INGEVOERD_ID       Int      @db.UnsignedMediumInt
+  /// @description Is kist geboekt voor een langere periode. Toekenning door beheerder
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  IS_GEBOEKT         Boolean  @default(false)
+  /// @description Eventuele opmerkingen bij de reservering
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN        String?  @db.Text
+  /// @description Is het record gemarkeerd als verwijderd
+  /// @DtoReadOnly
+  VERWIJDERD         Boolean  @default(false)
+  /// @description Tijdstempel met de laatste wijziging van het record
+  /// @DtoReadOnly
+  LAATSTE_AANPASSING DateTime @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefLid             RefLid   @relation(fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_1")
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  RefVliegtuig RefVliegtuig @relation(fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_reservering_ibfk_2")
+
+  @@index([LID_ID], map: "LID_ID")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
+  @@map("oper_reservering")
+}

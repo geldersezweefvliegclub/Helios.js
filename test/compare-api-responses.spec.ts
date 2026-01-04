@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-for-of */
 /**
  * In this file we call the PHP API and the new NestJS API, with the same endpoint and parameters.
  * Then, to validate if the NestJS API is working correctly, we compare the response of both APIs.

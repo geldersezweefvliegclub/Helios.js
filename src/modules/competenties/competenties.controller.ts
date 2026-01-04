@@ -134,7 +134,6 @@ export class CompetentiesController extends HeliosController
       properties:
          {
             items: {$ref: getSchemaPath(CompetentiesBoomResponse)},
-
          }
    }})
    async CompetentiesBoom(
@@ -166,7 +165,8 @@ export class CompetentiesController extends HeliosController
             BLOK: undefined,
             DOCUMENTATIE: undefined,
             GELDIGHEID: false,
-            SCORE: false,
+            // todo check this: false is not correct since score is int from 1-5
+            SCORE: undefined,
             VERWIJDERD: false,
             LAATSTE_AANPASSING: undefined
          })

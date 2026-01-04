@@ -33,6 +33,12 @@ export class OperDagRapportDto {
   })
   INCIDENTEN: string | null;
   @ApiProperty({
+    description: "Beschrijving van het vliegbedrijf deze dag",
+    type: "string",
+    nullable: true,
+  })
+  VLIEGBEDRIJF: string | null;
+  @ApiProperty({
     description: "Weersinformatie",
     type: "string",
     nullable: true,

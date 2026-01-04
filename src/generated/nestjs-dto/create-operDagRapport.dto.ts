@@ -55,6 +55,15 @@ export class CreateOperDagRapportDto {
   @IsString()
   INCIDENTEN?: string | null;
   @ApiProperty({
+    description: "Beschrijving van het vliegbedrijf deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  VLIEGBEDRIJF?: string | null;
+  @ApiProperty({
     description: "Weersinformatie",
     type: "string",
     required: false,

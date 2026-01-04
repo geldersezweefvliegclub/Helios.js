@@ -2,16 +2,16 @@ model OperWinterwerk {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van een winterwerk record
-  ID Int @id @default(autoincrement())
+  ID Int @id @default(autoincrement()) @db.UnsignedMediumInt
 
   /// @description Datum van de werkdag
-  DATUM DateTime    @db.Date
+  DATUM DateTime @db.Date
 
   /// @description Begin van de werkzaamheden
-  AANVANG DateTime  @db.Time
+  AANVANG DateTime @db.Time
 
   /// @description Einde van de werkzaamheden
-  EINDE DateTime    @db.Time
+  EINDE DateTime @db.Time
 
   /// @description Eventuele opmerkingen
   /// @DtoCreateOptional
@@ -26,7 +26,7 @@ model OperWinterwerk {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LID_ID Int @db.Int
+  LID_ID Int @db.UnsignedMediumInt
 
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
@@ -38,6 +38,5 @@ model OperWinterwerk {
 
   @@index([VERWIJDERD])
   @@index([DATUM])
-
   @@map("oper_winterwerk")
 }

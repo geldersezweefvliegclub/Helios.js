@@ -1,25 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import {RefType} from "@prisma/client";
 
 export class RefTypeDto {
-  /**
-   * Creates an instance of OperDienstDto, from a OperDienst model object from Primsa.
-   * If you get an error when instantiating this class after quering using Primsa, make sure you included all necessary relations in your Prisma query!
-   */
-  constructor(obj?: RefType) {
-    this.ID = obj?.ID;
-    this.GROEP = obj?.TYPEGROEP_ID;
-    this.CODE = obj?.CODE;
-    this.EXT_REF = obj?.EXT_REF;
-    this.OMSCHRIJVING = obj?.OMSCHRIJVING;
-    this.SORTEER_VOLGORDE = obj?.SORTEER_VOLGORDE;
-    this.READ_ONLY = obj?.READ_ONLY;
-    this.BEDRAG = obj?.BEDRAG;
-    this.EENHEDEN = obj?.EENHEDEN;
-    this.VERWIJDERD = obj?.VERWIJDERD;
-    this.LAATSTE_AANPASSING = obj?.LAATSTE_AANPASSING;
-  }
-
   @ApiProperty({
     description:
       "De primary ID van het type, andere objecten refereren naar dit ID",
@@ -67,18 +49,18 @@ export class RefTypeDto {
   READ_ONLY: boolean;
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  BEDRAG: number | null;
+  BEDRAG: Prisma.Decimal | null;
   @ApiProperty({
     description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  EENHEDEN: number | null;
+  EENHEDEN: Prisma.Decimal | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

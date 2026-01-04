@@ -11,9 +11,8 @@ export class OperJournaalDto {
     description: "Datum van het journaal",
     type: "string",
     format: "date-time",
-    nullable: true,
   })
-  DATUM: Date | null;
+  DATUM: Date;
   @ApiProperty({
     description: "Referentie naar het vliegtuig",
     type: "integer",
@@ -30,10 +29,10 @@ export class OperJournaalDto {
   ROLLEND_ID: number | null;
   @ApiProperty({
     description: "Titel van het journaal",
-    maxLength: 75,
     type: "string",
+    nullable: true,
   })
-  TITEL: string;
+  TITEL: string | null;
   @ApiProperty({
     description: "Beschrijving van het journaal",
     type: "string",

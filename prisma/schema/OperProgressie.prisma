@@ -1,64 +1,63 @@
 model OperProgressie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Het unieke ID van een factuur
-  ID Int @id @default(autoincrement())
-
-  RefLid RefLid? @relation("RefLid", fields: [LID_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  /// @description Het unieke ID van een progressie
+  ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid die de competentie gehaald heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LID_ID Int                @db.Int
-
-  Instructeur RefLid? @relation("RefInstructeur", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
-  /// @description Verwijzing naar de instructeur die de progressie heeft afgetekend, link naar de leden tabel
-  /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  INSTRUCTEUR_ID Int                @db.Int
-
-  RefCompetentie RefCompetentie? @relation("RefCompetentie", fields: [COMPETENTIE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  LID_ID             Int       @db.UnsignedMediumInt
   /// @description Verwijzing naar de competentie die het lid gehaald heeft
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  COMPETENTIE_ID Int @db.Int
-
+  COMPETENTIE_ID     Int       @db.UnsignedMediumInt
+  /// @description Verwijzing naar de instructeur die de progressie heeft afgetekend, link naar de leden tabel
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  INSTRUCTEUR_ID     Int       @db.UnsignedMediumInt
+  /// @description Opmerkingen bij de progressie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  OPMERKINGEN        String?   @db.Text
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Tijdstempel wanneer de progressie is afgetekend
-  INGEVOERD DateTime @default(now())
-
+  INGEVOERD          DateTime? @default(now()) @db.DateTime(0)
+  /// @description TODO
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  LINK_ID            Int?      @db.UnsignedMediumInt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Tot wanneer is de progressie geldig (Bijv theorie certificaat)
-  GELDIG_TOT DateTime? @db.Date
-
+  GELDIG_TOT         DateTime? @db.Date
   /// @description Hoe ver is de progessie gevorderd? (1=basis,5 =volledig)
   /// @DtoUpdateOptional
   /// @minimum 1
   /// @maximum 5
-  SCORE Int? @db.Int
-
-  /// @description Omschrijving van de factuurregel
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  OPMERKINGEN String?         @db.Text
-
+  SCORE              Int?      @db.UnsignedSmallInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean        @default(false)
-
+  VERWIJDERD         Boolean   @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @updatedAt
+  LAATSTE_AANPASSING DateTime  @updatedAt
 
-  @@index([VERWIJDERD])
-  @@index([LID_ID])
+  RefLid             RefLid           @relation("oper_progressie_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_1")
+  Instructeur        RefLid           @relation("oper_progressie_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_2")
+  RefCompetentie     RefCompetentie   @relation(fields: [COMPETENTIE_ID], references: [ID], onUpdate: Restrict, map: "oper_progressie_ibfk_3")
+  // todo why has self relation?
+  ParentProgressie   OperProgressie?  @relation("oper_progressieTooper_progressie", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_progressie_ibfk_4")
+  ChildrenProgressie OperProgressie[] @relation("oper_progressieTooper_progressie")
 
+  @@index([COMPETENTIE_ID], map: "COMPETENTIE_ID")
+  @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
+  @@index([LID_ID], map: "LID_ID")
+  @@index([LINK_ID], map: "LINK_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_progressie")
 }
