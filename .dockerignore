@@ -1,0 +1,17 @@
+# IDE files / GitHub files are not relevant in Docker image
+.github/
+.idea/
+.vscode/
+.run/
+
+# Unittests not important in Docker image
+test/
+# Exclude any already compiled files
+dist/
+
+# Do not copy node_modules because they are installed during the docker image build
+# Copying this normally huge folder, could take quite some time therefore by ignoring it we save time!
+node_modules
+
+# Prevent some .env file messing things up (potentially when building the image on your development machine, rather than an automated pipeline)
+.env
