@@ -33,4 +33,6 @@ RUN npm ci --omit=dev
 # Ensure Prisma is installed for runtime migrations
 RUN npm install prisma
 
+EXPOSE 3000
+
 ENTRYPOINT exec npm run prisma:deploy && node ./dist/src/main.js
