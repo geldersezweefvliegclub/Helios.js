@@ -28,6 +28,41 @@ services:
       retries: 30
       start_period: 10s
 
+  # Dump PHP DB -> restore into new DB (one-shot)
+  # WIP: Untested
+  refresh_from_php:
+    image: mariadb:11
+    restart: "no"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - default
+      - shared-db-sync
+    environment:
+      # PHP DB (source)
+      PHP_DB_HOST: php_mariadb
+      PHP_DB_USER: ${PHP_DB_USER}
+      PHP_DB_PASSWORD: ${PHP_DB_PASSWORD}
+      PHP_DB_NAME: ${PHP_DB_NAME}
+
+      # New DB (target)
+      NEW_DB_HOST: mariadb
+      NEW_DB_USER: app
+      NEW_DB_PASSWORD: app_password
+      NEW_DB_NAME: app
+    entrypoint: [ "sh", "-lc" ]
+    command:
+      - | 
+        set -euo pipefail
+        echo "Dumping PHP DB..."
+        mariadb-dump --single-transaction --routines --triggers --events -h "$PHP_DB_HOST" -u "$PHP_DB_USER" -p"$PHP_DB_PASSWORD" "$PHP_DB_NAME" > /tmp/php.sql
+        echo "Recreating target DB..."
+        mariadb -h "$NEW_DB_HOST" -u "$NEW_DB_USER" -p"$NEW_DB_PASSWORD" -e "DROP DATABASE IF EXISTS \`$NEW_DB_NAME\`; CREATE DATABASE \`$NEW_DB_NAME\`;"
+        echo "Restoring into target DB...";
+        mariadb -h "$NEW_DB_HOST" -u "$NEW_DB_USER" -p"$NEW_DB_PASSWORD" "$NEW_DB_NAME" < /tmp/php.sql
+        echo "Refresh completed."
+
   migrate:
     image: helios:migrate
     container_name: app_migrate
@@ -39,7 +74,8 @@ services:
       # Prisma expects DATABASE_URL. Example for MariaDB:
       # mysql://USER:PASSWORD@HOST:PORT/DATABASE
       DATABASE_URL: ${DATABASE_URL}
-      # If your app/migrations rely on any other env vars, add them here too.
+    # Run Prisma migrate resolve to mark the initial migration as applied, then deploy any pending migrations
+    # Assumes initial Helios DB is already loaded!
     command: >
       npx prisma migrate resolve --applied 0_init &&
       npx prisma migrate deploy
