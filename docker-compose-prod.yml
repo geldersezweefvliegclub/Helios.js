@@ -40,8 +40,9 @@ services:
       # mysql://USER:PASSWORD@HOST:PORT/DATABASE
       DATABASE_URL: ${DATABASE_URL}
       # If your app/migrations rely on any other env vars, add them here too.
-    # Optional: if your migrate image needs to wait/retry more robustly, add an entrypoint script in the image.
-    command: ["npx", "prisma", "migrate", "deploy"]
+    command: >
+      npx prisma migrate resolve --applied 0_init &&
+      npx prisma migrate deploy
 
   app:
     image: helios:app
