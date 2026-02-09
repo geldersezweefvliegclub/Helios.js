@@ -116,7 +116,7 @@ jobs:
             --push \
             .
 
-      - name: Update Portainer Stack
-        if: ${{ secrets.PORTAINER_WEBHOOK_URL != '' }}
-        run: |
-          curl -fsS -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
+#      - name: Update Portainer Stack
+        #if: ${{ secrets.PORTAINER_WEBHOOK_URL != '' }}
+        #run: |
+        #  curl -fsS -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
