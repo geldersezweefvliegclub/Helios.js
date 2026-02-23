@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsDateString, IsInt, IsOptional } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class UpdateOperDagInfoDto {
   @ApiProperty({
@@ -16,13 +22,11 @@ export class UpdateOperDagInfoDto {
     description: "Datum van de daginfo",
     type: "string",
     format: "date-time",
-    default: new Date().toISOString(),
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsDateString()
-  DATUM?: Date | null;
+  DATUM?: Date;
   @ApiProperty({
     description: "Referentie naar het vliegveld in de type tabel",
     type: "integer",
@@ -43,16 +47,6 @@ export class UpdateOperDagInfoDto {
   @IsOptional()
   @IsInt()
   BAAN_ID?: number | null;
-  @ApiProperty({
-    description: "Referentie naar de startmethode in de type tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  STARTMETHODE_ID?: number | null;
   @ApiProperty({
     description:
       "Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp",
@@ -85,14 +79,68 @@ export class UpdateOperDagInfoDto {
   @IsInt()
   STARTMETHODE_ID2?: number | null;
   @ApiProperty({
-    description: "Is het een clubbedrijf op het primaire veld",
-    type: "boolean",
-    default: false,
+    description: "Zijn er bijzondere gebeurtenissen geweest deze dag",
+    type: "string",
     required: false,
+    nullable: true,
   })
   @IsOptional()
-  @IsBoolean()
-  CLUB_BEDRIJF?: boolean;
+  @IsString()
+  INCIDENTEN?: string | null;
+  @ApiProperty({
+    description: "Beschrijving van het vliegbedrijf deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  VLIEGBEDRIJF?: string | null;
+  @ApiProperty({
+    description: "Weersomstandigheden deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  METEO?: string | null;
+  @ApiProperty({
+    description: "Beschrijven wie aanwezig was voor alle diensten",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  DIENSTEN?: string | null;
+  @ApiProperty({
+    description: "Overige bijzonderheden en opmerkingen deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  VERSLAG?: string | null;
+  @ApiProperty({
+    description: "Opmerkingen over het grondmaterieel deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  ROLLENDMATERIEEL?: string | null;
+  @ApiProperty({
+    description: "Opmerkingen over het vliegmaterieel deze dag",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  VLIEGENDMATERIEEL?: string | null;
   @ApiProperty({
     description: "Is het een DDWV bedrijf op het primaire veld",
     type: "boolean",
@@ -102,4 +150,13 @@ export class UpdateOperDagInfoDto {
   @IsOptional()
   @IsBoolean()
   DDWV?: boolean;
+  @ApiProperty({
+    description: "Is het een clubbedrijf op het primaire veld",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  CLUB_BEDRIJF?: boolean;
 }

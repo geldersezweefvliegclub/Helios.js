@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class OperFactuurDto {
@@ -12,22 +13,23 @@ export class OperFactuurDto {
     minimum: 2025,
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  JAAR: number | null;
+  JAAR: number;
   @ApiProperty({
     description:
       "Verwijzing naar het lid ID die de factuur ontvangt, link naar de leden tabel",
     type: "integer",
     format: "int32",
+    nullable: true,
   })
-  LID_ID: number;
+  LID_ID: number | null;
   @ApiProperty({
     description:
       "De naam van het lid op het moment dat de factuur aangemaakt is.",
     type: "string",
+    nullable: true,
   })
-  NAAM: string;
+  NAAM: string | null;
   @ApiProperty({
     description:
       "Het lidnummer zoals dat in de financiele administratie wordt gebruikt",
@@ -58,11 +60,11 @@ export class OperFactuurDto {
   OMSCHRIJVING: string | null;
   @ApiProperty({
     description: "Bedrag wat gefactureerd is",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  GEFACTUREERD: number | null;
+  GEFACTUREERD: Prisma.Decimal | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

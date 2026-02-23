@@ -1,0 +1,10 @@
+model SysSync {
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  LID_ID             Int?     @db.UnsignedMediumInt
+  STARTLIJST_ID      Int?     @db.UnsignedMediumInt
+  VLIEGTUIG_ID       Int?     @db.UnsignedMediumInt
+  DATA               String?  @db.Text
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  @@map("sys_sync")
+}

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class OperTransactieDto {
@@ -8,7 +9,7 @@ export class OperTransactieDto {
   })
   ID: number;
   @ApiProperty({
-    description: "Datum van het dagrapport",
+    description: "Datum van aanmaken van de transactie",
     type: "string",
     format: "date-time",
   })
@@ -49,33 +50,39 @@ export class OperTransactieDto {
   DDWV: boolean;
   @ApiProperty({
     description: "Het bedrag wat gefactureerd wordt per eenheid",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  BEDRAG: number | null;
+  BEDRAG: Prisma.Decimal | null;
   @ApiProperty({
     description:
       "De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  EENHEDEN: number | null;
+  EENHEDEN: Prisma.Decimal | null;
   @ApiProperty({
     description: "Aantal strippen voordat de transcatie verwerkt is.",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  SALDO_VOOR: number | null;
+  SALDO_VOOR: Prisma.Decimal | null;
   @ApiProperty({
     description: "Aantal strippen NA de transactie, dus het nieuwe saldo",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     nullable: true,
   })
-  SALDO_NA: number | null;
+  SALDO_NA: Prisma.Decimal | null;
+  @ApiProperty({
+    description: "Response van een extern systeem bijv Mollie of e-boekhouden",
+    type: "string",
+    nullable: true,
+  })
+  REFERENTIE: string | null;
   @ApiProperty({
     description:
       "Referentie naar een extern system, bijv Mollie of e-boekhouden",
@@ -86,9 +93,8 @@ export class OperTransactieDto {
   @ApiProperty({
     description: "Omschrijving van de transactie, komt zo ook op de factuur",
     type: "string",
-    nullable: true,
   })
-  OMSCHRIJVING: string | null;
+  OMSCHRIJVING: string;
   @ApiProperty({
     description: "Is de transactie betaald bijv Mollie",
     type: "boolean",

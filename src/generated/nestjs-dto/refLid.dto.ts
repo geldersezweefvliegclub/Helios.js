@@ -96,9 +96,8 @@ export class RefLidDto {
     description: "Verwijzing naar de lidtype (bv. lid, donateur, etc.)",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  LIDTYPE_ID: number | null;
+  LIDTYPE_ID: number;
   @ApiProperty({
     description: "Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)",
     type: "integer",
@@ -285,13 +284,6 @@ export class RefLidDto {
   })
   SLEUTEL2: string | null;
   @ApiProperty({
-    description: "Sleutelnummer om te kunnen tanken",
-    maxLength: 25,
-    type: "string",
-    nullable: true,
-  })
-  BRANDSTOF_PAS: string | null;
-  @ApiProperty({
     description:
       "Wat doet het lid in het dagelijkse leven. Handig als we hulp nodig hebben",
     type: "string",
@@ -340,4 +332,11 @@ export class RefLidDto {
     format: "date-time",
   })
   LAATSTE_AANPASSING: Date;
+  @ApiProperty({
+    description: "Sleutelnummer om te kunnen tanken",
+    maxLength: 25,
+    type: "string",
+    nullable: true,
+  })
+  BRANDSTOF_PAS: string | null;
 }

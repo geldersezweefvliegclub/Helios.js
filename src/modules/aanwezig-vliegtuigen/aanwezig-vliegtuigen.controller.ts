@@ -8,14 +8,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/OperAanwezigVliegtuig.dto";
+import {OperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/operAanwezigVliegtuig.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperAanwezigVliegtuigenResponse} from "./GetObjectsOperAanwezigVliegtuigenResponse";
 import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezigVliegtuigenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/create-OperAanwezigVliegtuig.dto";
-import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-OperAanwezigVliegtuig.dto";
+import {CreateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/create-operAanwezigVliegtuig.dto";
+import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-operAanwezigVliegtuig.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('AanwezigVliegtuigen')

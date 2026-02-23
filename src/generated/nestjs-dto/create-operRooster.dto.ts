@@ -10,7 +10,7 @@ import {
 
 export class CreateOperRoosterDto {
   @ApiProperty({
-    description: "Het unieke ID van de dienst",
+    description: "Het unieke ID van het rooster record",
     type: "integer",
     format: "int32",
     default: "autoincrement",
@@ -20,7 +20,7 @@ export class CreateOperRoosterDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Datum van de aanmelding",
+    description: "Datum van de vliegdag",
     type: "string",
     format: "date-time",
   })
@@ -39,7 +39,7 @@ export class CreateOperRoosterDto {
   @ApiProperty({
     description: "Is het een Club bedrijf op het primaire veld",
     type: "boolean",
-    default: false,
+    default: true,
     required: false,
   })
   @IsOptional()
@@ -55,31 +55,33 @@ export class CreateOperRoosterDto {
   @IsBoolean()
   WINTER_WERK?: boolean;
   @ApiProperty({
-    description: "Aantal aameldingen die we nodig hebben voor een sleepbedrijf",
+    description:
+      "Aantal aameldingen die we nodig hebben voor een sleepbedrijf (alleen DDWV)",
     minimum: 0,
     maximum: 25,
     type: "integer",
     format: "int32",
+    default: 3,
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  MIN_SLEEPSTART?: number | null;
+  MIN_SLEEPSTART?: number;
   @ApiProperty({
-    description: "Aantal aameldingen die we nodig hebben voor een lierbedrijf",
+    description:
+      "Aantal aameldingen die we nodig hebben voor een lierbedrijf (alleen DDWV)",
     minimum: 0,
     maximum: 25,
     type: "integer",
     format: "int32",
+    default: 10,
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  MIN_LIERSTART?: number | null;
+  MIN_LIERSTART?: number;
   @ApiProperty({
-    description: "Eventuele opmerkingen, zoals eerder weg gaan",
+    description: "Eventuele opmerkingen voor deze dag",
     type: "string",
     required: false,
     nullable: true,

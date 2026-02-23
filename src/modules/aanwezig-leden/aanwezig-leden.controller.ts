@@ -8,14 +8,14 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperAanwezigLidDto} from "../../generated/nestjs-dto/OperAanwezigLid.dto";
+import {OperAanwezigLidDto} from "../../generated/nestjs-dto/operAanwezigLid.dto";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
 import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-OperAanwezigLid.dto";
-import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-OperAanwezigLid.dto";
+import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
+import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {ApiTags} from "@nestjs/swagger";
 
 @Controller('AanwezigLeden')

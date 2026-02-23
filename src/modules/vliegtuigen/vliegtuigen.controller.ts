@@ -13,7 +13,7 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
-import {GetObjectsRefVliegtuigenResponse} from "./GetObjectsRefVliegtuigenResponse";
+import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
@@ -40,19 +40,19 @@ export class VliegtuigenController extends HeliosController
       return await this.vliegtuigenService.GetObject(id);
    }
 
-   @HeliosGetObjects(GetObjectsRefVliegtuigenResponse)
+   @HeliosGetObjects(GetRefVliegtuigenResponse)
    async GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefVliegtuigenResponse>>
+      @Query() queryParams: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetRefVliegtuigenResponse>>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.GetObjects');
       return await this.vliegtuigenService.GetObjects (queryParams);
    }
 
-   @HeliosCreateObject(CreateRefVliegtuigDto, RefVliegtuigDto)
+   @HeliosCreateObject(CreateRefVliegtuigDto, GetRefVliegtuigenResponse)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateRefVliegtuigDto): Promise<RefVliegtuigDto>
+      @Body() data: CreateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.AddObject');
 
@@ -64,10 +64,10 @@ export class VliegtuigenController extends HeliosController
       return await this.vliegtuigenService.AddObject(insertData as Prisma.RefVliegtuigCreateInput);
    }
 
-   @HeliosUpdateObject(UpdateRefVliegtuigDto, RefVliegtuigDto)
+   @HeliosUpdateObject(UpdateRefVliegtuigDto, GetRefVliegtuigenResponse)
    async UpdateObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<RefVliegtuigDto>
+      @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
       this.permissieService.heeftToegang(user, 'Vliegtuigen.UpdateObject');
 

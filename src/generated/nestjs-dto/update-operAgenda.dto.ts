@@ -28,6 +28,17 @@ export class UpdateOperAgendaDto {
   @IsDateString()
   DATUM?: Date;
   @ApiProperty({
+    description:
+      "Tijd van het agenda-item, indien van toepassing (kan leeg zijn als hele dag)",
+    type: "string",
+    format: "date-time",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString()
+  TIJD?: Date | null;
+  @ApiProperty({
     description: "Korte beschrijving van het agenda-item",
     maxLength: 255,
     type: "string",

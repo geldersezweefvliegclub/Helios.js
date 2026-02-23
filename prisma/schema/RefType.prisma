@@ -2,114 +2,114 @@ model RefType {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van het type, andere objecten refereren naar dit ID
-  ID Int @id @default(autoincrement())
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  TypesGroep RefTypesGroep @relation(fields: [TYPEGROEP_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  ID                     Int              @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Verwijzing naar de RefTypesGroepen
   /// @DtoRelationIncludeId
-  TYPEGROEP_ID Int
-
+  GROEP                  Int              @db.UnsignedMediumInt
   /// @description De code van dit type
   /// @maxLength 10
-  CODE String? @db.VarChar(10)
-
+  CODE                   String?          @db.VarChar(10)
   /// @description De externe referentie van dit type
   /// @maxLength 25
-  EXT_REF String? @db.VarChar(25)
-
+  EXT_REF                String?          @db.VarChar(25)
   /// @description De omschrijving van de groep
   /// @maxLength 75
   /// @IsNotEmpty()
-  OMSCHRIJVING String @db.VarChar(75)
-
+  OMSCHRIJVING           String           @db.VarChar(75)
   // @description De sorteer volgorde van de groep
-  SORTEER_VOLGORDE Int? @db.TinyInt
-
+  SORTEER_VOLGORDE       Int?             @db.UnsignedTinyInt
   /// @description Is dit type readonly. Indien readonly kan het record niet worden aangepast vanwege harde verwijzing in de source code
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  READ_ONLY Boolean @default(false) @db.TinyInt
-
+  READ_ONLY              Boolean          @default(false)
   /// @description Het bedrag om te kunnen factureren
-  BEDRAG Float? @db.Float
-
+  BEDRAG                 Decimal?         @db.Decimal(6, 2)
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
-  EENHEDEN Float? @db.Float
-
+  EENHEDEN               Decimal?         @db.Decimal(6, 2)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.TinyInt
-
+  VERWIJDERD             Boolean          @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
-
+  LAATSTE_AANPASSING     DateTime         @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Documenten             HeliosDocument[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  TypesGroep             RefTypesGroep    @relation(fields: [GROEP], references: [ID], onUpdate: Cascade, onDelete: NoAction)
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoVeld            OperDagInfo[]    @relation("oper_daginfo_VELD_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoBaan            OperDagInfo[]    @relation("oper_daginfo_BAAN_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoStartmethode    OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoVeld2           OperDagInfo[]    @relation("oper_daginfo_VELD_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoBaan2           OperDagInfo[]    @relation("oper_daginfo_BAAN_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  DaginfoStartmethode2   OperDagInfo[]    @relation("oper_daginfo_STARTMETHODE_ID2Toref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Dagrapporten           OperDagRapport[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Diensten               OperDienst[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalRollend        OperJournaal[]   @relation("oper_journaal_ROLLEND_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalCategorie      OperJournaal[]   @relation("oper_journaal_CATEGORIE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  JournaalStatus         OperJournaal[]   @relation("oper_journaal_STATUS_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstStartmethode OperStartlijst[] @relation("oper_startlijst_STARTMETHODE_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstVeld         OperStartlijst[] @relation("oper_startlijst_VELD_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartlijstBaan         OperStartlijst[] @relation("oper_startlijst_BAAN_IDToref_types")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Transacties            OperTransactie[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Competenties           RefCompetentie[]
   /// @description De leden die dit type hebben (bijv Ereleden, Jeugdleden, etc)
-  RefLid RefLid[] @relation("LidType")
-
-  /// @description De leden die deze vliegstatus hebben (bijv. DBO, Solist, Brevethouder, etc)
-  RefVliegStatus RefLid[] @relation("VliegStatus")
+  Leden                  RefLid[]
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Vliegtuigen            RefVliegtuig[]
 
   /// @description Het type brandstof dat kan worden getankt
-  Brandstof OperBrandstof[] @relation("BrandstofType")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Brandstof           OperBrandstof[]         @relation("BrandstofType")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigLeden       OperAanwezigLid[]       @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  AanwezigVliegtuigen OperAanwezigVliegtuig[] @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Gasten              OperGast[]              @relation("Veld")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  LedenVliegstatus    RefLid[]                @relation("VliegStatus")
 
-  /// @description Het type vliegtuig
-  Vliegtuig RefVliegtuig[] @relation("VliegtuigType")
-
-  /// @description In welke leerface zitten we EVO, VVO-1, VVO-2 of GeZC specifiek
-  Competentie RefCompetentie[] @relation("LeerfaseType")
-
-  /// @description Status van het journaal
-  JournaalStatus OperJournaal[] @relation("Status")
-
-  /// @description Categorie van de jornaal melding
-  JournaalCategorie OperJournaal[] @relation("Categorie")
-
-  /// @description Als journaal voor rollend geschreven is, voor welk materieel is het journaal, lier, bully, aanhanger
-  JournaalRollend OperJournaal[] @relation("Rollend")
-
-  /// @description Soort document
-  Documenten HeliosDocument[] @relation("DocumentGroep")
-
-  /// @description Op welk veld word gevlogen
-  DagInfoVeld  OperDagInfo[] @relation("Veld")
-  DagInfoVeld2 OperDagInfo[] @relation("Veld2")
-
-  /// @description Op welke baan is in gebruik
-  DagInfoBaan  OperDagInfo[] @relation("Baan")
-  DagInfoBaan2 OperDagInfo[] @relation("Baan2")
-
-  /// @description Op de meest gebruikte startmethode
-  DagInfoStartMethode  OperDagInfo[] @relation("StartMethode")
-  DagInfoStartMethode2 OperDagInfo[] @relation("StartMethode2")
-
-  /// @description Op welk veld word gevlogen
-  DagRapportVeld OperDagRapport[] @relation("Veld")
-
-  /// @description Welke gasten ontvangen op dit veld
-  GastVeld OperGast[] @relation("Veld")
-
-  /// @description Welke vliegers op dit veld
-  AanwezigLidVeld OperAanwezigLid[] @relation("Veld")
-
-  /// @description Welke vliegers op dit veld
-  AanwezigVliegtuigVeld OperAanwezigVliegtuig[] @relation("Veld")
-
-  /// @description Welke gasten ontvangen op dit veld
-  TransactieType OperTransactie[] @relation("RefTransactie")
-
-  /// @description Welke diensten zijn ingevoerd
-  DienstType OperDienst[] @relation("TypeDienst")
-
-  VluchtVeld OperStartlijst[] @relation("vluchten_veld")
-
-  VluchtStartmethode OperStartlijst[] @relation("vluchten_startmethode")
-  VluchtBaan         OperStartlijst[] @relation("vluchten_baan")
-
-  @@index([VERWIJDERD])
-  @@index([TYPEGROEP_ID])
+  @@index([GROEP], map: "GROEP")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("ref_types")
 }

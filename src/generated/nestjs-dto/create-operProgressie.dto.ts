@@ -3,7 +3,7 @@ import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
 
 export class CreateOperProgressieDto {
   @ApiProperty({
-    description: "Het unieke ID van een factuur",
+    description: "Het unieke ID van een progressie",
     type: "integer",
     format: "int32",
     default: "autoincrement",
@@ -23,6 +23,15 @@ export class CreateOperProgressieDto {
   @IsInt()
   LID_ID?: number;
   @ApiProperty({
+    description: "Verwijzing naar de competentie die het lid gehaald heeft",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  COMPETENTIE_ID?: number;
+  @ApiProperty({
     description:
       "Verwijzing naar de instructeur die de progressie heeft afgetekend, link naar de leden tabel",
     type: "integer",
@@ -33,24 +42,35 @@ export class CreateOperProgressieDto {
   @IsInt()
   INSTRUCTEUR_ID?: number;
   @ApiProperty({
-    description: "Verwijzing naar de competentie die het lid gehaald heeft",
-    type: "integer",
-    format: "int32",
+    description: "Opmerkingen bij de progressie",
+    type: "string",
     required: false,
+    nullable: true,
   })
   @IsOptional()
-  @IsInt()
-  COMPETENTIE_ID?: number;
+  @IsString()
+  OPMERKINGEN?: string | null;
   @ApiProperty({
     description: "Tijdstempel wanneer de progressie is afgetekend",
     type: "string",
     format: "date-time",
     default: new Date().toISOString(),
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsDateString()
-  INGEVOERD?: Date;
+  INGEVOERD?: Date | null;
+  @ApiProperty({
+    description: "TODO",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  LINK_ID?: number | null;
   @ApiProperty({
     description:
       "Tot wanneer is de progressie geldig (Bijv theorie certificaat)",
@@ -74,13 +94,4 @@ export class CreateOperProgressieDto {
   @IsOptional()
   @IsInt()
   SCORE?: number | null;
-  @ApiProperty({
-    description: "Omschrijving van de factuurregel",
-    type: "string",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsString()
-  OPMERKINGEN?: string | null;
 }

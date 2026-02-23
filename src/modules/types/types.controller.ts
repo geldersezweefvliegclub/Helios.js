@@ -17,7 +17,7 @@ import {CreateRefTypeDto} from "../../generated/nestjs-dto/create-refType.dto";
 import {UpdateRefTypeDto} from "../../generated/nestjs-dto/update-refType.dto";
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {ApiTags} from "@nestjs/swagger";
-import {GetObjectsRefTypesResponse} from "./GetObjectsRefTypesResponse";
+import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 
@@ -31,35 +31,35 @@ export class TypesController extends HeliosController
       super()
    }
 
-   @HeliosGetObject(RefTypeDto)
+   @HeliosGetObject(GetRefTypesResponse)
    async GetObject(
       @CurrentUser() user: RefLid,
-      @Query('ID') id: number): Promise<RefTypeDto>
+      @Query('ID') id: number): Promise<GetRefTypesResponse>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObject');
       return await this.typesService.GetObject(id);
    }
 
-   @HeliosGetObjects(GetObjectsRefTypesResponse)
+   @HeliosGetObjects(GetRefTypesResponse)
    GetObjects(
       @CurrentUser() user: RefLid,
-      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesResponse>>
+      @Query() queryParams: GetObjectsRefTypesRequest): Promise<IHeliosGetObjectsResponse<GetRefTypesResponse>>
    {
       this.permissieService.heeftToegang(user, 'Types.GetObjects');
       return this.typesService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateRefTypeDto, RefTypeDto)
+   @HeliosCreateObject(CreateRefTypeDto, GetRefTypesResponse)
    async AddObject(
       @CurrentUser() user: RefLid,
-      @Body() data: CreateRefTypeDto): Promise<RefTypeDto>
+      @Body() data: CreateRefTypeDto): Promise<GetRefTypesResponse>
    {
       this.permissieService.heeftToegang(user, 'Types.AddObject');
 
-      // remove TYPEGROEP_ID from the data
+      // remove GROEP from the data
       // and add it to the TypesGroep property
-      const { TYPEGROEP_ID, ...insertData} = data;
-      (insertData as Prisma.RefTypeCreateInput).TypesGroep = TYPEGROEP_ID ? { connect: {ID: TYPEGROEP_ID }} : undefined
+      const { GROEP, ...insertData} = data;
+      (insertData as Prisma.RefTypeCreateInput).TypesGroep = GROEP ? { connect: {ID: GROEP }} : undefined
 
       return await this.typesService.AddObject(insertData as Prisma.RefTypeCreateInput);
    }
@@ -71,10 +71,10 @@ export class TypesController extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Types.UpdateObject');
 
-      // remove TYPEGROEP_ID from the data
+      // remove GROEP from the data
       // and add it to the TypesGroep property
-      const { TYPEGROEP_ID, ...updateData} = data;
-      (updateData as Prisma.RefTypeCreateInput).TypesGroep = (TYPEGROEP_ID !== undefined) ? { connect: {ID: TYPEGROEP_ID }} : undefined
+      const { GROEP, ...updateData} = data;
+      (updateData as Prisma.RefTypeCreateInput).TypesGroep = (GROEP !== undefined) ? { connect: {ID: GROEP }} : undefined
 
       return await this.typesService.UpdateObject(id, updateData as Prisma.RefTypeCreateInput);
    }

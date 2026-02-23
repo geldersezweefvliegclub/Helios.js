@@ -51,18 +51,25 @@ export class DocumentenController extends HeliosController
 
    @HeliosCreateObject(CreateHeliosDocumentDto, HeliosDocumentDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
-      @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto>
-   {
+       @CurrentUser() user: RefLid,
+       @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto> {
       this.permissieService.heeftToegang(user, 'Documenten.AddObject');
 
       // remove TYPE_ID from the data
       // and add them as connect to the insertData object
-      const { LID_ID, GROEP_ID ,...insertData} = data;
-      (insertData as Prisma.HeliosDocumentCreateInput).RefLid = (LID_ID !== undefined) ? { connect: {ID: LID_ID }} : undefined;
-      (insertData as Prisma.HeliosDocumentCreateInput).DocumentGroep = (GROEP_ID !== undefined) ? { connect: {ID: GROEP_ID }} : undefined;
+      const {LID_ID, GROEP_ID, ...rest} = data;
 
-      return await this.documentenService.AddObject(insertData as Prisma.RefCompetentieCreateInput);
+      const insertData: Prisma.HeliosDocumentCreateInput = {
+         ...rest,
+         RefLid: LID_ID !== undefined
+             ? {connect: {ID: LID_ID}}
+             : undefined,
+         DocumentGroep: GROEP_ID !== undefined
+             ? {connect: {ID: GROEP_ID}}
+             : undefined,
+      };
+
+      return await this.documentenService.AddObject(insertData);
    }
 
    @HeliosUpdateObject(UpdateHeliosDocumentDto, HeliosDocumentDto)

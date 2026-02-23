@@ -3,7 +3,7 @@ import {IsDate, IsInt, IsOptional} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 
 /**
- * DTO class for requesting a SINGLE OperDagInfo object
+ * DTO class for requesting a SINGLE OperDagInfo.prisma object
  */
 export class GetObjectOperDagInfoRequest {
     @IsOptional()

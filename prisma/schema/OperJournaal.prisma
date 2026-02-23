@@ -2,103 +2,89 @@ model OperJournaal {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van het journaal
-  ID Int @id @default(autoincrement())
-
+  ID                 Int           @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Datum van het journaal
-  DATUM DateTime? @default(now())
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Vliegtuig RefVliegtuig? @relation("Vliegtuig", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  DATUM              DateTime      @default(now()) @db.DateTime(0)
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het vliegtuig
-  VLIEGTUIG_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Rollend RefType? @relation("Rollend", fields: [ROLLEND_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  VLIEGTUIG_ID       Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het rollend materieel (als type)
-  ROLLEND_ID Int?
-
+  ROLLEND_ID         Int?          @db.UnsignedMediumInt
   /// @IsNotEmpty()
-  /// @maxLength 75
   /// @description Titel van het journaal
-  TITEL String @db.VarChar(75)
-
+  TITEL              String?       @db.VarChar(250)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Beschrijving van het journaal
-  OMSCHRIJVING String? @db.Text
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Categorie RefType? @relation("Categorie", fields: [CATEGORIE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  OMSCHRIJVING       String?       @db.Text
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de categorie defect, observatie, klacht
-  CATEGORIE_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Status RefType? @relation("Status", fields: [STATUS_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  CATEGORIE_ID       Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de status (type tabel),
-  STATUS_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Melder RefLid? @relation("Melder", fields: [MELDER_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  STATUS_ID          Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de melder die journaal heeft aangemaakt
-  MELDER_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Technicus RefLid? @relation("Technicus", fields: [TECHNICUS_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  MELDER_ID          Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de technicus die journaal moet opvolgen
-  TECHNICUS_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Afgetekend RefLid? @relation("Afgetekend", fields: [AFGETEKEND_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  TECHNICUS_ID       Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar wie het heeft afgetekend
-  AFGETEKEND_ID Int?
-
+  AFGETEKEND_ID      Int?          @db.UnsignedMediumInt
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false)
-
+  VERWIJDERD         Boolean       @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+  LAATSTE_AANPASSING DateTime      @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Rollend            RefType?      @relation("oper_journaal_ROLLEND_IDToref_types", fields: [ROLLEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Categorie          RefType?      @relation("oper_journaal_CATEGORIE_IDToref_types", fields: [CATEGORIE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Status             RefType?      @relation("oper_journaal_STATUS_IDToref_types", fields: [STATUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_3")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Vliegtuig          RefVliegtuig? @relation(fields: [VLIEGTUIG_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_4")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Melder             RefLid?       @relation("oper_journaal_MELDER_IDToref_leden", fields: [MELDER_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_5")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Technicus          RefLid?       @relation("oper_journaal_TECHNICUS_IDToref_leden", fields: [TECHNICUS_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_6")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Afgetekend         RefLid?       @relation("oper_journaal_AFGETEKEND_IDToref_leden", fields: [AFGETEKEND_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_journaal_ibfk_7")
 
-  @@index([VERWIJDERD])
-  @@index([DATUM])
-
+  @@index([AFGETEKEND_ID], map: "AFGETEKEND_ID")
+  @@index([CATEGORIE_ID], map: "CATEGORIE_ID")
+  @@index([DATUM], map: "DATUM")
+  @@index([MELDER_ID], map: "MELDER_ID")
+  @@index([ROLLEND_ID], map: "ROLLEND_ID")
+  @@index([STATUS_ID], map: "STATUS_ID")
+  @@index([TECHNICUS_ID], map: "TECHNICUS_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@index([VLIEGTUIG_ID], map: "VLIEGTUIG_ID")
   @@map("oper_journaal")
 }

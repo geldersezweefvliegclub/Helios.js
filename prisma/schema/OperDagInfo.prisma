@@ -2,92 +2,105 @@ model OperDagInfo {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de daginfo
-  ID Int @id @default(autoincrement())
-
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Datum van de daginfo
-  DATUM DateTime? @default(now())
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Veld RefType? @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  DATUM              DateTime @db.Date
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het vliegveld in de type tabel
-  VELD_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Baan RefType? @relation("Baan", fields: [BAAN_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  VELD_ID            Int?     @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de baan in de type tabel
-  BAAN_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  StartMethode RefType? @relation("StartMethode", fields: [STARTMETHODE_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
-  /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
-  /// @description Referentie naar de startmethode in de type tabel
-  STARTMETHODE_ID Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Veld2 RefType? @relation("Veld2", fields: [VELD_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  BAAN_ID            Int?     @db.UnsignedMediumInt
+  STARTMETHODE_ID    Int?     @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp
-  VELD_ID2 Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Baan2 RefType? @relation("Baan2", fields: [BAAN_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  VELD_ID2           Int?     @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de baan in de type tabel
-  BAAN_ID2 Int?
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  StartMethode2 RefType? @relation("StartMethode2", fields: [STARTMETHODE_ID2], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  BAAN_ID2           Int?     @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar de startmethode in de type tabel
-  STARTMETHODE_ID2 Int?
-
-  /// @description Is het een clubbedrijf op het primaire veld
+  STARTMETHODE_ID2   Int?     @db.UnsignedMediumInt
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  CLUB_BEDRIJF Boolean @default(false)
-
+  /// @description Zijn er bijzondere gebeurtenissen geweest deze dag
+  INCIDENTEN         String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Beschrijving van het vliegbedrijf deze dag
+  VLIEGBEDRIJF       String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Weersomstandigheden deze dag
+  METEO              String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Beschrijven wie aanwezig was voor alle diensten
+  DIENSTEN           String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Overige bijzonderheden en opmerkingen deze dag
+  VERSLAG            String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Opmerkingen over het grondmaterieel deze dag
+  ROLLENDMATERIEEL   String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Opmerkingen over het vliegmaterieel deze dag
+  VLIEGENDMATERIEEL  String?  @db.Text
   /// @description Is het een DDWV bedrijf op het primaire veld
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DDWV Boolean @default(false)
-
+  DDWV               Boolean  @default(false)
+  /// @description Is het een clubbedrijf op het primaire veld
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  CLUB_BEDRIJF       Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false)
-
+  VERWIJDERD         Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
-  LAATSTE_AANPASSING DateTime @default(now()) @updatedAt
+  LAATSTE_AANPASSING DateTime @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld               RefType? @relation("oper_daginfo_VELD_IDToref_types", fields: [VELD_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_1")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Baan               RefType? @relation("oper_daginfo_BAAN_IDToref_types", fields: [BAAN_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_2")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartMethode       RefType? @relation("oper_daginfo_STARTMETHODE_IDToref_types", fields: [STARTMETHODE_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_3")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld2              RefType? @relation("oper_daginfo_VELD_ID2Toref_types", fields: [VELD_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_4")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Baan2              RefType? @relation("oper_daginfo_BAAN_ID2Toref_types", fields: [BAAN_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_5")
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  StartMethode2      RefType? @relation("oper_daginfo_STARTMETHODE_ID2Toref_types", fields: [STARTMETHODE_ID2], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_daginfo_ibfk_6")
 
-  @@index([VERWIJDERD])
-  @@index([DATUM])
+  @@index([BAAN_ID], map: "BAAN_ID")
+  @@index([BAAN_ID2], map: "BAAN_ID2")
+  @@index([DATUM], map: "DATUM")
+  @@index([STARTMETHODE_ID], map: "STARTMETHODE_ID")
+  @@index([STARTMETHODE_ID2], map: "STARTMETHODE_ID2")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VELD_ID2], map: "VELD_ID2")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_daginfo")
 }

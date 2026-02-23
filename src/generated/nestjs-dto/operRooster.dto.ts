@@ -2,13 +2,13 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class OperRoosterDto {
   @ApiProperty({
-    description: "Het unieke ID van de dienst",
+    description: "Het unieke ID van het rooster record",
     type: "integer",
     format: "int32",
   })
   ID: number;
   @ApiProperty({
-    description: "Datum van de aanmelding",
+    description: "Datum van de vliegdag",
     type: "string",
     format: "date-time",
   })
@@ -29,25 +29,25 @@ export class OperRoosterDto {
   })
   WINTER_WERK: boolean;
   @ApiProperty({
-    description: "Aantal aameldingen die we nodig hebben voor een sleepbedrijf",
+    description:
+      "Aantal aameldingen die we nodig hebben voor een sleepbedrijf (alleen DDWV)",
     minimum: 0,
     maximum: 25,
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  MIN_SLEEPSTART: number | null;
+  MIN_SLEEPSTART: number;
   @ApiProperty({
-    description: "Aantal aameldingen die we nodig hebben voor een lierbedrijf",
+    description:
+      "Aantal aameldingen die we nodig hebben voor een lierbedrijf (alleen DDWV)",
     minimum: 0,
     maximum: 25,
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  MIN_LIERSTART: number | null;
+  MIN_LIERSTART: number;
   @ApiProperty({
-    description: "Eventuele opmerkingen, zoals eerder weg gaan",
+    description: "Eventuele opmerkingen voor deze dag",
     type: "string",
     nullable: true,
   })
@@ -58,7 +58,6 @@ export class OperRoosterDto {
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Tijdstempel met de laatste wijziging van het record",
     type: "string",
     format: "date-time",
   })

@@ -21,9 +21,8 @@ export class RefCompetentieDto {
       "De basis leerfase van de competentie, relatie naar de types tabel (bijv EVO, VVO-1, VVO-2, GeZC)",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  LEERFASE_ID: number | null;
+  LEERFASE_ID: number;
   @ApiProperty({
     description: "Bovenliggende competentie",
     type: "integer",
@@ -59,9 +58,10 @@ export class RefCompetentieDto {
   GELDIGHEID: boolean;
   @ApiProperty({
     description: "Wordt score 1-5 gegeven voor deze competentie",
-    type: "boolean",
+    type: "integer",
+    format: "int32",
   })
-  SCORE: boolean;
+  SCORE: number;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

@@ -2,69 +2,60 @@ model OperDagRapport {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Het unieke ID van een dagrapport
-  ID Int @id @default(autoincrement())
-
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Datum van het dagrapport
-  DATUM DateTime   @db.Date
-
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
-  Veld RefType @relation("Veld", fields: [VELD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  DATUM              DateTime @db.Date
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het vliegveld in de type tabel
-  VELD_ID Int
-
-  RefLid RefLid? @relation("RefLid", fields: [INGEVOERD_ID], references: [ID], onUpdate: Cascade, onDelete: NoAction)
-
+  VELD_ID            Int      @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  INGEVOERD_ID Int @db.Int
-
+  INGEVOERD_ID       Int      @db.UnsignedMediumInt
   /// @description Beschrijving van de incidenten
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  INCIDENTEN String?          @db.Text
-
+  INCIDENTEN         String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Beschrijving van het vliegbedrijf deze dag
+  VLIEGBEDRIJF       String?  @db.Text
   /// @description Weersinformatie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  METEO String?               @db.Text
-
+  METEO              String?  @db.Text
   /// @description Diegene die dienst hebben gedaan, startleider, DDI, lierist etc
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  DIENSTEN String?            @db.Text
-
+  DIENSTEN           String?  @db.Text
   /// @description Algemeen verslag van het vliegbedrijf
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  VERSLAG String?             @db.Text
-
+  VERSLAG            String?  @db.Text
   /// @description Bijzonderheden over rollend materieel
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ROLLENDMATERIEEL String?    @db.Text
-
+  ROLLENDMATERIEEL   String?  @db.Text
   /// @description Bijzonderheden over de ingezette vliegtuigen
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  VLIEGENDMATERIEEL String?   @db.Text
-
-  /// @DtoReadOnly
+  VLIEGENDMATERIEEL  String?  @db.Text
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false)
-
+  VERWIJDERD         Boolean  @default(false)
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Veld               RefType  @relation(fields: [VELD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_1")
+  RefLid             RefLid   @relation(fields: [INGEVOERD_ID], references: [ID], onUpdate: Restrict, map: "oper_dagrapporten_ibfk_2")
 
-  @@index([VERWIJDERD])
-  @@index([DATUM])
-
+  @@index([DATUM], map: "DATUM")
+  @@index([INGEVOERD_ID], map: "INGEVOERD_ID")
+  @@index([VELD_ID], map: "VELD_ID")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_dagrapporten")
 }

@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `ref_competenties` MODIFY `DOCUMENTATIE` VARCHAR(75) NULL;

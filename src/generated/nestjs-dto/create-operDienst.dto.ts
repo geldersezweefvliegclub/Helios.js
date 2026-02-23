@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsDateString, IsInt, IsOptional } from "class-validator";
 
 export class CreateOperDienstDto {
   @ApiProperty({
@@ -22,6 +22,15 @@ export class CreateOperDienstDto {
   @IsDateString()
   DATUM?: Date;
   @ApiProperty({
+    description: "Referentie naar het rooster",
+    type: "integer",
+    format: "int32",
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  ROOSTER_ID?: number;
+  @ApiProperty({
     description:
       "Verwijzing naar het lid ID van diegene die ingeroosterd is, link naar de leden tabel",
     type: "integer",
@@ -31,16 +40,6 @@ export class CreateOperDienstDto {
   @IsOptional()
   @IsInt()
   LID_ID?: number;
-  @ApiProperty({
-    description: "Referentie naar het rooster",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  ROOSTER_ID?: number | null;
   @ApiProperty({
     description:
       "Referentie naar hettype dienst (startleider, DDI, lietrist, etc)",
@@ -58,17 +57,27 @@ export class CreateOperDienstDto {
     type: "integer",
     format: "int32",
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsInt()
-  INGEVOERD_DOOR_ID?: number;
+  INGEVOERD_DOOR_ID?: number | null;
   @ApiProperty({
-    description: "Opmerkingen die bij de gast horen",
-    type: "string",
+    description: "True als het lid aanwezig was tijdens deze dienst",
+    type: "boolean",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  OPMERKINGEN?: string | null;
+  @IsBoolean()
+  AANWEZIG?: boolean | null;
+  @ApiProperty({
+    description: "True als het lid afwezig was tijdens deze dienst",
+    type: "boolean",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  AFWEZIG?: boolean | null;
 }

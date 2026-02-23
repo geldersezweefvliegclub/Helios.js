@@ -2,7 +2,7 @@ model OperBrandstof {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description De primary ID van het tankbeurt
-  ID Int @id @default(autoincrement())
+  ID Int @id @default(autoincrement()) @db.UnsignedMediumInt
 
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
@@ -12,7 +12,7 @@ model OperBrandstof {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LID_ID Int @db.Int
+  LID_ID Int @db.UnsignedMediumInt
 
   /// @DtoReadOnly
   /// @description De naam van het lid die de tankbeurt heeft gedaan
@@ -29,7 +29,7 @@ model OperBrandstof {
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  BRANDSTOF_TYPE_ID Int? @db.Int
+  BRANDSTOF_TYPE_ID Int? @db.UnsignedMediumInt
 
   /// @description Prijs per liter van de brandstof
   PRIJS Float? @db.Float
@@ -46,7 +46,7 @@ model OperBrandstof {
 
   /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
-  VERWIJDERD Boolean @default(false) @db.TinyInt
+  VERWIJDERD Boolean @default(false)
 
   /// @DtoReadOnly
   /// @description Tijdstempel met de laatste wijziging van het record
@@ -54,6 +54,5 @@ model OperBrandstof {
 
   @@index([VERWIJDERD])
   @@index([TIJDSTIP])
-
   @@map("oper_brandstof")
 }

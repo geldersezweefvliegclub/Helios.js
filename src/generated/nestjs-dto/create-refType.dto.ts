@@ -1,9 +1,10 @@
+import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsBoolean,
+  IsDecimal,
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -27,7 +28,7 @@ export class CreateRefTypeDto {
   })
   @IsNotEmpty()
   @IsInt()
-  TYPEGROEP_ID: number;
+  GROEP: number;
   @ApiProperty({
     description: "De code van dit type",
     maxLength: 10,
@@ -77,22 +78,22 @@ export class CreateRefTypeDto {
   READ_ONLY?: boolean;
   @ApiProperty({
     description: "Het bedrag om te kunnen factureren",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  BEDRAG?: number | null;
+  @IsDecimal()
+  BEDRAG?: Prisma.Decimal | null;
   @ApiProperty({
     description: "De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen",
-    type: "number",
-    format: "float",
+    type: "string",
+    format: "Decimal.js",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
-  EENHEDEN?: number | null;
+  @IsDecimal()
+  EENHEDEN?: Prisma.Decimal | null;
 }

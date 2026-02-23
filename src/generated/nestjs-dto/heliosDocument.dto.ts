@@ -25,9 +25,8 @@ export class HeliosDocumentDto {
     description: "Documenten worden gegroepeerd",
     type: "integer",
     format: "int32",
-    nullable: true,
   })
-  GROEP_ID: number | null;
+  GROEP_ID: number;
   @ApiProperty({
     description: "Beschrijving van het document",
     minLength: 4,
