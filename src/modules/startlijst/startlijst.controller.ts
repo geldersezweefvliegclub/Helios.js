@@ -80,7 +80,6 @@ export class StartlijstController extends HeliosController
    @Get('GetObjects')
    @ApiOperation({summary: 'Ophalen van startlijst records.'})
    @ApiResponse({status: HttpStatus.OK, type: GetObjectsStartlijstResponse})
-   @ApiResponse({status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.'})
    async GetObjects(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsStartlijstRequest,
@@ -93,7 +92,6 @@ export class StartlijstController extends HeliosController
    @Get('GetLogboek')
    @ApiOperation({summary: 'Ophalen van het lid-logboek.'})
    @ApiResponse({status: HttpStatus.OK, type: GetLogboekResponse})
-   @ApiResponse({status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.'})
    async GetLogboek(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetLogboekRequest,
@@ -106,7 +104,6 @@ export class StartlijstController extends HeliosController
    @Get('GetLogboekTotalen')
    @ApiOperation({summary: 'Ophalen van logboek totalen voor een lid.'})
    @ApiResponse({status: HttpStatus.OK, type: GetLogboekTotalenResponse})
-   @ApiResponse({status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.'})
    async GetLogboekTotalen(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetLogboekTotalenRequest,
@@ -119,7 +116,6 @@ export class StartlijstController extends HeliosController
    @Get('GetVliegtuigLogboek')
    @ApiOperation({summary: 'Ophalen van het logboek per vliegtuig.'})
    @ApiResponse({status: HttpStatus.OK, type: GetVliegtuigLogboekResponse})
-   @ApiResponse({status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.'})
    async GetVliegtuigLogboek(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetVliegtuigLogboekRequest,
@@ -132,7 +128,6 @@ export class StartlijstController extends HeliosController
    @Get('GetVliegtuigLogboekTotalen')
    @ApiOperation({summary: 'Ophalen van vliegtuig-logboek totalen per maand.'})
    @ApiResponse({status: HttpStatus.OK, type: GetVliegtuigLogboekTotalenResponse})
-   @ApiResponse({status: HttpStatus.NOT_MODIFIED, description: 'Data is ongewijzigd.'})
    async GetVliegtuigLogboekTotalen(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetVliegtuigLogboekTotalenRequest,

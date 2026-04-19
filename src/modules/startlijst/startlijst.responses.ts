@@ -73,7 +73,6 @@ export class GetObjectsStartlijstResponse
 {
    @ApiProperty() totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({
       nullable: true,
       type: 'array',
@@ -93,7 +92,6 @@ export class GetVliegDagenResponse
 {
    @ApiProperty() totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({
       nullable: true,
       type: 'array',
@@ -129,7 +127,6 @@ export class GetLogboekResponse
 {
    @ApiProperty({type: Number}) totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({
       nullable: true,
       type: 'array',
@@ -163,7 +160,6 @@ export class GetLogboekTotalenResponse
 {
    @ApiProperty() totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({
       type: 'array',
       items: {$ref: getSchemaPath(StartMethodeTotaalResponse)},
@@ -192,7 +188,6 @@ export class GetVliegtuigLogboekResponse
 {
    @ApiProperty() totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({
       nullable: true,
       type: 'array',
@@ -223,7 +218,6 @@ export class GetVliegtuigLogboekTotalenResponse
 {
    @ApiProperty() totaal: number;
    @ApiProperty({nullable: true}) laatste_aanpassing: string | null;
-   @ApiProperty({required: false}) hash?: string;
    @ApiProperty({type: () => VliegtuigMaandTotalenResponse}) totalen: VliegtuigMaandTotalenResponse;
    @ApiProperty({
       nullable: true,

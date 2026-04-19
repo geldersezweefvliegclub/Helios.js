@@ -1,6 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
-import {crc32} from 'js-crc';
 import {DbService} from '../../database/db-service/db.service';
 import {IHeliosService} from '../../core/services/IHeliosService';
 import {PermissieService} from '../authorisatie/permissie.service';
@@ -57,7 +56,6 @@ export class StartlijstService extends IHeliosService
 
    async GetObjects(user: RefLid, params: GetObjectsStartlijstRequest): Promise<GetObjectsStartlijstResponse>
    {
-      const onlyLatest = params.LAATSTE_AANPASSING ?? false;
       const conditions: Prisma.Sql[] = [Prisma.sql`1=1`];
       const deletedOnly = params.VERWIJDERD ?? false;
 
@@ -122,14 +120,6 @@ export class StartlijstService extends IHeliosService
       const totaal = await this.querySingleNumber(Prisma.sql`SELECT COUNT(*) AS totaal FROM ${viewName} ${where}`, 'totaal');
       const laatsteAanpassing = await this.querySingleDateTime(Prisma.sql`SELECT MAX(LAATSTE_AANPASSING) AS laatste_aanpassing FROM ${viewName} ${where}`, 'laatste_aanpassing');
 
-      if (onlyLatest) {
-         return {
-            totaal,
-            laatste_aanpassing: laatsteAanpassing,
-            dataset: null,
-         };
-      }
-
       const fields = this.buildSelectClause(params.VELDEN);
       const limit = this.buildLimitClause(params.START, params.MAX);
       const rows = await this.dbService.$queryRaw<SqlRow[]>(Prisma.sql`
@@ -142,11 +132,11 @@ export class StartlijstService extends IHeliosService
 
       const dataset = rows.map((row) => this.normalizeStartlijstRecord(row)) as unknown as GetObjectsStartlijstResponse['dataset'];
 
-      return this.buildHashedResponse({
+      return {
          totaal,
          laatste_aanpassing: laatsteAanpassing,
          dataset,
-      }, params.HASH);
+      };
    }
 
    async GetLogboek(user: RefLid, params: GetLogboekRequest): Promise<GetLogboekResponse>
@@ -155,14 +145,6 @@ export class StartlijstService extends IHeliosService
       const where = await this.buildLidLogboekWhere(user, lidId, params.VLIEGTUIG_ID, params.JAAR, params.BEGIN_DATUM, params.EIND_DATUM);
       const totaal = await this.countRows(where);
       const laatsteAanpassing = await this.getLaatsteAanpassing(where);
-
-      if (params.LAATSTE_AANPASSING) {
-         return {
-            totaal,
-            laatste_aanpassing: laatsteAanpassing,
-            dataset: null,
-         };
-      }
 
       const orderBy = this.buildSortClause(params.SORT, ['ID', 'DATUM', 'STARTTIJD', 'LANDINGSTIJD', 'VLIEGTUIG_ID', 'VLIEGER_ID', 'INZITTENDE_ID']);
       const paging = this.buildLimitClause(params.START, params.MAX);
@@ -198,11 +180,11 @@ export class StartlijstService extends IHeliosService
       `);
 
       const dataset = rows.map((row) => this.normalizeLogboekRow(row));
-      return this.buildHashedResponse({
+      return {
          totaal,
          laatste_aanpassing: laatsteAanpassing,
          dataset,
-      }, params.HASH);
+      };
    }
 
    async GetLogboekTotalen(user: RefLid, params: GetLogboekTotalenRequest): Promise<GetLogboekTotalenResponse>
@@ -211,22 +193,6 @@ export class StartlijstService extends IHeliosService
       const where = await this.buildLidLogboekWhere(user, lidId, undefined, params.JAAR ?? new Date().getFullYear(), undefined, undefined, true);
       const totaal = await this.countRows(where, true);
       const laatsteAanpassing = await this.getLaatsteAanpassing(where, true);
-
-      if (params.LAATSTE_AANPASSING) {
-         return {
-            totaal,
-            laatste_aanpassing: laatsteAanpassing,
-            starts: [],
-            vliegtuigen: [],
-            jaar: {
-               STARTS: 0,
-               INSTRUCTIE_STARTS: 0,
-               INSTRUCTIE_UREN: '0:00',
-               VLIEGTIJD: '0:00',
-            },
-            dataset: null,
-         };
-      }
 
       const logboek = await this.dbService.$queryRaw<SqlRow[]>(Prisma.sql`
          SELECT REG_CALL, STARTMETHODE, DUUR, INSTRUCTIEVLUCHT, INZITTENDE_ID
@@ -285,7 +251,7 @@ export class StartlijstService extends IHeliosService
          },
       };
 
-      return this.buildHashedResponse(response, params.HASH);
+      return response;
    }
 
    async GetVliegtuigLogboek(user: RefLid, params: GetVliegtuigLogboekRequest): Promise<GetVliegtuigLogboekResponse>
@@ -301,14 +267,6 @@ export class StartlijstService extends IHeliosService
       `);
       const totaal = Number(totaalRow[0]?.totaal ?? 0);
       const laatsteAanpassing = await this.getLaatsteAanpassing(where, true);
-
-      if (params.LAATSTE_AANPASSING) {
-         return {
-            totaal,
-            laatste_aanpassing: laatsteAanpassing,
-            dataset: null,
-         };
-      }
 
       const paging = this.buildLimitClause(params.START, params.MAX);
       const rows = await this.dbService.$queryRaw<SqlRow[]>(Prisma.sql`
@@ -335,11 +293,11 @@ export class StartlijstService extends IHeliosService
          REG_CALL: this.toStringValue(row.REG_CALL),
       }));
 
-      return this.buildHashedResponse({
+      return {
          totaal,
          laatste_aanpassing: laatsteAanpassing,
          dataset,
-      }, params.HASH);
+      };
    }
 
    async GetVliegtuigLogboekTotalen(user: RefLid, params: GetVliegtuigLogboekTotalenRequest): Promise<GetVliegtuigLogboekTotalenResponse>
@@ -354,22 +312,7 @@ export class StartlijstService extends IHeliosService
            AND VLIEGTUIG_ID = ${vliegtuigId}
            AND YEAR(DATUM) = ${year}
       `;
-      const totaal = await this.countRows(where, true);
       const laatsteAanpassing = await this.getLaatsteAanpassing(where, true);
-
-      if (params.LAATSTE_AANPASSING) {
-         return {
-            totaal,
-            laatste_aanpassing: laatsteAanpassing,
-            totalen: {
-               VLUCHTEN: 0,
-               LIERSTARTS: 0,
-               SLEEPSTARTS: 0,
-               VLIEGTIJD: '00:00:00',
-            },
-            dataset: null,
-         };
-      }
 
       const rows = await this.dbService.$queryRaw<SqlRow[]>(Prisma.sql`
          SELECT
@@ -420,7 +363,7 @@ export class StartlijstService extends IHeliosService
          totalDuration = this.sumClockDurations(totalDuration, vliegtijd);
       }
 
-      return this.buildHashedResponse({
+      return {
          totaal: 12,
          laatste_aanpassing: laatsteAanpassing,
          totalen: {
@@ -430,7 +373,7 @@ export class StartlijstService extends IHeliosService
             VLIEGTIJD: totalDuration,
          },
          dataset: months,
-      }, params.HASH);
+      };
    }
 
    async GetVliegDagen(user: RefLid, params: GetVliegDagenRequest): Promise<GetVliegDagenResponse>
@@ -497,7 +440,7 @@ export class StartlijstService extends IHeliosService
          ${limit}
       `);
 
-      return this.buildHashedResponse({
+      return {
          totaal,
          laatste_aanpassing: laatsteAanpassing,
          dataset: rows.map((row) => ({
@@ -505,7 +448,7 @@ export class StartlijstService extends IHeliosService
             STARTS: this.toNumberValue(row.STARTS),
             VLIEGTIJD: this.trimTime(this.toStringValue(row.VLIEGTIJD)),
          })),
-      });
+      };
    }
 
    async GetRecency(user: RefLid, vliegerId: number, datum?: Date): Promise<GetRecencyResponse>
@@ -878,18 +821,6 @@ export class StartlijstService extends IHeliosService
 
       const offset = start && start >= 0 ? start : 0;
       return Prisma.sql`LIMIT ${offset}, ${max}`;
-   }
-
-   private buildHashedResponse<T extends object>(payload: T, currentHash?: string): T & {hash: string}
-   {
-      const hash = crc32(JSON.stringify(payload));
-      if (currentHash !== undefined && currentHash === hash) {
-         throw new HttpException('Data is ongewijzigd', HttpStatus.NOT_MODIFIED);
-      }
-      return {
-         ...payload,
-         hash,
-      };
    }
 
    private normalizeLogboekRow(row: GetLogboekRowResponse): GetLogboekRowResponse

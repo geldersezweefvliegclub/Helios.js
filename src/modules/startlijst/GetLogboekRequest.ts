@@ -1,15 +1,10 @@
-import {ApiProperty} from '@nestjs/swagger';
+import {ApiProperty, OmitType} from '@nestjs/swagger';
 import {IsDate, IsOptional, IsString} from 'class-validator';
 import {GetObjectsRequest} from '../../core/DTO/IHeliosFilter';
-import {OptionalBooleanTransform, OptionalDateTransform, OptionalNumberTransform} from '../../core/helpers/Transformers';
+import {OptionalDateTransform, OptionalNumberTransform} from '../../core/helpers/Transformers';
 
-export class GetLogboekRequest extends GetObjectsRequest
+export class GetLogboekRequest extends OmitType(GetObjectsRequest, ['HASH'] as const)
 {
-   @IsOptional()
-   @OptionalBooleanTransform()
-   @ApiProperty({name: 'LAATSTE_AANPASSING', required: false, type: Boolean})
-   LAATSTE_AANPASSING?: boolean;
-
    @IsOptional()
    @IsDate()
    @OptionalDateTransform()
