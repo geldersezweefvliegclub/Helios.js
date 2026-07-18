@@ -7,9 +7,7 @@ import {JwtAuthGuard} from "../login/guards/jwt-auth.guard";
 @Controller('DDWV')
 @ApiTags('DDWV')
 export class DdwvController extends HeliosController {
-    constructor(private readonly logger: Logger) {
-        super();
-    }
+    private readonly logger = new Logger(DdwvController.name);
 
     @Get('GetConfiguratie')
     @ApiBearerAuth()

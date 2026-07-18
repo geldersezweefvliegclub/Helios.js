@@ -6,7 +6,9 @@ import {ConfigService} from "@nestjs/config";
 @Injectable()
 export class DbService extends PrismaClient implements  OnModuleInit
 {
-    constructor(private readonly configService: ConfigService, private readonly logger: Logger) {
+    private readonly logger = new Logger(DbService.name);
+
+    constructor(private readonly configService: ConfigService) {
         super({
             log: [
                 {

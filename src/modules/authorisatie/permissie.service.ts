@@ -3,9 +3,7 @@ import { RefLid} from '@prisma/client';
 
 @Injectable()
 export class PermissieService {
-
-   constructor(private readonly logger: Logger) {
-   }
+   private readonly logger = new Logger(PermissieService.name);
 
    heeftToegang(user: RefLid, functie:string): void
    {
