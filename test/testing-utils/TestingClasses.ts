@@ -24,7 +24,7 @@ export class RequestBuilder {
                 request = axios.get(url, {
                     params: endpoint.queryParams,
                     auth: auth,
-                    timeout: 5000,
+                    timeout: 30000,
                 });
                 break;
             // Add other HTTP methods as needed
