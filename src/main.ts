@@ -4,7 +4,6 @@ import {BadRequestException, INestApplication, ValidationPipe} from "@nestjs/com
 import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger';
 import {utilities, WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
-import {SeqTransport} from "@datalust/winston-seq";
 import * as cookieParser from 'cookie-parser';
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosHttpExceptionFilter";
 import { dump }             from 'js-yaml';
@@ -16,18 +15,8 @@ import {HeliosPrismaClientValidationError} from "./core/helpers/HeliosPrismaClie
  * Create a logger for the application using Winston instead of the built-in nestjs logger.
  * Allows for logging to multiple transports, such as the console and Seq, or modifying the log format.
  */
-const createLogger = () => WinstonModule.createLogger({
-   level: process.env.LOGGER_LEVEL || 'info',
-   format: winston.format.combine(   /* This is required to get errors to log with stack traces. See https://github.com/winstonjs/winston/issues/1498 */
-      winston.format.errors({stack: true}),
-      winston.format.json(),
-   ),
-   defaultMeta: {
-      Application: 'Helios API',
-      Instance: process.env.INSTANCE || 'Local',
-      Environment: process.env.NODE_ENV || 'Local',
-   },
-   transports: [
+const createLogger = async () => {
+   const transports: winston.transport[] = [
       new winston.transports.Console({
          format: winston.format.combine(
              winston.format.timestamp(),
@@ -39,7 +28,13 @@ const createLogger = () => WinstonModule.createLogger({
              }),
           ),
       }),
-      ...(process.env.LOGGER_SERVER_URL ? [new SeqTransport({
+   ];
+
+   // @datalust/winston-seq is ESM-only, dynamic import so it's never require()'d when the Seq server isn't configured
+   if (process.env.LOGGER_SERVER_URL)
+   {
+      const {SeqTransport} = await import("@datalust/winston-seq");
+      transports.push(new SeqTransport({
          serverUrl: process.env.LOGGER_SERVER_URL,
          apiKey: process.env.LOGGER_API_KEY,
          onError: ((e: Error) => {
@@ -47,9 +42,23 @@ const createLogger = () => WinstonModule.createLogger({
          }),
          handleExceptions: true,
          handleRejections: true,
-      })] : []),
-   ],
-});
+      }));
+   }
+
+   return WinstonModule.createLogger({
+      level: process.env.LOGGER_LEVEL || 'info',
+      format: winston.format.combine(   /* This is required to get errors to log with stack traces. See https://github.com/winstonjs/winston/issues/1498 */
+         winston.format.errors({stack: true}),
+         winston.format.json(),
+      ),
+      defaultMeta: {
+         Application: 'Helios API',
+         Instance: process.env.INSTANCE || 'Local',
+         Environment: process.env.NODE_ENV || 'Local',
+      },
+      transports,
+   });
+};
 
 function setupSwagger(app: INestApplication, swaggerUrl: string)
 {
@@ -80,7 +89,7 @@ function setupSwagger(app: INestApplication, swaggerUrl: string)
 async function bootstrap()
 {
    const app = await NestFactory.create(AppModule, {
-     logger: createLogger()  // the logger to record debug information
+     logger: await createLogger()  // the logger to record debug information
    });
     app.enableCors({
         credentials: true,
