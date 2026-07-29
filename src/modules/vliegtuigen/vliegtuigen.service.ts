@@ -10,6 +10,9 @@ import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest
 import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 
+const JOURNAAL_CATEGORIE_DEFECT = 2404;
+const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = 2504; // t/m deze status telt een journaal als openstaand (Opgelost/Afgetekend niet)
+
 @Injectable()
 export class VliegtuigenService extends IHeliosService
 {
@@ -50,6 +53,7 @@ export class VliegtuigenService extends IHeliosService
                   { ID: params.ID },
                   { VERWIJDERD: params.VERWIJDERD ?? false },
                   { ID: { in: params.IDs }},
+                  { ID: { in: params.IN }},   // IN is enkel voor PHP compatibiliteit, functioneel gelijk aan IDs. TODO: verwijderen
                   { OR: [
                         { REGISTRATIE: { contains: params.SELECTIE }},
                         { CALLSIGN:    { contains: params.SELECTIE }},
@@ -70,7 +74,6 @@ export class VliegtuigenService extends IHeliosService
          count = await this.dbService.refVliegtuig.count({ where: where });
       }
 
-      //TODO: journaal_aantal
       const objs = await this.dbService.refVliegtuig.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "CLUBKIST DESC, VOLGORDE, ID"),
@@ -83,8 +86,30 @@ export class VliegtuigenService extends IHeliosService
          }
       });
 
+      // aantal openstaande journaals per vliegtuig, gebatched voor alle opgehaalde vliegtuigen (was per record een subquery)
+      const openJournaalsPerVliegtuig = await this.dbService.operJournaal.groupBy({
+         by: ['VLIEGTUIG_ID'],
+         where: {
+            STATUS_ID: {lte: JOURNAAL_STATUS_LAATSTE_OPENSTAAND},
+            CATEGORIE_ID: JOURNAAL_CATEGORIE_DEFECT,
+            VLIEGTUIG_ID: {in: objs.map(obj => obj.ID)}
+         },
+         _count: {_all: true}
+      });
+      const journaalAantalPerVliegtuig = new Map(openJournaalsPerVliegtuig.map(row => [row.VLIEGTUIG_ID, row._count._all]));
+
       const response = objs.map((obj) => {
-         return new GetRefVliegtuigenResponse(obj);
+         const resp = new GetRefVliegtuigenResponse(obj);
+         resp.REG_CALL = `${obj.REGISTRATIE ?? ''} (${obj.CALLSIGN ?? ''})`;
+         resp.BEVOEGDHEID_LOKAAL = obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null;
+         resp.BEVOEGDHEID_OVERLAND = obj.BevoegdheidOverland?.OMSCHRIJVING ?? null;
+         resp.JOURNAAL_AANTAL = journaalAantalPerVliegtuig.get(obj.ID) ?? 0;
+
+         // vliegtuig met een openstaand journaal is niet inzetbaar
+         if (resp.JOURNAAL_AANTAL > 0)
+            resp.INZETBAAR = false;
+
+         return resp;
       });
 
       return this.buildGetObjectsResponse(response, count, params.HASH);

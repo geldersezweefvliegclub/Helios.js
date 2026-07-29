@@ -30,6 +30,8 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
         this.OPMERKINGEN = obj?.OPMERKINGEN;
         this.VERWIJDERD = obj?.VERWIJDERD;
         this.LAATSTE_AANPASSING = obj?.LAATSTE_AANPASSING;
+        this.BEVOEGDHEID_LOKAAL_ID = obj?.BEVOEGDHEID_LOKAAL_ID;
+        this.BEVOEGDHEID_OVERLAND_ID = obj?.BEVOEGDHEID_OVERLAND_ID;
 
         this.VLIEGTUIGTYPE = obj?.VliegtuigType?.OMSCHRIJVING;
         this.BEVOEGDHEID_LOKAAL = obj?.BevoegdheidLokaal?.OMSCHRIJVING;
@@ -45,18 +47,32 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
     VLIEGTUIGTYPE?: string
 
     @ApiProperty({
+        type: Number,
+        required: false,
+        description: 'Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen',
+    })
+    BEVOEGDHEID_LOKAAL_ID?: number | null
+
+    @ApiProperty({
         type: String,
         required: false,
         description: 'Omschrijving om vliegtuig lokaal te mogen vliegen',
     })
-    BEVOEGDHEID_LOKAAL?: string
+    BEVOEGDHEID_LOKAAL?: string | null
+
+    @ApiProperty({
+        type: Number,
+        required: false,
+        description: 'Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan',
+    })
+    BEVOEGDHEID_OVERLAND_ID?: number | null
 
     @ApiProperty({
         type: String,
         required: false,
         description: 'Omschrijving om met vliegtuig overland te gaan',
     })
-    BEVOEGDHEID_OVERLAND?: string
+    BEVOEGDHEID_OVERLAND?: string | null
 
     @ApiProperty({
         type: Number,
@@ -64,4 +80,11 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
         description: 'Aantal uitstaande journaals',
     })
     JOURNAAL_AANTAL?: number
+
+    @ApiProperty({
+        type: String,
+        required: false,
+        description: 'Registratie en callsign van het vliegtuig',
+    })
+    REG_CALL?: string
 }
