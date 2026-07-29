@@ -56,11 +56,26 @@ export class GastenService extends IHeliosService
       {
          count = await this.dbService.operGast.count({where: where});
       }
-      const objs = await this.dbService.operGast.findMany({
+      const rawObjs = await this.dbService.operGast.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperGastOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            Veld: true
+         }
+      });
+
+      const objs = rawObjs.map((obj) => {
+         const retObj = {
+            ...obj,
+            VELD: obj.Veld?.OMSCHRIJVING ?? null,
+         };
+
+         delete retObj.Veld;
+
+         return retObj as GetObjectsOperGastenResponse;
+      });
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
