@@ -51,6 +51,8 @@ export class TransactiesService extends IHeliosService
                   { LID_ID: params.LID_ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
+                  { EXT_REF: params.EXT_REF},
+                  { VLIEGDAG: params.VLIEGDAG},
 
                   {
                      OR: [
@@ -70,11 +72,32 @@ export class TransactiesService extends IHeliosService
       {
          count = await this.dbService.operTransactie.count({where: where});
       }
-      const objs = await this.dbService.operTransactie.findMany({
+      const rawObjs = await this.dbService.operTransactie.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperTransactieOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            RefLid: true,
+            RefIngevoerd: true,
+            TypeTransactie: true
+         }
+      });
+
+      const objs = rawObjs.map((obj) => {
+         const retObj = {
+            ...obj,
+            NAAM: obj.RefLid?.NAAM ?? null,
+            INGEVOERD: obj.RefIngevoerd?.NAAM ?? null,
+            TYPE: obj.TypeTransactie?.OMSCHRIJVING ?? null,
+         };
+
+         delete retObj.RefLid;
+         delete retObj.RefIngevoerd;
+         delete retObj.TypeTransactie;
+
+         return retObj as GetObjectsOperTransactiesResponse;
+      });
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }

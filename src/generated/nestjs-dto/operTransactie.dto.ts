@@ -101,6 +101,12 @@ export class OperTransactieDto {
   })
   BETAALD: boolean;
   @ApiProperty({
+    description: "URL naar de betaalpagina van een extern systeem, bijv Mollie",
+    type: "string",
+    nullable: true,
+  })
+  BETAAL_URL: string | null;
+  @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
   })

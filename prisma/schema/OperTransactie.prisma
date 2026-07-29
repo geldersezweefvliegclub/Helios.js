@@ -48,6 +48,9 @@ model OperTransactie {
   /// @description Is de transactie betaald bijv Mollie
   BETAALD            Boolean   @default(false)
   /// @DtoReadOnly
+  /// @description URL naar de betaalpagina van een extern systeem, bijv Mollie
+  BETAAL_URL         String?   @db.VarChar(250)
+  /// @DtoReadOnly
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean   @default(false)
   /// @DtoReadOnly
