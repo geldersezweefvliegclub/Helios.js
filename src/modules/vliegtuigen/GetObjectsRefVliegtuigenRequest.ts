@@ -6,6 +6,19 @@ import {IsOptional} from "class-validator";
 export class GetObjectsRefVliegtuigenRequest extends GetObjectsRequest
 {
    // specifieke velden voor GetObjects
+   // IN is functioneel identiek aan het generieke IDs veld (beide filteren op ID), enkel aanwezig voor PHP compatibiliteit.
+   // TODO: verwijderen zodra PHP niet meer als referentie gebruikt wordt.
+   @IsOptional()
+   @CSVTransform()
+   @ApiProperty(
+      {
+         required: false,
+         deprecated: true,
+         description: 'Verouderd, gebruik IDs. CSV lijst van IDs die opgehaald moeten worden',
+         type: String
+      })
+   public IN?: number[];
+
    @IsOptional()
    @ApiProperty(
       {
