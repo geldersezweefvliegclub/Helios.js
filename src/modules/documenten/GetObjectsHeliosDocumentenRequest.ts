@@ -1,7 +1,7 @@
 import {GetObjectsRequest} from "../../core/DTO/IHeliosFilter";
 import {IsInt, IsOptional} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
-import {OptionalNumberTransform} from "../../core/helpers/Transformers";
+import {CSVTransform, OptionalNumberTransform} from "../../core/helpers/Transformers";
 
 export class GetObjectsHeliosDocumentenRequest extends GetObjectsRequest {
     // hier komen de specifieke velden voor GetObjects
@@ -18,15 +18,13 @@ export class GetObjectsHeliosDocumentenRequest extends GetObjectsRequest {
     LID_ID?: number;
 
     @IsOptional()
-    @IsInt()
-    @OptionalNumberTransform()
+    @CSVTransform()
     @ApiProperty(
         {
-            name: "GROEP_ID",
             required: false,
-            description: 'Opvragen documenten uit een specifieke groep',
-            type: Number
+            description: 'CSV lijst van groep IDs om documenten uit op te halen',
+            type: String
         })
-    GROEP_ID?: number;
+    GROEPEN?: number[];
 }
 

@@ -47,7 +47,7 @@ export class DocumentenService extends IHeliosService
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
-                  { GROEP_ID: params.GROEP_ID},
+                  { GROEP_ID: { in: params.GROEPEN }},
                   { LID_ID: params.LID_ID ?? null}
                ]
          }
@@ -62,7 +62,6 @@ export class DocumentenService extends IHeliosService
          take: params.MAX,
          skip: params.START,
          include: {
-            RefLid: true,
             DocumentGroep: true
          }
       });
@@ -71,12 +70,10 @@ export class DocumentenService extends IHeliosService
          // copy relevant fields from child objects to the parent object
          const retObj = {
             ...obj,
-            NAAM: obj.RefLid?.NAAM ?? null,
             GROEP: obj.DocumentGroep?.OMSCHRIJVING ?? null
          } ;
 
          // delete child objects from the response
-         delete retObj.RefLid;
          delete retObj.DocumentGroep;
 
          return  retObj as GetObjectsHeliosDocumentenResponse;
