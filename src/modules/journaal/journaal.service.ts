@@ -61,6 +61,8 @@ export class JournaalService extends IHeliosService
                   { TECHNICUS_ID: { in: params.TECHNICUS_ID }},
                   { STATUS_ID: { in: params.STATUS_ID }},
                   { CATEGORIE_ID: { in: params.CATEGORIE_ID }},
+                  { ROLLEND_ID: params.ROLLEND === undefined ? undefined : (params.ROLLEND ? {not: null} : null)},
+                  { VLIEGTUIG_ID: params.VLIEGEND === undefined ? undefined : (params.VLIEGEND ? {not: null} : null)},
                   { VLIEGTUIG_ID: { in: params.VLIEGTUIG_ID }},
 
                   {
