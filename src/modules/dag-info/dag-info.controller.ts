@@ -20,8 +20,8 @@ import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto/update-operDagInf
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectOperDagInfoRequest} from "./GetObjectOperDagInfoRequest";
 
-@Controller('DagInfo')
-@ApiTags('DagInfo')
+@Controller('Daginfo')
+@ApiTags('Daginfo')
 export class DagInfoController  extends HeliosController
 {
    constructor(private readonly DagInfoService: DagInfoService,

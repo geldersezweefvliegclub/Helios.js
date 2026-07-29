@@ -1,4 +1,4 @@
-import {Transform} from "class-transformer";
+import {Transform, Type} from "class-transformer";
 import {IsDate, IsInt, IsOptional} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 
@@ -7,6 +7,7 @@ import {ApiProperty} from "@nestjs/swagger";
  */
 export class GetObjectOperDagInfoRequest {
     @IsOptional()
+    @Type(() => Number)
     @IsInt()
     @ApiProperty({name: "ID", required: false, type: Number})
     ID?: number;

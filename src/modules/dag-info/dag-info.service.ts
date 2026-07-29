@@ -59,11 +59,47 @@ export class DagInfoService extends IHeliosService
       {
          count = await this.dbService.operDagInfo.count({where: where});
       }
-      const objs = await this.dbService.operDagInfo.findMany({
+      const rawObjs = await this.dbService.operDagInfo.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperDagInfoOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            Veld: true,
+            Baan: true,
+            StartMethode: true,
+            Veld2: true,
+            Baan2: true,
+            StartMethode2: true
+         }
+      });
+
+      const objs = rawObjs.map((obj) => {
+         const retObj = {
+            ...obj,
+            VELD_CODE: obj.Veld?.CODE ?? null,
+            VELD_OMS: obj.Veld?.OMSCHRIJVING ?? null,
+            BAAN_CODE: obj.Baan?.CODE ?? null,
+            BAAN_OMS: obj.Baan?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE: obj.StartMethode?.CODE ?? null,
+            STARTMETHODE_OMS: obj.StartMethode?.OMSCHRIJVING ?? null,
+            VELD_CODE2: obj.Veld2?.CODE ?? null,
+            VELD_OMS2: obj.Veld2?.OMSCHRIJVING ?? null,
+            BAAN_CODE2: obj.Baan2?.CODE ?? null,
+            BAAN_OMS2: obj.Baan2?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE2: obj.StartMethode2?.CODE ?? null,
+            STARTMETHODE_OMS2: obj.StartMethode2?.OMSCHRIJVING ?? null,
+         };
+
+         delete retObj.Veld;
+         delete retObj.Baan;
+         delete retObj.StartMethode;
+         delete retObj.Veld2;
+         delete retObj.Baan2;
+         delete retObj.StartMethode2;
+
+         return retObj as GetObjectsOperDagInfoResponse;
+      });
 
       return this.buildGetObjectsResponse(objs, count, params.HASH);
    }
