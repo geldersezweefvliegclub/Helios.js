@@ -27,9 +27,6 @@ export class DienstenService extends IHeliosService
          where: {
             ID: id
          },
-         include: {
-            TypeDienst: true
-         }
       });
 
       if (!db) {
@@ -57,6 +54,8 @@ export class DienstenService extends IHeliosService
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
                   { LID_ID: params.LID_ID },
+                  { AANWEZIG: params.AANWEZIG },
+                  { AFWEZIG: params.AFWEZIG },
 
                   {
                      OR: [
@@ -82,7 +81,9 @@ export class DienstenService extends IHeliosService
          take: params.MAX,
          skip: params.START,
          include: {
-            TypeDienst: true
+            TypeDienst: true,
+            RefLid: true,
+            RefIngevoerd: true
          }
       });
 
