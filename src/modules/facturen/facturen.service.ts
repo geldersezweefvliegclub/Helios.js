@@ -48,7 +48,17 @@ export class FacturenService extends IHeliosService
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+                  { LID_ID: { in: params.LID_ID }},
+                  { JAAR: params.JAAR },
+                  {
+                     OR: [
+                        { NAAM:           { contains: params.SELECTIE }},
+                        { FACTUUR_NUMMER: { contains: params.SELECTIE }},
+                        { OMSCHRIJVING:   { contains: params.SELECTIE }},
+                        { LIDNR:          { contains: params.SELECTIE }}
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
@@ -58,7 +68,7 @@ export class FacturenService extends IHeliosService
       }
       const objs = await this.dbService.operFactuur.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperFactuurOrderByWithRelationInput>(params.SORT ?? "DATUM"),
+         orderBy: this.SortStringToSortObj<Prisma.OperFactuurOrderByWithRelationInput>(params.SORT ?? "ID"),
          take: params.MAX,
          skip: params.START});
 
