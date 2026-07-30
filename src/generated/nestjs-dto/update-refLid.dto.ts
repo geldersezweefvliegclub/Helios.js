@@ -509,4 +509,25 @@ export class UpdateRefLidDto {
   @IsOptional()
   @IsString()
   BRANDSTOF_PAS?: string | null;
+  @ApiProperty({
+    description: "Gmail adres van het lid",
+    maxLength: 150,
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  GMAIL?: string | null;
+  @ApiProperty({
+    description:
+      "Specifieke zaken/wensen/vrijstellngen voor diensten tbv roostermaker",
+    maxLength: 250,
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  DIENSTEN?: string | null;
 }

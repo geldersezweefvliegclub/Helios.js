@@ -339,4 +339,19 @@ export class RefLidDto {
     nullable: true,
   })
   BRANDSTOF_PAS: string | null;
+  @ApiProperty({
+    description: "Gmail adres van het lid",
+    maxLength: 150,
+    type: "string",
+    nullable: true,
+  })
+  GMAIL: string | null;
+  @ApiProperty({
+    description:
+      "Specifieke zaken/wensen/vrijstellngen voor diensten tbv roostermaker",
+    maxLength: 250,
+    type: "string",
+    nullable: true,
+  })
+  DIENSTEN: string | null;
 }

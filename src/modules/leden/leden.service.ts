@@ -12,6 +12,8 @@ import {VerjaardagenResponse} from "./VerjaardagenResponse";
 
 import { hash } from "bcryptjs";
 
+const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
+
 @Injectable()
 export class LedenService extends IHeliosService
 {
@@ -97,7 +99,15 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
-      // TODO progressiekaart voor pax bevoegdheid
+      // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
+      const paxProgressies = await this.dbService.operProgressie.findMany({
+         where: {
+            COMPETENTIE_ID: PAX_COMPETENTIE_ID,
+            LID_ID: {in: objs.map(obj => obj.ID)}
+         },
+         select: {LID_ID: true}
+      });
+      const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
 
       const response = objs.map((obj) => {
          // copy relevant fields from child objects to the parent object
@@ -109,6 +119,7 @@ export class LedenService extends IHeliosService
             ZUSTERCLUB: obj.Zusterclub?.NAAM ?? null,
             BUDDY: obj.Buddy?.NAAM ?? null,
             BUDDY2: obj.Buddy2?.NAAM ?? null,
+            PAX: ledenMetPax.has(obj.ID),
          } ;
 
          // delete child objects from the response
