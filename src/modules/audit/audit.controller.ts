@@ -2,6 +2,7 @@ import {
     Controller,
     HttpException,
     HttpStatus,
+    Logger,
     Query
 } from '@nestjs/common';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -26,6 +27,7 @@ import {Prisma, RefLid} from "@prisma/client";
 @Controller('Audit')
 @ApiTags('Audit')
 export class AuditController extends HeliosController {
+    private readonly logger = new Logger(AuditController.name);
     excludeClasses = ['ABCD'];
 
     constructor(private readonly auditService: AuditService,
@@ -90,7 +92,9 @@ export class AuditController extends HeliosController {
             RESULTAAT: JSON.stringify(result),
             ACTIE: 'Toevoegen'
         }
-        this.auditService.AddObject(record);
+        // AddObject() wordt hier bewust niet awaited (event listener), maar een verworpen promise die niet wordt
+        // afgehandeld crasht de hele Node applicatie. Falende audit logging mag nooit de eigenlijke actie blokkeren.
+        this.auditService.AddObject(record).catch(err => this.logger.error(`Audit log mislukt voor ${objNaam}.Created (ID=${id}): ${err}`));
     }
 
 
@@ -117,7 +121,7 @@ export class AuditController extends HeliosController {
             RESULTAAT: JSON.stringify(result),
             ACTIE: 'Aanpassen'
         }
-        this.auditService.AddObject(record);
+        this.auditService.AddObject(record).catch(err => this.logger.error(`Audit log mislukt voor ${objNaam}.Updated (ID=${id}): ${err}`));
     }
 
 
@@ -137,7 +141,7 @@ export class AuditController extends HeliosController {
             VOOR: JSON.stringify(data),
             ACTIE: 'Verwijderd'
         }
-        this.auditService.AddObject(record);
+        this.auditService.AddObject(record).catch(err => this.logger.error(`Audit log mislukt voor ${objNaam}.Removed (ID=${id}): ${err}`));
     }
 
     //------------- Specifieke endpoints staan hieronder --------------------//
