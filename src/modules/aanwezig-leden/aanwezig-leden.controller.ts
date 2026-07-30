@@ -38,12 +38,20 @@ export class AanwezigLedenController  extends HeliosController
    }
 
    @HeliosGetObjects(GetObjectsOperAanwezigLedenResponse)
-   GetObjects(
+   async GetObjects(
       @CurrentUser() user: RefLid,
       @Query() queryParams: GetObjectsOperAanwezigLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperAanwezigLedenResponse>>
    {
       this.permissieService.heeftToegang(user, 'AanwezigLeden.GetObjects');
-      return this.AanwezigLedenService.GetObjects(queryParams);
+      const objs = await this.AanwezigLedenService.GetObjects(queryParams);
+
+      if (this.permissieService.isBeheerder(user) || this.permissieService.isInstructeur(user) || this.permissieService.isCIMT(user))
+      {
+         const barometers = await this.AanwezigLedenService.GetStatusBarometers(objs.dataset);
+         objs.dataset = objs.dataset.map(obj => ({...obj, STATUS_BAROMETER: barometers.get(obj.LID_ID)}));
+      }
+
+      return objs;
    }
 
    @HeliosCreateObject(CreateOperAanwezigLidDto, OperAanwezigLidDto)
