@@ -9,6 +9,14 @@ import {Prisma, OperAanwezigVliegtuig} from "@prisma/client";
 import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezigVliegtuigenRequest";
 import {GetObjectsOperAanwezigVliegtuigenResponse} from "./GetObjectsOperAanwezigVliegtuigenResponse";
 
+// aanwezig vliegtuig record inclusief de relaties die de PHP aanwezig_vliegtuigen_view samenvoegt
+type AanwezigVliegtuigMetRelaties = Prisma.OperAanwezigVliegtuigGetPayload<{
+   include: {
+      Vliegtuig: { include: { VliegtuigType: true } },
+      Veld: true,
+   }
+}>;
+
 @Injectable()
 export class AanwezigVliegtuigenService extends IHeliosService
 {
@@ -61,9 +69,70 @@ export class AanwezigVliegtuigenService extends IHeliosService
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperAanwezigVliegtuigOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            Vliegtuig: {
+               include: {
+                  VliegtuigType: true,
+               }
+            },
+            Veld: true,
+         }
+      });
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      return this.buildGetObjectsResponse(response, count, params.HASH);
+   }
+
+   // voegt de velden toe die de PHP aanwezig_vliegtuigen_view samenvoegt: vliegtuig- en type-gegevens via joins,
+   // en of het vliegtuig momenteel aan het vliegen is via een gebatchte aggregatie op oper_startlijst
+   private async NaarGetObjectsResponse(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
+   {
+      if (objs.length === 0) return [];
+
+      const vliegtuigIds = [...new Set(objs.map(obj => obj.VLIEGTUIG_ID))];
+      const datums = [...new Map(objs.map(obj => [obj.DATUM.getTime(), obj.DATUM])).values()];
+      const vluchtenVanVandaag = await this.dbService.operStartlijst.findMany({
+         where: {
+            VERWIJDERD: false,
+            VLIEGTUIG_ID: {in: vliegtuigIds},
+            DATUM: {in: datums}
+         }
+      });
+
+      const vliegtVliegtuigenPerDatum = new Set<string>();
+      for (const vlucht of vluchtenVanVandaag)
+      {
+         if (vlucht.STARTTIJD !== null && vlucht.LANDINGSTIJD === null)
+            vliegtVliegtuigenPerDatum.add(`${vlucht.VLIEGTUIG_ID}_${vlucht.DATUM.getTime()}`);
+      }
+
+      return objs.map(obj =>
+      {
+         const {Vliegtuig: vliegtuig, Veld: veld, ...aanwezigVliegtuig} = obj;
+
+         return {
+            ...aanwezigVliegtuig,
+            REGISTRATIE: vliegtuig.REGISTRATIE,
+            CALLSIGN: vliegtuig.CALLSIGN,
+            REG_CALL: `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})`,
+            ZITPLAATSEN: vliegtuig.ZITPLAATSEN,
+            CLUBKIST: vliegtuig.CLUBKIST,
+            FLARMCODE: vliegtuig.FLARMCODE,
+            TYPE_ID: vliegtuig.TYPE_ID,
+            VLIEGTUIGTYPE_OMS: vliegtuig.VliegtuigType?.OMSCHRIJVING ?? null,
+            TMG: vliegtuig.TMG,
+            ZELFSTART: vliegtuig.ZELFSTART,
+            SLEEPKIST: vliegtuig.SLEEPKIST,
+            VOLGORDE: vliegtuig.VOLGORDE,
+            INZETBAAR: vliegtuig.INZETBAAR,
+            TRAINER: vliegtuig.TRAINER,
+            OPMERKINGEN: vliegtuig.OPMERKINGEN,
+            VELD: veld?.OMSCHRIJVING ?? null,
+            VLIEGT: vliegtVliegtuigenPerDatum.has(`${obj.VLIEGTUIG_ID}_${obj.DATUM.getTime()}`) ? 1 : 0,
+         } as GetObjectsOperAanwezigVliegtuigenResponse;
+      });
    }
 
    async AddObject(data: Prisma.OperAanwezigVliegtuigCreateInput): Promise<OperAanwezigVliegtuig>
