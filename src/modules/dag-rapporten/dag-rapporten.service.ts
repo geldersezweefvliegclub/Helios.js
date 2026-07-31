@@ -73,9 +73,24 @@ export class DagRapportenService extends IHeliosService
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperDagRapportOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
-         skip: params.START});
+         skip: params.START,
+         include: {
+            Veld: true,
+            RefLid: true,
+         }
+      });
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const response = objs.map((obj) => {
+         const {Veld: veld, RefLid: lid, ...dagRapport} = obj;
+         return {
+            ...dagRapport,
+            INGEVOERD: lid.NAAM,
+            VELD_CODE: veld.CODE,
+            VELD_OMS: veld.OMSCHRIJVING,
+         } as GetObjectsOperDagRapportenResponse;
+      });
+
+      return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
    async AddObject(data: Prisma.OperDagRapportCreateInput): Promise<OperDagRapport>
