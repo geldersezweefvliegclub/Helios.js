@@ -21,6 +21,12 @@ export class OperStartlijstDto {
   })
   DAGNUMMER: number;
   @ApiProperty({
+    description: "Het vliegtuig dat gebruikt is voor de vlucht",
+    type: "integer",
+    format: "int32",
+  })
+  VLIEGTUIG_ID: number;
+  @ApiProperty({
     description: "De starttijd van de vlucht",
     type: "string",
     format: "date-time",
@@ -34,6 +40,27 @@ export class OperStartlijstDto {
     nullable: true,
   })
   LANDINGSTIJD: Date | null;
+  @ApiProperty({
+    description: "De startmethode die gebruikt is voor de vlucht",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  STARTMETHODE_ID: number | null;
+  @ApiProperty({
+    description: "De piloot die de vlucht heeft uitgevoerd",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  VLIEGER_ID: number | null;
+  @ApiProperty({
+    description: "De inzittende die meegevlogen heeft",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  INZITTENDE_ID: number | null;
   @ApiProperty({
     description:
       "Naam van de vlieger op het moment van de vlucht (voor historische doeleinden)",
@@ -49,12 +76,33 @@ export class OperStartlijstDto {
   })
   INZITTENDENAAM: string | null;
   @ApiProperty({
+    description: "Het sleepvliegtuig dat gebruikt is voor de vlucht",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  SLEEPKIST_ID: number | null;
+  @ApiProperty({
     description: "De hoogte waarop is losgekoppeld tijdens de sleep",
     type: "integer",
     format: "int32",
     nullable: true,
   })
   SLEEP_HOOGTE: number | null;
+  @ApiProperty({
+    description: "Het veld van waaruit is gestart",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  VELD_ID: number | null;
+  @ApiProperty({
+    description: "De baan waarop is gestart",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  BAAN_ID: number | null;
   @ApiProperty({
     description: "Eventuele opmerkingen bij de vlucht",
     type: "string",

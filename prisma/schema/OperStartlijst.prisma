@@ -7,28 +7,47 @@ model OperStartlijst {
   DATUM              DateTime      @db.Date
   /// @description Het volgnummer van de vlucht op die dag. Begint bij 1 voor de eerste vlucht van die dag.
   DAGNUMMER          Int           @default(0) @db.UnsignedTinyInt
+  /// @DtoRelationIncludeId
   /// @description Het vliegtuig dat gebruikt is voor de vlucht
   VLIEGTUIG_ID       Int           @db.UnsignedMediumInt
   /// @description De starttijd van de vlucht
   STARTTIJD          DateTime?     @db.Time(0)
   /// @description De landingtijd van de vlucht
   LANDINGSTIJD       DateTime?     @db.Time(0)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description De startmethode die gebruikt is voor de vlucht
   STARTMETHODE_ID    Int?          @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description De piloot die de vlucht heeft uitgevoerd
   VLIEGER_ID         Int?          @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description De inzittende die meegevlogen heeft
   INZITTENDE_ID      Int?          @db.UnsignedMediumInt
   /// @description Naam van de vlieger op het moment van de vlucht (voor historische doeleinden)
   VLIEGERNAAM        String?       @db.VarChar(50)
   /// @description Naam van de inzittende op het moment van de vlucht (voor historische doeleinden)
   INZITTENDENAAM     String?       @db.VarChar(50)
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Het sleepvliegtuig dat gebruikt is voor de vlucht
   SLEEPKIST_ID       Int?          @db.UnsignedMediumInt
   /// @description De hoogte waarop is losgekoppeld tijdens de sleep
   SLEEP_HOOGTE       Int?          @db.UnsignedSmallInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Het veld van waaruit is gestart
   VELD_ID            Int?          @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description De baan waarop is gestart
   BAAN_ID            Int?          @db.UnsignedMediumInt
   /// @description Eventuele opmerkingen bij de vlucht
