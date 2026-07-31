@@ -27,6 +27,7 @@ import {DienstenModule} from './modules/diensten/diensten.module';
 import {FacturenModule} from './modules/facturen/facturen.module';
 import { DdwvModule } from './modules/ddwv/ddwv.module';
 import {TracksModule} from './modules/tracks/tracks.module';
+import {ReserveringModule} from './modules/reservering/reservering.module';
 import config from './config/configuration';
 
 
@@ -63,6 +64,7 @@ import config from './config/configuration';
       FacturenModule,
       DdwvModule,
       TracksModule,
+      ReserveringModule,
    ],
    controllers: [HeliosController],
    providers: [],
