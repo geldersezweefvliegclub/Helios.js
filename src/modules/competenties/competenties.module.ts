@@ -8,6 +8,7 @@ import {TypesModule} from "../types/types.module";
 @Module({
   imports: [AuthorisatieModule, HeliosCoreModule, TypesModule],
   controllers: [CompetentiesController],
-  providers: [CompetentiesService]
+  providers: [CompetentiesService],
+  exports: [CompetentiesService]
 })
 export class CompetentiesModule {}

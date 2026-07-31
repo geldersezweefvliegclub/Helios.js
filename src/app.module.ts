@@ -29,6 +29,7 @@ import { DdwvModule } from './modules/ddwv/ddwv.module';
 import {TracksModule} from './modules/tracks/tracks.module';
 import {ReserveringModule} from './modules/reservering/reservering.module';
 import {StartlijstModule} from './modules/startlijst/startlijst.module';
+import {ProgressieModule} from './modules/progressie/progressie.module';
 import config from './config/configuration';
 
 
@@ -67,6 +68,7 @@ import config from './config/configuration';
       TracksModule,
       ReserveringModule,
       StartlijstModule,
+      ProgressieModule,
    ],
    controllers: [HeliosController],
    providers: [],
