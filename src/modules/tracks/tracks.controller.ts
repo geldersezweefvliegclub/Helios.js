@@ -10,7 +10,7 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {OperTrackDto} from "../../generated/nestjs-dto/operTrack.dto";
 import {CurrentUser} from "../login/current-user.decorator";
-import {Prisma, RefLid} from "@prisma/client";
+import {RefLid} from "@prisma/client";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -47,7 +47,7 @@ export class TracksController extends HeliosController
    }
 
    @HeliosCreateObject(CreateOperTrackDto, OperTrackDto)
-   async AddObject(
+   AddObject(
       @CurrentUser() user: RefLid,
       @Body() data: CreateOperTrackDto): Promise<OperTrackDto>
    {
@@ -57,20 +57,15 @@ export class TracksController extends HeliosController
       if ('LINK_ID' in data || 'INGEVOERD' in data)
          throw new HttpException("LINK_ID en INGEVOERD kunnen niet extern gezet worden", HttpStatus.BAD_REQUEST);
 
-      const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
+      // TEKST is niet verplicht op DB niveau, maar wel verplicht volgens de business regel uit class.Tracks.inc.php AddObject()
+      if (!data.TEKST)
+         throw new HttpException("TEKST is verplicht", HttpStatus.BAD_REQUEST);
 
-      const insertData: Prisma.OperTrackCreateInput = {
-         ...rest,
-         Lid: {connect: {ID: LID_ID}},
-         Instructeur: INSTRUCTEUR_ID !== undefined ? {connect: {ID: INSTRUCTEUR_ID}} : undefined,
-         Startlijst: START_ID !== undefined ? {connect: {ID: START_ID}} : undefined,
-      };
-
-      return await this.tracksService.AddObject(insertData);
+      return this.tracksService.AddObject(data);
    }
 
    @HeliosUpdateObject(UpdateOperTrackDto, OperTrackDto)
-   async UpdateObject(
+   UpdateObject(
       @CurrentUser() user: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTrackDto): Promise<OperTrackDto>
    {
@@ -79,7 +74,7 @@ export class TracksController extends HeliosController
       if ('LINK_ID' in data || 'INGEVOERD' in data)
          throw new HttpException("LINK_ID en INGEVOERD kunnen niet extern gezet worden", HttpStatus.BAD_REQUEST);
 
-      return await this.tracksService.UpdateObject(id, data);
+      return this.tracksService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()

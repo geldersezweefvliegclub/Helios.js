@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Query} from '@nestjs/common';
 import {AanwezigLedenService} from "./aanwezig-leden.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -60,7 +60,14 @@ export class AanwezigLedenController  extends HeliosController
       @Body() data: CreateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
       this.permissieService.heeftToegang(user, 'AanwezigLeden.AddObject');
-      return await this.AanwezigLedenService.AddObject(data as Prisma.OperAanwezigLidCreateInput);
+
+      // DATUM en LID_ID zijn verplicht
+      if (data.DATUM === undefined)
+         throw new HttpException("Datum is verplicht", HttpStatus.BAD_REQUEST);
+      if (data.LID_ID === undefined)
+         throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
+
+      return await this.AanwezigLedenService.AddObject(data);
    }
 
    @HeliosUpdateObject(UpdateOperAanwezigLidDto, OperAanwezigLidDto)
@@ -69,7 +76,7 @@ export class AanwezigLedenController  extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
       this.permissieService.heeftToegang(user, 'AanwezigLeden.UpdateObject');
-      return await this.AanwezigLedenService.UpdateObject(id, data as Prisma.OperAanwezigLidCreateInput);
+      return await this.AanwezigLedenService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()

@@ -8,6 +8,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperReservering, RefLid} from "@prisma/client";
 import {GetObjectsOperReserveringRequest} from "./GetObjectsOperReserveringRequest";
 import {GetObjectsOperReserveringResponse} from "./GetObjectsOperReserveringResponse";
+import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operReservering.dto";
+import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 
 // reservering record inclusief de relaties die de PHP reservering_view samenvoegt
 type ReserveringMetRelaties = Prisma.OperReserveringGetPayload<{
@@ -129,24 +131,38 @@ export class ReserveringService extends IHeliosService
       });
    }
 
-   async AddObject(data: Prisma.OperReserveringCreateInput): Promise<OperReservering>
+   async AddObject(data: CreateOperReserveringDto, user: RefLid): Promise<OperReservering>
    {
+      // per DATUM+VLIEGTUIG_ID mag er maar een reservering bestaan
+      const bestaand = await this.GetObjectByDetails(new Date(data.DATUM), data.VLIEGTUIG_ID);
+      if (bestaand)
+         throw new HttpException("Er bestaat al een reservering voor dit vliegtuig op deze datum", HttpStatus.CONFLICT);
+
+      const {LID_ID, VLIEGTUIG_ID, ...rest} = data;
+      const insertData: Prisma.OperReserveringCreateInput = {
+         ...rest,
+         DATUM: data.DATUM,
+         RefLid: {connect: {ID: LID_ID}},
+         RefVliegtuig: {connect: {ID: VLIEGTUIG_ID}},
+         INGEVOERD_ID: user.ID,
+      };
+
       const obj = await this.dbService.operReservering.create({
-         data: data
+         data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperReserveringUpdateInput): Promise<OperReservering>
+   async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput): Promise<OperReservering>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.operReservering.update({
          where: {
             ID: id
          },
-         data: data
+         data: data as Prisma.OperReserveringUpdateInput
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
       return obj;

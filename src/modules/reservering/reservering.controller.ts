@@ -48,7 +48,7 @@ export class ReserveringController extends HeliosController
    }
 
    @HeliosCreateObject(CreateOperReserveringDto, OperReserveringDto)
-   async AddObject(
+   AddObject(
       @CurrentUser() user: RefLid,
       @Body() data: CreateOperReserveringDto): Promise<OperReserveringDto>
    {
@@ -68,26 +68,11 @@ export class ReserveringController extends HeliosController
       if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(user) && !this.permissieService.isBeheerderDDWV(user))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      // per DATUM+VLIEGTUIG_ID mag er maar een reservering bestaan
-      const bestaand = await this.reserveringService.GetObjectByDetails(new Date(data.DATUM), data.VLIEGTUIG_ID);
-      if (bestaand)
-         throw new HttpException("Er bestaat al een reservering voor dit vliegtuig op deze datum", HttpStatus.CONFLICT);
-
-      const {LID_ID, VLIEGTUIG_ID, ...rest} = data;
-
-      const insertData: Prisma.OperReserveringCreateInput = {
-         ...rest,
-         DATUM: data.DATUM,
-         RefLid: {connect: {ID: LID_ID}},
-         RefVliegtuig: {connect: {ID: VLIEGTUIG_ID}},
-         INGEVOERD_ID: user.ID,
-      };
-
-      return await this.reserveringService.AddObject(insertData);
+      return this.reserveringService.AddObject(data, user);
    }
 
    @HeliosUpdateObject(UpdateOperReserveringDto, OperReserveringDto)
-   async UpdateObject(
+   UpdateObject(
       @CurrentUser() user: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperReserveringDto): Promise<OperReserveringDto>
    {
@@ -99,7 +84,7 @@ export class ReserveringController extends HeliosController
       if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(user) && !this.permissieService.isBeheerderDDWV(user))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      return await this.reserveringService.UpdateObject(id, data as Prisma.OperReserveringUpdateInput);
+      return this.reserveringService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()

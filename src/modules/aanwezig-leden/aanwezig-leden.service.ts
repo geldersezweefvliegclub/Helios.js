@@ -8,6 +8,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperAanwezigLid, RefLid} from "@prisma/client";
 import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenRequest";
 import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
+import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
+import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -260,24 +262,33 @@ export class AanwezigLedenService extends IHeliosService
       return `${String(uren).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
    }
 
-   async AddObject(data: Prisma.OperAanwezigLidCreateInput): Promise<OperAanwezigLid>
+   async AddObject(data: CreateOperAanwezigLidDto): Promise<OperAanwezigLid>
    {
+      const {LID_ID, OVERLAND_VLIEGTUIG_ID, TRANSACTIE_ID, VELD_ID, ...rest} = data;
+      const insertData: Prisma.OperAanwezigLidCreateInput = {
+         ...rest,
+         RefLid: {connect: {ID: LID_ID}},
+         RefVliegtuig: OVERLAND_VLIEGTUIG_ID != null ? {connect: {ID: OVERLAND_VLIEGTUIG_ID}} : undefined,
+         Transactie: TRANSACTIE_ID != null ? {connect: {ID: TRANSACTIE_ID}} : undefined,
+         Veld: VELD_ID != null ? {connect: {ID: VELD_ID}} : undefined,
+      };
+
       const obj = await this.dbService.operAanwezigLid.create({
-         data: data
+         data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
+   async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
    {
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAanwezigLid.update({
          where: {
             ID: id
          },
-         data: data
+         data: data as Prisma.OperAanwezigLidUpdateInput
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
       return obj;

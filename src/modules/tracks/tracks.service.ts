@@ -8,6 +8,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperTrack} from "@prisma/client";
 import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
+import {CreateOperTrackDto} from "../../generated/nestjs-dto/create-operTrack.dto";
+import {UpdateOperTrackDto} from "../../generated/nestjs-dto/update-operTrack.dto";
 
 // track record inclusief de relaties die de PHP tracks_view samenvoegt
 type TrackMetRelaties = Prisma.OperTrackGetPayload<{
@@ -16,13 +18,6 @@ type TrackMetRelaties = Prisma.OperTrackGetPayload<{
       Instructeur: true,
    }
 }>;
-
-export interface UpdateTrackData {
-   LID_ID?: number;
-   INSTRUCTEUR_ID?: number | null;
-   TEKST?: string | null;
-   START_ID?: number | null;
-}
 
 @Injectable()
 export class TracksService extends IHeliosService
@@ -101,17 +96,21 @@ export class TracksService extends IHeliosService
       return this.buildGetObjectsResponse(response, count, params.HASH);
    }
 
-   async AddObject(data: Prisma.OperTrackCreateInput): Promise<OperTrack>
+   async AddObject(data: CreateOperTrackDto): Promise<OperTrack>
    {
-      // TEKST is niet verplicht op DB niveau, maar wel verplicht volgens de business regel uit class.Tracks.inc.php AddObject()
-      if (!data.TEKST)
-         throw new HttpException("TEKST is verplicht", HttpStatus.BAD_REQUEST);
+      const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
+      const insertData: Prisma.OperTrackCreateInput = {
+         ...rest,
+         Lid: {connect: {ID: LID_ID}},
+         Instructeur: INSTRUCTEUR_ID !== undefined ? {connect: {ID: INSTRUCTEUR_ID}} : undefined,
+         Startlijst: START_ID !== undefined ? {connect: {ID: START_ID}} : undefined,
+      };
 
       const obj = await this.dbService.operTrack.create({
-         data: data
+         data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
       return obj;
    }
 
@@ -121,7 +120,7 @@ export class TracksService extends IHeliosService
     * de volledige historie van aanpassingen bewaard (audit trail), zie UpdateObject() in class.Tracks.inc.php.
     * De oorspronkelijke INGEVOERD datum blijft behouden op het nieuwe record.
     */
-   async UpdateObject(id: number, data: UpdateTrackData): Promise<OperTrack>
+   async UpdateObject(id: number, data: UpdateOperTrackDto): Promise<OperTrack>
    {
       const oud = await this.GetObject(id);
 

@@ -22,14 +22,12 @@ import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse
 import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
-import {LedenService} from "../leden/leden.service";
 
 @Controller('Brandstof')
 @ApiTags('Brandstof')
 export class BrandstofController  extends HeliosController
 {
    constructor(private readonly brandstofService: BrandstofService,
-               private readonly ledenService: LedenService,
                private readonly permissieService:PermissieService)
    {
       super()
@@ -60,18 +58,10 @@ export class BrandstofController  extends HeliosController
    {
       this.permissieService.heeftToegang(user, 'Brandstof.AddObject');
 
-      const lid = await this.ledenService.GetObject(data.LID_ID);
-      if (!lid)
-         throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
+      if (data.LID_ID === undefined)
+         throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
 
-      // remove BRANDSTOF_TYPE_ID and LID_ID from the data
-      // and add it to the BrandstofType, RefLid property
-      const { BRANDSTOF_TYPE_ID, LID_ID, ...insertData} = data;
-      (insertData as Prisma.OperBrandstofCreateInput).BrandstofType = BRANDSTOF_TYPE_ID ? { connect: {ID: BRANDSTOF_TYPE_ID }} : undefined;
-      (insertData as Prisma.OperBrandstofCreateInput).RefLid = LID_ID ? { connect: {ID: LID_ID }} : undefined;
-      (insertData as Prisma.OperBrandstofCreateInput).NAAM = lid.NAAM
-
-      return await this.brandstofService.AddObject(insertData as Prisma.OperBrandstofCreateInput);
+      return await this.brandstofService.AddObject(data);
    }
 
    @HeliosUpdateObject(UpdateOperBrandstofDto, OperBrandstofDto)
@@ -80,18 +70,7 @@ export class BrandstofController  extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateOperBrandstofDto): Promise<OperBrandstofDto>
    {
       this.permissieService.heeftToegang(user, 'Brandstof.UpdateObject');
-      const lid = await this.ledenService.GetObject(data.LID_ID);
-      if (!lid)
-         throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
-
-      // remove BRANDSTOF_TYPE_ID and LID_ID from the data
-      // and add it to the BrandstofType, RefLid property
-      const { BRANDSTOF_TYPE_ID, LID_ID, ...updateData} = data;
-      (updateData as Prisma.OperBrandstofCreateInput).BrandstofType = (BRANDSTOF_TYPE_ID !== undefined) ? { connect: {ID: BRANDSTOF_TYPE_ID }} : undefined;
-      (updateData as Prisma.OperBrandstofCreateInput).RefLid = LID_ID ? { connect: {ID: LID_ID }} : undefined;
-      (updateData as Prisma.OperBrandstofCreateInput).NAAM = lid.NAAM
-
-      return await this.brandstofService.UpdateObject(id, updateData as Prisma.OperBrandstofCreateInput);
+      return await this.brandstofService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
