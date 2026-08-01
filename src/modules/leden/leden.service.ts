@@ -9,6 +9,7 @@ import {Prisma, RefLid } from '@prisma/client';
 import {GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
 import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+import {LidType} from "../../core/enums/LidType";
 
 import { hash } from "bcryptjs";
 
@@ -78,7 +79,10 @@ export class LedenService extends IHeliosService
                { LIERIST_IO: params.LIO},
                { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
                { LIDTYPE_ID: { in: params.TYPES}},
-               { LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
+               { LIDTYPE_ID: params.CLUBLEDEN ? {in: [
+                  LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
+                  LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur,
+               ]} : undefined}
             ]
       }
       let count: number | undefined;
@@ -224,14 +228,14 @@ export class LedenService extends IHeliosService
       // List of type ID's which are considered a member of this club.
       // If the type ID of the member is in this list, he's considered a member of this club.
       return [
-         601, // Erelid
-         602, // Lid,
-         603, // Jeugdlid
-         604, // Private owner (mag ook op club vliegtuigen vliegen voor trainingsvlucht)
-         605, // Donateur
-         606, // Veteraan
-         608, // 5 Rittenkaart
-         611  // Cursist
+         LidType.Erelid,
+         LidType.Lid,
+         LidType.Jeugdlid,
+         LidType.PrivateOwner, // mag ook op club vliegtuigen vliegen voor trainingsvlucht
+         LidType.Veteraan,
+         LidType.Donateur,
+         LidType.Rittenkaart5,
+         LidType.Cursist,
       ].includes(lid.LIDTYPE_ID);
    }
 }

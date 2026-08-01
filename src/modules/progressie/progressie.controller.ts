@@ -23,6 +23,7 @@ import {CompetentiesService} from "../competenties/competenties.service";
 import {LedenService} from "../leden/leden.service";
 import {Boom} from "../../core/helpers/Boom";
 import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
+import {TypesGroep} from "../../core/enums/TypesGroep";
 
 // competentie IDs voor de startmethodes die op de startaantekeningen kaart getoond worden, zie
 // StartAantekeningen() in class.Progressie.inc.php
@@ -155,7 +156,7 @@ export class ProgressieController extends HeliosController
       const kaart = await this.BouwProgressieKaart(lidId ?? user.ID);
       const retValue: ProgressieKaartResponse[] = [];
 
-      const leerfasen = await this.typesService.GetObjects({GROEP: 10});
+      const leerfasen = await this.typesService.GetObjects({GROEP: TypesGroep.Opleidingsblok});
       for (const leerfase of leerfasen.dataset)
       {
          const dataset = kaart
@@ -210,7 +211,7 @@ export class ProgressieController extends HeliosController
    // opgegeven lid erop geplakt, zie ProgressieKaart() in class.Progressie.inc.php
    private async BouwProgressieKaart(lidId: number): Promise<ProgressieKaartResponse[]>
    {
-      const leerfasen = await this.typesService.GetObjects({GROEP: 10});
+      const leerfasen = await this.typesService.GetObjects({GROEP: TypesGroep.Opleidingsblok});
       const progressie = await this.progressieService.GetObjects({LID_ID: lidId} as GetObjectsOperProgressieRequest);
       const progressiePerCompetentie = new Map(progressie.dataset.map(item => [item.COMPETENTIE_ID, item]));
 

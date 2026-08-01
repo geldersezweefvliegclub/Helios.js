@@ -9,9 +9,11 @@ import {Prisma} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
 import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
+import {JournaalCategorie} from "../../core/enums/JournaalCategorie";
+import {JournaalStatus} from "../../core/enums/JournaalStatus";
 
-const JOURNAAL_CATEGORIE_DEFECT = 2404;
-const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = 2504; // t/m deze status telt een journaal als openstaand (Opgelost/Afgetekend niet)
+// t/m JournaalStatus.Uitgesteld telt een journaal als openstaand (Opgelost/Afgetekend niet)
+const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = JournaalStatus.Uitgesteld;
 
 @Injectable()
 export class VliegtuigenService extends IHeliosService
@@ -91,7 +93,7 @@ export class VliegtuigenService extends IHeliosService
          by: ['VLIEGTUIG_ID'],
          where: {
             STATUS_ID: {lte: JOURNAAL_STATUS_LAATSTE_OPENSTAAND},
-            CATEGORIE_ID: JOURNAAL_CATEGORIE_DEFECT,
+            CATEGORIE_ID: JournaalCategorie.Defect,
             VLIEGTUIG_ID: {in: objs.map(obj => obj.ID)}
          },
          _count: {_all: true}

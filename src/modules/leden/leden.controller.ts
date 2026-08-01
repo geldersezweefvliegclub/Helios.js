@@ -25,6 +25,7 @@ import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+import {LidType} from "../../core/enums/LidType";
 
 @Controller('Leden')
 @ApiTags('Leden')
@@ -56,16 +57,11 @@ export class LedenController extends HeliosController
       this.permissieService.heeftToegang(user, 'Leden.GetObjects');
 
       if (!this.permissieService.isBeheerderDDWV(user) && !this.permissieService.isBeheerder(user) && !this.permissieService.isStarttoren(user)) {
-         // 600 = Student
-         // 601 = Erelid
-         // 602 = Lid
-         // 603 = Jeugdlid
-         // 604 = private owner
-         // 605 = veteraan
-         // 606 = Donateur
-         // 625 = DDWV
          queryParams.TYPES = queryParams.TYPES ?? [];          // if TYPES is not set, set it to an empty array
-         queryParams.TYPES.push(601,602,603,604,605,606,625);  // add filter for normale leden
+         queryParams.TYPES.push(       // add filter for normale leden
+            LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
+            LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur, LidType.DDWV,
+         );
       }
 
       // retrieve the objects from the database based on the query parameters

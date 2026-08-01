@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RefLid} from '@prisma/client';
+import { LidType } from '../../core/enums/LidType';
 
 @Injectable()
 export class PermissieService {
@@ -40,17 +41,17 @@ export class PermissieService {
 
    isLid(user: RefLid): boolean
    {
-      return user.LIDTYPE_ID === 601 ||
-             user.LIDTYPE_ID === 602 ||
-             user.LIDTYPE_ID === 603 ||
-             user.LIDTYPE_ID === 604 ||
-             user.LIDTYPE_ID === 605 ||
-             user.LIDTYPE_ID === 606;
+      return user.LIDTYPE_ID === LidType.Erelid ||
+             user.LIDTYPE_ID === LidType.Lid ||
+             user.LIDTYPE_ID === LidType.Jeugdlid ||
+             user.LIDTYPE_ID === LidType.PrivateOwner ||
+             user.LIDTYPE_ID === LidType.Veteraan ||
+             user.LIDTYPE_ID === LidType.Donateur;
    }
 
    isDDWVer(user: RefLid): boolean
    {
-      return user.LIDTYPE_ID === 625;
+      return user.LIDTYPE_ID === LidType.DDWV;
    }
 
    // check if the user has privacy settings enabled

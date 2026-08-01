@@ -21,6 +21,7 @@ import {CompetentiesBoomResponse} from "./CompetentiesBoomResponse";
 import {AuthGuard} from "@nestjs/passport";
 import {TypesService} from "../types/types.service";
 import {Boom} from "../../core/helpers/Boom";
+import {TypesGroep} from "../../core/enums/TypesGroep";
 
 @Controller('Competenties')
 @ApiTags('Competenties')
@@ -143,7 +144,7 @@ export class CompetentiesController extends HeliosController
 
       const retValue: CompetentiesBoomResponse[] = [];
 
-      const blokken = await this.typesService.GetObjects({GROEP: 10})
+      const blokken = await this.typesService.GetObjects({GROEP: TypesGroep.Opleidingsblok})
       for (let i=0 ; i < blokken.totaal ; i++)
       {
          const blok = blokken.dataset[i];

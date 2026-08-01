@@ -1,0 +1,30 @@
+// GROEP-waarden van de ref_types_groepen tabel: elke groep bundelt een vaste verzameling RefType records
+// (bijv. TypesGroep.Lidmaatschap bundelt alle LidType records, zie LidType.ts)
+export enum TypesGroep
+{
+   Banen = 1,
+   Windrichting = 2,
+   Windkracht = 3,
+   VliegtuigTypes = 4,
+   Startmethodes = 5,
+   Lidmaatschap = 6,
+   Bedrijf = 7,
+   Vliegveld = 9,
+   Opleidingsblok = 10,
+   Bewolking = 11,
+   Windontwikkeling = 12,
+   Zicht = 13,
+   Luchtruim = 14,
+   Veldleiding = 15,
+   Termiek = 16,
+   BewolkingDekking = 17,
+   Diensten = 18,
+   Status = 19,
+   DdwvStrippen = 20,
+   IdealBestellen = 21,
+   Documenten = 22,
+   RollendMaterieel = 23,
+   MeldingenCategorie = 24,
+   MeldingenStatus = 25,
+   InhoudBrandstofpomp = 26,
+}

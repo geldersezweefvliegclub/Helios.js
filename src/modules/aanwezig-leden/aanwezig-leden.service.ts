@@ -10,6 +10,7 @@ import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenR
 import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLedenResponse";
 import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
+import {TypesGroep} from "../../core/enums/TypesGroep";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -117,7 +118,7 @@ export class AanwezigLedenService extends IHeliosService
    {
       if (objs.length === 0) return [];
 
-      const vliegtuigTypes = await this.dbService.refType.findMany({where: {GROEP: 4}});
+      const vliegtuigTypes = await this.dbService.refType.findMany({where: {GROEP: TypesGroep.VliegtuigTypes}});
 
       const lidIds = [...new Set(objs.map(obj => obj.LID_ID))];
       const datums = [...new Map(objs.map(obj => [obj.DATUM.getTime(), obj.DATUM])).values()];

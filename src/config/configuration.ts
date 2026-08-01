@@ -2,6 +2,8 @@
 import * as fs from 'fs';
 import { join } from 'path';
 import {Logger} from "@nestjs/common";
+import {Vliegveld} from "../core/enums/Vliegveld";
+import {TransactieType} from "../core/enums/TransactieType";
 
 const JSON_CONFIG_FILENAME = 'helios-config.json';
 
@@ -133,14 +135,14 @@ export default () => {
         },
         ddwv: {
             DDWV: true,
-            VELD_ID: 901,
+            VELD_ID: Vliegveld.Terlet,
             START: '04-01',
             EIND: '10-31',
             MAX_STRIPPEN: 100,
-            STRIPPEN_RETOUR: 2004,
-            STRIPPEN_RETOUR_OP_VLIEGDAG: 2005,
-            ANNULEREN_VLIEGDAG: 2006,
-            CREW_VERGOEDING: 2007,
+            STRIPPEN_RETOUR: TransactieType.UitschrijvenVoorVliegdag,
+            STRIPPEN_RETOUR_OP_VLIEGDAG: TransactieType.UitschrijvenOpVliegdag,
+            ANNULEREN_VLIEGDAG: TransactieType.AnnulerenVliegdag,
+            CREW_VERGOEDING: TransactieType.CrewVergoeding,
         }
     };
 
