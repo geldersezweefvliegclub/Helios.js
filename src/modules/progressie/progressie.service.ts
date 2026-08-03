@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,6 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperProgressie} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // progressie record inclusief de relaties die de PHP progressie_view samenvoegt
 type ProgressieMetRelaties = Prisma.OperProgressieGetPayload<{
@@ -30,17 +31,19 @@ export interface UpdateProgressieData {
 @Injectable()
 export class ProgressieService extends IHeliosService
 {
+   private readonly logger = new Logger(ProgressieService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperProgressie>
    {
-      // relation is included for consistency with other services, but not used.
+      this.logger.verbose(`ProgressieService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de progressie_view.
       const db = await this.dbService.operProgressie.findUnique({
          where: {
@@ -50,12 +53,15 @@ export class ProgressieService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Progressie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`ProgressieService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperProgressieRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperProgressieResponse>>
    {
+      this.logger.verbose(`ProgressieService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperProgressieRequest();
@@ -103,17 +109,22 @@ export class ProgressieService extends IHeliosService
          } as GetObjectsOperProgressieResponse;
       });
 
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`ProgressieService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperProgressieUncheckedCreateInput): Promise<OperProgressie>
    {
+      this.logger.verbose(`ProgressieService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operProgressie.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`ProgressieService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    /**
@@ -124,6 +135,7 @@ export class ProgressieService extends IHeliosService
     */
    async UpdateObject(id: number, data: UpdateProgressieData): Promise<OperProgressie>
    {
+      this.logger.verbose(`ProgressieService.UpdateObject(${safeStringify({id, data})})`);
       const oud = await this.GetObject(id);
 
       const lidId = data.LID_ID ?? oud.LID_ID;
@@ -152,13 +164,16 @@ export class ProgressieService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw);
-      return nieuw;
+      const result = nieuw;
+      this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
    // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
    async SetVerwijderd(id: number, verwijderd: boolean): Promise<OperProgressie>
    {
+      this.logger.verbose(`ProgressieService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operProgressie.update({
          where: {
@@ -169,17 +184,23 @@ export class ProgressieService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`ProgressieService.SetVerwijderd() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`ProgressieService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operProgressie.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

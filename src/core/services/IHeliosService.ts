@@ -4,12 +4,12 @@ import {HttpException, HttpStatus} from "@nestjs/common";
 
 export abstract class IHeliosService
 {
-   // The output format of the GetObjects call
+   // Het output formaat van de GetObjects call
    protected buildGetObjectsResponse<Type>(objects: Type[], count = undefined, hash: string = undefined): IHeliosGetObjectsResponse<Type>
    {
       const response = {
          dataset: objects,
-         totaal: count ? count : objects.length,      // if count is not defined return the length of the array
+         totaal: count ? count : objects.length,      // als count niet is opgegeven, geef de lengte van de array terug
          hash: crc32(JSON.stringify(objects))
       } as IHeliosGetObjectsResponse<Type>
 
@@ -20,14 +20,14 @@ export abstract class IHeliosService
       return response;
    }
 
-   // Convert a string like "field1 asc, field2 desc" to an array of objects like [{field1: "asc"}, {field2: "desc"}]
-   // This is used to be using in prismas sort function
+   // Zet een string zoals "field1 asc, field2 desc" om naar een array van objects zoals [{field1: "asc"}, {field2: "desc"}]
+   // Dit wordt gebruikt in de sort functie van prisma
    protected SortStringToSortObj<oType>(sort: string): oType[]
    {
       const retVal: oType[] = [];
       if (!sort) return undefined;
 
-      sort.split(',').forEach(part =>  // split on comma
+      sort.split(',').forEach(part =>  // splits op komma
       {
          const [field, order] = part.trim().split(' ');
 
@@ -35,13 +35,13 @@ export abstract class IHeliosService
             const [table, child_field] = field.split('.');
             const sortObj = {} as oType;
             sortObj[table] = {};
-            sortObj[table][child_field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
+            sortObj[table][child_field] = order ? order.toLowerCase() : "asc" as oType;    // standaard asc
             retVal.push(sortObj);
          }
          else
          {
             const sortObj = {} as oType;
-            sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // default to asc
+            sortObj[field] = order ? order.toLowerCase() : "asc" as oType;    // standaard asc
             retVal.push(sortObj);
          }
       });
@@ -53,7 +53,7 @@ export abstract class IHeliosService
       if (!tables) return undefined;
 
       const retObj: oType = {} as oType;
-      tables.split(',').forEach(field =>  // split on comma
+      tables.split(',').forEach(field =>  // splits op komma
       {
          retObj[field.trim()] = true
       });

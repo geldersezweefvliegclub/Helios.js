@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {FacturenService} from "./facturen.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperFactuurDto} from "../../generated/nestjs-dto/create-operFactuur.dto";
 import {UpdateOperFactuurDto} from "../../generated/nestjs-dto/update-operFactuur.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Facturen')
 @ApiTags('Facturen')
 export class FacturenController  extends HeliosController
 {
+   private readonly logger = new Logger(FacturenController.name);
+
    constructor(private readonly FacturenService: FacturenService,
                private readonly permissieService:PermissieService)
    {
@@ -30,46 +33,51 @@ export class FacturenController  extends HeliosController
 
    @HeliosGetObject(OperFactuurDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperFactuurDto>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.GetObject');
+      this.logger.verbose(`FacturenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.GetObject');
       return await this.FacturenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperFacturenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperFacturenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperFacturenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.GetObjects');
-      return this.FacturenService.GetObjects(queryParams);
+      this.logger.verbose(`FacturenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.GetObjects');
+      return await this.FacturenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperFactuurDto, OperFactuurDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperFactuurDto): Promise<OperFactuurDto>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.AddObject');
+      this.logger.verbose(`FacturenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.AddObject');
       return await this.FacturenService.AddObject(data as Prisma.OperFactuurCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperFactuurDto, OperFactuurDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperFactuurDto): Promise<OperFactuurDto>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.UpdateObject');
+      this.logger.verbose(`FacturenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.UpdateObject');
       return await this.FacturenService.UpdateObject(id, data as Prisma.OperFactuurCreateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.DeleteObject');
+      this.logger.verbose(`FacturenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.DeleteObject');
 
       const data: Prisma.OperFactuurUpdateInput = {
          VERWIJDERD: true
@@ -79,19 +87,21 @@ export class FacturenController  extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.RemoveObject');
-      await this.FacturenService.RemoveObject(id);
+      this.logger.verbose(`FacturenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.RemoveObject');
+      await this.FacturenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Facturen.RestoreObject');
+      this.logger.verbose(`FacturenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Facturen.RestoreObject');
 
       const data: Prisma.OperFactuurUpdateInput = {
          VERWIJDERD: false

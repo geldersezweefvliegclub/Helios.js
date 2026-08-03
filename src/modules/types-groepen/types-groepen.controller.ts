@@ -1,6 +1,7 @@
 import {
    Body,
    Controller,
+   Logger,
    Query
 } from '@nestjs/common';
 import {TypesGroepenService} from "./types-groepen.service";
@@ -20,11 +21,14 @@ import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResp
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto/create-refTypesGroep.dto";
 import {UpdateRefTypesGroepDto} from "../../generated/nestjs-dto/update-refTypesGroep.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('TypesGroepen')
 @ApiTags('TypesGroepen')
 export class TypesGroepenController extends HeliosController
 {
+   private readonly logger = new Logger(TypesGroepenController.name);
+
    constructor(private readonly permissieService:PermissieService,
                private readonly typesGroepenService: TypesGroepenService)
    {
@@ -33,46 +37,51 @@ export class TypesGroepenController extends HeliosController
 
    @HeliosGetObject(RefTypesGroepDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<RefTypesGroepDto>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.GetObject');
-      return  await this.typesGroepenService.GetObject(id);
+      this.logger.verbose(`TypesGroepenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.GetObject');
+      return await this.typesGroepenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefTypesGroepenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsRefTypesGroepenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefTypesGroepenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.GetObjects');
-      return this.typesGroepenService.GetObjects(queryParams);
+      this.logger.verbose(`TypesGroepenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.GetObjects');
+      return await this.typesGroepenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateRefTypesGroepDto, RefTypesGroepDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.AddObject');
+      this.logger.verbose(`TypesGroepenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.AddObject');
       return await this.typesGroepenService.AddObject(data);
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepDto, RefTypesGroepDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.UpdateObject');
+      this.logger.verbose(`TypesGroepenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.UpdateObject');
       return await this.typesGroepenService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.DeleteObject');
+      this.logger.verbose(`TypesGroepenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.DeleteObject');
 
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: true
@@ -82,19 +91,21 @@ export class TypesGroepenController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.RemoveObject');
-      await this.typesGroepenService.RemoveObject(id);
+      this.logger.verbose(`TypesGroepenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.RemoveObject');
+      await this.typesGroepenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'TypesGroepen.RestoreObject');
+      this.logger.verbose(`TypesGroepenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'TypesGroepen.RestoreObject');
 
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: false

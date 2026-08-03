@@ -6,8 +6,8 @@ import {Injectable} from '@nestjs/common';
 import {LedenService} from "../../leden/leden.service";
 
 
-// The cookie name is 'Authentication' and the token is stored in it
-// load Lid and make it available for all http requests
+// De cookie naam is 'Authentication' en de token wordt hierin opgeslagen
+// laad Lid en maak het beschikbaar voor alle http requests
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy)
 {

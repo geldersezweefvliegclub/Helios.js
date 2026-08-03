@@ -1,5 +1,5 @@
 
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {ApiTags} from "@nestjs/swagger";
 import {WinterwerkService} from "./winterwerk.service";
 import {PermissieService} from "../authorisatie/permissie.service";
@@ -18,11 +18,14 @@ import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto/create-operWinterwerk.dto";
 import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto/update-operWinterwerk.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Winterwerk')
 @ApiTags('Winterwerk')
 export class WinterwerkController extends HeliosController
 {
+   private readonly logger = new Logger(WinterwerkController.name);
+
    constructor(private readonly WinterwerkService: WinterwerkService,
                private readonly permissieService:PermissieService)
    {
@@ -31,46 +34,51 @@ export class WinterwerkController extends HeliosController
 
    @HeliosGetObject(OperWinterwerkDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperWinterwerkDto>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.GetObject');
+      this.logger.verbose(`WinterwerkController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.GetObject');
       return await this.WinterwerkService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperWinterwerkResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperWinterwerkRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperWinterwerkResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.GetObjects');
-      return this.WinterwerkService.GetObjects(queryParams);
+      this.logger.verbose(`WinterwerkController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.GetObjects');
+      return await this.WinterwerkService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperWinterwerkDto, OperWinterwerkDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.AddObject');
+      this.logger.verbose(`WinterwerkController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
       return await this.WinterwerkService.AddObject(data as Prisma.OperWinterwerkCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperWinterwerkDto, OperWinterwerkDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.UpdateObject');
+      this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
       return await this.WinterwerkService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.DeleteObject');
+      this.logger.verbose(`WinterwerkController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.DeleteObject');
 
       const data: Prisma.OperWinterwerkUpdateInput = {
          VERWIJDERD: true
@@ -80,19 +88,21 @@ export class WinterwerkController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.RemoveObject');
-      await this.WinterwerkService.RemoveObject(id);
+      this.logger.verbose(`WinterwerkController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.RemoveObject');
+      await this.WinterwerkService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Winterwerk.RestoreObject');
+      this.logger.verbose(`WinterwerkController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Winterwerk.RestoreObject');
 
       const data: Prisma.OperWinterwerkUpdateInput = {
          VERWIJDERD: false

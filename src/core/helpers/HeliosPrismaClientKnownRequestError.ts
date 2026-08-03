@@ -1,19 +1,22 @@
-import {ArgumentsHost, Catch, ExceptionFilter, HttpStatus} from "@nestjs/common";
+import {ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger} from "@nestjs/common";
 import {Prisma} from "@prisma/client";
 import {Response} from "express";
+import {logFailedRequest} from "./LogHelper";
 
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class HeliosPrismaClientKnownRequestError implements ExceptionFilter {
+   private readonly logger = new Logger(HeliosPrismaClientKnownRequestError.name);
+
    catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
 
-      // for more information, see https://www.prisma.io/docs/orm/reference/error-reference
+      // voor meer informatie, zie https://www.prisma.io/docs/orm/reference/error-reference
       let httpMsg = "Database error";
       let httpStatus = HttpStatus.INTERNAL_SERVER_ERROR
       
       switch (exception.code)
       {
          //--------------------------------------------------------------------------------------------------
-         // COMMON ERROR CODES,
+         // ALGEMENE ERROR CODES,
          case 'P1000':
             httpMsg = 'Database authentication failed'
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR; break;
@@ -220,6 +223,9 @@ export class HeliosPrismaClientKnownRequestError implements ExceptionFilter {
             httpMsg = "Too many database connections opened: {message}"
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR; break;
       }
+
+      logFailedRequest(this.logger, host, httpStatus, httpMsg);
+
       const ctx = host.switchToHttp();
       const response = ctx.getResponse<Response>();
 

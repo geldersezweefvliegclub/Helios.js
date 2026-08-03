@@ -1,15 +1,20 @@
-import {ExceptionFilter, Catch, ArgumentsHost, HttpException, BadRequestException} from '@nestjs/common';
+import {ExceptionFilter, Catch, ArgumentsHost, HttpException, BadRequestException, Logger} from '@nestjs/common';
 import { Response } from 'express';
+import {logFailedRequest} from "./LogHelper";
 
 @Catch(HttpException)
 export class HeliosHttpExceptionFilter implements ExceptionFilter {
+   private readonly logger = new Logger(HeliosHttpExceptionFilter.name);
+
    catch(exception: HttpException, host: ArgumentsHost) {
       const ctx = host.switchToHttp();
       const response = ctx.getResponse<Response>();
       const status = exception.getStatus();
 
-      // Add the error message to the response headers 'X-Error-Message'
-      // Backward compatibility with the old API
+      logFailedRequest(this.logger, host, status, exception.message);
+
+      // Voeg de foutmelding toe aan de response header 'X-Error-Message'
+      // Backward compatibility met de oude API
       response
          .status(status)
          .header('X-Error-Message', exception.message).json();
@@ -18,9 +23,13 @@ export class HeliosHttpExceptionFilter implements ExceptionFilter {
 
 @Catch(BadRequestException)
 export class BadRequestExceptionFilter implements ExceptionFilter {
+   private readonly logger = new Logger(BadRequestExceptionFilter.name);
+
    catch(exception: BadRequestException, host: ArgumentsHost) {
       const ctx = host.switchToHttp();
       const response = ctx.getResponse<Response>();
+
+      logFailedRequest(this.logger, host, exception.getStatus(), exception.message);
 
       response
          .status(exception.getStatus())

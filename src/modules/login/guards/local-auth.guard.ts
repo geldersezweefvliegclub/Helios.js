@@ -3,5 +3,5 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 
-// LocalAuthGuard is a guard that will be used for http requests to authenticate a user.
+// LocalAuthGuard is een guard die gebruikt wordt voor http requests om een gebruiker te authenticeren.
 export class LocalAuthGuard extends AuthGuard('local') {}

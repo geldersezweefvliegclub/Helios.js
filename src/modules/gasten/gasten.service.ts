@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,21 +8,24 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperGast} from "@prisma/client";
 import {GetObjectsOperGastenRequest} from "./GetObjectsOperGastenRequest";
 import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class GastenService extends IHeliosService
 {
+   private readonly logger = new Logger(GastenService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperGast>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`GastenService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operGast.findUnique({
          where: {
             ID: id
@@ -31,12 +34,15 @@ export class GastenService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Gast record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`GastenService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperGastenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperGastenResponse>>
    {
+      this.logger.verbose(`GastenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperGastenRequest();
@@ -77,21 +83,27 @@ export class GastenService extends IHeliosService
          return retObj as GetObjectsOperGastenResponse;
       });
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      this.logger.verbose(`GastenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperGastCreateInput): Promise<OperGast>
    {
+      this.logger.verbose(`GastenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operGast.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`GastenService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.OperGastUpdateInput): Promise<OperGast>
    {
+      this.logger.verbose(`GastenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operGast.update({
          where: {
@@ -100,17 +112,23 @@ export class GastenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`GastenService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`GastenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operGast.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {DienstenService} from "./diensten.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -19,11 +19,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperDienstDto} from "../../generated/nestjs-dto/create-operDienst.dto";
 import {UpdateOperDienstDto} from "../../generated/nestjs-dto/update-operDienst.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Diensten')
 @ApiTags('Diensten')
 export class DienstenController  extends HeliosController
 {
+   private readonly logger = new Logger(DienstenController.name);
+
    constructor(private readonly DienstenService: DienstenService,
                private readonly permissieService:PermissieService)
    {
@@ -32,46 +35,51 @@ export class DienstenController  extends HeliosController
 
    @HeliosGetObject(GetOperDienstenResponse)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<GetOperDienstenResponse>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.GetObject');
+      this.logger.verbose(`DienstenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.GetObject');
       return await this.DienstenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetOperDienstenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.GetObjects');
-      return this.DienstenService.GetObjects(queryParams);
+      this.logger.verbose(`DienstenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.GetObjects');
+      return await this.DienstenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperDienstDto, GetOperDienstenResponse)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperDienstDto): Promise<GetOperDienstenResponse>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.AddObject');
+      this.logger.verbose(`DienstenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
       return await this.DienstenService.AddObject(data as Prisma.OperDienstCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperDienstDto, GetOperDienstenResponse)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDienstDto): Promise<GetOperDienstenResponse>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.UpdateObject');
+      this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
       return await this.DienstenService.UpdateObject(id, data as Prisma.OperDienstCreateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.DeleteObject');
+      this.logger.verbose(`DienstenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.DeleteObject');
 
       const data: Prisma.OperDienstUpdateInput = {
          VERWIJDERD: true
@@ -81,19 +89,21 @@ export class DienstenController  extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.RemoveObject');
-      await this.DienstenService.RemoveObject(id);
+      this.logger.verbose(`DienstenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.RemoveObject');
+      await this.DienstenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Diensten.RestoreObject');
+      this.logger.verbose(`DienstenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Diensten.RestoreObject');
 
       const data: Prisma.OperDienstUpdateInput = {
          VERWIJDERD: false

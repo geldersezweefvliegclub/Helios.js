@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpStatus, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, HttpStatus, Logger, Query, UseGuards} from '@nestjs/common';
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -22,11 +22,14 @@ import {AuthGuard} from "@nestjs/passport";
 import {TypesService} from "../types/types.service";
 import {Boom} from "../../core/helpers/Boom";
 import {TypesGroep} from "../../core/enums/TypesGroep";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Competenties')
 @ApiTags('Competenties')
 export class CompetentiesController extends HeliosController
 {
+   private readonly logger = new Logger(CompetentiesController.name);
+
    constructor(private readonly typesService: TypesService,
                private readonly configService: ConfigService,
                private readonly competentiesService: CompetentiesService,
@@ -37,61 +40,68 @@ export class CompetentiesController extends HeliosController
 
    @HeliosGetObject(RefCompetentieDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<RefCompetentieDto>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.GetObject');
+      this.logger.verbose(`CompetentiesController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.GetObject');
       return await this.competentiesService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsRefCompetentiesResponse)
-      GetObjects(
-      @CurrentUser() user: RefLid,
+      async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsRefCompetentiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefCompetentiesResponse>>
    {
-      // check if the user has the right permissions
-      this.permissieService.heeftToegang(user, 'Competenties.GetObjects');
+      this.logger.verbose(`CompetentiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      // controleer of de gebruiker de juiste rechten heeft
+      this.permissieService.heeftToegang(currentUser, 'Competenties.GetObjects');
 
-      // retrieve the objects from the database based on the query parameters
-      return this.competentiesService.GetObjects (queryParams);
+      // haal de objects op uit de database op basis van de query parameters
+      return await this.competentiesService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateRefCompetentieDto, RefCompetentieDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefCompetentieDto): Promise<RefCompetentieDto>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.AddObject');
+      this.logger.verbose(`CompetentiesController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the insertData object
+      // verwijder TYPE_ID uit de data
+      // en voeg ze toe als connect aan het insertData object
       const { LEERFASE_ID, ...insertData} = data;
-      (insertData as Prisma.RefCompetentieCreateInput).LeerfaseType = (LEERFASE_ID !== undefined) ? { connect: {ID: LEERFASE_ID }} : undefined;
+      const insert = insertData as Prisma.RefCompetentieCreateInput;
+      insert.LeerfaseType = (LEERFASE_ID !== undefined) ? { connect: { ID: LEERFASE_ID } } : undefined;
 
-      return await this.competentiesService.AddObject(insertData as Prisma.RefCompetentieCreateInput);
+      return await this.competentiesService.AddObject(insert);
    }
 
    @HeliosUpdateObject(UpdateRefCompetentieDto, RefCompetentieDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefCompetentieDto): Promise<RefCompetentie>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.UpdateObject');
+      this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the updateData object
+      // verwijder TYPE_ID uit de data
+      // en voeg ze toe als connect aan het updateData object
       const { LEERFASE_ID, ...updateData} = data;
-      (updateData as Prisma.RefCompetentieCreateInput).LeerfaseType = LEERFASE_ID ? { connect: {ID: LEERFASE_ID }} : undefined;
+      const update = updateData as Prisma.RefCompetentieUpdateInput;
+      update.LeerfaseType = LEERFASE_ID ? { connect: { ID: LEERFASE_ID } } : undefined;
 
-      return await this.competentiesService.UpdateObject(id, updateData as Prisma.RefCompetentieUpdateInput);
+      return await this.competentiesService.UpdateObject(id, update);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.DeleteObject');
+      this.logger.verbose(`CompetentiesController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.DeleteObject');
 
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: true
@@ -101,19 +111,21 @@ export class CompetentiesController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.RemoveObject');
-      await this.competentiesService.RemoveObject(id);
+      this.logger.verbose(`CompetentiesController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.RemoveObject');
+      await this.competentiesService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.RestoreObject');
+      this.logger.verbose(`CompetentiesController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.RestoreObject');
 
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: false
@@ -138,9 +150,10 @@ export class CompetentiesController extends HeliosController
          }
    }})
    async CompetentiesBoom(
-      @CurrentUser() user: RefLid): Promise<CompetentiesBoomResponse[]>
+      @CurrentUser() currentUser: RefLid): Promise<CompetentiesBoomResponse[]>
    {
-      this.permissieService.heeftToegang(user, 'Competenties.CompetentiesBoom');
+      this.logger.verbose(`CompetentiesController.CompetentiesBoom(${safeStringify({currentUser})})`);
+      this.permissieService.heeftToegang(currentUser, 'Competenties.CompetentiesBoom');
 
       const retValue: CompetentiesBoomResponse[] = [];
 
@@ -166,7 +179,7 @@ export class CompetentiesController extends HeliosController
             BLOK: undefined,
             DOCUMENTATIE: undefined,
             GELDIGHEID: false,
-            // todo check this: false is not correct since score is int from 1-5
+            // todo check dit: false is niet correct aangezien score een int is van 1-5
             SCORE: undefined,
             VERWIJDERD: false,
             LAATSTE_AANPASSING: undefined
@@ -175,6 +188,6 @@ export class CompetentiesController extends HeliosController
          retValue.push(Boom.bouwBoom<CompetentiesBoomResponse>(dataset));
       }
 
-      return Promise.resolve(retValue)
+      return Promise.resolve(retValue);
    }
 }

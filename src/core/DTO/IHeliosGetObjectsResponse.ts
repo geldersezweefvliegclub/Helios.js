@@ -1,6 +1,6 @@
 /**
- * Generic class for all Helios GetObjects endpoints
- * Type can be any DTO class which we want to return the list for. Defaults to 'never' to force the user to specify a type.
+ * Generieke class voor alle Helios GetObjects endpoints
+ * Type kan elke DTO class zijn waarvoor we de lijst willen teruggeven. Standaard 'never' om de gebruiker te dwingen een type op te geven.
  */
 export class IHeliosGetObjectsResponse<Type = never>
 {

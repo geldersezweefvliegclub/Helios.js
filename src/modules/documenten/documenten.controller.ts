@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -16,12 +16,15 @@ import {CreateHeliosDocumentDto} from "../../generated/nestjs-dto/create-heliosD
 import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto/update-heliosDocument.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {DocumentenService} from "./documenten.service";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 
 @Controller('Documenten')
 @ApiTags('Documenten')
 export class DocumentenController extends HeliosController
 {
+   private readonly logger = new Logger(DocumentenController.name);
+
    constructor(private readonly documentenService: DocumentenService,
                private readonly permissieService:PermissieService)
    {
@@ -30,43 +33,42 @@ export class DocumentenController extends HeliosController
 
    @HeliosGetObject(HeliosDocumentDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<HeliosDocumentDto>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.GetObject');
+      this.logger.verbose(`DocumentenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.GetObject');
       return await this.documentenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsHeliosDocumentenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsHeliosDocumentenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsHeliosDocumentenResponse>>
    {
-      // check if the user has the right permissions
-      this.permissieService.heeftToegang(user, 'Documenten.GetObjects');
+      this.logger.verbose(`DocumentenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      // controleer of de gebruiker de juiste rechten heeft
+      this.permissieService.heeftToegang(currentUser, 'Documenten.GetObjects');
 
-      // retrieve the objects from the database based on the query parameters
-      return this.documentenService.GetObjects (queryParams);
+      // haal de objects op uit de database op basis van de query parameters
+      return await this.documentenService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateHeliosDocumentDto, HeliosDocumentDto)
    async AddObject(
-       @CurrentUser() user: RefLid,
+       @CurrentUser() currentUser: RefLid,
        @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto> {
-      this.permissieService.heeftToegang(user, 'Documenten.AddObject');
+      this.logger.verbose(`DocumentenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the insertData object
+      // verwijder TYPE_ID uit de data
+      // en voeg ze toe als connect aan het insertData object
       const {LID_ID, GROEP_ID, ...rest} = data;
-
+      const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.HeliosDocumentCreateInput = {
          ...rest,
-         RefLid: LID_ID !== undefined
-             ? {connect: {ID: LID_ID}}
-             : undefined,
-         DocumentGroep: GROEP_ID !== undefined
-             ? {connect: {ID: GROEP_ID}}
-             : undefined,
+         RefLid: connect(LID_ID),
+         DocumentGroep: connect(GROEP_ID),
       };
 
       return await this.documentenService.AddObject(insertData);
@@ -74,26 +76,30 @@ export class DocumentenController extends HeliosController
 
    @HeliosUpdateObject(UpdateHeliosDocumentDto, HeliosDocumentDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateHeliosDocumentDto): Promise<HeliosDocument>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.UpdateObject');
+      this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the updateData object
+      // verwijder TYPE_ID uit de data
+      // en voeg ze toe als connect aan het updateData object
       const { LID_ID, GROEP_ID, ...updateData} = data;
-      (updateData as Prisma.HeliosDocumentUpdateInput).RefLid = LID_ID ? { connect: {ID: LID_ID }} : undefined;
-      (updateData as Prisma.HeliosDocumentUpdateInput).DocumentGroep = GROEP_ID ? { connect: {ID: GROEP_ID }} : undefined;
+      const connect = (id?: number) => id ? { connect: { ID: id } } : undefined;
+      const update = updateData as Prisma.HeliosDocumentUpdateInput;
+      update.RefLid = connect(LID_ID);
+      update.DocumentGroep = connect(GROEP_ID);
 
-      return await this.documentenService.UpdateObject(id, updateData as Prisma.HeliosDocumentUpdateInput);
+      return await this.documentenService.UpdateObject(id, update);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.DeleteObject');
+      this.logger.verbose(`DocumentenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.DeleteObject');
 
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: true
@@ -103,19 +109,21 @@ export class DocumentenController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.RemoveObject');
-      await this.documentenService.RemoveObject(id);
+      this.logger.verbose(`DocumentenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.RemoveObject');
+      await this.documentenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.RestoreObject');
+      this.logger.verbose(`DocumentenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.RestoreObject');
 
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: false

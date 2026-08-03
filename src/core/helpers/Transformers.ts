@@ -8,8 +8,8 @@ const optionBooleanMapper = new Map<string, boolean>([
 ]);
 
 /**
- * Decorator. Transforms an optional boolean to a boolean (or undefined) using the optionBooleanMapper
- * Problem: when using class transformer to transform query parameters, using @Type(() => Boolean) will always transform to a boolean that is true
+ * Decorator. Zet een optionele boolean om naar een boolean (of undefined) met behulp van de optionBooleanMapper
+ * Probleem: bij het gebruik van class transformer om query parameters om te zetten, zorgt @Type(() => Boolean) er altijd voor dat het naar een boolean true wordt omgezet
  *
  * @example class SomeRequest {
  *     @IsBoolean()
@@ -24,9 +24,9 @@ export const OptionalNumberTransform = () => Transform((options) => options.valu
 export const OptionalDateTransform = () => Transform((options) => options.value != null ? new Date(options.value) : null);
 
 
-// converts a string of comma separated values to an array of numbers.
-// If the string is null or undefined, it returns null
-// If a value is not a number, it is filtered out
+// zet een string van komma-gescheiden waarden om naar een array van numbers.
+// Als de string null of undefined is, wordt null teruggegeven
+// Als een waarde geen number is, wordt deze eruit gefilterd
 export const CSVTransform = () => Transform((options) =>
 {
    const o = options.value != null ? options.value.split(",") : null;

@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Query, UseGuards} from '@nestjs/common';
 import {ReserveringService} from "./reservering.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -18,11 +18,14 @@ import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operRe
 import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 import {ApiBasicAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Reservering')
 @ApiTags('Reservering')
 export class ReserveringController extends HeliosController
 {
+   private readonly logger = new Logger(ReserveringController.name);
+
    constructor(private readonly reserveringService: ReserveringService,
                private readonly permissieService: PermissieService)
    {
@@ -31,28 +34,31 @@ export class ReserveringController extends HeliosController
 
    @HeliosGetObject(OperReserveringDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperReserveringDto>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.GetObject');
+      this.logger.verbose(`ReserveringController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.GetObject');
       return await this.reserveringService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperReserveringResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperReserveringRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperReserveringResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.GetObjects');
-      return this.reserveringService.GetObjects(queryParams);
+      this.logger.verbose(`ReserveringController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.GetObjects');
+      return await this.reserveringService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperReserveringDto, OperReserveringDto)
-   AddObject(
-      @CurrentUser() user: RefLid,
+   async AddObject(
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperReserveringDto): Promise<OperReserveringDto>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.AddObject');
+      this.logger.verbose(`ReserveringController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.AddObject');
 
       // INGEVOERD_ID wordt enkel intern gezet, zie RequestToRecord() in class.Reservering.inc.php
       if ('INGEVOERD_ID' in data)
@@ -65,34 +71,36 @@ export class ReserveringController extends HeliosController
          throw new HttpException("VliegtuigID is verplicht", HttpStatus.BAD_REQUEST);
 
       // IS_GEBOEKT mag alleen door een (DDWV) beheerder gezet worden
-      if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(user) && !this.permissieService.isBeheerderDDWV(user))
+      if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      return this.reserveringService.AddObject(data, user);
+      return await this.reserveringService.AddObject(data, currentUser);
    }
 
    @HeliosUpdateObject(UpdateOperReserveringDto, OperReserveringDto)
-   UpdateObject(
-      @CurrentUser() user: RefLid,
+   async UpdateObject(
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperReserveringDto): Promise<OperReserveringDto>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.UpdateObject');
+      this.logger.verbose(`ReserveringController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.UpdateObject');
 
       if ('INGEVOERD_ID' in data)
          throw new HttpException("INGEVOERD_ID kan niet extern gezet worden", HttpStatus.BAD_REQUEST);
 
-      if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(user) && !this.permissieService.isBeheerderDDWV(user))
+      if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      return this.reserveringService.UpdateObject(id, data);
+      return await this.reserveringService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.DeleteObject');
+      this.logger.verbose(`ReserveringController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.DeleteObject');
 
       const data: Prisma.OperReserveringUpdateInput = {
          VERWIJDERD: true
@@ -102,19 +110,21 @@ export class ReserveringController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.RemoveObject');
-      await this.reserveringService.RemoveObject(id);
+      this.logger.verbose(`ReserveringController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.RemoveObject');
+      await this.reserveringService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.RestoreObject');
+      this.logger.verbose(`ReserveringController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.RestoreObject');
 
       const data: Prisma.OperReserveringUpdateInput = {
          VERWIJDERD: false
@@ -131,9 +141,10 @@ export class ReserveringController extends HeliosController
    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
    @ApiResponse({status: HttpStatus.OK, description: 'True als de gebruiker nog mag reserveren.', schema: {type: 'boolean'}})
    async MagNogReserveren(
-      @CurrentUser() user: RefLid): Promise<boolean>
+      @CurrentUser() currentUser: RefLid): Promise<boolean>
    {
-      this.permissieService.heeftToegang(user, 'Reservering.MagNogReserveren');
-      return this.reserveringService.MagNogReserveren(user.ID);
+      this.logger.verbose(`ReserveringController.MagNogReserveren(${safeStringify({currentUser})})`);
+      this.permissieService.heeftToegang(currentUser, 'Reservering.MagNogReserveren');
+      return await this.reserveringService.MagNogReserveren(currentUser.ID);
    }
 }

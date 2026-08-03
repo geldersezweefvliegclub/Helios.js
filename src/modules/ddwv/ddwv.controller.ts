@@ -13,7 +13,8 @@ export class DdwvController extends HeliosController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     async getConfiguratie(): Promise<DDWVConfiguratie> {
-        // TODO: Implement this!
+        this.logger.verbose(`DdwvController.getConfiguratie()`);
+        // TODO: dit implementeren!
         this.logger.warn("DDWV configuratie endpoint called, but not implemented yet.");
         return {
             DDWV: false,
@@ -21,6 +22,6 @@ export class DdwvController extends HeliosController {
             MAX_STRIPPEN: 0,
             START: new Date().toISOString(),
             STRIPPEN_RETOUR_OP_VLIEGDAG: 0
-        }
+        };
     }
 }

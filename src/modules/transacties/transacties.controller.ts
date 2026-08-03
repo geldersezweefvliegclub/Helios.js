@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {TransactiesService} from "./transacties.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {ApiTags} from "@nestjs/swagger";
 import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTransactie.dto";
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Transacties')
 @ApiTags('Transacties')
 export class TransactiesController  extends HeliosController
 {
+   private readonly logger = new Logger(TransactiesController.name);
+
    constructor(private readonly TransactiesService: TransactiesService,
                private readonly permissieService:PermissieService)
    {
@@ -30,46 +33,51 @@ export class TransactiesController  extends HeliosController
 
    @HeliosGetObject(OperTransactieDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.GetObject');
+      this.logger.verbose(`TransactiesController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.GetObject');
       return await this.TransactiesService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperTransactiesResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperTransactiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperTransactiesResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.GetObjects');
-      return this.TransactiesService.GetObjects(queryParams);
+      this.logger.verbose(`TransactiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.GetObjects');
+      return await this.TransactiesService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperTransactieDto, OperTransactieDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperTransactieDto): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.AddObject');
+      this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
       return await this.TransactiesService.AddObject(data as Prisma.OperTransactieCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperTransactieDto, OperTransactieDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.UpdateObject');
+      this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
       return await this.TransactiesService.UpdateObject(id, data as Prisma.OperTransactieCreateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.DeleteObject');
+      this.logger.verbose(`TransactiesController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.DeleteObject');
 
       const data: Prisma.OperTransactieUpdateInput = {
          VERWIJDERD: true
@@ -79,19 +87,21 @@ export class TransactiesController  extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.RemoveObject');
-      await this.TransactiesService.RemoveObject(id);
+      this.logger.verbose(`TransactiesController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.RemoveObject');
+      await this.TransactiesService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.RestoreObject');
+      this.logger.verbose(`TransactiesController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.RestoreObject');
 
       const data: Prisma.OperTransactieUpdateInput = {
          VERWIJDERD: false

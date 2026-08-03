@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,21 +8,24 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperWinterwerk} from "@prisma/client";
 import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
 import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class WinterwerkService extends IHeliosService
 {
+   private readonly logger = new Logger(WinterwerkService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperWinterwerk>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`WinterwerkService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operWinterwerk.findUnique({
          where: {
             ID: id
@@ -31,12 +34,15 @@ export class WinterwerkService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Winterwerk record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`WinterwerkService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperWinterwerkRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperWinterwerkResponse>>
    {
+      this.logger.verbose(`WinterwerkService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperWinterwerkRequest();
@@ -62,21 +68,27 @@ export class WinterwerkService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      this.logger.verbose(`WinterwerkService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperWinterwerkCreateInput): Promise<OperWinterwerk>
    {
+      this.logger.verbose(`WinterwerkService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operWinterwerk.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`WinterwerkService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput): Promise<OperWinterwerk>
    {
+      this.logger.verbose(`WinterwerkService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operWinterwerk.update({
          where: {
@@ -85,17 +97,23 @@ export class WinterwerkService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`WinterwerkService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`WinterwerkService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operWinterwerk.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

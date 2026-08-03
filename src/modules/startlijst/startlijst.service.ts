@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,6 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperStartlijst} from "@prisma/client";
 import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest";
 import {GetObjectsOperStartlijstResponse} from "./GetObjectsOperStartlijstResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // startlijst record inclusief de relaties die de PHP startlijst_view samenvoegt
 type StartlijstMetRelaties = Prisma.OperStartlijstGetPayload<{
@@ -25,17 +26,19 @@ type StartlijstMetRelaties = Prisma.OperStartlijstGetPayload<{
 @Injectable()
 export class StartlijstService extends IHeliosService
 {
+   private readonly logger = new Logger(StartlijstService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperStartlijst>
    {
-      // relation is included for consistency with other services, but not used.
+      this.logger.verbose(`StartlijstService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de startlijst_view.
       const db = await this.dbService.operStartlijst.findUnique({
          where: {
@@ -45,12 +48,15 @@ export class StartlijstService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Startlijst record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`StartlijstService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperStartlijstRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperStartlijstResponse>>
    {
+      this.logger.verbose(`StartlijstService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperStartlijstRequest();
@@ -117,28 +123,39 @@ export class StartlijstService extends IHeliosService
 
       const response = await this.NaarGetObjectsResponse(objs);
 
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`StartlijstService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    // datums waarop een DDWV bedrijf gepland staat, via oper_daginfo of oper_rooster (zie startlijst_view)
    private async DDWVDatums(): Promise<Date[]>
    {
+      this.logger.verbose(`StartlijstService.DDWVDatums()`);
       const [daginfo, rooster] = await Promise.all([
          this.dbService.operDagInfo.findMany({where: {DDWV: true}, select: {DATUM: true}}),
          this.dbService.operRooster.findMany({where: {DDWV: true}, select: {DATUM: true}}),
       ]);
-      return [...daginfo, ...rooster].map(record => record.DATUM);
+      const result = [...daginfo, ...rooster].map(record => record.DATUM);
+      this.logger.verbose(`StartlijstService.DDWVDatums() => ${safeStringify(result)}`);
+      return result;
    }
 
    // voegt de velden toe die de PHP startlijst_view samenvoegt: vliegtuig-, lid-, en type-gegevens via joins,
    // de berekende vliegduur, en de DDWV vlag via een gebatchte datum-lookup op oper_daginfo/oper_rooster
    private async NaarGetObjectsResponse(objs: StartlijstMetRelaties[]): Promise<GetObjectsOperStartlijstResponse[]>
    {
-      if (objs.length === 0) return [];
+      this.logger.verbose(`StartlijstService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      if (objs.length === 0)
+      {
+         const result: GetObjectsOperStartlijstResponse[] = [];
+         this.logger.verbose(`StartlijstService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         return result;
+      }
 
       const ddwvDatums = new Set((await this.DDWVDatums()).map(datum => datum.getTime()));
 
-      return objs.map(obj =>
+      const result = objs.map(obj =>
       {
          const {Vliegtuig: vliegtuig, Sleepkist: sleepkist, Vlieger: vlieger, Inzittende: inzittende,
             Startmethode: startmethode, Veld: veld, Baan: baan, ...startlijst} = obj;
@@ -163,13 +180,21 @@ export class StartlijstService extends IHeliosService
             DDWV: ddwvDatums.has(startlijst.DATUM.getTime()),
          } as GetObjectsOperStartlijstResponse;
       });
+      this.logger.verbose(`StartlijstService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      return result;
    }
 
    // zie DUUR berekening in de startlijst_view: verstreken tijd tot nu (als het vandaag is en nog niet geland),
    // of het verschil tussen start- en landingstijd, of leeg als er nog geen landingstijd is op een andere dag
    private BerekenDuur(datum: Date, starttijd: Date | null, landingstijd: Date | null): string
    {
-      if (!starttijd) return '';
+      this.logger.verbose(`StartlijstService.BerekenDuur(${safeStringify({datum, starttijd, landingstijd})})`);
+      if (!starttijd)
+      {
+         const result = '';
+         this.logger.verbose(`StartlijstService.BerekenDuur() => ${safeStringify(result)}`);
+         return result;
+      }
 
       const vandaag = new Date();
       const isVandaag = datum.toDateString() === vandaag.toDateString();
@@ -177,32 +202,46 @@ export class StartlijstService extends IHeliosService
       let eindTijd: Date | null = landingstijd;
       if (!eindTijd)
       {
-         if (!isVandaag) return '';
+         if (!isVandaag)
+         {
+            const result = '';
+            this.logger.verbose(`StartlijstService.BerekenDuur() => ${safeStringify(result)}`);
+            return result;
+         }
          eindTijd = vandaag;
       }
 
       const minuten = Math.max(0, Math.round((this.MinutenSindsMiddernacht(eindTijd) - this.MinutenSindsMiddernacht(starttijd) + 1440) % 1440));
-      return `${String(Math.floor(minuten / 60)).padStart(2, '0')}:${String(minuten % 60).padStart(2, '0')}`;
+      const result = `${String(Math.floor(minuten / 60)).padStart(2, '0')}:${String(minuten % 60).padStart(2, '0')}`;
+      this.logger.verbose(`StartlijstService.BerekenDuur() => ${safeStringify(result)}`);
+      return result;
    }
 
    private MinutenSindsMiddernacht(tijd: Date): number
    {
-      return tijd.getUTCHours() * 60 + tijd.getUTCMinutes();
+      this.logger.verbose(`StartlijstService.MinutenSindsMiddernacht(${safeStringify({tijd})})`);
+      const result = tijd.getUTCHours() * 60 + tijd.getUTCMinutes();
+      this.logger.verbose(`StartlijstService.MinutenSindsMiddernacht() => ${safeStringify(result)}`);
+      return result;
    }
 
    // bepaalt het volgnummer van de vlucht op die dag, zie NieuwDagNummer() in class.Startlijst.inc.php
    private async NieuwDagNummer(datum: Date): Promise<number>
    {
+      this.logger.verbose(`StartlijstService.NieuwDagNummer(${safeStringify({datum})})`);
       const laatste = await this.dbService.operStartlijst.findFirst({
          where: {DATUM: datum},
          orderBy: {DAGNUMMER: 'desc'},
       });
-      return (laatste?.DAGNUMMER ?? 0) + 1;
+      const result = (laatste?.DAGNUMMER ?? 0) + 1;
+      this.logger.verbose(`StartlijstService.NieuwDagNummer() => ${safeStringify(result)}`);
+      return result;
    }
 
    // controleert of start- en landingstijd geldig zijn, zie StartLandingTijdenValidatie() in class.Startlijst.inc.php
    private ValideerStartLandingTijden(starttijd: Date | null | undefined, landingstijd: Date | null | undefined): void
    {
+      this.logger.verbose(`StartlijstService.ValideerStartLandingTijden(${safeStringify({starttijd, landingstijd})})`);
       if (starttijd === undefined || landingstijd === undefined) return; // niet allebei opgegeven, niets te doen
 
       if (starttijd == null && landingstijd != null)
@@ -219,11 +258,16 @@ export class StartlijstService extends IHeliosService
    // zie InstructieVlucht() in class.Startlijst.inc.php
    private async ValideerInstructieVlucht(vliegtuigId: number | undefined, inzittendeId: number | null | undefined, instructievlucht: boolean | undefined): Promise<boolean | undefined>
    {
+      this.logger.verbose(`StartlijstService.ValideerInstructieVlucht(${safeStringify({vliegtuigId, inzittendeId, instructievlucht})})`);
       if (vliegtuigId !== undefined)
       {
          const vliegtuig = await this.dbService.refVliegtuig.findUnique({where: {ID: vliegtuigId}});
          if (vliegtuig?.ZITPLAATSEN === 1)
-            return false; // eenzitter, kan nooit een instructievlucht zijn
+         {
+            const result = false; // eenzitter, kan nooit een instructievlucht zijn
+            this.logger.verbose(`StartlijstService.ValideerInstructieVlucht() => ${safeStringify(result)}`);
+            return result;
+         }
       }
 
       if (instructievlucht && inzittendeId != null)
@@ -233,11 +277,14 @@ export class StartlijstService extends IHeliosService
             throw new HttpException("Instructie vlucht kan alleen door een instructeur worden gedaan", HttpStatus.CONFLICT);
       }
 
-      return instructievlucht;
+      const result = instructievlucht;
+      this.logger.verbose(`StartlijstService.ValideerInstructieVlucht() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput): Promise<OperStartlijst>
    {
+      this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
       this.ValideerStartLandingTijden(data.STARTTIJD as Date | null | undefined, data.LANDINGSTIJD as Date | null | undefined);
 
       const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID, data.INZITTENDE_ID, data.INSTRUCTIEVLUCHT as boolean | undefined);
@@ -251,11 +298,14 @@ export class StartlijstService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput): Promise<OperStartlijst>
    {
+      this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
 
       const nieuweStarttijd = data.STARTTIJD !== undefined ? data.STARTTIJD as Date | null : db.STARTTIJD;
@@ -280,17 +330,23 @@ export class StartlijstService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`StartlijstService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operStartlijst.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

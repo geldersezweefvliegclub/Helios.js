@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,21 +8,24 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperTransactie} from "@prisma/client";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class TransactiesService extends IHeliosService
 {
+   private readonly logger = new Logger(TransactiesService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperTransactie>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`TransactiesService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operTransactie.findUnique({
          where: {
             ID: id
@@ -31,12 +34,15 @@ export class TransactiesService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Transactie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`TransactiesService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperTransactiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperTransactiesResponse>>
    {
+      this.logger.verbose(`TransactiesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperTransactiesRequest();
@@ -99,21 +105,27 @@ export class TransactiesService extends IHeliosService
          return retObj as GetObjectsOperTransactiesResponse;
       });
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      this.logger.verbose(`TransactiesService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperTransactieCreateInput): Promise<OperTransactie>
    {
+      this.logger.verbose(`TransactiesService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operTransactie.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`TransactiesService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.OperTransactieUpdateInput): Promise<OperTransactie>
    {
+      this.logger.verbose(`TransactiesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operTransactie.update({
          where: {
@@ -122,17 +134,23 @@ export class TransactiesService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`TransactiesService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`TransactiesService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operTransactie.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

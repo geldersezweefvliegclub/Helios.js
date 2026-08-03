@@ -5,19 +5,19 @@ import {LoginService} from "../login.service";
 
 
 @Injectable()
-// Strategy is a passport-local strategy that will be used to authenticate a user.
+// Strategy is een passport-local strategy die gebruikt wordt om een gebruiker te authenticeren.
 export class LocalStrategy extends PassportStrategy(Strategy) {
    constructor(private readonly loginervice: LoginService) {
       super({
-         // incoming request will have a field called inlognaam to authenticate the user.
+         // het inkomende request heeft een veld genaamd inlognaam om de gebruiker te authenticeren.
          usernameField: 'Inlognaam',
          passwordField: 'Wachtwoord',
       });
    }
 
-   // validate() method will be called by the passport library to validate the user.
+   // de validate() methode wordt door de passport library aangeroepen om de gebruiker te valideren.
    async validate(inlognaam: string, wachtwoord: string) {
-      // the return value (lid) will be available in the request user object.
+      // de returnwaarde (lid) komt beschikbaar in het request user object.
       return this.loginervice.verifyUser(inlognaam, wachtwoord);
    }
 }

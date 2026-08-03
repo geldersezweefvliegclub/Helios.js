@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -11,6 +11,7 @@ import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLeden
 import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {TypesGroep} from "../../core/enums/TypesGroep";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -24,17 +25,19 @@ type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
 @Injectable()
 export class AanwezigLedenService extends IHeliosService
 {
+   private readonly logger = new Logger(AanwezigLedenService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperAanwezigLid>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`AanwezigLedenService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operAanwezigLid.findUnique({
          where: {
             ID: id
@@ -43,12 +46,15 @@ export class AanwezigLedenService extends IHeliosService
 
       if (!db)
          throw new HttpException(`AanwezigLid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`AanwezigLedenService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperAanwezigLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperAanwezigLedenResponse>>
    {
+      this.logger.verbose(`AanwezigLedenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperAanwezigLedenRequest();
@@ -109,14 +115,22 @@ export class AanwezigLedenService extends IHeliosService
 
       const response = await this.NaarGetObjectsResponse(objs);
 
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`AanwezigLedenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    // voegt de velden toe die de PHP aanwezig_leden_view samenvoegt: leden-, vliegtuig- en type-gegevens via joins,
    // en de vliegtijd/starts van vandaag via een gebatchte aggregatie op oper_startlijst (was per record een subquery)
    private async NaarGetObjectsResponse(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
    {
-      if (objs.length === 0) return [];
+      this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      if (objs.length === 0)
+      {
+         const result = [];
+         this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         return result;
+      }
 
       const vliegtuigTypes = await this.dbService.refType.findMany({where: {GROEP: TypesGroep.VliegtuigTypes}});
 
@@ -139,7 +153,7 @@ export class AanwezigLedenService extends IHeliosService
          vluchtenPerLidEnDatum.get(key).push(vlucht);
       }
 
-      return objs.map(obj =>
+      const result = objs.map(obj =>
       {
          const {RefLid: lid, RefVliegtuig: vliegtuig, Veld: veld, ...aanwezigLid} = obj;
 
@@ -200,12 +214,15 @@ export class AanwezigLedenService extends IHeliosService
             VLIEGT: vluchten.some(vlucht => vlucht.STARTTIJD !== null && vlucht.LANDINGSTIJD === null) ? 1 : 0,
          } as GetObjectsOperAanwezigLedenResponse;
       });
+      this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      return result;
    }
 
    // vliegcurrency-indicator (rood/geel/groen) per lid over de laatste 26 weken, gebaseerd op de gewogen
    // gemiddelde van vlieguren en starts, zie Startlijst.GetRecency() in de PHP implementatie
    async GetStatusBarometers(leden: {LID_ID: number, INSTRUCTEUR?: boolean}[]): Promise<Map<number, string>>
    {
+      this.logger.verbose(`AanwezigLedenService.GetStatusBarometers(${safeStringify({leden})})`);
       const lidIds = [...new Set(leden.map(lid => lid.LID_ID))];
       const instructeurIds = [...new Set(leden.filter(lid => lid.INSTRUCTEUR).map(lid => lid.LID_ID))];
 
@@ -253,25 +270,32 @@ export class AanwezigLedenService extends IHeliosService
          const gemiddelde = (stats.minuten / 60 + stats.starts * 25 / 35) / 2;
          barometers.set(lidId, gemiddelde < 10 ? 'rood' : gemiddelde < 20 ? 'geel' : 'groen');
       }
-      return barometers;
+      const result = barometers;
+      this.logger.verbose(`AanwezigLedenService.GetStatusBarometers() => ${safeStringify(result)}`);
+      return result;
    }
 
    private SecondenNaarTijd(seconden: number): string
    {
+      this.logger.verbose(`AanwezigLedenService.SecondenNaarTijd(${safeStringify({seconden})})`);
       const uren = Math.floor(seconden / 3600);
       const minuten = Math.floor((seconden % 3600) / 60);
-      return `${String(uren).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
+      const result = `${String(uren).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
+      this.logger.verbose(`AanwezigLedenService.SecondenNaarTijd() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: CreateOperAanwezigLidDto): Promise<OperAanwezigLid>
    {
+      this.logger.verbose(`AanwezigLedenService.AddObject(${safeStringify({data})})`);
       const {LID_ID, OVERLAND_VLIEGTUIG_ID, TRANSACTIE_ID, VELD_ID, ...rest} = data;
+      const connect = (id?: number) => id != null ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.OperAanwezigLidCreateInput = {
          ...rest,
          RefLid: {connect: {ID: LID_ID}},
-         RefVliegtuig: OVERLAND_VLIEGTUIG_ID != null ? {connect: {ID: OVERLAND_VLIEGTUIG_ID}} : undefined,
-         Transactie: TRANSACTIE_ID != null ? {connect: {ID: TRANSACTIE_ID}} : undefined,
-         Veld: VELD_ID != null ? {connect: {ID: VELD_ID}} : undefined,
+         RefVliegtuig: connect(OVERLAND_VLIEGTUIG_ID),
+         Transactie: connect(TRANSACTIE_ID),
+         Veld: connect(VELD_ID),
       };
 
       const obj = await this.dbService.operAanwezigLid.create({
@@ -279,11 +303,14 @@ export class AanwezigLedenService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`AanwezigLedenService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
    {
+      this.logger.verbose(`AanwezigLedenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAanwezigLid.update({
          where: {
@@ -292,22 +319,31 @@ export class AanwezigLedenService extends IHeliosService
          data: data as Prisma.OperAanwezigLidUpdateInput
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`AanwezigLedenService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`AanwezigLedenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operAanwezigLid.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 
    async IsAangemeld(currentUser: RefLid): Promise<boolean> {
+      this.logger.verbose(`AanwezigLedenService.IsAangemeld(${safeStringify({currentUser})})`);
       const rec = await this.dbService.operAanwezigLid.findFirst({ where: { LID_ID: currentUser.ID, DATUM: new Date(), VERWIJDERD: false } });
-      return !!rec;
+      const result = !!rec;
+      this.logger.verbose(`AanwezigLedenService.IsAangemeld() => ${safeStringify(result)}`);
+      return result;
    }
 }

@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {StartlijstService} from "./startlijst.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperStartlijstDto} from "../../generated/nestjs-dto/create-operStartlijst.dto";
 import {UpdateOperStartlijstDto} from "../../generated/nestjs-dto/update-operStartlijst.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Startlijst')
 @ApiTags('Startlijst')
 export class StartlijstController extends HeliosController
 {
+   private readonly logger = new Logger(StartlijstController.name);
+
    constructor(private readonly startlijstService: StartlijstService,
                private readonly permissieService: PermissieService)
    {
@@ -30,46 +33,51 @@ export class StartlijstController extends HeliosController
 
    @HeliosGetObject(OperStartlijstDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperStartlijstDto>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.GetObject');
+      this.logger.verbose(`StartlijstController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObject');
       return await this.startlijstService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperStartlijstResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperStartlijstRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperStartlijstResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.GetObjects');
-      return this.startlijstService.GetObjects(queryParams);
+      this.logger.verbose(`StartlijstController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObjects');
+      return await this.startlijstService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperStartlijstDto, OperStartlijstDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperStartlijstDto): Promise<OperStartlijstDto>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.AddObject');
+      this.logger.verbose(`StartlijstController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.AddObject');
       return await this.startlijstService.AddObject(data as Prisma.OperStartlijstUncheckedCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperStartlijstDto, OperStartlijstDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperStartlijstDto): Promise<OperStartlijstDto>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.UpdateObject');
+      this.logger.verbose(`StartlijstController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.UpdateObject');
       return await this.startlijstService.UpdateObject(id, data as Prisma.OperStartlijstUncheckedUpdateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.DeleteObject');
+      this.logger.verbose(`StartlijstController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.DeleteObject');
 
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: true
@@ -79,19 +87,21 @@ export class StartlijstController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.RemoveObject');
-      await this.startlijstService.RemoveObject(id);
+      this.logger.verbose(`StartlijstController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.RemoveObject');
+      await this.startlijstService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Startlijst.RestoreObject');
+      this.logger.verbose(`StartlijstController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.RestoreObject');
 
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: false

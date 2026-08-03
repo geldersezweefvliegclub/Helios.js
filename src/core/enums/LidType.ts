@@ -9,7 +9,7 @@ export enum LidType
    Veteraan = 605,
    Donateur = 606,
    Zusterclub = 607,
-   Rittenkaart5 = 608,
+   Rittenkaart = 608,
    NieuwLid = 609,
    Oprotkabel = 610,
    Cursist = 611,

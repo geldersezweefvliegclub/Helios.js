@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Query, UseGuards} from '@nestjs/common';
 import {ProgressieService} from "./progressie.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -24,6 +24,7 @@ import {LedenService} from "../leden/leden.service";
 import {Boom} from "../../core/helpers/Boom";
 import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
 import {TypesGroep} from "../../core/enums/TypesGroep";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // competentie IDs voor de startmethodes die op de startaantekeningen kaart getoond worden, zie
 // StartAantekeningen() in class.Progressie.inc.php
@@ -42,6 +43,8 @@ export class StartAantekeningenResponse
 @ApiTags('Progressie')
 export class ProgressieController extends HeliosController
 {
+   private readonly logger = new Logger(ProgressieController.name);
+
    constructor(private readonly progressieService: ProgressieService,
                private readonly competentiesService: CompetentiesService,
                private readonly typesService: TypesService,
@@ -53,37 +56,40 @@ export class ProgressieController extends HeliosController
 
    @HeliosGetObject(OperProgressieDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperProgressieDto>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.GetObject');
+      this.logger.verbose(`ProgressieController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.GetObject');
       return await this.progressieService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperProgressieResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperProgressieRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperProgressieResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.GetObjects');
-      return this.progressieService.GetObjects(queryParams);
+      this.logger.verbose(`ProgressieController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.GetObjects');
+      return await this.progressieService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperProgressieDto, OperProgressieDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperProgressieDto): Promise<OperProgressieDto>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.AddObject');
+      this.logger.verbose(`ProgressieController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.AddObject');
 
       // een lid mag geen eigen progressie aftekenen, zie AddObject() in class.Progressie.inc.php
-      if (data.LID_ID === user.ID)
+      if (data.LID_ID === currentUser.ID)
          throw new HttpException("Mag geen eigen progressie toevoegen", HttpStatus.FORBIDDEN);
 
       const insertData: Prisma.OperProgressieUncheckedCreateInput = {
          ...data,
          // INSTRUCTEUR_ID default naar de ingelogde gebruiker als niet expliciet meegegeven, zie RequestToRecord()
-         INSTRUCTEUR_ID: data.INSTRUCTEUR_ID ?? user.ID,
+         INSTRUCTEUR_ID: data.INSTRUCTEUR_ID ?? currentUser.ID,
       } as Prisma.OperProgressieUncheckedCreateInput;
 
       return await this.progressieService.AddObject(insertData);
@@ -91,37 +97,41 @@ export class ProgressieController extends HeliosController
 
    @HeliosUpdateObject(UpdateOperProgressieDto, OperProgressieDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperProgressieDto): Promise<OperProgressieDto>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.UpdateObject');
+      this.logger.verbose(`ProgressieController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.UpdateObject');
       return await this.progressieService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.DeleteObject');
+      this.logger.verbose(`ProgressieController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.DeleteObject');
       await this.progressieService.SetVerwijderd(id, true);
    }
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.RemoveObject');
-      await this.progressieService.RemoveObject(id);
+      this.logger.verbose(`ProgressieController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.RemoveObject');
+      await this.progressieService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.RestoreObject');
+      this.logger.verbose(`ProgressieController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.RestoreObject');
       await this.progressieService.SetVerwijderd(id, false);
    }
 
@@ -134,11 +144,12 @@ export class ProgressieController extends HeliosController
    @ApiOperation({summary: 'Alle competenties met de progressie van een lid erop, per leerfase.'})
    @ApiResponse({status: HttpStatus.OK, description: 'Data opgehaald.', schema: {type: 'array', items: {$ref: getSchemaPath(ProgressieKaartResponse)}}})
    async ProgressieKaart(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('LID_ID') lidId?: number): Promise<ProgressieKaartResponse[]>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.ProgressieKaart');
-      return this.BouwProgressieKaart(lidId ?? user.ID);
+      this.logger.verbose(`ProgressieController.ProgressieKaart(${safeStringify({currentUser, lidId})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.ProgressieKaart');
+      return await this.BouwProgressieKaart(lidId ?? currentUser.ID);
    }
 
    @Get("ProgressieBoom")
@@ -148,12 +159,13 @@ export class ProgressieController extends HeliosController
    @ApiOperation({summary: 'Progressiekaart van een lid, gegroepeerd in een boomstructuur per leerfase.'})
    @ApiResponse({status: HttpStatus.OK, description: 'Data opgehaald.', schema: {type: 'array', items: {$ref: getSchemaPath(ProgressieKaartResponse)}}})
    async ProgressieBoom(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('LID_ID') lidId?: number): Promise<ProgressieKaartResponse[]>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.ProgressieBoom');
+      this.logger.verbose(`ProgressieController.ProgressieBoom(${safeStringify({currentUser, lidId})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.ProgressieBoom');
 
-      const kaart = await this.BouwProgressieKaart(lidId ?? user.ID);
+      const kaart = await this.BouwProgressieKaart(lidId ?? currentUser.ID);
       const retValue: ProgressieKaartResponse[] = [];
 
       const leerfasen = await this.typesService.GetObjects({GROEP: TypesGroep.Opleidingsblok});
@@ -187,10 +199,11 @@ export class ProgressieController extends HeliosController
       properties: {lieren: {type: 'boolean'}, slepen: {type: 'boolean'}, zelfstart: {type: 'boolean'}}
    }})
    async StartAantekeningen(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('LID_ID') lidId: number): Promise<StartAantekeningenResponse>
    {
-      this.permissieService.heeftToegang(user, 'Progressie.StartAantekeningen');
+      this.logger.verbose(`ProgressieController.StartAantekeningen(${safeStringify({currentUser, lidId})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.StartAantekeningen');
 
       await this.ledenService.GetObject(lidId); // gooit 404 als lid niet bestaat
 
@@ -211,6 +224,7 @@ export class ProgressieController extends HeliosController
    // opgegeven lid erop geplakt, zie ProgressieKaart() in class.Progressie.inc.php
    private async BouwProgressieKaart(lidId: number): Promise<ProgressieKaartResponse[]>
    {
+      this.logger.verbose(`ProgressieController.BouwProgressieKaart(${safeStringify({lidId})})`);
       const leerfasen = await this.typesService.GetObjects({GROEP: TypesGroep.Opleidingsblok});
       const progressie = await this.progressieService.GetObjects({LID_ID: lidId} as GetObjectsOperProgressieRequest);
       const progressiePerCompetentie = new Map(progressie.dataset.map(item => [item.COMPETENTIE_ID, item]));

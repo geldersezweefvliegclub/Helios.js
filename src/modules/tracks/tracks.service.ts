@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -10,6 +10,7 @@ import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {CreateOperTrackDto} from "../../generated/nestjs-dto/create-operTrack.dto";
 import {UpdateOperTrackDto} from "../../generated/nestjs-dto/update-operTrack.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // track record inclusief de relaties die de PHP tracks_view samenvoegt
 type TrackMetRelaties = Prisma.OperTrackGetPayload<{
@@ -22,17 +23,19 @@ type TrackMetRelaties = Prisma.OperTrackGetPayload<{
 @Injectable()
 export class TracksService extends IHeliosService
 {
+   private readonly logger = new Logger(TracksService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperTrack>
    {
-      // relation is included for consistency with other services, but not used.
+      this.logger.verbose(`TracksService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de tracks_view.
       const db = await this.dbService.operTrack.findUnique({
          where: {
@@ -42,12 +45,15 @@ export class TracksService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Track record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`TracksService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperTracksRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperTracksResponse>>
    {
+      this.logger.verbose(`TracksService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperTracksRequest();
@@ -93,17 +99,21 @@ export class TracksService extends IHeliosService
          } as GetObjectsOperTracksResponse;
       });
 
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`TracksService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: CreateOperTrackDto): Promise<OperTrack>
    {
+      this.logger.verbose(`TracksService.AddObject(${safeStringify({data})})`);
       const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
+      const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.OperTrackCreateInput = {
          ...rest,
          Lid: {connect: {ID: LID_ID}},
-         Instructeur: INSTRUCTEUR_ID !== undefined ? {connect: {ID: INSTRUCTEUR_ID}} : undefined,
-         Startlijst: START_ID !== undefined ? {connect: {ID: START_ID}} : undefined,
+         Instructeur: connect(INSTRUCTEUR_ID),
+         Startlijst: connect(START_ID),
       };
 
       const obj = await this.dbService.operTrack.create({
@@ -111,7 +121,9 @@ export class TracksService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`TracksService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    /**
@@ -122,6 +134,7 @@ export class TracksService extends IHeliosService
     */
    async UpdateObject(id: number, data: UpdateOperTrackDto): Promise<OperTrack>
    {
+      this.logger.verbose(`TracksService.UpdateObject(${safeStringify({id, data})})`);
       const oud = await this.GetObject(id);
 
       const lidId = data.LID_ID ?? oud.LID_ID;
@@ -129,6 +142,7 @@ export class TracksService extends IHeliosService
       const tekst = data.TEKST !== undefined ? data.TEKST : oud.TEKST;
       const startId = data.START_ID !== undefined ? data.START_ID : oud.START_ID;
 
+      const connectIfSet = (relId?: number) => relId != null ? {connect: {ID: relId}} : undefined;
       const nieuw = await this.dbService.$transaction(async (tx) =>
       {
          await tx.operTrack.update({where: {ID: id}, data: {VERWIJDERD: true}});
@@ -136,9 +150,9 @@ export class TracksService extends IHeliosService
          return tx.operTrack.create({
             data: {
                Lid: {connect: {ID: lidId}},
-               Instructeur: instructeurId != null ? {connect: {ID: instructeurId}} : undefined,
+               Instructeur: connectIfSet(instructeurId),
                TEKST: tekst,
-               Startlijst: startId != null ? {connect: {ID: startId}} : undefined,
+               Startlijst: connectIfSet(startId),
                INGEVOERD: oud.INGEVOERD,
                Track: {connect: {ID: id}},
             }
@@ -146,13 +160,16 @@ export class TracksService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw);
-      return nieuw;
+      const result = nieuw;
+      this.logger.verbose(`TracksService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
    // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
    async SetVerwijderd(id: number, verwijderd: boolean): Promise<OperTrack>
    {
+      this.logger.verbose(`TracksService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operTrack.update({
          where: {
@@ -163,17 +180,23 @@ export class TracksService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`TracksService.SetVerwijderd() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`TracksService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operTrack.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

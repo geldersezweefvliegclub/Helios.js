@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,21 +8,24 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperDagInfo} from "@prisma/client";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class DagInfoService extends IHeliosService
 {
+   private readonly logger = new Logger(DagInfoService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, date?: Date, relation: string = undefined): Promise<OperDagInfo>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`DagInfoService.GetObject(${safeStringify({id, date, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operDagInfo.findFirst({
          where: {
             ID: id ? id : undefined,
@@ -34,12 +37,15 @@ export class DagInfoService extends IHeliosService
          throw new HttpException(`DagInfo record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
-      return db;
+      const result = db;
+      this.logger.verbose(`DagInfoService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperDagInfoRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagInfoResponse>>
    {
+      this.logger.verbose(`DagInfoService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperDagInfoRequest();
@@ -101,21 +107,27 @@ export class DagInfoService extends IHeliosService
          return retObj as GetObjectsOperDagInfoResponse;
       });
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      this.logger.verbose(`DagInfoService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.OperDagInfoCreateInput): Promise<OperDagInfo>
    {
+      this.logger.verbose(`DagInfoService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operDagInfo.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`DagInfoService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.OperDagInfoUpdateInput): Promise<OperDagInfo>
    {
+      this.logger.verbose(`DagInfoService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDagInfo.update({
          where: {
@@ -124,17 +136,23 @@ export class DagInfoService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      return obj;
+      const result = obj;
+      this.logger.verbose(`DagInfoService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`DagInfoService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operDagInfo.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

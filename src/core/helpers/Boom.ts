@@ -2,16 +2,16 @@ export class Boom
 {
    static bouwBoom<Type>(data): Type
    {
-      // Create a map to store nodes by their ID
+      // Maak een map om nodes op te slaan op hun ID
       const nodeMap = new Map();
 
-      // Initialize the map and set up each node
+      // Initialiseer de map en zet elke node klaar
       data.forEach((item) =>
       {
          nodeMap.set(item.ID, {...item, children: []});
       });
 
-      // Define the root nodes of the tree
+      // Definieer de root nodes van de boom
       const tree = [];
 
       data.forEach((item) =>
@@ -19,7 +19,7 @@ export class Boom
          const parentID = item.OUDER_ID;
          if (parentID)
          {
-            // Add current item as a child of its parent
+            // Voeg het huidige item toe als child van zijn parent
             if (nodeMap.has(parentID))
             {
                nodeMap.get(parentID).children.push(nodeMap.get(item.ID));
@@ -27,7 +27,7 @@ export class Boom
          }
          else
          {
-            // If no parent ID, it's a root node
+            // Als er geen parent ID is, is het een root node
             tree.push(nodeMap.get(item.ID));
          }
       });

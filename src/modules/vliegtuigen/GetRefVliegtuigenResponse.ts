@@ -4,8 +4,8 @@ import {ApiProperty} from "@nestjs/swagger";
 
 export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
     /**
-     * Creates an instance of RefVliegtuigDto, from a RefVliegtuig model object from Prisma.
-     * If you get an error when instantiating this class after querying using Prisma, make sure you included all necessary relations in your Prisma query!
+     * Maakt een instantie van RefVliegtuigDto, op basis van een RefVliegtuig model object van Prisma.
+     * Als je een error krijgt bij het instantiëren van deze class na een Prisma query, zorg er dan voor dat je alle benodigde relaties in je Prisma query hebt opgenomen!
      */
     constructor(obj?: RefVliegtuig & {
         VliegtuigType?: RefType,

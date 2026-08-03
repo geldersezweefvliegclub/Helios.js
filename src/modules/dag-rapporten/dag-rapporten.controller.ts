@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {DagRapportenService} from "./dag-rapporten.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperDagRapportDto} from "../../generated/nestjs-dto/create-operDagRapport.dto";
 import {UpdateOperDagRapportDto} from "../../generated/nestjs-dto/update-operDagRapport.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('DagRapporten')
 @ApiTags('DagRapporten')
 export class DagRapportenController extends HeliosController
 {
+   private readonly logger = new Logger(DagRapportenController.name);
+
    constructor(private readonly DagRapportenService: DagRapportenService,
                private readonly permissieService:PermissieService)
    {
@@ -30,46 +33,51 @@ export class DagRapportenController extends HeliosController
 
    @HeliosGetObject(OperDagRapportDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.GetObject');
+      this.logger.verbose(`DagRapportenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObject');
       return await this.DagRapportenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperDagRapportenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperDagRapportenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagRapportenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.GetObjects');
-      return this.DagRapportenService.GetObjects(queryParams);
+      this.logger.verbose(`DagRapportenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObjects');
+      return await this.DagRapportenService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.AddObject');
+      this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
       return await this.DagRapportenService.AddObject(data as Prisma.OperDagRapportCreateInput);
    }
 
    @HeliosUpdateObject(UpdateOperDagRapportDto, OperDagRapportDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.UpdateObject');
+      this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
       return await this.DagRapportenService.UpdateObject(id, data as Prisma.OperDagRapportCreateInput);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.DeleteObject');
+      this.logger.verbose(`DagRapportenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.DeleteObject');
 
       const data: Prisma.OperDagRapportUpdateInput = {
          VERWIJDERD: true
@@ -79,19 +87,21 @@ export class DagRapportenController extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.RemoveObject');
-      await this.DagRapportenService.RemoveObject(id);
+      this.logger.verbose(`DagRapportenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RemoveObject');
+      await this.DagRapportenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'DagRapporten.RestoreObject');
+      this.logger.verbose(`DagRapportenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RestoreObject');
 
       const data: Prisma.OperDagRapportUpdateInput = {
          VERWIJDERD: false

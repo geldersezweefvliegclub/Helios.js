@@ -3,6 +3,7 @@ import {
    Controller,
    HttpException,
    HttpStatus,
+   Logger,
    Query
 } from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
@@ -22,11 +23,14 @@ import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse
 import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Brandstof')
 @ApiTags('Brandstof')
 export class BrandstofController  extends HeliosController
 {
+   private readonly logger = new Logger(BrandstofController.name);
+
    constructor(private readonly brandstofService: BrandstofService,
                private readonly permissieService:PermissieService)
    {
@@ -35,28 +39,31 @@ export class BrandstofController  extends HeliosController
 
    @HeliosGetObject(OperBrandstofDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperBrandstofDto>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.GetObject');
+      this.logger.verbose(`BrandstofController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.GetObject');
       return await this.brandstofService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperBrandstofResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.GetObjects');
-      return this.brandstofService.GetObjects(queryParams);
+      this.logger.verbose(`BrandstofController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.GetObjects');
+      return await this.brandstofService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperBrandstofDto, OperBrandstofDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperBrandstofDto): Promise<OperBrandstofDto>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.AddObject');
+      this.logger.verbose(`BrandstofController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.AddObject');
 
       if (data.LID_ID === undefined)
          throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
@@ -66,19 +73,21 @@ export class BrandstofController  extends HeliosController
 
    @HeliosUpdateObject(UpdateOperBrandstofDto, OperBrandstofDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperBrandstofDto): Promise<OperBrandstofDto>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.UpdateObject');
+      this.logger.verbose(`BrandstofController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.UpdateObject');
       return await this.brandstofService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.DeleteObject');
+      this.logger.verbose(`BrandstofController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.DeleteObject');
 
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: true
@@ -88,19 +97,21 @@ export class BrandstofController  extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.RemoveObject');
-      await this.brandstofService.RemoveObject(id);
+      this.logger.verbose(`BrandstofController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.RemoveObject');
+      await this.brandstofService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Brandstof.RestoreObject');
+      this.logger.verbose(`BrandstofController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Brandstof.RestoreObject');
 
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: false

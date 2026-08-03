@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -11,6 +11,7 @@ import {GetRefVliegtuigenResponse} from "./GetRefVliegtuigenResponse";
 import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 import {JournaalCategorie} from "../../core/enums/JournaalCategorie";
 import {JournaalStatus} from "../../core/enums/JournaalStatus";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 // t/m JournaalStatus.Uitgesteld telt een journaal als openstaand (Opgelost/Afgetekend niet)
 const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = JournaalStatus.Uitgesteld;
@@ -18,15 +19,18 @@ const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = JournaalStatus.Uitgesteld;
 @Injectable()
 export class VliegtuigenService extends IHeliosService
 {
+   private readonly logger = new Logger(VliegtuigenService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation:string = undefined): Promise<RefVliegtuigDto>
    {
+      this.logger.verbose(`VliegtuigenService.GetObject(${safeStringify({id, relation})})`);
       const db = await this.dbService.refVliegtuig.findUnique({
          where: {
             ID: id
@@ -37,12 +41,15 @@ export class VliegtuigenService extends IHeliosService
          throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
-      return new GetRefVliegtuigenResponse(db);
+      const result = new GetRefVliegtuigenResponse(db);
+      this.logger.verbose(`VliegtuigenService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsRefVliegtuigenRequest): Promise<IHeliosGetObjectsResponse<GetRefVliegtuigenResponse>>
    {
+      this.logger.verbose(`VliegtuigenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsRefVliegtuigenRequest();
@@ -114,11 +121,14 @@ export class VliegtuigenService extends IHeliosService
          return resp;
       });
 
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`VliegtuigenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
    async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<GetRefVliegtuigenResponse>
    {
+      this.logger.verbose(`VliegtuigenService.AddObject(${safeStringify({data})})`);
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
          where: {
             REGISTRATIE: data.REGISTRATIE,
@@ -135,11 +145,14 @@ export class VliegtuigenService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return new GetRefVliegtuigenResponse(obj);
+      const result = new GetRefVliegtuigenResponse(obj);
+      this.logger.verbose(`VliegtuigenService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
    async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<GetRefVliegtuigenResponse>
    {
+      this.logger.verbose(`VliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
 
       // Dit moeten we ALTIJD doen, ook als er geen REGISTRATIE in de data zit. Bijvoorbeeld voor een restore
@@ -164,17 +177,23 @@ export class VliegtuigenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return new GetRefVliegtuigenResponse(obj);
+      const result = new GetRefVliegtuigenResponse(obj);
+      this.logger.verbose(`VliegtuigenService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`VliegtuigenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.refVliegtuig.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
    }
 }

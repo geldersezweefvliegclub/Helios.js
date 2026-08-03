@@ -1,4 +1,4 @@
-import {Body, Controller, HttpException, HttpStatus, Query} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Logger, Query} from '@nestjs/common';
 import {AanwezigLedenService} from "./aanwezig-leden.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,14 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {ApiTags} from "@nestjs/swagger";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('AanwezigLeden')
 @ApiTags('AanwezigLeden')
 export class AanwezigLedenController  extends HeliosController
 {
+   private readonly logger = new Logger(AanwezigLedenController.name);
+
    constructor(private readonly AanwezigLedenService: AanwezigLedenService,
                private readonly permissieService:PermissieService)
    {
@@ -30,22 +33,24 @@ export class AanwezigLedenController  extends HeliosController
 
    @HeliosGetObject(OperAanwezigLidDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperAanwezigLidDto>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.GetObject');
+      this.logger.verbose(`AanwezigLedenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObject');
       return await this.AanwezigLedenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperAanwezigLedenResponse)
    async GetObjects(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperAanwezigLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperAanwezigLedenResponse>>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.GetObjects');
+      this.logger.verbose(`AanwezigLedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObjects');
       const objs = await this.AanwezigLedenService.GetObjects(queryParams);
 
-      if (this.permissieService.isBeheerder(user) || this.permissieService.isInstructeur(user) || this.permissieService.isCIMT(user))
+      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isInstructeur(currentUser) || this.permissieService.isCIMT(currentUser))
       {
          const barometers = await this.AanwezigLedenService.GetStatusBarometers(objs.dataset);
          objs.dataset = objs.dataset.map(obj => ({...obj, STATUS_BAROMETER: barometers.get(obj.LID_ID)}));
@@ -56,10 +61,11 @@ export class AanwezigLedenController  extends HeliosController
 
    @HeliosCreateObject(CreateOperAanwezigLidDto, OperAanwezigLidDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.AddObject');
+      this.logger.verbose(`AanwezigLedenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.AddObject');
 
       // DATUM en LID_ID zijn verplicht
       if (data.DATUM === undefined)
@@ -72,19 +78,21 @@ export class AanwezigLedenController  extends HeliosController
 
    @HeliosUpdateObject(UpdateOperAanwezigLidDto, OperAanwezigLidDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.UpdateObject');
+      this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
       return await this.AanwezigLedenService.UpdateObject(id, data);
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.DeleteObject');
+      this.logger.verbose(`AanwezigLedenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.DeleteObject');
 
       const data: Prisma.OperAanwezigLidUpdateInput = {
          VERWIJDERD: true
@@ -94,19 +102,21 @@ export class AanwezigLedenController  extends HeliosController
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.RemoveObject');
-      await this.AanwezigLedenService.RemoveObject(id);
+      this.logger.verbose(`AanwezigLedenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.RemoveObject');
+      await this.AanwezigLedenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'AanwezigLeden.RestoreObject');
+      this.logger.verbose(`AanwezigLedenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.RestoreObject');
 
       const data: Prisma.OperAanwezigLidUpdateInput = {
          VERWIJDERD: false
