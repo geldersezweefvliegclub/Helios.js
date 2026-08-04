@@ -17,6 +17,7 @@ import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto/update-heliosD
 import {ApiTags} from "@nestjs/swagger";
 import {DocumentenService} from "./documenten.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 
 @Controller('Documenten')
@@ -59,6 +60,7 @@ export class DocumentenController extends HeliosController
        @CurrentUser() currentUser: RefLid,
        @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto> {
       this.logger.verbose(`DocumentenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
       // verwijder TYPE_ID uit de data
@@ -79,6 +81,8 @@ export class DocumentenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateHeliosDocumentDto): Promise<HeliosDocument>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 

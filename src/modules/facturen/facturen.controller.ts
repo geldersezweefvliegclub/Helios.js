@@ -18,6 +18,7 @@ import {CreateOperFactuurDto} from "../../generated/nestjs-dto/create-operFactuu
 import {UpdateOperFactuurDto} from "../../generated/nestjs-dto/update-operFactuur.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Facturen')
 @ApiTags('Facturen')
@@ -57,6 +58,7 @@ export class FacturenController  extends HeliosController
       @Body() data: CreateOperFactuurDto): Promise<OperFactuurDto>
    {
       this.logger.verbose(`FacturenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Facturen.AddObject');
       return await this.FacturenService.AddObject(data as Prisma.OperFactuurCreateInput);
    }
@@ -66,6 +68,8 @@ export class FacturenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperFactuurDto): Promise<OperFactuurDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`FacturenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.UpdateObject');
       return await this.FacturenService.UpdateObject(id, data as Prisma.OperFactuurCreateInput);

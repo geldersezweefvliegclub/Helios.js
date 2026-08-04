@@ -18,6 +18,8 @@ import {ApiTags} from "@nestjs/swagger";
 import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTransactie.dto";
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Transacties')
 @ApiTags('Transacties')
@@ -38,7 +40,8 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.GetObject');
-      return await this.TransactiesService.GetObject(id);
+      const obj = await this.TransactiesService.GetObject(id);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperTransactiesResponse)
@@ -57,6 +60,7 @@ export class TransactiesController  extends HeliosController
       @Body() data: CreateOperTransactieDto): Promise<OperTransactieDto>
    {
       this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
       return await this.TransactiesService.AddObject(data as Prisma.OperTransactieCreateInput);
    }
@@ -66,6 +70,8 @@ export class TransactiesController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<OperTransactieDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
       return await this.TransactiesService.UpdateObject(id, data as Prisma.OperTransactieCreateInput);

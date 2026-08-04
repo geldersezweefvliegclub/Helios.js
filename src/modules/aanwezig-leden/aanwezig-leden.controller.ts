@@ -18,6 +18,8 @@ import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAa
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('AanwezigLeden')
 @ApiTags('AanwezigLeden')
@@ -38,7 +40,13 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObject');
-      return await this.AanwezigLedenService.GetObject(id);
+      const obj = await this.AanwezigLedenService.GetObject(id);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
    }
 
    @HeliosGetObjects(GetObjectsOperAanwezigLedenResponse)
@@ -65,6 +73,7 @@ export class AanwezigLedenController  extends HeliosController
       @Body() data: CreateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
       this.logger.verbose(`AanwezigLedenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.AddObject');
 
       // DATUM en LID_ID zijn verplicht
@@ -81,6 +90,8 @@ export class AanwezigLedenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
       return await this.AanwezigLedenService.UpdateObject(id, data);

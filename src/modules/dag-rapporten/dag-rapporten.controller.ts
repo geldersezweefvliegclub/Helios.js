@@ -18,6 +18,8 @@ import {CreateOperDagRapportDto} from "../../generated/nestjs-dto/create-operDag
 import {UpdateOperDagRapportDto} from "../../generated/nestjs-dto/update-operDagRapport.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('DagRapporten')
 @ApiTags('DagRapporten')
@@ -38,7 +40,8 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObject');
-      return await this.DagRapportenService.GetObject(id);
+      const obj = await this.DagRapportenService.GetObject(id);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperDagRapportenResponse)
@@ -57,6 +60,7 @@ export class DagRapportenController extends HeliosController
       @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
    {
       this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
       return await this.DagRapportenService.AddObject(data as Prisma.OperDagRapportCreateInput);
    }
@@ -66,6 +70,8 @@ export class DagRapportenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
       return await this.DagRapportenService.UpdateObject(id, data as Prisma.OperDagRapportCreateInput);

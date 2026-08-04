@@ -12,6 +12,7 @@ import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAa
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -169,6 +170,9 @@ export class AanwezigLedenService extends IHeliosService
 
          return {
             ...aanwezigLid,
+            DATUM: toDateOnly(aanwezigLid.DATUM) as unknown as Date,
+            AANKOMST: toTimeOnly(aanwezigLid.AANKOMST) as unknown as Date,
+            VERTREK: toTimeOnly(aanwezigLid.VERTREK) as unknown as Date,
             REG_CALL: vliegtuig ? `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})` : null,
             NAAM: lid.NAAM,
             VOORNAAM: lid.VOORNAAM,
@@ -297,13 +301,21 @@ export class AanwezigLedenService extends IHeliosService
          Transactie: connect(TRANSACTIE_ID),
          Veld: connect(VELD_ID),
       };
+      insertData.DATUM = parseDateOnly(insertData.DATUM as Date | string) as Date;
+      insertData.AANKOMST = parseTimeOnly(insertData.AANKOMST as Date | string | null);
+      insertData.VERTREK = parseTimeOnly(insertData.VERTREK as Date | string | null);
 
       const obj = await this.dbService.operAanwezigLid.create({
          data: insertData
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
       this.logger.verbose(`AanwezigLedenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -311,15 +323,25 @@ export class AanwezigLedenService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
    {
       this.logger.verbose(`AanwezigLedenService.UpdateObject(${safeStringify({id, data})})`);
+      const update = data as Prisma.OperAanwezigLidUpdateInput;
+      update.DATUM = parseDateOnly(update.DATUM as Date | string) as Date;
+      update.AANKOMST = parseTimeOnly(update.AANKOMST as Date | string | null);
+      update.VERTREK = parseTimeOnly(update.VERTREK as Date | string | null);
+
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAanwezigLid.update({
          where: {
             ID: id
          },
-         data: data as Prisma.OperAanwezigLidUpdateInput
+         data: update
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
       this.logger.verbose(`AanwezigLedenService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

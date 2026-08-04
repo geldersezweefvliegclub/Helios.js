@@ -25,6 +25,8 @@ import {Boom} from "../../core/helpers/Boom";
 import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 // competentie IDs voor de startmethodes die op de startaantekeningen kaart getoond worden, zie
 // StartAantekeningen() in class.Progressie.inc.php
@@ -61,7 +63,8 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.GetObject');
-      return await this.progressieService.GetObject(id);
+      const obj = await this.progressieService.GetObject(id);
+      return {...obj, GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperProgressieResponse)
@@ -80,6 +83,7 @@ export class ProgressieController extends HeliosController
       @Body() data: CreateOperProgressieDto): Promise<OperProgressieDto>
    {
       this.logger.verbose(`ProgressieController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Progressie.AddObject');
 
       // een lid mag geen eigen progressie aftekenen, zie AddObject() in class.Progressie.inc.php
@@ -100,6 +104,8 @@ export class ProgressieController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperProgressieDto): Promise<OperProgressieDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`ProgressieController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.UpdateObject');
       return await this.progressieService.UpdateObject(id, data);

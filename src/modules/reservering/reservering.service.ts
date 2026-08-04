@@ -11,6 +11,7 @@ import {GetObjectsOperReserveringResponse} from "./GetObjectsOperReserveringResp
 import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operReservering.dto";
 import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 // reservering record inclusief de relaties die de PHP reservering_view samenvoegt
 type ReserveringMetRelaties = Prisma.OperReserveringGetPayload<{
@@ -138,6 +139,7 @@ export class ReserveringService extends IHeliosService
          const {RefLid: lid, RefVliegtuig: vliegtuig, ...reservering} = obj;
          return {
             ...reservering,
+            DATUM: toDateOnly(reservering.DATUM) as unknown as Date,
             NAAM: lid.NAAM,
             PRIVACY: lid.PRIVACY,
             INGEVOERD_DOOR: invoerderPerId.get(obj.INGEVOERD_ID)?.NAAM,
@@ -153,15 +155,16 @@ export class ReserveringService extends IHeliosService
    async AddObject(data: CreateOperReserveringDto, user: RefLid): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.AddObject(${safeStringify({data, user})})`);
+      const datum = parseDateOnly(data.DATUM as Date | string) as Date;
       // per DATUM+VLIEGTUIG_ID mag er maar een reservering bestaan
-      const bestaand = await this.GetObjectByDetails(new Date(data.DATUM), data.VLIEGTUIG_ID);
+      const bestaand = await this.GetObjectByDetails(datum, data.VLIEGTUIG_ID);
       if (bestaand)
          throw new HttpException("Er bestaat al een reservering voor dit vliegtuig op deze datum", HttpStatus.CONFLICT);
 
       const {LID_ID, VLIEGTUIG_ID, ...rest} = data;
       const insertData: Prisma.OperReserveringCreateInput = {
          ...rest,
-         DATUM: data.DATUM,
+         DATUM: datum,
          RefLid: {connect: {ID: LID_ID}},
          RefVliegtuig: {connect: {ID: VLIEGTUIG_ID}},
          INGEVOERD_ID: user.ID,
@@ -172,7 +175,7 @@ export class ReserveringService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`ReserveringService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -180,15 +183,18 @@ export class ReserveringService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.UpdateObject(${safeStringify({id, data})})`);
+      const update = data as Prisma.OperReserveringUpdateInput;
+      update.DATUM = parseDateOnly(update.DATUM as Date | string) as Date;
+
       const db = await this.GetObject(id);
       const obj = await this.dbService.operReservering.update({
          where: {
             ID: id
          },
-         data: data as Prisma.OperReserveringUpdateInput
+         data: update
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`ReserveringService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

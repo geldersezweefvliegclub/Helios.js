@@ -18,6 +18,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperAgendaDto} from "../../generated/nestjs-dto/create-operAgenda.dto";
 import {UpdateOperAgendaDto} from "../../generated/nestjs-dto/update-operAgenda.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Agenda')
 @ApiTags('Agenda')
@@ -38,7 +40,12 @@ async GetObject(
    {
       this.logger.verbose(`AgendaController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.GetObject');
-      return await this.agendaService.GetObject(id);
+      const obj = await this.agendaService.GetObject(id);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
+      };
    }
 
 @HeliosGetObjects(GetObjectsOperAgendaResponse)
@@ -57,6 +64,7 @@ async AddObject(
    @Body() data: CreateOperAgendaDto): Promise<OperAgendaDto>
    {
       this.logger.verbose(`AgendaController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Agenda.AddObject');
       return await this.agendaService.AddObject(data as Prisma.OperAgendaCreateInput);
    }
@@ -66,6 +74,8 @@ async UpdateObject(
    @CurrentUser() currentUser: RefLid,
    @Query('ID') id: number, @Body() data: UpdateOperAgendaDto): Promise<OperAgendaDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`AgendaController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.UpdateObject');
       return await this.agendaService.UpdateObject(id, data as Prisma.OperAgendaCreateInput);

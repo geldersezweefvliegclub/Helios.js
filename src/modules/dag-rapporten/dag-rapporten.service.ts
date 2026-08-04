@@ -9,6 +9,7 @@ import {Prisma, OperDagRapport} from "@prisma/client";
 import {GetObjectsOperDagRapportenRequest} from "./GetObjectsOperDagRapportenRequest";
 import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class DagRapportenService extends IHeliosService
@@ -90,6 +91,7 @@ export class DagRapportenService extends IHeliosService
          const {Veld: veld, RefLid: lid, ...dagRapport} = obj;
          return {
             ...dagRapport,
+            DATUM: toDateOnly(dagRapport.DATUM) as unknown as Date,
             INGEVOERD: lid.NAAM,
             VELD_CODE: veld.CODE,
             VELD_OMS: veld.OMSCHRIJVING,
@@ -104,12 +106,13 @@ export class DagRapportenService extends IHeliosService
    async AddObject(data: Prisma.OperDagRapportCreateInput): Promise<OperDagRapport>
    {
       this.logger.verbose(`DagRapportenService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operDagRapport.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`DagRapportenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -117,6 +120,7 @@ export class DagRapportenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperDagRapportUpdateInput): Promise<OperDagRapport>
    {
       this.logger.verbose(`DagRapportenService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDagRapport.update({
          where: {
@@ -125,7 +129,7 @@ export class DagRapportenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`DagRapportenService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

@@ -24,6 +24,8 @@ import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBran
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Brandstof')
 @ApiTags('Brandstof')
@@ -44,7 +46,8 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.GetObject');
-      return await this.brandstofService.GetObject(id);
+      const obj = await this.brandstofService.GetObject(id);
+      return {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperBrandstofResponse)
@@ -63,6 +66,7 @@ export class BrandstofController  extends HeliosController
       @Body() data: CreateOperBrandstofDto): Promise<OperBrandstofDto>
    {
       this.logger.verbose(`BrandstofController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.AddObject');
 
       if (data.LID_ID === undefined)
@@ -76,6 +80,8 @@ export class BrandstofController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperBrandstofDto): Promise<OperBrandstofDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`BrandstofController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.UpdateObject');
       return await this.brandstofService.UpdateObject(id, data);

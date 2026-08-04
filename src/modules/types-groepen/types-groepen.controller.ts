@@ -22,6 +22,7 @@ import {PermissieService} from "../authorisatie/permissie.service";
 import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto/create-refTypesGroep.dto";
 import {UpdateRefTypesGroepDto} from "../../generated/nestjs-dto/update-refTypesGroep.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('TypesGroepen')
 @ApiTags('TypesGroepen')
@@ -61,6 +62,7 @@ export class TypesGroepenController extends HeliosController
       @Body() data: CreateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
       this.logger.verbose(`TypesGroepenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.AddObject');
       return await this.typesGroepenService.AddObject(data);
    }
@@ -70,6 +72,8 @@ export class TypesGroepenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`TypesGroepenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.UpdateObject');
       return await this.typesGroepenService.UpdateObject(id, data);

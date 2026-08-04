@@ -9,6 +9,7 @@ import {Prisma, OperDagInfo} from "@prisma/client";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class DagInfoService extends IHeliosService
@@ -83,6 +84,7 @@ export class DagInfoService extends IHeliosService
       const objs = rawObjs.map((obj) => {
          const retObj = {
             ...obj,
+            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
             VELD_CODE: obj.Veld?.CODE ?? null,
             VELD_OMS: obj.Veld?.OMSCHRIJVING ?? null,
             BAAN_CODE: obj.Baan?.CODE ?? null,
@@ -115,12 +117,13 @@ export class DagInfoService extends IHeliosService
    async AddObject(data: Prisma.OperDagInfoCreateInput): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operDagInfo.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`DagInfoService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -128,6 +131,7 @@ export class DagInfoService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperDagInfoUpdateInput): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDagInfo.update({
          where: {
@@ -136,7 +140,7 @@ export class DagInfoService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`DagInfoService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

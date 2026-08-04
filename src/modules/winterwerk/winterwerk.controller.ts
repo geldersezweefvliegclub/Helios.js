@@ -19,6 +19,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto/create-operWinterwerk.dto";
 import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto/update-operWinterwerk.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Winterwerk')
 @ApiTags('Winterwerk')
@@ -39,7 +41,13 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.GetObject');
-      return await this.WinterwerkService.GetObject(id);
+      const obj = await this.WinterwerkService.GetObject(id);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
+         EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
+      };
    }
 
    @HeliosGetObjects(GetObjectsOperWinterwerkResponse)
@@ -58,6 +66,7 @@ export class WinterwerkController extends HeliosController
       @Body() data: CreateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
       this.logger.verbose(`WinterwerkController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
       return await this.WinterwerkService.AddObject(data as Prisma.OperWinterwerkCreateInput);
    }
@@ -67,6 +76,8 @@ export class WinterwerkController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
       return await this.WinterwerkService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);

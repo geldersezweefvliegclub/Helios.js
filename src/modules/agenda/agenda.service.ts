@@ -9,6 +9,7 @@ import {Prisma, OperAgenda} from "@prisma/client";
 import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
 import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class AgendaService extends IHeliosService
@@ -81,7 +82,12 @@ export class AgendaService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      const response = objs.map(obj => ({
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
+      }));
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`AgendaService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
@@ -89,12 +95,19 @@ export class AgendaService extends IHeliosService
    async AddObject(data: Prisma.OperAgendaCreateInput): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
+
       const obj = await this.dbService.operAgenda.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
+      };
       this.logger.verbose(`AgendaService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -102,6 +115,9 @@ export class AgendaService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperAgendaUpdateInput): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
+
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAgenda.update({
          where: {
@@ -110,7 +126,11 @@ export class AgendaService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
+      };
       this.logger.verbose(`AgendaService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

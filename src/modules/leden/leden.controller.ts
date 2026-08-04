@@ -28,6 +28,8 @@ import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {toDateOnly} from "../../core/helpers/DateOnly";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Leden')
 @ApiTags('Leden')
@@ -85,6 +87,7 @@ export class LedenController extends HeliosController
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
 
       // verwijder LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 uit de data
@@ -98,7 +101,8 @@ export class LedenController extends HeliosController
       insert.Buddy = connect(BUDDY_ID);
       insert.Buddy2 = connect(BUDDY_ID2);
 
-      return await this.ledenService.AddObject(insert);
+      const obj = await this.ledenService.AddObject(insert);
+      return this.privacyMask(obj, currentUser);
    }
 
    @HeliosUpdateObject(UpdateRefLidDto, RefLidDto)
@@ -107,6 +111,8 @@ export class LedenController extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
    {
       this.logger.verbose(`LedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.permissieService.heeftToegang(currentUser, 'Leden.UpdateObject');
       if ((currentUser.ID !== id) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser)) {
          throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
@@ -123,7 +129,8 @@ export class LedenController extends HeliosController
       update.Buddy = connect(BUDDY_ID);
       update.Buddy2 = connect(BUDDY_ID2);
 
-      return await this.ledenService.UpdateObject(id, update);
+      const obj = await this.ledenService.UpdateObject(id, update);
+      return this.privacyMask(obj, currentUser);
    }
 
    @HeliosDeleteObject()
@@ -234,6 +241,10 @@ export class LedenController extends HeliosController
          obj.LIDNR = null;
          obj.STATUSTYPE_ID = null;
       }
+
+      // GEBOORTE_DATUM en MEDICAL zijn datums zonder tijdscomponent, geef enkel de datum (yyyy-MM-dd) terug
+      obj.GEBOORTE_DATUM = toDateOnly(obj.GEBOORTE_DATUM) as unknown as Date;
+      obj.MEDICAL = toDateOnly(obj.MEDICAL) as unknown as Date;
 
       return obj as RefLid;
    }

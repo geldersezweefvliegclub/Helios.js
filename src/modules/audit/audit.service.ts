@@ -6,6 +6,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
 import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class AuditService extends IHeliosService
@@ -30,7 +31,7 @@ export class AuditService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Audit record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      const result = db;
+      const result = {...db, DATUM: toDateOnly(db.DATUM) as unknown as Date};
       this.logger.verbose(`AuditService.GetObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -101,6 +102,7 @@ export class AuditService extends IHeliosService
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
+            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
             NAAM: obj.RefLid?.NAAM ?? null,
          } ;
 

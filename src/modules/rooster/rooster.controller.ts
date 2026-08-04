@@ -18,6 +18,8 @@ import {CreateOperRoosterDto} from "../../generated/nestjs-dto/create-operRooste
 import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-operRooster.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Rooster')
 @ApiTags('Rooster')
@@ -38,7 +40,8 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.GetObject');
-      return await this.RoosterService.GetObject(id);
+      const obj = await this.RoosterService.GetObject(id);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperRoosterResponse)
@@ -57,6 +60,7 @@ export class RoosterController  extends HeliosController
       @Body() data: CreateOperRoosterDto): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Rooster.AddObject');
       return await this.RoosterService.AddObject(data as Prisma.OperRoosterCreateInput);
    }
@@ -66,6 +70,8 @@ export class RoosterController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperRoosterDto): Promise<OperRoosterDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`RoosterController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.UpdateObject');
       return await this.RoosterService.UpdateObject(id, data as Prisma.OperRoosterCreateInput);

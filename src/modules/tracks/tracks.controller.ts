@@ -18,6 +18,7 @@ import {CreateOperTrackDto} from "../../generated/nestjs-dto/create-operTrack.dt
 import {UpdateOperTrackDto} from "../../generated/nestjs-dto/update-operTrack.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Tracks')
 @ApiTags('Tracks')
@@ -57,6 +58,7 @@ export class TracksController extends HeliosController
       @Body() data: CreateOperTrackDto): Promise<OperTrackDto>
    {
       this.logger.verbose(`TracksController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Tracks.AddObject');
 
       // LINK_ID en INGEVOERD worden enkel intern door UpdateObject beheerd, zie class.Tracks.inc.php RequestToRecord()
@@ -75,6 +77,8 @@ export class TracksController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTrackDto): Promise<OperTrackDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`TracksController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.UpdateObject');
 

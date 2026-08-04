@@ -21,6 +21,7 @@ import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Types')
 @ApiTags('Types')
@@ -60,6 +61,7 @@ export class TypesController extends HeliosController
       @Body() data: CreateRefTypeDto): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Types.AddObject');
 
       // verwijder GROEP uit de data
@@ -76,6 +78,8 @@ export class TypesController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefTypeDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`TypesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.UpdateObject');
 

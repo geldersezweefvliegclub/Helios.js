@@ -12,6 +12,7 @@ import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBran
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {LedenService} from "../leden/leden.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class BrandstofService extends IHeliosService
@@ -79,6 +80,7 @@ export class BrandstofService extends IHeliosService
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
+            TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date,
             BRANDSTOF_TYPE: obj.BrandstofType?.OMSCHRIJVING ?? null,
          } ;
 
@@ -109,13 +111,14 @@ export class BrandstofService extends IHeliosService
          RefLid: connect(LID_ID),
          NAAM: lid.NAAM,
       };
+      insertData.TIJDSTIP = parseDateOnly(insertData.TIJDSTIP as Date | string);
 
       const obj = await this.dbService.operBrandstof.create({
          data: insertData
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      const result = obj;
+      const result = {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
       this.logger.verbose(`BrandstofService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -143,6 +146,8 @@ export class BrandstofService extends IHeliosService
          };
       }
 
+      updateData.TIJDSTIP = parseDateOnly(updateData.TIJDSTIP as Date | string);
+
       const obj = await this.dbService.operBrandstof.update({
          where: {
             ID: id
@@ -150,7 +155,7 @@ export class BrandstofService extends IHeliosService
          data: updateData
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, updateData, obj);
-      const result = obj;
+      const result = {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
       this.logger.verbose(`BrandstofService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

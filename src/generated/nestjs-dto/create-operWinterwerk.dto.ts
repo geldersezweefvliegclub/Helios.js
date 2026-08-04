@@ -32,7 +32,7 @@ export class CreateOperWinterwerkDto {
     format: "date-time",
   })
   @IsNotEmpty()
-  @IsDateString()
+  @IsString()
   AANVANG: Date;
   @ApiProperty({
     description: "Einde van de werkzaamheden",
@@ -40,7 +40,7 @@ export class CreateOperWinterwerkDto {
     format: "date-time",
   })
   @IsNotEmpty()
-  @IsDateString()
+  @IsString()
   EINDE: Date;
   @ApiProperty({
     description: "Eventuele opmerkingen",

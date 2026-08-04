@@ -10,6 +10,7 @@ import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class RoosterService extends IHeliosService
@@ -81,7 +82,8 @@ export class RoosterService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      const response = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`RoosterService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
@@ -89,12 +91,13 @@ export class RoosterService extends IHeliosService
    async AddObject(data: Prisma.OperRoosterCreateInput): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operRooster.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`RoosterService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -102,6 +105,7 @@ export class RoosterService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operRooster.update({
          where: {
@@ -110,7 +114,7 @@ export class RoosterService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`RoosterService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

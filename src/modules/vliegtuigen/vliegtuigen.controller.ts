@@ -21,6 +21,7 @@ import {VliegtuigenService} from "./vliegtuigen.service";
 import {CreateRefVliegtuigDto} from "../../generated/nestjs-dto/create-refVliegtuig.dto";
 import {UpdateRefVliegtuigDto} from "../../generated/nestjs-dto/update-refVliegtuig.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Vliegtuigen')
 @ApiTags('Vliegtuigen')
@@ -60,6 +61,7 @@ export class VliegtuigenController extends HeliosController
       @Body() data: CreateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.AddObject');
 
       // verwijder TYPE_ID uit de data
@@ -76,6 +78,8 @@ export class VliegtuigenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`VliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.UpdateObject');
 

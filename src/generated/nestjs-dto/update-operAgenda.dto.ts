@@ -36,7 +36,7 @@ export class UpdateOperAgendaDto {
     nullable: true,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   TIJD?: Date | null;
   @ApiProperty({
     description: "Korte beschrijving van het agenda-item",

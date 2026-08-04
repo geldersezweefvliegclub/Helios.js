@@ -9,6 +9,7 @@ import {Prisma, OperStartlijst} from "@prisma/client";
 import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest";
 import {GetObjectsOperStartlijstResponse} from "./GetObjectsOperStartlijstResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 // startlijst record inclusief de relaties die de PHP startlijst_view samenvoegt
 type StartlijstMetRelaties = Prisma.OperStartlijstGetPayload<{
@@ -162,6 +163,9 @@ export class StartlijstService extends IHeliosService
 
          return {
             ...startlijst,
+            DATUM: toDateOnly(startlijst.DATUM) as unknown as Date,
+            STARTTIJD: toTimeOnly(startlijst.STARTTIJD) as unknown as Date,
+            LANDINGSTIJD: toTimeOnly(startlijst.LANDINGSTIJD) as unknown as Date,
             REGISTRATIE: vliegtuig.REGISTRATIE,
             CALLSIGN: vliegtuig.CALLSIGN,
             REG_CALL: `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})`,
@@ -285,6 +289,11 @@ export class StartlijstService extends IHeliosService
    async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
+      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
+
       this.ValideerStartLandingTijden(data.STARTTIJD as Date | null | undefined, data.LANDINGSTIJD as Date | null | undefined);
 
       const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID, data.INZITTENDE_ID, data.INSTRUCTIEVLUCHT as boolean | undefined);
@@ -298,7 +307,12 @@ export class StartlijstService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
+         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
+      };
       this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -306,6 +320,11 @@ export class StartlijstService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date | undefined;
+      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
+      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
+
       const db = await this.GetObject(id);
 
       const nieuweStarttijd = data.STARTTIJD !== undefined ? data.STARTTIJD as Date | null : db.STARTTIJD;
@@ -330,7 +349,12 @@ export class StartlijstService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
+         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
+      };
       this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

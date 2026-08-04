@@ -9,6 +9,7 @@ import {Prisma, OperProgressie} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 // progressie record inclusief de relaties die de PHP progressie_view samenvoegt
 type ProgressieMetRelaties = Prisma.OperProgressieGetPayload<{
@@ -101,6 +102,7 @@ export class ProgressieService extends IHeliosService
          const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
          return {
             ...progressie,
+            GELDIG_TOT: toDateOnly(progressie.GELDIG_TOT) as unknown as Date,
             LEERFASE_ID: competentie.LEERFASE_ID,
             LEERFASE: competentie.LeerfaseType?.OMSCHRIJVING ?? null,
             COMPETENTIE: competentie.OMSCHRIJVING,
@@ -117,12 +119,13 @@ export class ProgressieService extends IHeliosService
    async AddObject(data: Prisma.OperProgressieUncheckedCreateInput): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.AddObject(${safeStringify({data})})`);
+      data.GELDIG_TOT = parseDateOnly(data.GELDIG_TOT as Date | string | null);
       const obj = await this.dbService.operProgressie.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date};
       this.logger.verbose(`ProgressieService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -143,7 +146,7 @@ export class ProgressieService extends IHeliosService
       const instructeurId = data.INSTRUCTEUR_ID ?? oud.INSTRUCTEUR_ID;
       const opmerkingen = data.OPMERKINGEN !== undefined ? data.OPMERKINGEN : oud.OPMERKINGEN;
       const score = data.SCORE !== undefined ? data.SCORE : oud.SCORE;
-      const geldigTot = data.GELDIG_TOT !== undefined ? data.GELDIG_TOT : oud.GELDIG_TOT;
+      const geldigTot = data.GELDIG_TOT !== undefined ? parseDateOnly(data.GELDIG_TOT as Date | string | null) : oud.GELDIG_TOT;
 
       const nieuw = await this.dbService.$transaction(async (tx) =>
       {
@@ -164,7 +167,7 @@ export class ProgressieService extends IHeliosService
       });
 
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw);
-      const result = nieuw;
+      const result = {...nieuw, GELDIG_TOT: toDateOnly(nieuw.GELDIG_TOT) as unknown as Date};
       this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

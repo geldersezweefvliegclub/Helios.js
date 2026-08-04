@@ -9,6 +9,7 @@ import {Prisma, OperTransactie} from "@prisma/client";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class TransactiesService extends IHeliosService
@@ -93,6 +94,7 @@ export class TransactiesService extends IHeliosService
       const objs = rawObjs.map((obj) => {
          const retObj = {
             ...obj,
+            VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date,
             NAAM: obj.RefLid?.NAAM ?? null,
             INGEVOERD: obj.RefIngevoerd?.NAAM ?? null,
             TYPE: obj.TypeTransactie?.OMSCHRIJVING ?? null,
@@ -113,12 +115,13 @@ export class TransactiesService extends IHeliosService
    async AddObject(data: Prisma.OperTransactieCreateInput): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.AddObject(${safeStringify({data})})`);
+      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
       const obj = await this.dbService.operTransactie.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
       this.logger.verbose(`TransactiesService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -126,6 +129,7 @@ export class TransactiesService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperTransactieUpdateInput): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.UpdateObject(${safeStringify({id, data})})`);
+      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operTransactie.update({
          where: {
@@ -134,7 +138,7 @@ export class TransactiesService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
       this.logger.verbose(`TransactiesService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

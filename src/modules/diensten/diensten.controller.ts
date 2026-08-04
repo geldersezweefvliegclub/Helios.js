@@ -20,6 +20,7 @@ import {CreateOperDienstDto} from "../../generated/nestjs-dto/create-operDienst.
 import {UpdateOperDienstDto} from "../../generated/nestjs-dto/update-operDienst.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Diensten')
 @ApiTags('Diensten')
@@ -59,6 +60,7 @@ export class DienstenController  extends HeliosController
       @Body() data: CreateOperDienstDto): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
       return await this.DienstenService.AddObject(data as Prisma.OperDienstCreateInput);
    }
@@ -68,6 +70,8 @@ export class DienstenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDienstDto): Promise<GetOperDienstenResponse>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
       return await this.DienstenService.UpdateObject(id, data as Prisma.OperDienstCreateInput);

@@ -9,6 +9,7 @@ import {Prisma, OperGast} from "@prisma/client";
 import {GetObjectsOperGastenRequest} from "./GetObjectsOperGastenRequest";
 import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class GastenService extends IHeliosService
@@ -75,6 +76,7 @@ export class GastenService extends IHeliosService
       const objs = rawObjs.map((obj) => {
          const retObj = {
             ...obj,
+            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
             VELD: obj.Veld?.OMSCHRIJVING ?? null,
          };
 
@@ -91,12 +93,13 @@ export class GastenService extends IHeliosService
    async AddObject(data: Prisma.OperGastCreateInput): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operGast.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`GastenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -104,6 +107,7 @@ export class GastenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperGastUpdateInput): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operGast.update({
          where: {
@@ -112,7 +116,7 @@ export class GastenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
       this.logger.verbose(`GastenService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }

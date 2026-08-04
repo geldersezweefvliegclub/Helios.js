@@ -28,7 +28,7 @@ export class UpdateOperWinterwerkDto {
     required: false,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   AANVANG?: Date;
   @ApiProperty({
     description: "Einde van de werkzaamheden",
@@ -37,7 +37,7 @@ export class UpdateOperWinterwerkDto {
     required: false,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   EINDE?: Date;
   @ApiProperty({
     description: "Eventuele opmerkingen",

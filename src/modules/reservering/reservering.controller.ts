@@ -19,6 +19,8 @@ import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operRe
 import {ApiBasicAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Reservering')
 @ApiTags('Reservering')
@@ -39,7 +41,8 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.GetObject');
-      return await this.reserveringService.GetObject(id);
+      const obj = await this.reserveringService.GetObject(id);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperReserveringResponse)
@@ -58,6 +61,7 @@ export class ReserveringController extends HeliosController
       @Body() data: CreateOperReserveringDto): Promise<OperReserveringDto>
    {
       this.logger.verbose(`ReserveringController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Reservering.AddObject');
 
       // INGEVOERD_ID wordt enkel intern gezet, zie RequestToRecord() in class.Reservering.inc.php
@@ -82,6 +86,8 @@ export class ReserveringController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperReserveringDto): Promise<OperReserveringDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`ReserveringController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.UpdateObject');
 

@@ -18,6 +18,8 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {CreateOperGastDto} from "../../generated/nestjs-dto/create-operGast.dto";
 import {UpdateOperGastDto} from "../../generated/nestjs-dto/update-operGast.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Gasten')
 @ApiTags('Gasten')
@@ -38,7 +40,8 @@ export class GastenController extends HeliosController
    {
       this.logger.verbose(`GastenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.GetObject');
-      return await this.GastenService.GetObject(id);
+      const obj = await this.GastenService.GetObject(id);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperGastenResponse)
@@ -57,6 +60,7 @@ export class GastenController extends HeliosController
       @Body() data: CreateOperGastDto): Promise<OperGastDto>
    {
       this.logger.verbose(`GastenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Gasten.AddObject');
       return await this.GastenService.AddObject(data as Prisma.OperGastCreateInput);
    }
@@ -66,6 +70,8 @@ export class GastenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperGastDto): Promise<OperGastDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`GastenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.UpdateObject');
       return await this.GastenService.UpdateObject(id, data as Prisma.OperGastCreateInput);

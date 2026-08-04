@@ -64,7 +64,7 @@ export class UpdateOperAanwezigLidDto {
     nullable: true,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   AANKOMST?: Date | null;
   @ApiProperty({
     description:
@@ -75,7 +75,7 @@ export class UpdateOperAanwezigLidDto {
     nullable: true,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   VERTREK?: Date | null;
   @ApiProperty({
     description: "Referentie naar het vliegtuig in de vliegtuigen tabel",

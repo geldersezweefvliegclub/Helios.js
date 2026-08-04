@@ -20,6 +20,8 @@ import {UpdateOperDagInfoDto} from "../../generated/nestjs-dto/update-operDagInf
 import {ApiTags} from "@nestjs/swagger";
 import {GetObjectOperDagInfoRequest} from "./GetObjectOperDagInfoRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Daginfo')
 @ApiTags('Daginfo')
@@ -41,7 +43,8 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.GetObject(${safeStringify({currentUser, params})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObject');
-      return await this.DagInfoService.GetObject(params.ID, params.DATUM);
+      const obj = await this.DagInfoService.GetObject(params.ID, params.DATUM);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperDagInfoResponse)
@@ -60,6 +63,7 @@ export class DagInfoController  extends HeliosController
       @Body() data: CreateOperDagInfoDto): Promise<OperDagInfoDto>
    {
       this.logger.verbose(`DagInfoController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.AddObject');
       return await this.DagInfoService.AddObject(data as Prisma.OperDagInfoCreateInput);
    }
@@ -69,6 +73,8 @@ export class DagInfoController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDagInfoDto): Promise<OperDagInfoDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`DagInfoController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.UpdateObject');
       return await this.DagInfoService.UpdateObject(id, data as Prisma.OperDagInfoCreateInput);

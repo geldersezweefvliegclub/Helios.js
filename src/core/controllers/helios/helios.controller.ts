@@ -73,7 +73,7 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
 
 export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
    applyDecorators(
-      Post("AddObject"),
+      Post("SaveObject"),
       ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(inputDto),
@@ -89,7 +89,7 @@ export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto ext
 // dataDto is het object wat door de service wordt ontvangen en data vanuit de database wordt teruggegeven naar de client.
 export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto extends Type<unknown>>(inputDto: InputDto, outputDto: OutputDto, ) =>
     applyDecorators(
-      Put("UpdateObject"),
+      Put("SaveObject"),
       ApiBasicAuth(),
       UseGuards(AuthGuard(['jwt', 'basic-auth'])),
       ApiExtraModels(inputDto),

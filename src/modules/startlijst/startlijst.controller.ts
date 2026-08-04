@@ -18,6 +18,8 @@ import {CreateOperStartlijstDto} from "../../generated/nestjs-dto/create-operSta
 import {UpdateOperStartlijstDto} from "../../generated/nestjs-dto/update-operStartlijst.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Startlijst')
 @ApiTags('Startlijst')
@@ -38,7 +40,13 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObject');
-      return await this.startlijstService.GetObject(id);
+      const obj = await this.startlijstService.GetObject(id);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
+         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
+      };
    }
 
    @HeliosGetObjects(GetObjectsOperStartlijstResponse)
@@ -57,6 +65,7 @@ export class StartlijstController extends HeliosController
       @Body() data: CreateOperStartlijstDto): Promise<OperStartlijstDto>
    {
       this.logger.verbose(`StartlijstController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.AddObject');
       return await this.startlijstService.AddObject(data as Prisma.OperStartlijstUncheckedCreateInput);
    }
@@ -66,6 +75,8 @@ export class StartlijstController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperStartlijstDto): Promise<OperStartlijstDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`StartlijstController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.UpdateObject');
       return await this.startlijstService.UpdateObject(id, data as Prisma.OperStartlijstUncheckedUpdateInput);

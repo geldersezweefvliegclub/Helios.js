@@ -46,7 +46,7 @@ const ignoreExcludedFunctions = winston.format((info) => {
 const createLogger = async () => {
    const transports: winston.transport[] = [
       new winston.transports.Console({
-         level: 'verbose',
+         level: 'info',
          format: winston.format.combine(
              ignoreExcludedFunctions(),
              winston.format.colorize({

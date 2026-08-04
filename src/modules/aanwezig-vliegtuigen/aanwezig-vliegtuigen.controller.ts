@@ -18,6 +18,8 @@ import {CreateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/create-
 import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-operAanwezigVliegtuig.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('AanwezigVliegtuigen')
 @ApiTags('AanwezigVliegtuigen')
@@ -38,7 +40,13 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.GetObject');
-      return await this.AanwezigVliegtuigenService.GetObject(id);
+      const obj = await this.AanwezigVliegtuigenService.GetObject(id);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
    }
 
    @HeliosGetObjects(GetObjectsOperAanwezigVliegtuigenResponse)
@@ -57,6 +65,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @Body() data: CreateOperAanwezigVliegtuigDto): Promise<OperAanwezigVliegtuigDto>
    {
       this.logger.verbose(`AanwezigVliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.AddObject');
       return await this.AanwezigVliegtuigenService.AddObject(data as Prisma.OperAanwezigVliegtuigCreateInput);
    }
@@ -66,6 +75,8 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigVliegtuigDto): Promise<OperAanwezigVliegtuigDto>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`AanwezigVliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.UpdateObject');
       return await this.AanwezigVliegtuigenService.UpdateObject(id, data as Prisma.OperAanwezigVliegtuigCreateInput);

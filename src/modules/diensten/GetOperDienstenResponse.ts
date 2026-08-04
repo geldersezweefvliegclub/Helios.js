@@ -1,6 +1,7 @@
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
 import {OperDienstDto} from "../../generated/nestjs-dto/operDienst.dto";
 import {OperDienst, RefLid, RefType} from "@prisma/client";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @ApiTags('DagRapporten')
 export class GetOperDienstenResponse extends OperDienstDto {
@@ -8,7 +9,7 @@ export class GetOperDienstenResponse extends OperDienstDto {
         super();
 
         this.ID = dienst?.ID;
-        this.DATUM = dienst?.DATUM;
+        this.DATUM = toDateOnly(dienst?.DATUM) as unknown as Date;
         this.LID_ID = dienst?.LID_ID;
         this.ROOSTER_ID = dienst?.ROOSTER_ID;
         this.TYPE_DIENST_ID = dienst?.TYPE_DIENST_ID;

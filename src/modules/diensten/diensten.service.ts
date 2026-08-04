@@ -9,6 +9,7 @@ import {Prisma} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class DienstenService extends IHeliosService
@@ -104,6 +105,7 @@ export class DienstenService extends IHeliosService
    async AddObject(data: Prisma.OperDienstCreateInput): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operDienst.create({
          data: data,
          include: {
@@ -120,6 +122,7 @@ export class DienstenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDienst.update({
          where: {

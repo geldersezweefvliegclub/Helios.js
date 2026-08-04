@@ -21,6 +21,7 @@ import {OperJournaalDto} from "../../generated/nestjs-dto/operJournaal.dto";
 import {CreateOperJournaalDto} from "../../generated/nestjs-dto/create-operJournaal.dto";
 import {UpdateOperJournaalDto} from "../../generated/nestjs-dto/update-operJournaal.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Journaal')
 @ApiTags('Journaal')
@@ -60,6 +61,7 @@ export class JournaalController extends HeliosController
       @Body() data: CreateOperJournaalDto): Promise<OperJournaalDto>
    {
       this.logger.verbose(`JournaalController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
 
       // verwijder MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID uit de data
@@ -83,6 +85,8 @@ export class JournaalController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperJournaalDto): Promise<OperJournaal>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
 

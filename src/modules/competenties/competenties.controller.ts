@@ -23,6 +23,7 @@ import {TypesService} from "../types/types.service";
 import {Boom} from "../../core/helpers/Boom";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Competenties')
 @ApiTags('Competenties')
@@ -67,6 +68,7 @@ export class CompetentiesController extends HeliosController
       @Body() data: CreateRefCompetentieDto): Promise<RefCompetentieDto>
    {
       this.logger.verbose(`CompetentiesController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
 
       // verwijder TYPE_ID uit de data
@@ -83,6 +85,8 @@ export class CompetentiesController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefCompetentieDto): Promise<RefCompetentie>
    {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
       this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
 

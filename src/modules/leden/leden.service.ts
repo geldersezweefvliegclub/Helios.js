@@ -11,6 +11,7 @@ import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly} from "../../core/helpers/DateOnly";
 
 import { hash } from "bcryptjs";
 
@@ -173,6 +174,9 @@ export class LedenService extends IHeliosService
       if (data.WACHTWOORD)
          data.WACHTWOORD = await hash(data.WACHTWOORD, 10)
 
+      data.MEDICAL = parseDateOnly(data.MEDICAL);
+      data.GEBOORTE_DATUM = parseDateOnly(data.GEBOORTE_DATUM);
+
       const obj = await this.dbService.refLid.create({
          data: data
       });
@@ -198,6 +202,9 @@ export class LedenService extends IHeliosService
 
       if (data.WACHTWOORD)
          data.WACHTWOORD = await hash(data.WACHTWOORD as string, 10)
+
+      data.MEDICAL = parseDateOnly(data.MEDICAL as Date | string | null);
+      data.GEBOORTE_DATUM = parseDateOnly(data.GEBOORTE_DATUM as Date | string | null);
 
       const obj = await this.dbService.refLid.update({
          where: {

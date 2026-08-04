@@ -9,6 +9,7 @@ import {Prisma, OperAanwezigVliegtuig} from "@prisma/client";
 import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezigVliegtuigenRequest";
 import {GetObjectsOperAanwezigVliegtuigenResponse} from "./GetObjectsOperAanwezigVliegtuigenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 // aanwezig vliegtuig record inclusief de relaties die de PHP aanwezig_vliegtuigen_view samenvoegt
 type AanwezigVliegtuigMetRelaties = Prisma.OperAanwezigVliegtuigGetPayload<{
@@ -128,6 +129,9 @@ export class AanwezigVliegtuigenService extends IHeliosService
 
          return {
             ...aanwezigVliegtuig,
+            DATUM: toDateOnly(aanwezigVliegtuig.DATUM) as unknown as Date,
+            AANKOMST: toTimeOnly(aanwezigVliegtuig.AANKOMST) as unknown as Date,
+            VERTREK: toTimeOnly(aanwezigVliegtuig.VERTREK) as unknown as Date,
             REGISTRATIE: vliegtuig.REGISTRATIE,
             CALLSIGN: vliegtuig.CALLSIGN,
             REG_CALL: `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})`,
@@ -154,12 +158,21 @@ export class AanwezigVliegtuigenService extends IHeliosService
    async AddObject(data: Prisma.OperAanwezigVliegtuigCreateInput): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.AddObject(${safeStringify({data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
       const obj = await this.dbService.operAanwezigVliegtuig.create({
          data: data
       });
 
       this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
       this.logger.verbose(`AanwezigVliegtuigenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
@@ -167,6 +180,10 @@ export class AanwezigVliegtuigenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperAanwezigVliegtuigUpdateInput): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAanwezigVliegtuig.update({
          where: {
@@ -175,7 +192,12 @@ export class AanwezigVliegtuigenService extends IHeliosService
          data: data
       });
       this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = obj;
+      const result = {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
       this.logger.verbose(`AanwezigVliegtuigenService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }
