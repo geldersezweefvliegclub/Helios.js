@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateOperTrackDto {
   @ApiProperty({
@@ -74,4 +80,22 @@ export class CreateOperTrackDto {
   @IsOptional()
   @IsInt()
   LINK_ID?: number | null;
+  @ApiProperty({
+    description: "Is de track gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

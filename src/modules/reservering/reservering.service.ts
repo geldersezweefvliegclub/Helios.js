@@ -155,6 +155,11 @@ export class ReserveringService extends IHeliosService
    async AddObject(data: CreateOperReserveringDto, user: RefLid): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.AddObject(${safeStringify({data, user})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const datum = parseDateOnly(data.DATUM as Date | string) as Date;
       // per DATUM+VLIEGTUIG_ID mag er maar een reservering bestaan
       const bestaand = await this.GetObjectByDetails(datum, data.VLIEGTUIG_ID);
@@ -183,6 +188,12 @@ export class ReserveringService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const update = data as Prisma.OperReserveringUpdateInput;
       update.DATUM = parseDateOnly(update.DATUM as Date | string) as Date;
 

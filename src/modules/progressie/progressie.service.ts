@@ -119,6 +119,11 @@ export class ProgressieService extends IHeliosService
    async AddObject(data: Prisma.OperProgressieUncheckedCreateInput): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.GELDIG_TOT = parseDateOnly(data.GELDIG_TOT as Date | string | null);
       const obj = await this.dbService.operProgressie.create({
          data: data

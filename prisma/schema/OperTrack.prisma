@@ -31,10 +31,12 @@ model OperTrack {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   LINK_ID            Int?      @db.UnsignedMediumInt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is de track gemarkeerd als verwijderd
-  /// @DtoReadOnly
   VERWIJDERD         Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt
 

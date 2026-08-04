@@ -20,10 +20,12 @@ model OperAgenda {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OPENBAAR           Boolean   @default(true)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt
 

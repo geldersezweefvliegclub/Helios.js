@@ -158,6 +158,11 @@ export class AanwezigVliegtuigenService extends IHeliosService
    async AddObject(data: Prisma.OperAanwezigVliegtuigCreateInput): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
       data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
@@ -180,6 +185,12 @@ export class AanwezigVliegtuigenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperAanwezigVliegtuigUpdateInput): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
       data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);

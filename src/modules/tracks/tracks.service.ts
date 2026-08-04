@@ -107,6 +107,11 @@ export class TracksService extends IHeliosService
    async AddObject(data: CreateOperTrackDto): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
       const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.OperTrackCreateInput = {
@@ -135,6 +140,12 @@ export class TracksService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperTrackDto): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const oud = await this.GetObject(id);
 
       const lidId = data.LID_ID ?? oud.LID_ID;

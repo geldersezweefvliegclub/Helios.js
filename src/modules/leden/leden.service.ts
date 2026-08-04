@@ -166,10 +166,17 @@ export class LedenService extends IHeliosService
    async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>
    {
       this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
-      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
-      data.NAAM = data.VOORNAAM.trim()
-      data.NAAM += ((data.NAAM ? " " : "") + data.TUSSENVOEGSEL).trim()
-      data.NAAM += ((data.NAAM ? " " : "") + data.ACHTERNAAM).trim()
+      // NAAM, VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven waarde
+      // wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+
+      // bouw de naam op uit voornaam, tussenvoegsel en achternaam
+      data.NAAM = [data.VOORNAAM, data.TUSSENVOEGSEL, data.ACHTERNAAM]
+         .map(deel => (deel ?? "").trim())
+         .filter(deel => deel.length > 0)
+         .join(" ");
 
       if (data.WACHTWOORD)
          data.WACHTWOORD = await hash(data.WACHTWOORD, 10)
@@ -192,12 +199,22 @@ export class LedenService extends IHeliosService
       this.logger.verbose(`LedenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
 
-      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
-      if (typeof data.VOORNAAM === "string" && typeof data.TUSSENVOEGSEL === "string" && typeof data.ACHTERNAAM === "string")
+      // NAAM, VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven waarde
+      // wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
+      delete data.NAAM;
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as Prisma.RefLidUpdateInput & {ID?: number}).ID;
+
+      // bouw de naam op uit voornaam, tussenvoegsel en achternaam - enkel als er daadwerkelijk nieuwe
+      // naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+      if (typeof data.VOORNAAM === "string" && typeof data.ACHTERNAAM === "string")
       {
-         data.NAAM = data.VOORNAAM.trim()
-         data.NAAM += ((data.NAAM ? " " : "") + data.TUSSENVOEGSEL).trim()
-         data.NAAM += ((data.NAAM ? " " : "") + data.ACHTERNAAM).trim()
+         data.NAAM = [data.VOORNAAM, data.TUSSENVOEGSEL as string | null, data.ACHTERNAAM]
+            .map(deel => (deel ?? "").trim())
+            .filter(deel => deel.length > 0)
+            .join(" ");
       }
 
       if (data.WACHTWOORD)

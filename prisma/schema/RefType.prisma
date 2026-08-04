@@ -26,10 +26,12 @@ model RefType {
   BEDRAG                 Decimal?         @db.Decimal(6, 2)
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen
   EENHEDEN               Decimal?         @db.Decimal(6, 2)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD             Boolean          @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING     DateTime         @updatedAt
   /// @DtoRelationCanConnectOnCreate

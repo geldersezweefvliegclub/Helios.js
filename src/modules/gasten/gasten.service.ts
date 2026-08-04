@@ -93,6 +93,11 @@ export class GastenService extends IHeliosService
    async AddObject(data: Prisma.OperGastCreateInput): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operGast.create({
          data: data
@@ -107,6 +112,12 @@ export class GastenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperGastUpdateInput): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operGast.update({

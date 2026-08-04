@@ -93,6 +93,11 @@ export class DocumentenService extends IHeliosService
    async AddObject(data: Prisma.HeliosDocumentCreateInput): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.heliosDocument.create({
          data: data
       });
@@ -106,6 +111,12 @@ export class DocumentenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.HeliosDocumentUpdateInput): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.heliosDocument.update({
          where: {

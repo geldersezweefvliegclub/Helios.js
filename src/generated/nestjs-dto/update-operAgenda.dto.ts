@@ -66,4 +66,22 @@ export class UpdateOperAgendaDto {
   @IsOptional()
   @IsBoolean()
   OPENBAAR?: boolean;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

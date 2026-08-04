@@ -83,6 +83,11 @@ export class WinterwerkService extends IHeliosService
    async AddObject(data: Prisma.OperWinterwerkCreateInput): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
       data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
@@ -105,6 +110,12 @@ export class WinterwerkService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
       data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;

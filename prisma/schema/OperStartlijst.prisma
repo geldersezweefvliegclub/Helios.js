@@ -60,8 +60,12 @@ model OperStartlijst {
   CHECKSTART         Boolean       @default(false)
   /// @description Was de vlucht een instructievlucht
   INSTRUCTIEVLUCHT   Boolean       @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean       @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime      @updatedAt
   Vliegtuig          RefVliegtuig  @relation("oper_startlijst_VLIEGTUIG_IDToref_vliegtuigen", fields: [VLIEGTUIG_ID], references: [ID], onUpdate: Restrict, map: "oper_startlijst_ibfk_1")

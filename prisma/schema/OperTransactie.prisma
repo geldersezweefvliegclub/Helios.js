@@ -50,10 +50,12 @@ model OperTransactie {
   /// @DtoReadOnly
   /// @description URL naar de betaalpagina van een extern systeem, bijv Mollie
   BETAAL_URL         String?   @db.VarChar(250)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt
   /// @DtoRelationCanConnectOnCreate

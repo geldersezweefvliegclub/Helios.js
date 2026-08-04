@@ -1,6 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDecimal, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsDecimal,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateOperFactuurDto {
   @ApiProperty({
@@ -84,4 +91,22 @@ export class CreateOperFactuurDto {
   @IsOptional()
   @IsDecimal()
   GEFACTUREERD?: Prisma.Decimal | null;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

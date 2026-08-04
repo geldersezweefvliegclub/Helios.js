@@ -95,6 +95,11 @@ export class AgendaService extends IHeliosService
    async AddObject(data: Prisma.OperAgendaCreateInput): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
 
@@ -115,6 +120,12 @@ export class AgendaService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperAgendaUpdateInput): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
 

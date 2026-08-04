@@ -10,7 +10,7 @@ export class RefLidDto {
   ID: number;
   @ApiProperty({
     description:
-      "De naam van het lid, wordt gegenereerd uit de voornaam, tussenvoegsel en achternaam",
+      "De naam van het lid, altijd server-side herberekend uit voornaam/tussenvoegsel/achternaam - een meegegeven waarde wordt genegeerd",
     type: "string",
   })
   NAAM: string;
@@ -322,12 +322,14 @@ export class RefLidDto {
   })
   TEGOED: number;
   @ApiProperty({
-    description: "Is het record gemarkeerd als verwijderd",
+    description:
+      "Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk",
     type: "boolean",
   })
   VERWIJDERD: boolean;
   @ApiProperty({
-    description: "Tijdstempel met de laatste wijziging van het record",
+    description:
+      "Tijdstempel met de laatste wijziging van het record, altijd automatisch gezet - een meegegeven waarde wordt genegeerd",
     type: "string",
     format: "date-time",
   })

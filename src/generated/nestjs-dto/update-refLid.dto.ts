@@ -21,6 +21,15 @@ export class UpdateRefLidDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
+    description:
+      "De naam van het lid, altijd server-side herberekend uit voornaam/tussenvoegsel/achternaam - een meegegeven waarde wordt genegeerd",
+    type: "string",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  NAAM?: string;
+  @ApiProperty({
     description: "De voornaam van het lid",
     maxLength: 15,
     type: "string",
@@ -499,6 +508,26 @@ export class UpdateRefLidDto {
   @IsOptional()
   @IsNumber()
   TEGOED?: number;
+  @ApiProperty({
+    description:
+      "Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description:
+      "Tijdstempel met de laatste wijziging van het record, altijd automatisch gezet - een meegegeven waarde wordt genegeerd",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
   @ApiProperty({
     description: "Sleutelnummer om te kunnen tanken",
     maxLength: 25,

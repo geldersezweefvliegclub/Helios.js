@@ -53,11 +53,14 @@ export class OperRoosterDto {
   })
   OPMERKINGEN: string | null;
   @ApiProperty({
-    description: "Is het record gemarkeerd als verwijderd",
+    description:
+      "Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk",
     type: "boolean",
   })
   VERWIJDERD: boolean;
   @ApiProperty({
+    description:
+      "Tijdstempel met de laatste wijziging van het record, altijd automatisch gezet - een meegegeven waarde wordt genegeerd",
     type: "string",
     format: "date-time",
   })

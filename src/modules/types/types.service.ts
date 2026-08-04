@@ -82,6 +82,11 @@ export class TypesService extends IHeliosService
    async AddObject(data: Prisma.RefTypeCreateInput ): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.refType.create({
          data: data
       });
@@ -95,6 +100,12 @@ export class TypesService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.RefTypeUpdateInput): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.refType.update({
          where: {

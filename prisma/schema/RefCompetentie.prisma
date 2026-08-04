@@ -41,10 +41,12 @@ model RefCompetentie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   SCORE               Int              @default(0) @db.UnsignedTinyInt
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD          Boolean          @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING  DateTime         @updatedAt
   /// @DtoRelationCanConnectOnCreate

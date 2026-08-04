@@ -292,6 +292,11 @@ export class AanwezigLedenService extends IHeliosService
    async AddObject(data: CreateOperAanwezigLidDto): Promise<OperAanwezigLid>
    {
       this.logger.verbose(`AanwezigLedenService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const {LID_ID, OVERLAND_VLIEGTUIG_ID, TRANSACTIE_ID, VELD_ID, ...rest} = data;
       const connect = (id?: number) => id != null ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.OperAanwezigLidCreateInput = {
@@ -323,6 +328,12 @@ export class AanwezigLedenService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUpdateInput): Promise<OperAanwezigLid>
    {
       this.logger.verbose(`AanwezigLedenService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const update = data as Prisma.OperAanwezigLidUpdateInput;
       update.DATUM = parseDateOnly(update.DATUM as Date | string) as Date;
       update.AANKOMST = parseTimeOnly(update.AANKOMST as Date | string | null);

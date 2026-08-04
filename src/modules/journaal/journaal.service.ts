@@ -141,6 +141,11 @@ export class JournaalService extends IHeliosService
    async AddObject(data: Prisma.OperJournaalCreateInput ): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.operJournaal.create({
          data: data
       });
@@ -154,6 +159,12 @@ export class JournaalService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperJournaalUpdateInput): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operJournaal.update({
          where: {

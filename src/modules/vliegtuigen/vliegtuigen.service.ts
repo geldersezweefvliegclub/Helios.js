@@ -129,6 +129,11 @@ export class VliegtuigenService extends IHeliosService
    async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
          where: {
             REGISTRATIE: data.REGISTRATIE,
@@ -153,6 +158,12 @@ export class VliegtuigenService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
 
       // Dit moeten we ALTIJD doen, ook als er geen REGISTRATIE in de data zit. Bijvoorbeeld voor een restore

@@ -97,6 +97,11 @@ export class BrandstofService extends IHeliosService
    async AddObject(data: CreateOperBrandstofDto): Promise<OperBrandstof>
    {
       this.logger.verbose(`BrandstofService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       const lid = await this.ledenService.GetObject(data.LID_ID);
       if (!lid)
          throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
@@ -126,6 +131,12 @@ export class BrandstofService extends IHeliosService
    async UpdateObject(id: number, data: UpdateOperBrandstofDto | Prisma.OperBrandstofUpdateInput): Promise<OperBrandstof>
    {
       this.logger.verbose(`BrandstofService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
 
       let updateData: Prisma.OperBrandstofUpdateInput = data as Prisma.OperBrandstofUpdateInput;

@@ -289,6 +289,11 @@ export class StartlijstService extends IHeliosService
    async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
 
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
@@ -320,6 +325,12 @@ export class StartlijstService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
 
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date | undefined;
       data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);

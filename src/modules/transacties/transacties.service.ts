@@ -115,6 +115,11 @@ export class TransactiesService extends IHeliosService
    async AddObject(data: Prisma.OperTransactieCreateInput): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.AddObject(${safeStringify({data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
       data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
       const obj = await this.dbService.operTransactie.create({
          data: data
@@ -129,6 +134,12 @@ export class TransactiesService extends IHeliosService
    async UpdateObject(id: number, data: Prisma.OperTransactieUpdateInput): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.UpdateObject(${safeStringify({id, data})})`);
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete (data as {ID?: number}).ID;
       data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operTransactie.update({
