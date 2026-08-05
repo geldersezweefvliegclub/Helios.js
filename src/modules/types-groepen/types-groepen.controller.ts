@@ -62,8 +62,8 @@ export class TypesGroepenController extends HeliosController
       @Body() data: CreateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
       this.logger.verbose(`TypesGroepenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.AddObject');
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.RefTypesGroepCreateInput;
       return await this.typesGroepenService.AddObject(insert, currentUser.ID);
@@ -74,10 +74,10 @@ export class TypesGroepenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
    {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.logger.verbose(`TypesGroepenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
 
       const update = await this.normaliserenData(data) as Prisma.RefTypesGroepUpdateInput;
       return await this.typesGroepenService.UpdateObject(id, update, currentUser.ID);
@@ -136,6 +136,4 @@ export class TypesGroepenController extends HeliosController
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//
-
-
 }

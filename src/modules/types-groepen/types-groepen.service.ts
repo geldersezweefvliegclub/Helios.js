@@ -41,6 +41,7 @@ export class TypesGroepenService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Typegroep record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+
       const result = db;
       this.logger.verbose(`TypesGroepenService.GetObject() => ${safeStringify(result)}`);
       return result;
