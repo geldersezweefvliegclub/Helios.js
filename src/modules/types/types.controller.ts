@@ -61,8 +61,8 @@ export class TypesController extends HeliosController
       @Body() data: CreateRefTypeDto): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Types.AddObject');
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.RefTypeCreateInput;
       return await this.typesService.AddObject(insert, currentUser.ID);
@@ -73,10 +73,10 @@ export class TypesController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefTypeDto): Promise<RefTypeDto>
    {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.logger.verbose(`TypesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
 
       const update = await this.normaliserenData(data) as Prisma.RefTypeUpdateInput;
       return await this.typesService.UpdateObject(id, update, currentUser.ID);

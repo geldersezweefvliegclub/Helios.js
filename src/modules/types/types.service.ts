@@ -34,6 +34,7 @@ export class TypesService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Type record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+
       const result = new GetRefTypesResponse(db);
       this.logger.verbose(`TypesService.GetObject() => ${safeStringify(result)}`);
       return result;
