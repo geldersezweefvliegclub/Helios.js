@@ -5,15 +5,12 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, RefLid } from '@prisma/client';
+import {Prisma, RefLid} from '@prisma/client';
 import {GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
 import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly} from "../../core/helpers/DateOnly";
-
-import { hash } from "bcryptjs";
 
 const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
 
@@ -40,6 +37,7 @@ export class LedenService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Lid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+
       const result = db;
       this.logger.verbose(`LedenService.GetObject() => ${safeStringify(result)}`);
       return result;
@@ -163,65 +161,22 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>
+   async AddObject(data: Prisma.RefLidCreateInput , actorId: number): Promise<RefLid>
    {
       this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
-      // NAAM, VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven waarde
-      // wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-
-      // bouw de naam op uit voornaam, tussenvoegsel en achternaam
-      data.NAAM = [data.VOORNAAM, data.TUSSENVOEGSEL, data.ACHTERNAAM]
-         .map(deel => (deel ?? "").trim())
-         .filter(deel => deel.length > 0)
-         .join(" ");
-
-      if (data.WACHTWOORD)
-         data.WACHTWOORD = await hash(data.WACHTWOORD, 10)
-
-      data.MEDICAL = parseDateOnly(data.MEDICAL);
-      data.GEBOORTE_DATUM = parseDateOnly(data.GEBOORTE_DATUM);
-
       const obj = await this.dbService.refLid.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = obj;
-      this.logger.verbose(`LedenService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`LedenService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefLidUpdateInput): Promise<RefLid>
+   async UpdateObject(id: number, data: Prisma.RefLidUpdateInput, actorId: number): Promise<RefLid>
    {
       this.logger.verbose(`LedenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
-
-      // NAAM, VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven waarde
-      // wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
-      delete data.NAAM;
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as Prisma.RefLidUpdateInput & {ID?: number}).ID;
-
-      // bouw de naam op uit voornaam, tussenvoegsel en achternaam - enkel als er daadwerkelijk nieuwe
-      // naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
-      if (typeof data.VOORNAAM === "string" && typeof data.ACHTERNAAM === "string")
-      {
-         data.NAAM = [data.VOORNAAM, data.TUSSENVOEGSEL as string | null, data.ACHTERNAAM]
-            .map(deel => (deel ?? "").trim())
-            .filter(deel => deel.length > 0)
-            .join(" ");
-      }
-
-      if (data.WACHTWOORD)
-         data.WACHTWOORD = await hash(data.WACHTWOORD as string, 10)
-
-      data.MEDICAL = parseDateOnly(data.MEDICAL as Date | string | null);
-      data.GEBOORTE_DATUM = parseDateOnly(data.GEBOORTE_DATUM as Date | string | null);
 
       const obj = await this.dbService.refLid.update({
          where: {
@@ -229,10 +184,9 @@ export class LedenService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      const result = obj;
-      this.logger.verbose(`LedenService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`LedenService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

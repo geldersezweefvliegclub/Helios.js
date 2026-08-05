@@ -77,8 +77,8 @@ export class AuditController extends HeliosController {
     // luister naar events van de database acties
     // sla data op in de audit tabel wanneer een record wordt toegevoegd
     @OnEvent(DatabaseEvents.Created)
-    CreatedRecord(objNaam: string, id: number, data: unknown, result: unknown) {
-        this.logger.verbose(`AuditController.CreatedRecord(${safeStringify({objNaam, id, data, result})})`);
+    CreatedRecord(objNaam: string, id: number, data: unknown, result: unknown, actorId: number) {
+        this.logger.verbose(`AuditController.CreatedRecord(${safeStringify({objNaam, id, data, result, actorId})})`);
         // Niet alles mag in de audit trail
         if (this.excludeClasses.includes(objNaam))
             return;
@@ -87,7 +87,7 @@ export class AuditController extends HeliosController {
             DATUM: new Date(),
             RefLid: {
                 connect: {
-                    ID: 0
+                    ID: actorId
                 }
             },
             OBJECT_ID: id,
@@ -106,8 +106,8 @@ export class AuditController extends HeliosController {
     // luister naar events van de database acties
     // sla data op in de audit tabel wanneer een record wordt aangepast
     @OnEvent(DatabaseEvents.Updated)
-    UpdatedRecord(objNaam: string, id: number, before: unknown, data: unknown, result: unknown) {
-        this.logger.verbose(`AuditController.UpdatedRecord(${safeStringify({objNaam, id, before, data, result})})`);
+    UpdatedRecord(objNaam: string, id: number, before: unknown, data: unknown, result: unknown, actorId: number) {
+        this.logger.verbose(`AuditController.UpdatedRecord(${safeStringify({objNaam, id, before, data, result, actorId})})`);
         // Niet alles mag in de audit trail
         if (this.excludeClasses.includes(objNaam))
             return;
@@ -116,7 +116,7 @@ export class AuditController extends HeliosController {
             DATUM: new Date(),
             RefLid: {
                 connect: {
-                    ID: 0
+                    ID: actorId
                 }
             },
             OBJECT_ID: id,

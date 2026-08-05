@@ -19,7 +19,7 @@ import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('AanwezigVliegtuigen')
 @ApiTags('AanwezigVliegtuigen')
@@ -67,7 +67,15 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.AddObject');
-      return await this.AanwezigVliegtuigenService.AddObject(data as Prisma.OperAanwezigVliegtuigCreateInput);
+
+      const insert = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigCreateInput;
+      const obj = await this.AanwezigVliegtuigenService.AddObject(insert, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
    }
 
    @HeliosUpdateObject(UpdateOperAanwezigVliegtuigDto, OperAanwezigVliegtuigDto)
@@ -79,7 +87,34 @@ export class AanwezigVliegtuigenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigVliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.UpdateObject');
-      return await this.AanwezigVliegtuigenService.UpdateObject(id, data as Prisma.OperAanwezigVliegtuigCreateInput);
+
+      const update = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigCreateInput;
+      const obj = await this.AanwezigVliegtuigenService.UpdateObject(id, update, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperAanwezigVliegtuigDto | UpdateOperAanwezigVliegtuigDto): Promise<Prisma.OperAanwezigVliegtuigCreateInput | Prisma.OperAanwezigVliegtuigUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
+      return data as Prisma.OperAanwezigVliegtuigCreateInput | Prisma.OperAanwezigVliegtuigUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -93,7 +128,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       const data: Prisma.OperAanwezigVliegtuigUpdateInput = {
          VERWIJDERD: true
       }
-      await this.AanwezigVliegtuigenService.UpdateObject(id, data);
+      await this.AanwezigVliegtuigenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -117,7 +152,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       const data: Prisma.OperAanwezigVliegtuigUpdateInput = {
          VERWIJDERD: false
       }
-      await this.AanwezigVliegtuigenService.UpdateObject(id, data);
+      await this.AanwezigVliegtuigenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -80,33 +80,22 @@ export class TypesGroepenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefTypesGroepCreateInput): Promise<RefTypesGroep>
+   async AddObject(data: Prisma.RefTypesGroepCreateInput, actorId: number): Promise<RefTypesGroep>
    {
       this.logger.verbose(`TypesGroepenService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.refTypesGroep.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`TypesGroepenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypesGroepUpdateInput): Promise<RefTypesGroep>
+   async UpdateObject(id: number, data: Prisma.RefTypesGroepUpdateInput, actorId: number): Promise<RefTypesGroep>
    {
       this.logger.verbose(`TypesGroepenService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.refTypesGroep.update({
          where: {
@@ -114,7 +103,7 @@ export class TypesGroepenService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`TypesGroepenService.UpdateObject() => ${safeStringify(result)}`);
       return result;

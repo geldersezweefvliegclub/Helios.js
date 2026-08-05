@@ -104,14 +104,9 @@ export class TracksService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: CreateOperTrackDto): Promise<OperTrack>
+   async AddObject(data: CreateOperTrackDto, actorId: number): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
       const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
       const insertData: Prisma.OperTrackCreateInput = {
@@ -125,7 +120,7 @@ export class TracksService extends IHeliosService
          data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, actorId);
       const result = obj;
       this.logger.verbose(`TracksService.AddObject() => ${safeStringify(result)}`);
       return result;
@@ -137,15 +132,9 @@ export class TracksService extends IHeliosService
     * de volledige historie van aanpassingen bewaard (audit trail), zie UpdateObject() in class.Tracks.inc.php.
     * De oorspronkelijke INGEVOERD datum blijft behouden op het nieuwe record.
     */
-   async UpdateObject(id: number, data: UpdateOperTrackDto): Promise<OperTrack>
+   async UpdateObject(id: number, data: UpdateOperTrackDto, actorId: number): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const oud = await this.GetObject(id);
 
       const lidId = data.LID_ID ?? oud.LID_ID;
@@ -170,7 +159,7 @@ export class TracksService extends IHeliosService
          });
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw, actorId);
       const result = nieuw;
       this.logger.verbose(`TracksService.UpdateObject() => ${safeStringify(result)}`);
       return result;
@@ -178,7 +167,7 @@ export class TracksService extends IHeliosService
 
    // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
    // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
-   async SetVerwijderd(id: number, verwijderd: boolean): Promise<OperTrack>
+   async SetVerwijderd(id: number, verwijderd: boolean, actorId: number): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
@@ -190,7 +179,7 @@ export class TracksService extends IHeliosService
             VERWIJDERD: verwijderd
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj, actorId);
       const result = obj;
       this.logger.verbose(`TracksService.SetVerwijderd() => ${safeStringify(result)}`);
       return result;

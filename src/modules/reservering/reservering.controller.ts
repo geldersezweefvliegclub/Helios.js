@@ -20,7 +20,7 @@ import {ApiBasicAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger"
 import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Reservering')
 @ApiTags('Reservering')
@@ -78,7 +78,9 @@ export class ReserveringController extends HeliosController
       if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      return await this.reserveringService.AddObject(data, currentUser);
+      const insert = await this.normaliserenData(data) as CreateOperReserveringDto;
+      const obj = await this.reserveringService.AddObject(insert, currentUser);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperReserveringDto, OperReserveringDto)
@@ -97,7 +99,27 @@ export class ReserveringController extends HeliosController
       if (data.IS_GEBOEKT !== undefined && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser))
          throw new HttpException("Geen rechten om IS_GEBOEKT te zetten", HttpStatus.FORBIDDEN);
 
-      return await this.reserveringService.UpdateObject(id, data);
+      const update = await this.normaliserenData(data) as UpdateOperReserveringDto;
+      const obj = await this.reserveringService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
+   private async normaliserenData(
+      data: CreateOperReserveringDto | UpdateOperReserveringDto): Promise<CreateOperReserveringDto | UpdateOperReserveringDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      if (data.DATUM !== undefined)
+         data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -111,7 +133,7 @@ export class ReserveringController extends HeliosController
       const data: Prisma.OperReserveringUpdateInput = {
          VERWIJDERD: true
       }
-      await this.reserveringService.UpdateObject(id, data);
+      await this.reserveringService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -135,7 +157,7 @@ export class ReserveringController extends HeliosController
       const data: Prisma.OperReserveringUpdateInput = {
          VERWIJDERD: false
       }
-      await this.reserveringService.UpdateObject(id, data);
+      await this.reserveringService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

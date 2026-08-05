@@ -9,7 +9,7 @@ import {Prisma, OperDagInfo} from "@prisma/client";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class DagInfoService extends IHeliosService
@@ -114,35 +114,21 @@ export class DagInfoService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperDagInfoCreateInput): Promise<OperDagInfo>
+   async AddObject(data: Prisma.OperDagInfoCreateInput, actorId: number): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operDagInfo.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-      this.logger.verbose(`DagInfoService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`DagInfoService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDagInfoUpdateInput): Promise<OperDagInfo>
+   async UpdateObject(id: number, data: Prisma.OperDagInfoUpdateInput, actorId: number): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDagInfo.update({
          where: {
@@ -150,10 +136,9 @@ export class DagInfoService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-      this.logger.verbose(`DagInfoService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
+      this.logger.verbose(`DagInfoService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

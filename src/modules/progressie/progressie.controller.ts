@@ -26,7 +26,7 @@ import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 // competentie IDs voor de startmethodes die op de startaantekeningen kaart getoond worden, zie
 // StartAantekeningen() in class.Progressie.inc.php
@@ -90,13 +90,16 @@ export class ProgressieController extends HeliosController
       if (data.LID_ID === currentUser.ID)
          throw new HttpException("Mag geen eigen progressie toevoegen", HttpStatus.FORBIDDEN);
 
+      const genormaliseerd = await this.normaliserenData(data) as CreateOperProgressieDto;
       const insertData: Prisma.OperProgressieUncheckedCreateInput = {
-         ...data,
+         ...genormaliseerd,
          // INSTRUCTEUR_ID default naar de ingelogde gebruiker als niet expliciet meegegeven, zie RequestToRecord()
-         INSTRUCTEUR_ID: data.INSTRUCTEUR_ID ?? currentUser.ID,
+         INSTRUCTEUR_ID: genormaliseerd.INSTRUCTEUR_ID ?? currentUser.ID,
       } as Prisma.OperProgressieUncheckedCreateInput;
+      insertData.GELDIG_TOT = parseDateOnly(insertData.GELDIG_TOT as Date | string | null);
 
-      return await this.progressieService.AddObject(insertData);
+      const obj = await this.progressieService.AddObject(insertData, currentUser.ID);
+      return {...obj, GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperProgressieDto, OperProgressieDto)
@@ -108,7 +111,21 @@ export class ProgressieController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`ProgressieController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.UpdateObject');
-      return await this.progressieService.UpdateObject(id, data);
+
+      const update = await this.normaliserenData(data) as UpdateOperProgressieDto;
+      const obj = await this.progressieService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden VERWIJDERD en
+   // LAATSTE_AANPASSING - deze mogen nooit direct door de client gezet worden, ook al accepteert de DTO ze
+   private async normaliserenData(
+      data: CreateOperProgressieDto | UpdateOperProgressieDto): Promise<CreateOperProgressieDto | UpdateOperProgressieDto>
+   {
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -118,7 +135,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.DeleteObject');
-      await this.progressieService.SetVerwijderd(id, true);
+      await this.progressieService.SetVerwijderd(id, true, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -138,7 +155,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.RestoreObject');
-      await this.progressieService.SetVerwijderd(id, false);
+      await this.progressieService.SetVerwijderd(id, false, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

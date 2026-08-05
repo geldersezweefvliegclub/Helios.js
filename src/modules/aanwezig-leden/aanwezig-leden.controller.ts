@@ -19,7 +19,7 @@ import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAa
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('AanwezigLeden')
 @ApiTags('AanwezigLeden')
@@ -82,7 +82,14 @@ export class AanwezigLedenController  extends HeliosController
       if (data.LID_ID === undefined)
          throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
 
-      return await this.AanwezigLedenService.AddObject(data);
+      const insert = await this.normaliserenData(data) as CreateOperAanwezigLidDto;
+      const obj = await this.AanwezigLedenService.AddObject(insert, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
    }
 
    @HeliosUpdateObject(UpdateOperAanwezigLidDto, OperAanwezigLidDto)
@@ -94,7 +101,34 @@ export class AanwezigLedenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
-      return await this.AanwezigLedenService.UpdateObject(id, data);
+
+      const update = await this.normaliserenData(data) as UpdateOperAanwezigLidDto;
+      const obj = await this.AanwezigLedenService.UpdateObject(id, update, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto): Promise<CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -108,7 +142,7 @@ export class AanwezigLedenController  extends HeliosController
       const data: Prisma.OperAanwezigLidUpdateInput = {
          VERWIJDERD: true
       }
-      await this.AanwezigLedenService.UpdateObject(id, data);
+      await this.AanwezigLedenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -132,7 +166,7 @@ export class AanwezigLedenController  extends HeliosController
       const data: Prisma.OperAanwezigLidUpdateInput = {
          VERWIJDERD: false
       }
-      await this.AanwezigLedenService.UpdateObject(id, data);
+      await this.AanwezigLedenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -74,7 +74,7 @@ const createLogger = async () => {
                ignoreExcludedFunctions(),
                winston.format.printf(info => `${localTimeWithMs()};${info.message}`),
             ),
-            maxsize: 20 * 1024 * 1024,   // 20 MB per bestand
+            maxsize: 10 * 1024 * 1024,   // 10 MB per bestand
             maxFiles: 2,                 // actief bestand + 1 gerotate backup - nooit meer dan 2 bestanden in de directory
             tailable: true,              // houdt het actieve bestand altijd helios-api.log genoemd; bij rotatie wordt het
                                           // helios-api1.log, waarbij een eventuele vorige backup wordt overschreven (niet aangevuld)

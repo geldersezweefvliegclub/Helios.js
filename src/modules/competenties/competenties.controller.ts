@@ -71,13 +71,8 @@ export class CompetentiesController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het insertData object
-      const { LEERFASE_ID, ...insertData} = data;
-      const insert = insertData as Prisma.RefCompetentieCreateInput;
-      insert.LeerfaseType = (LEERFASE_ID !== undefined) ? { connect: { ID: LEERFASE_ID } } : undefined;
-
-      return await this.competentiesService.AddObject(insert);
+      const insert = await this.normaliserenData(data) as Prisma.RefCompetentieCreateInput;
+      return await this.competentiesService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateRefCompetentieDto, RefCompetentieDto)
@@ -90,13 +85,29 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het updateData object
-      const { LEERFASE_ID, ...updateData} = data;
-      const update = updateData as Prisma.RefCompetentieUpdateInput;
-      update.LeerfaseType = LEERFASE_ID ? { connect: { ID: LEERFASE_ID } } : undefined;
+      const update = await this.normaliserenData(data) as Prisma.RefCompetentieUpdateInput;
+      return await this.competentiesService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.competentiesService.UpdateObject(id, update);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet
+   // LEERFASE_ID om naar een relatie-connect
+   private async normaliserenData(
+      data: CreateRefCompetentieDto | UpdateRefCompetentieDto): Promise<Prisma.RefCompetentieCreateInput | Prisma.RefCompetentieUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // verwijder LEERFASE_ID uit de data
+      // en voeg het toe als connect aan het insert-/updateData object
+      const { LEERFASE_ID, ...rest } = data;
+      const result = rest as Prisma.RefCompetentieCreateInput | Prisma.RefCompetentieUpdateInput;
+      result.LeerfaseType = LEERFASE_ID !== undefined ? { connect: { ID: LEERFASE_ID } } : undefined;
+
+      return result;
    }
 
    @HeliosDeleteObject()
@@ -110,7 +121,7 @@ export class CompetentiesController extends HeliosController
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: true
       }
-      await this.competentiesService.UpdateObject(id, data);
+      await this.competentiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -134,7 +145,7 @@ export class CompetentiesController extends HeliosController
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: false
       }
-      await this.competentiesService.UpdateObject(id, data);
+      await this.competentiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -69,7 +69,8 @@ export class TracksController extends HeliosController
       if (!data.TEKST)
          throw new HttpException("TEKST is verplicht", HttpStatus.BAD_REQUEST);
 
-      return await this.tracksService.AddObject(data);
+      const insert = await this.normaliserenData(data) as CreateOperTrackDto;
+      return await this.tracksService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateOperTrackDto, OperTrackDto)
@@ -85,7 +86,22 @@ export class TracksController extends HeliosController
       if ('LINK_ID' in data || 'INGEVOERD' in data)
          throw new HttpException("LINK_ID en INGEVOERD kunnen niet extern gezet worden", HttpStatus.BAD_REQUEST);
 
-      return await this.tracksService.UpdateObject(id, data);
+      const update = await this.normaliserenData(data) as UpdateOperTrackDto;
+      return await this.tracksService.UpdateObject(id, update, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   private async normaliserenData(
+      data: CreateOperTrackDto | UpdateOperTrackDto): Promise<CreateOperTrackDto | UpdateOperTrackDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -95,7 +111,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.DeleteObject');
-      await this.tracksService.SetVerwijderd(id, true);
+      await this.tracksService.SetVerwijderd(id, true, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -115,7 +131,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.RestoreObject');
-      await this.tracksService.SetVerwijderd(id, false);
+      await this.tracksService.SetVerwijderd(id, false, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

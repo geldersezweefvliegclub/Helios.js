@@ -28,8 +28,9 @@ import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import { hash } from "bcryptjs";
 
 @Controller('Leden')
 @ApiTags('Leden')
@@ -61,12 +62,11 @@ export class LedenController extends HeliosController
       @Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>>
    {
       this.logger.verbose(`LedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
-      // controleer of de gebruiker de juiste rechten heeft
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObjects');
 
       if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isStarttoren(currentUser)) {
          queryParams.TYPES = queryParams.TYPES ?? [];          // als TYPES niet is opgegeven, zet het op een lege array
-         queryParams.TYPES.push(       // voeg filter toe voor normale leden
+         queryParams.TYPES.push(                               // voeg filter toe voor normale leden
             LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
             LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur, LidType.DDWV,
          );
@@ -76,7 +76,6 @@ export class LedenController extends HeliosController
       const objs = await this.ledenService.GetObjects (queryParams);
 
       // verwijder de privacygevoelige data uit de response, ook extra velden
-
       objs.dataset = objs.dataset.map(obj => this.privacyMask(obj, currentUser) as GetObjectsRefLedenResponse);
       return objs;
    }
@@ -87,21 +86,11 @@ export class LedenController extends HeliosController
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
+      bodyHeeftData(data);
 
-      // verwijder LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 uit de data
-      // en voeg ze toe als connect aan het insertData object
-      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...insertData} = data;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      const insert = insertData as Prisma.RefLidCreateInput;
-      insert.LidType = connect(LIDTYPE_ID);
-      insert.VliegStatus = connect(STATUSTYPE_ID);
-      insert.Zusterclub = connect(ZUSTERCLUB_ID);
-      insert.Buddy = connect(BUDDY_ID);
-      insert.Buddy2 = connect(BUDDY_ID2);
-
-      const obj = await this.ledenService.AddObject(insert);
+      const insert = await this.normaliserenData(data, true) as Prisma.RefLidCreateInput;
+      const obj = await this.ledenService.AddObject(insert, currentUser.ID);
       return this.privacyMask(obj, currentUser);
    }
 
@@ -111,26 +100,67 @@ export class LedenController extends HeliosController
       @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
    {
       this.logger.verbose(`LedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.permissieService.heeftToegang(currentUser, 'Leden.UpdateObject');
+      bodyHeeftData(data);
+
+      id = id ?? data.ID;
       if ((currentUser.ID !== id) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser)) {
          throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
       }
 
-      // verwijder LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 uit de data
-      // en voeg ze toe als connect aan het updateData object
-      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...updateData} = data;
-      const connect = (id?: number) => id ? { connect: { ID: id } } : undefined;
-      const update = updateData as Prisma.RefLidUpdateInput;
-      update.LidType = connect(LIDTYPE_ID);
-      update.VliegStatus = connect(STATUSTYPE_ID);
-      update.Zusterclub = connect(ZUSTERCLUB_ID);
-      update.Buddy = connect(BUDDY_ID);
-      update.Buddy2 = connect(BUDDY_ID2);
-
-      const obj = await this.ledenService.UpdateObject(id, update);
+      const update = await this.normaliserenData(data, false) as Prisma.RefLidUpdateInput;
+      const obj = await this.ledenService.UpdateObject(id, update, currentUser.ID);
       return this.privacyMask(obj, currentUser);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, zet de
+   // *_ID velden om naar relatie-connects, bouwt de NAAM op, hasht het wachtwoord en normaliseert de datumvelden
+   private async normaliserenData(
+      data: CreateRefLidDto | UpdateRefLidDto,
+      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidCreateInput | Prisma.RefLidUpdateInput>
+   {
+      // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
+      // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
+      // meegegeven waarde wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
+      delete data.NAAM;
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // verwijder LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 uit de data
+      // en voeg ze toe als connect aan het insert-/updateData object
+      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...rest } = data;
+      const result = rest as Prisma.RefLidCreateInput | Prisma.RefLidUpdateInput;
+      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
+      result.LidType = connect(LIDTYPE_ID);
+      result.VliegStatus = connect(STATUSTYPE_ID);
+      result.Zusterclub = connect(ZUSTERCLUB_ID);
+      result.Buddy = connect(BUDDY_ID);
+      result.Buddy2 = connect(BUDDY_ID2);
+
+      const voornaam = result.VOORNAAM as string | null | undefined;
+      const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
+      const achternaam = result.ACHTERNAAM as string | null | undefined;
+
+      // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
+      // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+      if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+      {
+         result.NAAM = [voornaam, tussenvoegsel, achternaam]
+            .map(deel => (deel ?? "").trim())
+            .filter(deel => deel.length > 0)
+            .join(" ");
+      }
+
+      // encrypt het wachtwoord voordat het opgeslagen wordt in de database
+      if (result.WACHTWOORD)
+         result.WACHTWOORD = await hash(result.WACHTWOORD as string, 10);
+
+      // zorg dat de datums omgezet worden in ISO 8601 formaat
+      result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
+      result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
+
+      return result;
    }
 
    @HeliosDeleteObject()
@@ -144,7 +174,7 @@ export class LedenController extends HeliosController
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: true
       }
-      await this.ledenService.UpdateObject(id, data);
+      await this.ledenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -171,7 +201,7 @@ export class LedenController extends HeliosController
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: false
       }
-      await this.ledenService.UpdateObject(id, data);
+      await this.ledenService.UpdateObject(id, data, currentUser.ID);
    }
 
 
@@ -186,19 +216,17 @@ export class LedenController extends HeliosController
       const isStarttoren = this.permissieService.isStarttoren(currentUser);
 
       this.logger.verbose(`LedenController.privacyMask(${safeStringify({obj, currentUser})})`);
-      if (ikBenHetZelf || isBeheerder || isInstructeur) {
-          obj.SECRET = authenticator.keyuri(obj.INLOGNAAM, this.configService.get('Authenticator.Vereniging'), obj.SECRET);
-      }
-      else {
+      if (!ikBenHetZelf && !isBeheerder && !isBeheerderDDWV) {
          // verwijder de geheime info uit de response
          obj.INLOGNAAM = null;
-         obj.SECRET = null;
-         obj.WACHTWOORD = null;
          obj.AUTH = false;
       }
 
+      obj.SECRET = null;
+      obj.WACHTWOORD = null;
+
       // startverbod mag alleen door beheerder, instructeur of CIMT worden gezien. Of door het lid zelf natuurlijk
-      if (!isBeheerder &&  !isInstructeur && !isCIMT && !ikBenHetZelf) {
+      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !ikBenHetZelf) {
          obj.STARTVERBOD = false;
       }
 

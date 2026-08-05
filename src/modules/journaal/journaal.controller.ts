@@ -64,20 +64,8 @@ export class JournaalController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
 
-      // verwijder MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID uit de data
-      // en voeg ze toe als connect aan het insertData object
-      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID,  ...insertData} = data;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      const insert = insertData as Prisma.OperJournaalCreateInput;
-      insert.Vliegtuig = connect(VLIEGTUIG_ID);
-      insert.Rollend = connect(ROLLEND_ID);
-      insert.Status = connect(STATUS_ID);
-      insert.Categorie = connect(CATEGORIE_ID);
-      insert.Melder = connect(MELDER_ID);
-      insert.Technicus = connect(TECHNICUS_ID);
-      insert.Afgetekend = connect(AFGETEKEND_ID);
-
-      return await this.journaalService.AddObject(insert);
+      const insert = await this.normaliserenData(data) as Prisma.OperJournaalCreateInput;
+      return await this.journaalService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateOperJournaalDto, OperJournaalDto)
@@ -90,20 +78,36 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
 
-      // verwijder MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID uit de data
-      // en voeg ze toe als connect aan het updateData object
-      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID,  ...updateData} = data;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      const update = updateData as Prisma.OperJournaalUpdateInput;
-      update.Vliegtuig = connect(VLIEGTUIG_ID);
-      update.Rollend = connect(ROLLEND_ID);
-      update.Status = connect(STATUS_ID);
-      update.Categorie = connect(CATEGORIE_ID);
-      update.Melder = connect(MELDER_ID);
-      update.Technicus = connect(TECHNICUS_ID);
-      update.Afgetekend = connect(AFGETEKEND_ID);
+      const update = await this.normaliserenData(data) as Prisma.OperJournaalUpdateInput;
+      return await this.journaalService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.journaalService.UpdateObject(id, update);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet de
+   // *_ID velden om naar relatie-connects
+   private async normaliserenData(
+      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalCreateInput | Prisma.OperJournaalUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // verwijder MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID uit de data
+      // en voeg ze toe als connect aan het insert-/updateData object
+      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID, ...rest } = data;
+      const result = rest as Prisma.OperJournaalCreateInput | Prisma.OperJournaalUpdateInput;
+      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
+      result.Vliegtuig = connect(VLIEGTUIG_ID);
+      result.Rollend = connect(ROLLEND_ID);
+      result.Status = connect(STATUS_ID);
+      result.Categorie = connect(CATEGORIE_ID);
+      result.Melder = connect(MELDER_ID);
+      result.Technicus = connect(TECHNICUS_ID);
+      result.Afgetekend = connect(AFGETEKEND_ID);
+
+      return result;
    }
 
    @HeliosDeleteObject()
@@ -117,7 +121,7 @@ export class JournaalController extends HeliosController
       const data: Prisma.OperJournaalUpdateInput = {
          VERWIJDERD: true
       }
-      await this.journaalService.UpdateObject(id, data);
+      await this.journaalService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -141,7 +145,7 @@ export class JournaalController extends HeliosController
       const data: Prisma.OperJournaalUpdateInput = {
          VERWIJDERD: false
       }
-      await this.journaalService.UpdateObject(id, data);
+      await this.journaalService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -64,13 +64,8 @@ export class VliegtuigenController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.AddObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het insertData object
-      const { TYPE_ID, ...insertData} = data;
-      const insert = insertData as Prisma.RefVliegtuigCreateInput;
-      insert.VliegtuigType = (TYPE_ID !== undefined) ? { connect: { ID: TYPE_ID } } : undefined;
-
-      return await this.vliegtuigenService.AddObject(insert);
+      const insert = await this.normaliserenData(data) as Prisma.RefVliegtuigCreateInput;
+      return await this.vliegtuigenService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateRefVliegtuigDto, GetRefVliegtuigenResponse)
@@ -83,13 +78,29 @@ export class VliegtuigenController extends HeliosController
       this.logger.verbose(`VliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.UpdateObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het updateData object
-      const { TYPE_ID, ...updateData} = data;
-      const update = updateData as Prisma.RefVliegtuigUpdateInput;
-      update.VliegtuigType = TYPE_ID ? { connect: { ID: TYPE_ID } } : undefined;
+      const update = await this.normaliserenData(data) as Prisma.RefVliegtuigUpdateInput;
+      return await this.vliegtuigenService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.vliegtuigenService.UpdateObject(id, update);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet
+   // TYPE_ID om naar een relatie-connect
+   private async normaliserenData(
+      data: CreateRefVliegtuigDto | UpdateRefVliegtuigDto): Promise<Prisma.RefVliegtuigCreateInput | Prisma.RefVliegtuigUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // verwijder TYPE_ID uit de data
+      // en voeg het toe als connect aan het insert-/updateData object
+      const { TYPE_ID, ...rest } = data;
+      const result = rest as Prisma.RefVliegtuigCreateInput | Prisma.RefVliegtuigUpdateInput;
+      result.VliegtuigType = TYPE_ID !== undefined ? { connect: { ID: TYPE_ID } } : undefined;
+
+      return result;
    }
 
    @HeliosDeleteObject()
@@ -103,7 +114,7 @@ export class VliegtuigenController extends HeliosController
       const data: Prisma.RefVliegtuigUpdateInput = {
          VERWIJDERD: true
       }
-      await this.vliegtuigenService.UpdateObject(id, data);
+      await this.vliegtuigenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -127,7 +138,7 @@ export class VliegtuigenController extends HeliosController
       const data: Prisma.RefVliegtuigUpdateInput = {
          VERWIJDERD: false
       }
-      await this.vliegtuigenService.UpdateObject(id, data);
+      await this.vliegtuigenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

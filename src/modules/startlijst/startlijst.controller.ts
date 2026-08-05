@@ -19,7 +19,7 @@ import {UpdateOperStartlijstDto} from "../../generated/nestjs-dto/update-operSta
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Startlijst')
 @ApiTags('Startlijst')
@@ -67,7 +67,15 @@ export class StartlijstController extends HeliosController
       this.logger.verbose(`StartlijstController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.AddObject');
-      return await this.startlijstService.AddObject(data as Prisma.OperStartlijstUncheckedCreateInput);
+
+      const insert = await this.normaliserenData(data) as CreateOperStartlijstDto;
+      const obj = await this.startlijstService.AddObject(insert as Prisma.OperStartlijstUncheckedCreateInput, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
+         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
+      };
    }
 
    @HeliosUpdateObject(UpdateOperStartlijstDto, OperStartlijstDto)
@@ -79,7 +87,36 @@ export class StartlijstController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`StartlijstController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.UpdateObject');
-      return await this.startlijstService.UpdateObject(id, data as Prisma.OperStartlijstUncheckedUpdateInput);
+
+      const update = await this.normaliserenData(data) as UpdateOperStartlijstDto;
+      const obj = await this.startlijstService.UpdateObject(id, update as Prisma.OperStartlijstUncheckedUpdateInput, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
+         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
+      };
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datumvelden (DATUM, STARTTIJD, LANDINGSTIJD)
+   private async normaliserenData(
+      data: CreateOperStartlijstDto | UpdateOperStartlijstDto): Promise<CreateOperStartlijstDto | UpdateOperStartlijstDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
+      // toewijzing toe te staan
+      (data as Pick<CreateOperStartlijstDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
+      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -93,7 +130,7 @@ export class StartlijstController extends HeliosController
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: true
       }
-      await this.startlijstService.UpdateObject(id, data);
+      await this.startlijstService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -117,7 +154,7 @@ export class StartlijstController extends HeliosController
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: false
       }
-      await this.startlijstService.UpdateObject(id, data);
+      await this.startlijstService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

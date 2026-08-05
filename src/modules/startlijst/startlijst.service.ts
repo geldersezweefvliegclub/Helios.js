@@ -9,7 +9,7 @@ import {Prisma, OperStartlijst} from "@prisma/client";
 import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest";
 import {GetObjectsOperStartlijstResponse} from "./GetObjectsOperStartlijstResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 // startlijst record inclusief de relaties die de PHP startlijst_view samenvoegt
 type StartlijstMetRelaties = Prisma.OperStartlijstGetPayload<{
@@ -286,19 +286,9 @@ export class StartlijstService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput): Promise<OperStartlijst>
+   async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput, actorId: number): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
-      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
-
       this.ValideerStartLandingTijden(data.STARTTIJD as Date | null | undefined, data.LANDINGSTIJD as Date | null | undefined);
 
       const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID, data.INZITTENDE_ID, data.INSTRUCTIEVLUCHT as boolean | undefined);
@@ -311,31 +301,14 @@ export class StartlijstService extends IHeliosService
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = {
-         ...obj,
-         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
-         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
-      };
-      this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput): Promise<OperStartlijst>
+   async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput, actorId: number): Promise<OperStartlijst>
    {
       this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
-
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date | undefined;
-      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
-      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
-
       const db = await this.GetObject(id);
 
       const nieuweStarttijd = data.STARTTIJD !== undefined ? data.STARTTIJD as Date | null : db.STARTTIJD;
@@ -359,15 +332,9 @@ export class StartlijstService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      const result = {
-         ...obj,
-         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-         STARTTIJD: toTimeOnly(obj.STARTTIJD) as unknown as Date,
-         LANDINGSTIJD: toTimeOnly(obj.LANDINGSTIJD) as unknown as Date,
-      };
-      this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

@@ -19,7 +19,7 @@ import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTra
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Transacties')
 @ApiTags('Transacties')
@@ -62,7 +62,10 @@ export class TransactiesController  extends HeliosController
       this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
-      return await this.TransactiesService.AddObject(data as Prisma.OperTransactieCreateInput);
+
+      const insert = await this.normaliserenData(data) as Prisma.OperTransactieCreateInput;
+      const obj = await this.TransactiesService.AddObject(insert, currentUser.ID);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperTransactieDto, OperTransactieDto)
@@ -74,7 +77,27 @@ export class TransactiesController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
-      return await this.TransactiesService.UpdateObject(id, data as Prisma.OperTransactieCreateInput);
+
+      const update = await this.normaliserenData(data) as Prisma.OperTransactieUpdateInput;
+      const obj = await this.TransactiesService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
+   private async normaliserenData(
+      data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieCreateInput | Prisma.OperTransactieUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // zorg dat VLIEGDAG omgezet wordt in ISO 8601 formaat
+      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
+
+      return data as Prisma.OperTransactieCreateInput | Prisma.OperTransactieUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -88,7 +111,7 @@ export class TransactiesController  extends HeliosController
       const data: Prisma.OperTransactieUpdateInput = {
          VERWIJDERD: true
       }
-      await this.TransactiesService.UpdateObject(id, data);
+      await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -112,7 +135,7 @@ export class TransactiesController  extends HeliosController
       const data: Prisma.OperTransactieUpdateInput = {
          VERWIJDERD: false
       }
-      await this.TransactiesService.UpdateObject(id, data);
+      await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -126,14 +126,9 @@ export class VliegtuigenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefVliegtuigCreateInput ): Promise<GetRefVliegtuigenResponse>
+   async AddObject(data: Prisma.RefVliegtuigCreateInput , actorId: number): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
          where: {
             REGISTRATIE: data.REGISTRATIE,
@@ -149,21 +144,15 @@ export class VliegtuigenService extends IHeliosService
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = new GetRefVliegtuigenResponse(obj);
       this.logger.verbose(`VliegtuigenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput): Promise<GetRefVliegtuigenResponse>
+   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput, actorId: number): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
 
       // Dit moeten we ALTIJD doen, ook als er geen REGISTRATIE in de data zit. Bijvoorbeeld voor een restore
@@ -187,7 +176,7 @@ export class VliegtuigenService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
       const result = new GetRefVliegtuigenResponse(obj);
       this.logger.verbose(`VliegtuigenService.UpdateObject() => ${safeStringify(result)}`);
       return result;

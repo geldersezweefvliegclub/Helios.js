@@ -19,7 +19,7 @@ import {CreateOperGastDto} from "../../generated/nestjs-dto/create-operGast.dto"
 import {UpdateOperGastDto} from "../../generated/nestjs-dto/update-operGast.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Gasten')
 @ApiTags('Gasten')
@@ -62,7 +62,10 @@ export class GastenController extends HeliosController
       this.logger.verbose(`GastenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Gasten.AddObject');
-      return await this.GastenService.AddObject(data as Prisma.OperGastCreateInput);
+
+      const insert = await this.normaliserenData(data) as Prisma.OperGastCreateInput;
+      const obj = await this.GastenService.AddObject(insert, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperGastDto, OperGastDto)
@@ -74,7 +77,28 @@ export class GastenController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`GastenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.UpdateObject');
-      return await this.GastenService.UpdateObject(id, data as Prisma.OperGastCreateInput);
+
+      const update = await this.normaliserenData(data) as Prisma.OperGastUpdateInput;
+      const obj = await this.GastenService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert het datumveld
+   private async normaliserenData(
+      data: CreateOperGastDto | UpdateOperGastDto): Promise<Prisma.OperGastCreateInput | Prisma.OperGastUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // zorg dat de datum omgezet wordt in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data as Prisma.OperGastCreateInput | Prisma.OperGastUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -88,7 +112,7 @@ export class GastenController extends HeliosController
       const data: Prisma.OperGastUpdateInput = {
          VERWIJDERD: true
       }
-      await this.GastenService.UpdateObject(id, data);
+      await this.GastenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -112,7 +136,7 @@ export class GastenController extends HeliosController
       const data: Prisma.OperGastUpdateInput = {
          VERWIJDERD: false
       }
-      await this.GastenService.UpdateObject(id, data);
+      await this.GastenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

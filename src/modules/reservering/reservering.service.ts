@@ -11,7 +11,7 @@ import {GetObjectsOperReserveringResponse} from "./GetObjectsOperReserveringResp
 import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operReservering.dto";
 import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 // reservering record inclusief de relaties die de PHP reservering_view samenvoegt
 type ReserveringMetRelaties = Prisma.OperReserveringGetPayload<{
@@ -155,12 +155,7 @@ export class ReserveringService extends IHeliosService
    async AddObject(data: CreateOperReserveringDto, user: RefLid): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.AddObject(${safeStringify({data, user})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      const datum = parseDateOnly(data.DATUM as Date | string) as Date;
+      const datum = data.DATUM as Date;
       // per DATUM+VLIEGTUIG_ID mag er maar een reservering bestaan
       const bestaand = await this.GetObjectByDetails(datum, data.VLIEGTUIG_ID);
       if (bestaand)
@@ -179,23 +174,15 @@ export class ReserveringService extends IHeliosService
          data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-      this.logger.verbose(`ReserveringService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, user.ID);
+      this.logger.verbose(`ReserveringService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput): Promise<OperReservering>
+   async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput, actorId: number): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const update = data as Prisma.OperReserveringUpdateInput;
-      update.DATUM = parseDateOnly(update.DATUM as Date | string) as Date;
 
       const db = await this.GetObject(id);
       const obj = await this.dbService.operReservering.update({
@@ -204,10 +191,9 @@ export class ReserveringService extends IHeliosService
          },
          data: update
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      const result = {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-      this.logger.verbose(`ReserveringService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`ReserveringService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

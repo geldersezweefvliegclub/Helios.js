@@ -25,7 +25,7 @@ import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBran
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Brandstof')
 @ApiTags('Brandstof')
@@ -72,7 +72,9 @@ export class BrandstofController  extends HeliosController
       if (data.LID_ID === undefined)
          throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
 
-      return await this.brandstofService.AddObject(data);
+      const insert = await this.normaliserenData(data, true) as CreateOperBrandstofDto;
+      const obj = await this.brandstofService.AddObject(insert, currentUser.ID);
+      return {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperBrandstofDto, OperBrandstofDto)
@@ -84,7 +86,32 @@ export class BrandstofController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`BrandstofController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.UpdateObject');
-      return await this.brandstofService.UpdateObject(id, data);
+
+      const update = await this.normaliserenData(data, false) as UpdateOperBrandstofDto;
+      const obj = await this.brandstofService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // het TIJDSTIP veld. Bij een insert wordt TIJDSTIP altijd geparsed, bij een update enkel als er
+   // daadwerkelijk een nieuwe waarde is meegegeven
+   private async normaliserenData(
+      data: CreateOperBrandstofDto | UpdateOperBrandstofDto,
+      tijdstipAltijdParsen: boolean): Promise<CreateOperBrandstofDto | UpdateOperBrandstofDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // TIJDSTIP zit niet op de DTO maar wel op het Prisma create-/update-input, vandaar de cast
+      const prismaData = data as Prisma.OperBrandstofCreateInput | Prisma.OperBrandstofUpdateInput;
+      if (tijdstipAltijdParsen || prismaData.TIJDSTIP !== undefined)
+         prismaData.TIJDSTIP = parseDateOnly(prismaData.TIJDSTIP as Date | string) as Date;
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -98,7 +125,7 @@ export class BrandstofController  extends HeliosController
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: true
       }
-      await this.brandstofService.UpdateObject(id, data);
+      await this.brandstofService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -122,7 +149,7 @@ export class BrandstofController  extends HeliosController
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: false
       }
-      await this.brandstofService.UpdateObject(id, data);
+      await this.brandstofService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

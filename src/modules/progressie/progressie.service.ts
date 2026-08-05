@@ -5,7 +5,7 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperProgressie} from "@prisma/client";
+import {Prisma, OperProgressie, RefLid} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
@@ -116,23 +116,16 @@ export class ProgressieService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperProgressieUncheckedCreateInput): Promise<OperProgressie>
+   async AddObject(data: Prisma.OperProgressieUncheckedCreateInput, actorId: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      data.GELDIG_TOT = parseDateOnly(data.GELDIG_TOT as Date | string | null);
       const obj = await this.dbService.operProgressie.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = {...obj, GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date};
-      this.logger.verbose(`ProgressieService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`ProgressieService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    /**
@@ -141,7 +134,7 @@ export class ProgressieService extends IHeliosService
     * de volledige historie van afgetekende competenties bewaard (audit trail), zie UpdateObject() in
     * class.Progressie.inc.php. De oorspronkelijke INGEVOERD datum blijft behouden op het nieuwe record.
     */
-   async UpdateObject(id: number, data: UpdateProgressieData): Promise<OperProgressie>
+   async UpdateObject(id: number, data: UpdateProgressieData, actorId: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.UpdateObject(${safeStringify({id, data})})`);
       const oud = await this.GetObject(id);
@@ -171,15 +164,14 @@ export class ProgressieService extends IHeliosService
          });
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw);
-      const result = {...nieuw, GELDIG_TOT: toDateOnly(nieuw.GELDIG_TOT) as unknown as Date};
-      this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw, actorId);
+      this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(nieuw)}`);
+      return nieuw;
    }
 
    // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
    // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
-   async SetVerwijderd(id: number, verwijderd: boolean): Promise<OperProgressie>
+   async SetVerwijderd(id: number, verwijderd: boolean, actorId: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
@@ -191,7 +183,7 @@ export class ProgressieService extends IHeliosService
             VERWIJDERD: verwijderd
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj, actorId);
       const result = obj;
       this.logger.verbose(`ProgressieService.SetVerwijderd() => ${safeStringify(result)}`);
       return result;

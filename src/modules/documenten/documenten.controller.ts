@@ -63,17 +63,8 @@ export class DocumentenController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het insertData object
-      const {LID_ID, GROEP_ID, ...rest} = data;
-      const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
-      const insertData: Prisma.HeliosDocumentCreateInput = {
-         ...rest,
-         RefLid: connect(LID_ID),
-         DocumentGroep: connect(GROEP_ID),
-      };
-
-      return await this.documentenService.AddObject(insertData);
+      const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentCreateInput;
+      return await this.documentenService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateHeliosDocumentDto, HeliosDocumentDto)
@@ -86,15 +77,31 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 
-      // verwijder TYPE_ID uit de data
-      // en voeg ze toe als connect aan het updateData object
-      const { LID_ID, GROEP_ID, ...updateData} = data;
-      const connect = (id?: number) => id ? { connect: { ID: id } } : undefined;
-      const update = updateData as Prisma.HeliosDocumentUpdateInput;
-      update.RefLid = connect(LID_ID);
-      update.DocumentGroep = connect(GROEP_ID);
+      const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUpdateInput;
+      return await this.documentenService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.documentenService.UpdateObject(id, update);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet de
+   // *_ID velden om naar relatie-connects
+   private async normaliserenData(
+      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentCreateInput | Prisma.HeliosDocumentUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // verwijder LID_ID, GROEP_ID uit de data
+      // en voeg ze toe als connect aan het insert-/updateData object
+      const { LID_ID, GROEP_ID, ...rest } = data;
+      const result = rest as Prisma.HeliosDocumentCreateInput | Prisma.HeliosDocumentUpdateInput;
+      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
+      result.RefLid = connect(LID_ID);
+      result.DocumentGroep = connect(GROEP_ID);
+
+      return result;
    }
 
    @HeliosDeleteObject()
@@ -108,7 +115,7 @@ export class DocumentenController extends HeliosController
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: true
       }
-      await this.documentenService.UpdateObject(id, data);
+      await this.documentenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -132,7 +139,7 @@ export class DocumentenController extends HeliosController
       const data: Prisma.RefCompetentieUpdateInput = {
          VERWIJDERD: false
       }
-      await this.documentenService.UpdateObject(id, data);
+      await this.documentenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

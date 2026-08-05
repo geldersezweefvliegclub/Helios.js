@@ -20,7 +20,7 @@ import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto/create-operWin
 import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto/update-operWinterwerk.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Winterwerk')
 @ApiTags('Winterwerk')
@@ -68,7 +68,15 @@ export class WinterwerkController extends HeliosController
       this.logger.verbose(`WinterwerkController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
-      return await this.WinterwerkService.AddObject(data as Prisma.OperWinterwerkCreateInput);
+
+      const insert = await this.normaliserenData(data) as Prisma.OperWinterwerkCreateInput;
+      const obj = await this.WinterwerkService.AddObject(insert, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
+         EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
+      };
    }
 
    @HeliosUpdateObject(UpdateOperWinterwerkDto, OperWinterwerkDto)
@@ -80,7 +88,34 @@ export class WinterwerkController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
-      return await this.WinterwerkService.UpdateObject(id, data as Prisma.OperWinterwerkCreateInput);
+
+      const update = await this.normaliserenData(data) as Prisma.OperWinterwerkUpdateInput;
+      const obj = await this.WinterwerkService.UpdateObject(id, update, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
+         EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
+      };
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperWinterwerkDto | UpdateOperWinterwerkDto): Promise<Prisma.OperWinterwerkCreateInput | Prisma.OperWinterwerkUpdateInput>
+   {
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+
+      // zorg dat de datum en tijden omgezet worden in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
+      data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
+
+      return data as Prisma.OperWinterwerkCreateInput | Prisma.OperWinterwerkUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -94,7 +129,7 @@ export class WinterwerkController extends HeliosController
       const data: Prisma.OperWinterwerkUpdateInput = {
          VERWIJDERD: true
       }
-      await this.WinterwerkService.UpdateObject(id, data);
+      await this.WinterwerkService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -118,7 +153,7 @@ export class WinterwerkController extends HeliosController
       const data: Prisma.OperWinterwerkUpdateInput = {
          VERWIJDERD: false
       }
-      await this.WinterwerkService.UpdateObject(id, data);
+      await this.WinterwerkService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -138,33 +138,22 @@ export class JournaalService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperJournaalCreateInput ): Promise<OperJournaal>
+   async AddObject(data: Prisma.OperJournaalCreateInput , actorId: number): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.operJournaal.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`JournaalService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperJournaalUpdateInput): Promise<OperJournaal>
+   async UpdateObject(id: number, data: Prisma.OperJournaalUpdateInput, actorId: number): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operJournaal.update({
          where: {
@@ -172,7 +161,7 @@ export class JournaalService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`JournaalService.UpdateObject() => ${safeStringify(result)}`);
       return result;

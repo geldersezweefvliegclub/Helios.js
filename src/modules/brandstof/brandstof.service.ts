@@ -5,14 +5,14 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperBrandstof} from '@prisma/client';
+import {Prisma, OperBrandstof, RefLid} from '@prisma/client';
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
 import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {LedenService} from "../leden/leden.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class BrandstofService extends IHeliosService
@@ -94,14 +94,9 @@ export class BrandstofService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: CreateOperBrandstofDto): Promise<OperBrandstof>
+   async AddObject(data: CreateOperBrandstofDto, actorId: number): Promise<OperBrandstof>
    {
       this.logger.verbose(`BrandstofService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const lid = await this.ledenService.GetObject(data.LID_ID);
       if (!lid)
          throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
@@ -116,27 +111,19 @@ export class BrandstofService extends IHeliosService
          RefLid: connect(LID_ID),
          NAAM: lid.NAAM,
       };
-      insertData.TIJDSTIP = parseDateOnly(insertData.TIJDSTIP as Date | string);
 
       const obj = await this.dbService.operBrandstof.create({
          data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj);
-      const result = {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
-      this.logger.verbose(`BrandstofService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, actorId);
+      this.logger.verbose(`BrandstofService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: UpdateOperBrandstofDto | Prisma.OperBrandstofUpdateInput): Promise<OperBrandstof>
+   async UpdateObject(id: number, data: UpdateOperBrandstofDto | Prisma.OperBrandstofUpdateInput, actorId: number): Promise<OperBrandstof>
    {
       this.logger.verbose(`BrandstofService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
 
       let updateData: Prisma.OperBrandstofUpdateInput = data as Prisma.OperBrandstofUpdateInput;
@@ -157,18 +144,15 @@ export class BrandstofService extends IHeliosService
          };
       }
 
-      updateData.TIJDSTIP = parseDateOnly(updateData.TIJDSTIP as Date | string);
-
       const obj = await this.dbService.operBrandstof.update({
          where: {
             ID: id
          },
          data: updateData
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, updateData, obj);
-      const result = {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
-      this.logger.verbose(`BrandstofService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, updateData, obj, actorId);
+      this.logger.verbose(`BrandstofService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

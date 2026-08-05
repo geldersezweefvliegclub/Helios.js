@@ -21,6 +21,7 @@ import {UpdateOperDienstDto} from "../../generated/nestjs-dto/update-operDienst.
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {parseDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Diensten')
 @ApiTags('Diensten')
@@ -62,7 +63,9 @@ export class DienstenController  extends HeliosController
       this.logger.verbose(`DienstenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
-      return await this.DienstenService.AddObject(data as Prisma.OperDienstCreateInput);
+
+      const insert = await this.normaliserenData(data) as Prisma.OperDienstCreateInput;
+      return await this.DienstenService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateOperDienstDto, GetOperDienstenResponse)
@@ -74,7 +77,27 @@ export class DienstenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
-      return await this.DienstenService.UpdateObject(id, data as Prisma.OperDienstCreateInput);
+
+      const update = await this.normaliserenData(data) as Prisma.OperDienstUpdateInput;
+      return await this.DienstenService.UpdateObject(id, update, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert het datumveld
+   private async normaliserenData(
+      data: CreateOperDienstDto | UpdateOperDienstDto): Promise<Prisma.OperDienstCreateInput | Prisma.OperDienstUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // zorg dat de datum omgezet wordt in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data as Prisma.OperDienstCreateInput | Prisma.OperDienstUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -88,7 +111,7 @@ export class DienstenController  extends HeliosController
       const data: Prisma.OperDienstUpdateInput = {
          VERWIJDERD: true
       }
-      await this.DienstenService.UpdateObject(id, data);
+      await this.DienstenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -112,7 +135,7 @@ export class DienstenController  extends HeliosController
       const data: Prisma.OperDienstUpdateInput = {
          VERWIJDERD: false
       }
-      await this.DienstenService.UpdateObject(id, data);
+      await this.DienstenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

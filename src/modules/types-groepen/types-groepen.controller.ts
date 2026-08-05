@@ -64,7 +64,9 @@ export class TypesGroepenController extends HeliosController
       this.logger.verbose(`TypesGroepenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.AddObject');
-      return await this.typesGroepenService.AddObject(data);
+
+      const insert = await this.normaliserenData(data) as Prisma.RefTypesGroepCreateInput;
+      return await this.typesGroepenService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepDto, RefTypesGroepDto)
@@ -76,7 +78,23 @@ export class TypesGroepenController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`TypesGroepenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.UpdateObject');
-      return await this.typesGroepenService.UpdateObject(id, data);
+
+      const update = await this.normaliserenData(data) as Prisma.RefTypesGroepUpdateInput;
+      return await this.typesGroepenService.UpdateObject(id, update, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   private async normaliserenData(
+      data: CreateRefTypesGroepDto | UpdateRefTypesGroepDto): Promise<Prisma.RefTypesGroepCreateInput | Prisma.RefTypesGroepUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.RefTypesGroepCreateInput | Prisma.RefTypesGroepUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -90,7 +108,7 @@ export class TypesGroepenController extends HeliosController
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: true
       }
-      await this.typesGroepenService.UpdateObject(id, data);
+      await this.typesGroepenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -114,7 +132,7 @@ export class TypesGroepenController extends HeliosController
       const data: Prisma.RefTypesGroepUpdateInput = {
          VERWIJDERD: false
       }
-      await this.typesGroepenService.UpdateObject(id, data);
+      await this.typesGroepenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

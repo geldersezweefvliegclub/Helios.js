@@ -19,7 +19,7 @@ import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-operRooste
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Rooster')
 @ApiTags('Rooster')
@@ -62,7 +62,10 @@ export class RoosterController  extends HeliosController
       this.logger.verbose(`RoosterController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Rooster.AddObject');
-      return await this.RoosterService.AddObject(data as Prisma.OperRoosterCreateInput);
+
+      const insert = await this.normaliserenData(data) as CreateOperRoosterDto;
+      const obj = await this.RoosterService.AddObject(insert as Prisma.OperRoosterCreateInput, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperRoosterDto, OperRoosterDto)
@@ -74,7 +77,29 @@ export class RoosterController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`RoosterController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.UpdateObject');
-      return await this.RoosterService.UpdateObject(id, data as Prisma.OperRoosterCreateInput);
+
+      const update = await this.normaliserenData(data) as UpdateOperRoosterDto;
+      const obj = await this.RoosterService.UpdateObject(id, update as Prisma.OperRoosterCreateInput, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
+   private async normaliserenData(
+      data: CreateOperRoosterDto | UpdateOperRoosterDto): Promise<CreateOperRoosterDto | UpdateOperRoosterDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
+      // toewijzing toe te staan
+      (data as Pick<CreateOperRoosterDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data;
    }
 
    @HeliosDeleteObject()
@@ -88,7 +113,7 @@ export class RoosterController  extends HeliosController
       const data: Prisma.OperRoosterUpdateInput = {
          VERWIJDERD: true
       }
-      await this.RoosterService.UpdateObject(id, data);
+      await this.RoosterService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -112,7 +137,7 @@ export class RoosterController  extends HeliosController
       const data: Prisma.OperRoosterUpdateInput = {
          VERWIJDERD: false
       }
-      await this.RoosterService.UpdateObject(id, data);
+      await this.RoosterService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

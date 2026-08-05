@@ -90,33 +90,22 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.HeliosDocumentCreateInput): Promise<HeliosDocument>
+   async AddObject(data: Prisma.HeliosDocumentCreateInput, actorId: number): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
       const obj = await this.dbService.heliosDocument.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`DocumentenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.HeliosDocumentUpdateInput): Promise<HeliosDocument>
+   async UpdateObject(id: number, data: Prisma.HeliosDocumentUpdateInput, actorId: number): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
       const db = await this.GetObject(id);
       const obj = await this.dbService.heliosDocument.update({
          where: {
@@ -124,7 +113,7 @@ export class DocumentenService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`DocumentenService.UpdateObject() => ${safeStringify(result)}`);
       return result;

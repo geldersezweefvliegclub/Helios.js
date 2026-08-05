@@ -9,7 +9,7 @@ import {Prisma, OperWinterwerk} from "@prisma/client";
 import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
 import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class WinterwerkService extends IHeliosService
@@ -80,46 +80,21 @@ export class WinterwerkService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperWinterwerkCreateInput): Promise<OperWinterwerk>
+   async AddObject(data: Prisma.OperWinterwerkCreateInput, actorId: number): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
-      data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
-
       const obj = await this.dbService.operWinterwerk.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      const result = {
-         ...obj,
-         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-         AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
-         EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
-      };
-      this.logger.verbose(`WinterwerkService.AddObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`WinterwerkService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput): Promise<OperWinterwerk>
+   async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput, actorId: number): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
-      data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
-
       const db = await this.GetObject(id);
       const obj = await this.dbService.operWinterwerk.update({
          where: {
@@ -127,15 +102,9 @@ export class WinterwerkService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
-      const result = {
-         ...obj,
-         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-         AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
-         EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
-      };
-      this.logger.verbose(`WinterwerkService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
+      this.logger.verbose(`WinterwerkService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>

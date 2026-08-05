@@ -5,11 +5,10 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma} from "@prisma/client";
+import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class DienstenService extends IHeliosService
@@ -102,15 +101,9 @@ export class DienstenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperDienstCreateInput): Promise<GetOperDienstenResponse>
+   async AddObject(data: Prisma.OperDienstCreateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.AddObject(${safeStringify({data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const obj = await this.dbService.operDienst.create({
          data: data,
          include: {
@@ -118,22 +111,15 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = new GetOperDienstenResponse(obj);
       this.logger.verbose(`DienstenService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<GetOperDienstenResponse>
+   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.UpdateObject(${safeStringify({id, data})})`);
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete (data as {ID?: number}).ID;
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDienst.update({
          where: {
@@ -145,7 +131,7 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
 
       const result = new GetOperDienstenResponse(obj);
       this.logger.verbose(`DienstenService.UpdateObject() => ${safeStringify(result)}`);
