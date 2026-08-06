@@ -25,9 +25,8 @@ export class OperTrackDto {
   @ApiProperty({
     description: "Omschrijving van de track",
     type: "string",
-    nullable: true,
   })
-  TEKST: string | null;
+  TEKST: string;
   @ApiProperty({
     description: "Verwijzing naar de startlijst waar deze track bij hoort",
     type: "integer",
@@ -42,14 +41,6 @@ export class OperTrackDto {
     nullable: true,
   })
   INGEVOERD: Date | null;
-  @ApiProperty({
-    description:
-      "De track kan gelinkt zijn aan een andere track (bijv vervolgactie)",
-    type: "integer",
-    format: "int32",
-    nullable: true,
-  })
-  LINK_ID: number | null;
   @ApiProperty({
     description: "Is de track gemarkeerd als verwijderd",
     type: "boolean",

@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -42,12 +43,10 @@ export class CreateOperTrackDto {
   @ApiProperty({
     description: "Omschrijving van de track",
     type: "string",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  TEKST?: string | null;
+  TEKST: string;
   @ApiProperty({
     description: "Verwijzing naar de startlijst waar deze track bij hoort",
     type: "integer",
@@ -69,17 +68,6 @@ export class CreateOperTrackDto {
   @IsOptional()
   @IsDateString()
   INGEVOERD?: Date | null;
-  @ApiProperty({
-    description:
-      "De track kan gelinkt zijn aan een andere track (bijv vervolgactie)",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  LINK_ID?: number | null;
   @ApiProperty({
     description: "Is de track gemarkeerd als verwijderd",
     type: "boolean",

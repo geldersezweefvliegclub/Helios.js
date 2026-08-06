@@ -8,17 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperTrack} from "@prisma/client";
 import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
-import {CreateOperTrackDto} from "../../generated/nestjs-dto/create-operTrack.dto";
-import {UpdateOperTrackDto} from "../../generated/nestjs-dto/update-operTrack.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
-
-// track record inclusief de relaties die de PHP tracks_view samenvoegt
-type TrackMetRelaties = Prisma.OperTrackGetPayload<{
-   include: {
-      Lid: true,
-      Instructeur: true,
-   }
-}>;
 
 @Injectable()
 export class TracksService extends IHeliosService
@@ -35,8 +25,6 @@ export class TracksService extends IHeliosService
    async GetObject(id: number, relation: string = undefined): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
-      // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de tracks_view.
       const db = await this.dbService.operTrack.findUnique({
          where: {
             ID: id
@@ -45,6 +33,7 @@ export class TracksService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Track record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+
       const result = db;
       this.logger.verbose(`TracksService.GetObject() => ${safeStringify(result)}`);
       return result;
@@ -68,8 +57,6 @@ export class TracksService extends IHeliosService
                   { ID: { in: params.IDs }},
                   { LID_ID: params.LID_ID },
                   { INSTRUCTEUR_ID: params.INSTRUCTEUR_ID },
-                  // tracks_view/verwijderd_tracks_view filteren in de PHP implementatie altijd op l.VERWIJDERD = 0,
-                  // ook bij het opvragen van verwijderde tracks. Zie CreateViews() in class.Tracks.inc.php
                   { Lid: { VERWIJDERD: false } },
                ]
          }
@@ -89,7 +76,7 @@ export class TracksService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj: TrackMetRelaties) =>
+      const response = objs.map((obj) =>
       {
          const {Lid: lid, Instructeur: instructeur, ...track} = obj;
          return {
@@ -104,84 +91,32 @@ export class TracksService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: CreateOperTrackDto, actorId: number): Promise<OperTrack>
+   async AddObject(data: Prisma.OperTrackUncheckedCreateInput, actorId: number): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.AddObject(${safeStringify({data})})`);
-      const {LID_ID, INSTRUCTEUR_ID, START_ID, ...rest} = data;
-      const connect = (id?: number) => id !== undefined ? {connect: {ID: id}} : undefined;
-      const insertData: Prisma.OperTrackCreateInput = {
-         ...rest,
-         Lid: {connect: {ID: LID_ID}},
-         Instructeur: connect(INSTRUCTEUR_ID),
-         Startlijst: connect(START_ID),
-      };
-
       const obj = await this.dbService.operTrack.create({
-         data: insertData
+         data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, actorId);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
       const result = obj;
       this.logger.verbose(`TracksService.AddObject() => ${safeStringify(result)}`);
       return result;
    }
 
-   /**
-    * Een track wordt bij een update NOOIT in-place aangepast: het bestaande record wordt gemarkeerd als
-    * verwijderd, en er wordt een NIEUW record aangemaakt met LINK_ID naar het oorspronkelijke record. Zo blijft
-    * de volledige historie van aanpassingen bewaard (audit trail), zie UpdateObject() in class.Tracks.inc.php.
-    * De oorspronkelijke INGEVOERD datum blijft behouden op het nieuwe record.
-    */
-   async UpdateObject(id: number, data: UpdateOperTrackDto, actorId: number): Promise<OperTrack>
+   async UpdateObject(id: number, data: Prisma.OperTrackUncheckedUpdateInput, actorId: number): Promise<OperTrack>
    {
       this.logger.verbose(`TracksService.UpdateObject(${safeStringify({id, data})})`);
-      const oud = await this.GetObject(id);
-
-      const lidId = data.LID_ID ?? oud.LID_ID;
-      const instructeurId = data.INSTRUCTEUR_ID !== undefined ? data.INSTRUCTEUR_ID : oud.INSTRUCTEUR_ID;
-      const tekst = data.TEKST !== undefined ? data.TEKST : oud.TEKST;
-      const startId = data.START_ID !== undefined ? data.START_ID : oud.START_ID;
-
-      const connectIfSet = (relId?: number) => relId != null ? {connect: {ID: relId}} : undefined;
-      const nieuw = await this.dbService.$transaction(async (tx) =>
-      {
-         await tx.operTrack.update({where: {ID: id}, data: {VERWIJDERD: true}});
-
-         return tx.operTrack.create({
-            data: {
-               Lid: {connect: {ID: lidId}},
-               Instructeur: connectIfSet(instructeurId),
-               TEKST: tekst,
-               Startlijst: connectIfSet(startId),
-               INGEVOERD: oud.INGEVOERD,
-               Track: {connect: {ID: id}},
-            }
-         });
-      });
-
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw, actorId);
-      const result = nieuw;
-      this.logger.verbose(`TracksService.UpdateObject() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
-   // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
-   async SetVerwijderd(id: number, verwijderd: boolean, actorId: number): Promise<OperTrack>
-   {
-      this.logger.verbose(`TracksService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operTrack.update({
          where: {
             ID: id
          },
-         data: {
-            VERWIJDERD: verwijderd
-         }
+         data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj, actorId);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
       const result = obj;
-      this.logger.verbose(`TracksService.SetVerwijderd() => ${safeStringify(result)}`);
+      this.logger.verbose(`TracksService.UpdateObject() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -43,11 +43,10 @@ export class UpdateOperTrackDto {
     description: "Omschrijving van de track",
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()
-  TEKST?: string | null;
+  TEKST?: string;
   @ApiProperty({
     description: "Verwijzing naar de startlijst waar deze track bij hoort",
     type: "integer",
@@ -69,17 +68,6 @@ export class UpdateOperTrackDto {
   @IsOptional()
   @IsDateString()
   INGEVOERD?: Date | null;
-  @ApiProperty({
-    description:
-      "De track kan gelinkt zijn aan een andere track (bijv vervolgactie)",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  LINK_ID?: number | null;
   @ApiProperty({
     description: "Is de track gemarkeerd als verwijderd",
     type: "boolean",

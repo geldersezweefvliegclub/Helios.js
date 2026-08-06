@@ -5,20 +5,11 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperProgressie, RefLid} from "@prisma/client";
+import {Prisma, OperProgressie} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
-
-// progressie record inclusief de relaties die de PHP progressie_view samenvoegt
-type ProgressieMetRelaties = Prisma.OperProgressieGetPayload<{
-   include: {
-      RefCompetentie: {include: {LeerfaseType: true}},
-      RefLid: true,
-      Instructeur: true,
-   }
-}>;
 
 export interface UpdateProgressieData {
    LID_ID?: number;
@@ -97,7 +88,7 @@ export class ProgressieService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj: ProgressieMetRelaties) =>
+      const response = objs.map((obj) =>
       {
          const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
          return {

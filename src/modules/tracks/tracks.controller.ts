@@ -10,7 +10,7 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {OperTrackDto} from "../../generated/nestjs-dto/operTrack.dto";
 import {CurrentUser} from "../login/current-user.decorator";
-import {RefLid} from "@prisma/client";
+import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -58,18 +58,10 @@ export class TracksController extends HeliosController
       @Body() data: CreateOperTrackDto): Promise<OperTrackDto>
    {
       this.logger.verbose(`TracksController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Tracks.AddObject');
+      bodyHeeftData(data);
 
-      // LINK_ID en INGEVOERD worden enkel intern door UpdateObject beheerd, zie class.Tracks.inc.php RequestToRecord()
-      if ('LINK_ID' in data || 'INGEVOERD' in data)
-         throw new HttpException("LINK_ID en INGEVOERD kunnen niet extern gezet worden", HttpStatus.BAD_REQUEST);
-
-      // TEKST is niet verplicht op DB niveau, maar wel verplicht volgens de business regel uit class.Tracks.inc.php AddObject()
-      if (!data.TEKST)
-         throw new HttpException("TEKST is verplicht", HttpStatus.BAD_REQUEST);
-
-      const insert = await this.normaliserenData(data) as CreateOperTrackDto;
+      const insert = await this.normaliserenData(data) as Prisma.OperTrackUncheckedCreateInput;
       return await this.tracksService.AddObject(insert, currentUser.ID);
    }
 
@@ -78,21 +70,21 @@ export class TracksController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTrackDto): Promise<OperTrackDto>
    {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.logger.verbose(`TracksController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
+      await this.magAanpassen(currentUser, id);
 
-      if ('LINK_ID' in data || 'INGEVOERD' in data)
-         throw new HttpException("LINK_ID en INGEVOERD kunnen niet extern gezet worden", HttpStatus.BAD_REQUEST);
-
-      const update = await this.normaliserenData(data) as UpdateOperTrackDto;
+      const update = await this.normaliserenData(data) as Prisma.OperTrackUncheckedUpdateInput;
       return await this.tracksService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // LID_ID, INSTRUCTEUR_ID en START_ID hoeven niet omgezet te worden naar relatie-connects: met het
+   // Unchecked Prisma inputtype zijn dit al platte kolommen
    private async normaliserenData(
-      data: CreateOperTrackDto | UpdateOperTrackDto): Promise<CreateOperTrackDto | UpdateOperTrackDto>
+      data: CreateOperTrackDto | UpdateOperTrackDto): Promise<Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -101,7 +93,22 @@ export class TracksController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      return data;
+      // INGEVOERD wordt enkel intern beheerd, een eventueel meegegeven waarde wordt hier, net als
+      // VERWIJDERD en LAATSTE_AANPASSING, altijd genegeerd
+      delete data.INGEVOERD;
+
+      return data as Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput;
+   }
+
+   // update en verwijderen mag alleen door een beheerder, CIMT, of de instructeur die de track zelf heeft ingevoerd
+   private async magAanpassen(currentUser: RefLid, id: number): Promise<void>
+   {
+      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isCIMT(currentUser))
+         return;
+
+      const track = await this.tracksService.GetObject(id);
+      if (track.INSTRUCTEUR_ID !== currentUser.ID)
+         throw new HttpException(`Niet toegestaan om deze track aan te passen of te verwijderen`, HttpStatus.UNAUTHORIZED);
    }
 
    @HeliosDeleteObject()
@@ -111,7 +118,12 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.DeleteObject');
-      await this.tracksService.SetVerwijderd(id, true, currentUser.ID);
+      await this.magAanpassen(currentUser, id);
+
+      const data: Prisma.OperTrackUncheckedUpdateInput = {
+         VERWIJDERD: true
+      }
+      await this.tracksService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
@@ -131,7 +143,11 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.RestoreObject');
-      await this.tracksService.SetVerwijderd(id, false, currentUser.ID);
+
+      const data: Prisma.OperTrackUncheckedUpdateInput = {
+         VERWIJDERD: false
+      }
+      await this.tracksService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//
