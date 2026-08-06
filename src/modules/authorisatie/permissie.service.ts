@@ -81,6 +81,12 @@ export class PermissieService {
       return user.LIDTYPE_ID === LidType.DDWV;
    }
 
+   isSysteemAccount(user: RefLid): boolean
+   {
+      this.logger.verbose(`PermissieService.isSysteemAccount(${safeStringify({NAAM: user.NAAM, systeemAccount: user.LIDTYPE_ID === LidType.SysteemAccount})})`);
+      return user.LIDTYPE_ID === LidType.SysteemAccount;
+   }
+
    ikBenHetZelf(user: RefLid, currentUser: RefLid): boolean
    {
       this.logger.verbose(`PermissieService.ikBenHetZelf(${safeStringify({NAAM: user.NAAM, CURRENT_USER: currentUser.NAAM, result: user.ID === currentUser.ID})})`);

@@ -60,10 +60,10 @@ export class TransactiesController  extends HeliosController
       @Body() data: CreateOperTransactieDto): Promise<OperTransactieDto>
    {
       this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
+      bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(data) as Prisma.OperTransactieCreateInput;
+      const insert = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedCreateInput;
       const obj = await this.TransactiesService.AddObject(insert, currentUser.ID);
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
@@ -73,20 +73,23 @@ export class TransactiesController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<OperTransactieDto>
    {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
 
-      const update = await this.normaliserenData(data) as Prisma.OperTransactieUpdateInput;
+      const update = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedUpdateInput;
       const obj = await this.TransactiesService.UpdateObject(id, update, currentUser.ID);
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
    private async normaliserenData(
-      data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieCreateInput | Prisma.OperTransactieUpdateInput>
+      currentUser: RefLid,
+      data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
    {
+      const db = this.TransactiesService.GetObject(data.ID ?? -1);
+
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
       // waarde wordt hier altijd genegeerd
@@ -94,10 +97,23 @@ export class TransactiesController  extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
+      // Alleen bij nieuwe invoer
+      if (db) {
+         data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
+      }
+
+      // BETAALD en BETAAL_URL mogen alleen gezet worden door een Systeem account (bijv. Mollie/e-boekhouden
+      // koppeling); voor alle andere gebruikers wordt een meegegeven waarde, net als bij VERWIJDERD, genegeerd
+      if (!this.permissieService.isSysteemAccount(currentUser))
+      {
+         delete data.BETAALD;
+         delete data.BETAAL_URL;
+      }
+
       // zorg dat VLIEGDAG omgezet wordt in ISO 8601 formaat
       data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
 
-      return data as Prisma.OperTransactieCreateInput | Prisma.OperTransactieUpdateInput;
+      return data as Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -108,7 +124,7 @@ export class TransactiesController  extends HeliosController
       this.logger.verbose(`TransactiesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.DeleteObject');
 
-      const data: Prisma.OperTransactieUpdateInput = {
+      const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
@@ -132,7 +148,7 @@ export class TransactiesController  extends HeliosController
       this.logger.verbose(`TransactiesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.RestoreObject');
 
-      const data: Prisma.OperTransactieUpdateInput = {
+      const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.TransactiesService.UpdateObject(id, data, currentUser.ID);

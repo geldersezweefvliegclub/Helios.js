@@ -35,6 +35,7 @@ export class TransactiesService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Transactie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+
       const result = db;
       this.logger.verbose(`TransactiesService.GetObject() => ${safeStringify(result)}`);
       return result;
@@ -112,7 +113,7 @@ export class TransactiesService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperTransactieCreateInput, actorId: number): Promise<OperTransactie>
+   async AddObject(data: Prisma.OperTransactieUncheckedCreateInput, actorId: number): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operTransactie.create({
@@ -124,7 +125,7 @@ export class TransactiesService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperTransactieUpdateInput, actorId: number): Promise<OperTransactie>
+   async UpdateObject(id: number, data: Prisma.OperTransactieUncheckedUpdateInput, actorId: number): Promise<OperTransactie>
    {
       this.logger.verbose(`TransactiesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
