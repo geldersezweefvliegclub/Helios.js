@@ -63,7 +63,7 @@ export class DocumentenController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedCreateInput;
       return await this.documentenService.AddObject(insert, currentUser.ID);
    }
 
@@ -77,14 +77,16 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedUpdateInput;
       return await this.documentenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet de
-   // *_ID velden om naar relatie-connects
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // LID_ID en GROEP_ID hoeven niet omgezet te worden naar relatie-connects: met het Unchecked Prisma
+   // inputtype zijn dit al platte kolommen, dus een meegegeven null zet de relatie direct los
+   // (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
-      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentCreateInput | Prisma.HeliosDocumentUpdateInput>
+      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -93,15 +95,7 @@ export class DocumentenController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder LID_ID, GROEP_ID uit de data
-      // en voeg ze toe als connect aan het insert-/updateData object
-      const { LID_ID, GROEP_ID, ...rest } = data;
-      const result = rest as Prisma.HeliosDocumentCreateInput | Prisma.HeliosDocumentUpdateInput;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      result.RefLid = connect(LID_ID);
-      result.DocumentGroep = connect(GROEP_ID);
-
-      return result;
+      return data as Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -112,7 +106,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.DeleteObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.documentenService.UpdateObject(id, data, currentUser.ID);
@@ -136,7 +130,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.RestoreObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.documentenService.UpdateObject(id, data, currentUser.ID);

@@ -161,7 +161,7 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefLidCreateInput , actorId: number): Promise<RefLid>
+   async AddObject(data: Prisma.RefLidUncheckedCreateInput, actorId: number): Promise<RefLid>
    {
       this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refLid.create({
@@ -173,7 +173,7 @@ export class LedenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefLidUpdateInput, actorId: number): Promise<RefLid>
+   async UpdateObject(id: number, data: Prisma.RefLidUncheckedUpdateInput, actorId: number): Promise<RefLid>
    {
       this.logger.verbose(`LedenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

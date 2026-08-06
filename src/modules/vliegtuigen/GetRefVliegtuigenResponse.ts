@@ -46,12 +46,7 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
     })
     VLIEGTUIGTYPE?: string
 
-    @ApiProperty({
-        type: Number,
-        required: false,
-        description: 'Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen',
-    })
-    BEVOEGDHEID_LOKAAL_ID?: number | null
+    // BEVOEGDHEID_LOKAAL_ID en BEVOEGDHEID_OVERLAND_ID staan al (verplicht, nullable) op de RefVliegtuigDto basisklasse
 
     @ApiProperty({
         type: String,
@@ -59,13 +54,6 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
         description: 'Omschrijving om vliegtuig lokaal te mogen vliegen',
     })
     BEVOEGDHEID_LOKAAL?: string | null
-
-    @ApiProperty({
-        type: Number,
-        required: false,
-        description: 'Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan',
-    })
-    BEVOEGDHEID_OVERLAND_ID?: number | null
 
     @ApiProperty({
         type: String,

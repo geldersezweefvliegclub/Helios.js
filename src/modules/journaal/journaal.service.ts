@@ -138,7 +138,7 @@ export class JournaalService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperJournaalCreateInput , actorId: number): Promise<OperJournaal>
+   async AddObject(data: Prisma.OperJournaalUncheckedCreateInput, actorId: number): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operJournaal.create({
@@ -151,7 +151,7 @@ export class JournaalService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperJournaalUpdateInput, actorId: number): Promise<OperJournaal>
+   async UpdateObject(id: number, data: Prisma.OperJournaalUncheckedUpdateInput, actorId: number): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

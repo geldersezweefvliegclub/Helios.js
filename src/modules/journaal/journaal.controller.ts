@@ -64,7 +64,7 @@ export class JournaalController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperJournaalCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedCreateInput;
       return await this.journaalService.AddObject(insert, currentUser.ID);
    }
 
@@ -78,14 +78,16 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperJournaalUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedUpdateInput;
       return await this.journaalService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet de
-   // *_ID velden om naar relatie-connects
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID en VLIEGTUIG_ID hoeven niet
+   // omgezet te worden naar relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable
+   // kolommen, dus een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
-      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalCreateInput | Prisma.OperJournaalUpdateInput>
+      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -94,20 +96,7 @@ export class JournaalController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID uit de data
-      // en voeg ze toe als connect aan het insert-/updateData object
-      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID, ...rest } = data;
-      const result = rest as Prisma.OperJournaalCreateInput | Prisma.OperJournaalUpdateInput;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      result.Vliegtuig = connect(VLIEGTUIG_ID);
-      result.Rollend = connect(ROLLEND_ID);
-      result.Status = connect(STATUS_ID);
-      result.Categorie = connect(CATEGORIE_ID);
-      result.Melder = connect(MELDER_ID);
-      result.Technicus = connect(TECHNICUS_ID);
-      result.Afgetekend = connect(AFGETEKEND_ID);
-
-      return result;
+      return data as Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -118,7 +107,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.DeleteObject');
 
-      const data: Prisma.OperJournaalUpdateInput = {
+      const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.journaalService.UpdateObject(id, data, currentUser.ID);
@@ -142,7 +131,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.RestoreObject');
 
-      const data: Prisma.OperJournaalUpdateInput = {
+      const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.journaalService.UpdateObject(id, data, currentUser.ID);

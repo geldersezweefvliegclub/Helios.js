@@ -126,7 +126,7 @@ export class VliegtuigenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefVliegtuigCreateInput , actorId: number): Promise<GetRefVliegtuigenResponse>
+   async AddObject(data: Prisma.RefVliegtuigUncheckedCreateInput, actorId: number): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.AddObject(${safeStringify({data})})`);
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
@@ -150,7 +150,7 @@ export class VliegtuigenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefVliegtuigUpdateInput, actorId: number): Promise<GetRefVliegtuigenResponse>
+   async UpdateObject(id: number, data: Prisma.RefVliegtuigUncheckedUpdateInput, actorId: number): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

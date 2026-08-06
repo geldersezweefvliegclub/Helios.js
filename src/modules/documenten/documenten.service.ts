@@ -90,7 +90,7 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.HeliosDocumentCreateInput, actorId: number): Promise<HeliosDocument>
+   async AddObject(data: Prisma.HeliosDocumentUncheckedCreateInput, actorId: number): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.heliosDocument.create({
@@ -103,7 +103,7 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.HeliosDocumentUpdateInput, actorId: number): Promise<HeliosDocument>
+   async UpdateObject(id: number, data: Prisma.HeliosDocumentUncheckedUpdateInput, actorId: number): Promise<HeliosDocument>
    {
       this.logger.verbose(`DocumentenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

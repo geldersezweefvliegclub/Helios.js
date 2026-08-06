@@ -61,10 +61,10 @@ export class VliegtuigenController extends HeliosController
       @Body() data: CreateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
       this.logger.verbose(`VliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.AddObject');
+      bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(data) as Prisma.RefVliegtuigCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.RefVliegtuigUncheckedCreateInput;
       return await this.vliegtuigenService.AddObject(insert, currentUser.ID);
    }
 
@@ -73,19 +73,21 @@ export class VliegtuigenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefVliegtuigDto): Promise<GetRefVliegtuigenResponse>
    {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
       this.logger.verbose(`VliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
 
-      const update = await this.normaliserenData(data) as Prisma.RefVliegtuigUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.RefVliegtuigUncheckedUpdateInput;
       return await this.vliegtuigenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet
-   // TYPE_ID om naar een relatie-connect
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // TYPE_ID, BEVOEGDHEID_LOKAAL_ID en BEVOEGDHEID_OVERLAND_ID hoeven niet omgezet te worden naar
+   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus
+   // een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
-      data: CreateRefVliegtuigDto | UpdateRefVliegtuigDto): Promise<Prisma.RefVliegtuigCreateInput | Prisma.RefVliegtuigUpdateInput>
+      data: CreateRefVliegtuigDto | UpdateRefVliegtuigDto): Promise<Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
       // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -94,13 +96,10 @@ export class VliegtuigenController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder TYPE_ID uit de data
-      // en voeg het toe als connect aan het insert-/updateData object
-      const { TYPE_ID, ...rest } = data;
-      const result = rest as Prisma.RefVliegtuigCreateInput | Prisma.RefVliegtuigUpdateInput;
-      result.VliegtuigType = TYPE_ID !== undefined ? { connect: { ID: TYPE_ID } } : undefined;
+      // Registratie moet uniek zijn, dus spaties verwijderen om te voorkomen dat er meerdere vliegtuigen met dezelfde registratie bestaan
+      data.REGISTRATIE = data.REGISTRATIE.trim();
 
-      return result;
+      return data as Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()

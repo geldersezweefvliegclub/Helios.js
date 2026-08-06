@@ -89,7 +89,7 @@ export class LedenController extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
       bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(data, true) as Prisma.RefLidCreateInput;
+      const insert = await this.normaliserenData(data, true) as Prisma.RefLidUncheckedCreateInput;
       const obj = await this.ledenService.AddObject(insert, currentUser.ID);
       return this.privacyMask(obj, currentUser);
    }
@@ -108,16 +108,19 @@ export class LedenController extends HeliosController
          throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
       }
 
-      const update = await this.normaliserenData(data, false) as Prisma.RefLidUpdateInput;
+      const update = await this.normaliserenData(data, false) as Prisma.RefLidUncheckedUpdateInput;
       const obj = await this.ledenService.UpdateObject(id, update, currentUser.ID);
       return this.privacyMask(obj, currentUser);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, zet de
-   // *_ID velden om naar relatie-connects, bouwt de NAAM op, hasht het wachtwoord en normaliseert de datumvelden
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, bouwt de
+   // NAAM op, hasht het wachtwoord en normaliseert de datumvelden.
+   // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
+   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
+   // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
       data: CreateRefLidDto | UpdateRefLidDto,
-      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidCreateInput | Prisma.RefLidUpdateInput>
+      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
    {
       // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
       // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
@@ -127,17 +130,7 @@ export class LedenController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 uit de data
-      // en voeg ze toe als connect aan het insert-/updateData object
-      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...rest } = data;
-      const result = rest as Prisma.RefLidCreateInput | Prisma.RefLidUpdateInput;
-      const connect = (id?: number) => id !== undefined ? { connect: { ID: id } } : undefined;
-      result.LidType = connect(LIDTYPE_ID);
-      result.VliegStatus = connect(STATUSTYPE_ID);
-      result.Zusterclub = connect(ZUSTERCLUB_ID);
-      result.Buddy = connect(BUDDY_ID);
-      result.Buddy2 = connect(BUDDY_ID2);
-
+      const result = data as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
       const voornaam = result.VOORNAAM as string | null | undefined;
       const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
       const achternaam = result.ACHTERNAAM as string | null | undefined;
