@@ -88,7 +88,7 @@ export class TransactiesController  extends HeliosController
       currentUser: RefLid,
       data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
    {
-      const db = this.TransactiesService.GetObject(data.ID ?? -1);
+      const db = await this.TransactiesService.GetObject(data.ID ?? -1);
 
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
