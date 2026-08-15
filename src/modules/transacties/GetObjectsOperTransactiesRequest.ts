@@ -1,6 +1,6 @@
 import {GetObjectsDateRequest } from "../../core/DTO/IHeliosFilter";
-import {IsInt, IsOptional} from "class-validator";
-import {OptionalNumberTransform} from "../../core/helpers/Transformers";
+import {IsDate, IsInt, IsOptional} from "class-validator";
+import {OptionalDateTransform, OptionalNumberTransform} from "../../core/helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
 
 
@@ -18,5 +18,25 @@ export class GetObjectsOperTransactiesRequest extends GetObjectsDateRequest
             type: Number
         })
     LID_ID?: number;
+
+    @IsOptional()
+    @ApiProperty(
+        {
+            required: false,
+            description: 'Referentie naar een extern systeem, bijv Mollie of e-boekhouden',
+            type: String
+        })
+    EXT_REF?: string;
+
+    @IsOptional()
+    @IsDate()
+    @OptionalDateTransform()
+    @ApiProperty(
+        {
+            required: false,
+            description: 'Enkel transacties van deze vliegdag (DDWV)',
+            type: Date
+        })
+    VLIEGDAG?: Date;
 }
 

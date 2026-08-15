@@ -29,11 +29,13 @@ model OperReservering {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OPMERKINGEN        String?  @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
-  /// @DtoReadOnly
   VERWIJDERD         Boolean  @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
-  /// @DtoReadOnly
   LAATSTE_AANPASSING DateTime @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly

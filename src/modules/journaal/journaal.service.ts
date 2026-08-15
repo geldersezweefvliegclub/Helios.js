@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,19 +8,23 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperJournaal} from "@prisma/client";
 import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class JournaalService extends IHeliosService
 {
+   private readonly logger = new Logger(JournaalService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation:string = undefined): Promise<OperJournaal>
    {
+      this.logger.verbose(`JournaalService.GetObject(${safeStringify({id, relation})})`);
       const db = await this.dbService.operJournaal.findUnique({
          where: {
             ID: id
@@ -29,12 +33,15 @@ export class JournaalService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Journaal record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`JournaalService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperJournaalRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperJournaalResponse>>
    {
+      this.logger.verbose(`JournaalService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperJournaalRequest();
@@ -61,6 +68,8 @@ export class JournaalService extends IHeliosService
                   { TECHNICUS_ID: { in: params.TECHNICUS_ID }},
                   { STATUS_ID: { in: params.STATUS_ID }},
                   { CATEGORIE_ID: { in: params.CATEGORIE_ID }},
+                  { ROLLEND_ID: params.ROLLEND === undefined ? undefined : (params.ROLLEND ? {not: null} : null)},
+                  { VLIEGTUIG_ID: params.VLIEGEND === undefined ? undefined : (params.VLIEGEND ? {not: null} : null)},
                   { VLIEGTUIG_ID: { in: params.VLIEGTUIG_ID }},
 
                   {
@@ -99,7 +108,7 @@ export class JournaalService extends IHeliosService
       });
 
       const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
+         // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
             MELDER: obj.Melder?.NAAM ?? null,
@@ -113,7 +122,7 @@ export class JournaalService extends IHeliosService
             REG_CALL: obj.Vliegtuig === null ? " ()" : obj.Vliegtuig?.REGISTRATIE + (obj.Vliegtuig?.CALLSIGN ?  " (" + obj.Vliegtuig.CALLSIGN + ")" : "")
          } ;
 
-         // delete child objects from the response
+         // verwijder child objects uit de response
          delete retObj.Vliegtuig;
          delete retObj.Rollend;
          delete retObj.Status;
@@ -124,21 +133,27 @@ export class JournaalService extends IHeliosService
 
          return  retObj as GetObjectsOperJournaalResponse
       });
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`JournaalService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.OperJournaalCreateInput ): Promise<OperJournaal>
+   async AddObject(data: Prisma.OperJournaalUncheckedCreateInput, actorId: number): Promise<OperJournaal>
    {
+      this.logger.verbose(`JournaalService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operJournaal.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      const result = obj;
+      this.logger.verbose(`JournaalService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperJournaalUpdateInput): Promise<OperJournaal>
+   async UpdateObject(id: number, data: Prisma.OperJournaalUncheckedUpdateInput, actorId: number): Promise<OperJournaal>
    {
+      this.logger.verbose(`JournaalService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operJournaal.update({
          where: {
@@ -146,18 +161,24 @@ export class JournaalService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return obj;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      const result = obj;
+      this.logger.verbose(`JournaalService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`JournaalService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operJournaal.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
    }
 }

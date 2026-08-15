@@ -14,9 +14,8 @@ model OperTrack {
   /// @DtoUpdateOptional
   INSTRUCTEUR_ID     Int?      @db.UnsignedMediumInt
   /// @description Omschrijving van de track
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  TEKST              String?   @db.Text
+  TEKST              String    @db.Text
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @DtoRelationIncludeId
@@ -26,27 +25,21 @@ model OperTrack {
   /// @DtoUpdateOptional
   /// @description Tijdstempel wanneer de track is ingevoerd
   INGEVOERD          DateTime? @default(now()) @db.DateTime(0)
-  /// @description De track kan gelinkt zijn aan een andere track (bijv vervolgactie)
-  /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  LINK_ID            Int?      @db.UnsignedMediumInt
   /// @description Is de track gemarkeerd als verwijderd
-  /// @DtoReadOnly
   VERWIJDERD         Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt
 
   Lid         RefLid          @relation("oper_tracks_LID_IDToref_leden", fields: [LID_ID], references: [ID], onUpdate: Restrict, map: "oper_tracks_ibfk_1")
   Instructeur RefLid?         @relation("oper_tracks_INSTRUCTEUR_IDToref_leden", fields: [INSTRUCTEUR_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_2")
   Startlijst  OperStartlijst? @relation(fields: [START_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_3")
-  Track       OperTrack?      @relation("oper_tracksTooper_tracks", fields: [LINK_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_tracks_ibfk_4")
-  Reacties    OperTrack[]     @relation("oper_tracksTooper_tracks")
 
   @@index([INSTRUCTEUR_ID], map: "INSTRUCTEUR_ID")
   @@index([LID_ID], map: "LID_ID")
-  @@index([LINK_ID], map: "LINK_ID")
   @@index([START_ID], map: "START_ID")
   @@index([VERWIJDERD], map: "VERWIJDERD")
   @@map("oper_tracks")

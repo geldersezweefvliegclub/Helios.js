@@ -1,47 +1,50 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma} from "@prisma/client";
+import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class DienstenService extends IHeliosService
 {
+   private readonly logger = new Logger(DienstenService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<GetOperDienstenResponse>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`DienstenService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operDienst.findUnique({
          where: {
             ID: id
          },
-         include: {
-            TypeDienst: true
-         }
       });
 
       if (!db) {
          throw new HttpException(`DagRapport record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
-      return new GetOperDienstenResponse(db);
+      const result = new GetOperDienstenResponse(db);
+      this.logger.verbose(`DienstenService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
    {
+      this.logger.verbose(`DienstenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperDienstenRequest();
@@ -57,6 +60,8 @@ export class DienstenService extends IHeliosService
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
                   { LID_ID: params.LID_ID },
+                  { AANWEZIG: params.AANWEZIG },
+                  { AFWEZIG: params.AFWEZIG },
 
                   {
                      OR: [
@@ -82,18 +87,23 @@ export class DienstenService extends IHeliosService
          take: params.MAX,
          skip: params.START,
          include: {
-            TypeDienst: true
+            TypeDienst: true,
+            RefLid: true,
+            RefIngevoerd: true
          }
       });
 
       const objs = rawObjs.map((o) => new GetOperDienstenResponse(o))
 
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      this.logger.verbose(`DienstenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.OperDienstCreateInput): Promise<GetOperDienstenResponse>
+   async AddObject(data: Prisma.OperDienstCreateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
+      this.logger.verbose(`DienstenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operDienst.create({
          data: data,
          include: {
@@ -101,12 +111,15 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return new GetOperDienstenResponse(obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      const result = new GetOperDienstenResponse(obj);
+      this.logger.verbose(`DienstenService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput): Promise<GetOperDienstenResponse>
+   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
+      this.logger.verbose(`DienstenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operDienst.update({
          where: {
@@ -118,19 +131,25 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
 
-      return new GetOperDienstenResponse(obj);
+      const result = new GetOperDienstenResponse(obj);
+      this.logger.verbose(`DienstenService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`DienstenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operDienst.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

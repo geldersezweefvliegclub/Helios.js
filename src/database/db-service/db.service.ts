@@ -6,7 +6,9 @@ import {ConfigService} from "@nestjs/config";
 @Injectable()
 export class DbService extends PrismaClient implements  OnModuleInit
 {
-    constructor(private readonly configService: ConfigService, private readonly logger: Logger) {
+    private readonly logger = new Logger(DbService.name);
+
+    constructor(private readonly configService: ConfigService) {
         super({
             log: [
                 {
@@ -45,14 +47,14 @@ export class DbService extends PrismaClient implements  OnModuleInit
             });
 
             this.$on('info' as never, (event: Prisma.LogEvent) => {
-                this.logger.log(`Prisma info: ${event.message}`, {
+                this.logger.debug(`Prisma info: ${event.message}`, {
                     message: event.message,
                     target: event.target,
                 });
             });
 
             this.$on('query' as never, (event: Prisma.QueryEvent) => {
-                this.logger.log(`Executed Prisma query - Duration: ${event.duration}ms`, {
+                this.logger.debug(`Executed Prisma query - Duration: ${event.duration}ms`, {
                     query: event.query,
                     params: event.params,
                     duration: event.duration

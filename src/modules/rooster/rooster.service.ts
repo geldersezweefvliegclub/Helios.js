@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -9,21 +9,25 @@ import {Prisma} from "@prisma/client";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class RoosterService extends IHeliosService
 {
+   private readonly logger = new Logger(RoosterService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
-   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation: string = undefined): Promise<OperRoosterDto>
    {
-      // relation is included for consistency with other services, but not used
+      this.logger.verbose(`RoosterService.GetObject(${safeStringify({id, relation})})`);
+      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
       const db = await this.dbService.operRooster.findUnique({
          where: {
             ID: id
@@ -32,12 +36,15 @@ export class RoosterService extends IHeliosService
 
       if (!db)
          throw new HttpException(`Rooster record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`RoosterService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperRoosterRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperRoosterResponse>>
    {
+      this.logger.verbose(`RoosterService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperRoosterRequest();
@@ -75,21 +82,27 @@ export class RoosterService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      return this.buildGetObjectsResponse(objs, count, params.HASH);
+      const response = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`RoosterService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.OperRoosterCreateInput): Promise<OperRoosterDto>
+   async AddObject(data: Prisma.OperRoosterCreateInput, actorId: number): Promise<OperRoosterDto>
    {
+      this.logger.verbose(`RoosterService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operRooster.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`RoosterService.AddObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput): Promise<OperRoosterDto>
+   async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput, actorId: number): Promise<OperRoosterDto>
    {
+      this.logger.verbose(`RoosterService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.operRooster.update({
          where: {
@@ -97,18 +110,23 @@ export class RoosterService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj, actorId);
+      this.logger.verbose(`RoosterService.UpdateObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`RoosterService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operRooster.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

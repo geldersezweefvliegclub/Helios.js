@@ -21,6 +21,16 @@ export class UpdateOperTransactieDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
+    description: "Datum van aanmaken van de transactie",
+    type: "string",
+    format: "date-time",
+    default: new Date().toISOString(),
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  DATUM?: Date;
+  @ApiProperty({
     description:
       "Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag",
     type: "string",
@@ -83,14 +93,14 @@ export class UpdateOperTransactieDto {
   @ApiProperty({
     description:
       "De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen",
-    type: "string",
-    format: "Decimal.js",
+    type: "integer",
+    format: "int32",
     required: false,
     nullable: true,
   })
   @IsOptional()
-  @IsDecimal()
-  EENHEDEN?: Prisma.Decimal | null;
+  @IsInt()
+  EENHEDEN?: number | null;
   @ApiProperty({
     description: "Aantal strippen voordat de transcatie verwerkt is.",
     type: "string",
@@ -138,4 +148,42 @@ export class UpdateOperTransactieDto {
   @IsOptional()
   @IsString()
   OMSCHRIJVING?: string;
+  @ApiProperty({
+    description:
+      "Is de transactie betaald bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  BETAALD?: boolean;
+  @ApiProperty({
+    description:
+      "URL naar de betaalpagina van een extern systeem, bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)",
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  BETAAL_URL?: string | null;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

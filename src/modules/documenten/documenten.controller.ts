@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -16,12 +16,16 @@ import {CreateHeliosDocumentDto} from "../../generated/nestjs-dto/create-heliosD
 import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto/update-heliosDocument.dto";
 import {ApiTags} from "@nestjs/swagger";
 import {DocumentenService} from "./documenten.service";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 
 @Controller('Documenten')
 @ApiTags('Documenten')
 export class DocumentenController extends HeliosController
 {
+   private readonly logger = new Logger(DocumentenController.name);
+
    constructor(private readonly documentenService: DocumentenService,
                private readonly permissieService:PermissieService)
    {
@@ -30,97 +34,106 @@ export class DocumentenController extends HeliosController
 
    @HeliosGetObject(HeliosDocumentDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<HeliosDocumentDto>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.GetObject');
+      this.logger.verbose(`DocumentenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.GetObject');
       return await this.documentenService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsHeliosDocumentenResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsHeliosDocumentenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsHeliosDocumentenResponse>>
    {
-      // check if the user has the right permissions
-      this.permissieService.heeftToegang(user, 'Documenten.GetObjects');
+      this.logger.verbose(`DocumentenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      // controleer of de gebruiker de juiste rechten heeft
+      this.permissieService.heeftToegang(currentUser, 'Documenten.GetObjects');
 
-      // retrieve the objects from the database based on the query parameters
-      return this.documentenService.GetObjects (queryParams);
+      // haal de objects op uit de database op basis van de query parameters
+      return await this.documentenService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateHeliosDocumentDto, HeliosDocumentDto)
    async AddObject(
-       @CurrentUser() user: RefLid,
+       @CurrentUser() currentUser: RefLid,
        @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto> {
-      this.permissieService.heeftToegang(user, 'Documenten.AddObject');
+      this.logger.verbose(`DocumentenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the insertData object
-      const {LID_ID, GROEP_ID, ...rest} = data;
-
-      const insertData: Prisma.HeliosDocumentCreateInput = {
-         ...rest,
-         RefLid: LID_ID !== undefined
-             ? {connect: {ID: LID_ID}}
-             : undefined,
-         DocumentGroep: GROEP_ID !== undefined
-             ? {connect: {ID: GROEP_ID}}
-             : undefined,
-      };
-
-      return await this.documentenService.AddObject(insertData);
+      const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedCreateInput;
+      return await this.documentenService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateHeliosDocumentDto, HeliosDocumentDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateHeliosDocumentDto): Promise<HeliosDocument>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
+      this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 
-      // remove TYPE_ID from the data
-      // and add them as connect to the updateData object
-      const { LID_ID, GROEP_ID, ...updateData} = data;
-      (updateData as Prisma.HeliosDocumentUpdateInput).RefLid = LID_ID ? { connect: {ID: LID_ID }} : undefined;
-      (updateData as Prisma.HeliosDocumentUpdateInput).DocumentGroep = GROEP_ID ? { connect: {ID: GROEP_ID }} : undefined;
+      const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedUpdateInput;
+      return await this.documentenService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.documentenService.UpdateObject(id, updateData as Prisma.HeliosDocumentUpdateInput);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // LID_ID en GROEP_ID hoeven niet omgezet te worden naar relatie-connects: met het Unchecked Prisma
+   // inputtype zijn dit al platte kolommen, dus een meegegeven null zet de relatie direct los
+   // (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.DeleteObject');
+      this.logger.verbose(`DocumentenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.DeleteObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: true
       }
-      await this.documentenService.UpdateObject(id, data);
+      await this.documentenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.RemoveObject');
-      await this.documentenService.RemoveObject(id);
+      this.logger.verbose(`DocumentenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.RemoveObject');
+      await this.documentenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Documenten.RestoreObject');
+      this.logger.verbose(`DocumentenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Documenten.RestoreObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: false
       }
-      await this.documentenService.UpdateObject(id, data);
+      await this.documentenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

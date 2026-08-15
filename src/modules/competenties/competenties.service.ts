@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -8,19 +8,23 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, RefCompetentie} from "@prisma/client";
 import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
 import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class CompetentiesService extends IHeliosService
 {
+   private readonly logger = new Logger(CompetentiesService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation:string = undefined): Promise<RefCompetentie>
    {
+      this.logger.verbose(`CompetentiesService.GetObject(${safeStringify({id, relation})})`);
       const db = await this.dbService.refCompetentie.findUnique({
          where: {
             ID: id
@@ -29,12 +33,15 @@ export class CompetentiesService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Competentie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`CompetentiesService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsRefCompetentiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefCompetentiesResponse>>
    {
+      this.logger.verbose(`CompetentiesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsRefCompetentiesRequest();
@@ -66,32 +73,38 @@ export class CompetentiesService extends IHeliosService
       });
 
       const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
+         // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
             LEERFASE: obj.LeerfaseType?.OMSCHRIJVING ?? null
          } ;
 
-         // delete child objects from the response
+         // verwijder child objects uit de response
          delete retObj.LeerfaseType;
 
          return  retObj as GetObjectsRefCompetentiesResponse
       });
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`CompetentiesService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.RefCompetentieCreateInput ): Promise<RefCompetentie>
+   async AddObject(data: Prisma.RefCompetentieCreateInput , actorId: number): Promise<RefCompetentie>
    {
+      this.logger.verbose(`CompetentiesService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refCompetentie.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
-      return obj;
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      const result = obj;
+      this.logger.verbose(`CompetentiesService.AddObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefCompetentieUpdateInput): Promise<RefCompetentie>
+   async UpdateObject(id: number, data: Prisma.RefCompetentieUpdateInput, actorId: number): Promise<RefCompetentie>
    {
+      this.logger.verbose(`CompetentiesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
       const obj = await this.dbService.refCompetentie.update({
          where: {
@@ -99,18 +112,24 @@ export class CompetentiesService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
-      return obj;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      const result = obj;
+      this.logger.verbose(`CompetentiesService.UpdateObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`CompetentiesService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.refCompetentie.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
    }
 }

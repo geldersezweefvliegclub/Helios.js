@@ -58,11 +58,11 @@ export class OperTransactieDto {
   @ApiProperty({
     description:
       "De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen",
-    type: "string",
-    format: "Decimal.js",
+    type: "integer",
+    format: "int32",
     nullable: true,
   })
-  EENHEDEN: Prisma.Decimal | null;
+  EENHEDEN: number | null;
   @ApiProperty({
     description: "Aantal strippen voordat de transcatie verwerkt is.",
     type: "string",
@@ -96,10 +96,18 @@ export class OperTransactieDto {
   })
   OMSCHRIJVING: string;
   @ApiProperty({
-    description: "Is de transactie betaald bijv Mollie",
+    description:
+      "Is de transactie betaald bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)",
     type: "boolean",
   })
   BETAALD: boolean;
+  @ApiProperty({
+    description:
+      "URL naar de betaalpagina van een extern systeem, bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)",
+    type: "string",
+    nullable: true,
+  })
+  BETAAL_URL: string | null;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

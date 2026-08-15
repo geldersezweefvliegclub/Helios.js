@@ -4,8 +4,8 @@ import {ApiProperty} from "@nestjs/swagger";
 
 export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
     /**
-     * Creates an instance of RefVliegtuigDto, from a RefVliegtuig model object from Prisma.
-     * If you get an error when instantiating this class after querying using Prisma, make sure you included all necessary relations in your Prisma query!
+     * Maakt een instantie van RefVliegtuigDto, op basis van een RefVliegtuig model object van Prisma.
+     * Als je een error krijgt bij het instantiëren van deze class na een Prisma query, zorg er dan voor dat je alle benodigde relaties in je Prisma query hebt opgenomen!
      */
     constructor(obj?: RefVliegtuig & {
         VliegtuigType?: RefType,
@@ -30,6 +30,8 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
         this.OPMERKINGEN = obj?.OPMERKINGEN;
         this.VERWIJDERD = obj?.VERWIJDERD;
         this.LAATSTE_AANPASSING = obj?.LAATSTE_AANPASSING;
+        this.BEVOEGDHEID_LOKAAL_ID = obj?.BEVOEGDHEID_LOKAAL_ID;
+        this.BEVOEGDHEID_OVERLAND_ID = obj?.BEVOEGDHEID_OVERLAND_ID;
 
         this.VLIEGTUIGTYPE = obj?.VliegtuigType?.OMSCHRIJVING;
         this.BEVOEGDHEID_LOKAAL = obj?.BevoegdheidLokaal?.OMSCHRIJVING;
@@ -44,19 +46,21 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
     })
     VLIEGTUIGTYPE?: string
 
+    // BEVOEGDHEID_LOKAAL_ID en BEVOEGDHEID_OVERLAND_ID staan al (verplicht, nullable) op de RefVliegtuigDto basisklasse
+
     @ApiProperty({
         type: String,
         required: false,
         description: 'Omschrijving om vliegtuig lokaal te mogen vliegen',
     })
-    BEVOEGDHEID_LOKAAL?: string
+    BEVOEGDHEID_LOKAAL?: string | null
 
     @ApiProperty({
         type: String,
         required: false,
         description: 'Omschrijving om met vliegtuig overland te gaan',
     })
-    BEVOEGDHEID_OVERLAND?: string
+    BEVOEGDHEID_OVERLAND?: string | null
 
     @ApiProperty({
         type: Number,
@@ -64,4 +68,11 @@ export class GetRefVliegtuigenResponse extends RefVliegtuigDto {
         description: 'Aantal uitstaande journaals',
     })
     JOURNAAL_AANTAL?: number
+
+    @ApiProperty({
+        type: String,
+        required: false,
+        description: 'Registratie en callsign van het vliegtuig',
+    })
+    REG_CALL?: string
 }

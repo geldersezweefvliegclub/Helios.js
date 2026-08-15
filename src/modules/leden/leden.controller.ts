@@ -3,6 +3,7 @@ import {
    Controller, Get,
    HttpException,
    HttpStatus,
+   Logger,
    Query, UseGuards
 } from '@nestjs/common';
 import {Prisma, RefLid} from '@prisma/client';
@@ -25,11 +26,18 @@ import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+import {LidType} from "../../core/enums/LidType";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import { hash } from "bcryptjs";
 
 @Controller('Leden')
 @ApiTags('Leden')
 export class LedenController extends HeliosController
 {
+   private readonly logger = new Logger(LedenController.name);
+
    constructor(private readonly configService: ConfigService,
                private readonly ledenService: LedenService,
                private readonly permissieService:PermissieService)
@@ -39,174 +47,210 @@ export class LedenController extends HeliosController
 
    @HeliosGetObject(RefLidDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<RefLidDto>
    {
-      this.permissieService.heeftToegang(user, 'Leden.GetObject');
+      this.logger.verbose(`LedenController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.GetObject');
       const obj =  await this.ledenService.GetObject(id);
-      return this.privacyMask(obj, user);
+      return this.privacyMask(obj, currentUser);
    }
 
    @HeliosGetObjects(GetObjectsRefLedenResponse)
    async GetObjects(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsRefLedenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>>
    {
-      // check if the user has the right permissions
-      this.permissieService.heeftToegang(user, 'Leden.GetObjects');
+      this.logger.verbose(`LedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.GetObjects');
 
-      if (!this.permissieService.isBeheerderDDWV(user) && !this.permissieService.isBeheerder(user) && !this.permissieService.isStarttoren(user)) {
-         // 600 = Student
-         // 601 = Erelid
-         // 602 = Lid
-         // 603 = Jeugdlid
-         // 604 = private owner
-         // 605 = veteraan
-         // 606 = Donateur
-         // 625 = DDWV
-         queryParams.TYPES = queryParams.TYPES ?? [];          // if TYPES is not set, set it to an empty array
-         queryParams.TYPES.push(601,602,603,604,605,606,625);  // add filter for normale leden
+      if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isStarttoren(currentUser)) {
+         queryParams.TYPES = queryParams.TYPES ?? [];          // als TYPES niet is opgegeven, zet het op een lege array
+         queryParams.TYPES.push(                               // voeg filter toe voor normale leden
+            LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
+            LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur, LidType.DDWV,
+         );
       }
 
-      // retrieve the objects from the database based on the query parameters
+      // haal de objects op uit de database op basis van de query parameters
       const objs = await this.ledenService.GetObjects (queryParams);
 
-      // remove the privacy sensitive data in the response, also extra fields
-      objs.dataset = objs.dataset.map(obj => this.privacyMaskGetObjects (obj, user));
+      // verwijder de privacygevoelige data uit de response, ook extra velden
+      objs.dataset = objs.dataset.map(obj => this.privacyMask(obj, currentUser) as GetObjectsRefLedenResponse);
       return objs;
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
-      this.permissieService.heeftToegang(user, 'Leden.AddObject');
+      this.logger.verbose(`LedenController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
+      bodyHeeftData(data);
 
-      // remove LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 from the data
-      // and add them as connect to the insertData object
-      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...insertData} = data;
-      (insertData as Prisma.RefLidCreateInput).LidType = (LIDTYPE_ID !== undefined) ? { connect: {ID: LIDTYPE_ID }} : undefined;
-      (insertData as Prisma.RefLidCreateInput).VliegStatus = (STATUSTYPE_ID !== undefined) ? { connect: {ID: STATUSTYPE_ID }} : undefined;
-      (insertData as Prisma.RefLidCreateInput).Zusterclub = (ZUSTERCLUB_ID !== undefined) ? { connect: {ID: ZUSTERCLUB_ID }} : undefined;
-      (insertData as Prisma.RefLidCreateInput).Buddy = (BUDDY_ID !== undefined) ? { connect: {ID: BUDDY_ID }} : undefined;
-      (insertData as Prisma.RefLidCreateInput).Buddy2 = (BUDDY_ID2 !== undefined) ? { connect: {ID: BUDDY_ID2 }} : undefined;
-
-      return await this.ledenService.AddObject(insertData as Prisma.RefLidCreateInput);
+      const insert = await this.normaliserenData(data, true) as Prisma.RefLidUncheckedCreateInput;
+      const obj = await this.ledenService.AddObject(insert, currentUser.ID);
+      return this.privacyMask(obj, currentUser);
    }
 
    @HeliosUpdateObject(UpdateRefLidDto, RefLidDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
    {
-      this.permissieService.heeftToegang(user, 'Leden.UpdateObject');
-      if ((user.ID !== id) && !this.permissieService.isBeheerder(user) && !this.permissieService.isBeheerderDDWV(user)) {
+      this.logger.verbose(`LedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.UpdateObject');
+      bodyHeeftData(data);
+
+      id = id ?? data.ID;
+      if ((currentUser.ID !== id) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser)) {
          throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
       }
 
-      // remove LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2 from the data
-      // and add them as connect to the updateData object
-      const { LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID, BUDDY_ID2, ...updateData} = data;
-      (updateData as Prisma.RefLidCreateInput).LidType = LIDTYPE_ID ? { connect: {ID: LIDTYPE_ID }} : undefined;
-      (updateData as Prisma.RefLidCreateInput).VliegStatus = STATUSTYPE_ID ? { connect: {ID: STATUSTYPE_ID }} : undefined;
-      (updateData as Prisma.RefLidCreateInput).Zusterclub = ZUSTERCLUB_ID ? { connect: {ID: ZUSTERCLUB_ID }} : undefined;
-      (updateData as Prisma.RefLidCreateInput).Buddy = BUDDY_ID ? { connect: {ID: BUDDY_ID }} : undefined;
-      (updateData as Prisma.RefLidCreateInput).Buddy2 = BUDDY_ID2 ? { connect: {ID: BUDDY_ID2 }} : undefined;
+      const update = await this.normaliserenData(data, false) as Prisma.RefLidUncheckedUpdateInput;
+      const obj = await this.ledenService.UpdateObject(id, update, currentUser.ID);
+      return this.privacyMask(obj, currentUser);
+   }
 
-      return await this.ledenService.UpdateObject(id, updateData as Prisma.RefLidUpdateInput);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, bouwt de
+   // NAAM op, hasht het wachtwoord en normaliseert de datumvelden.
+   // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
+   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
+   // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateRefLidDto | UpdateRefLidDto,
+      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
+   {
+      // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
+      // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
+      // meegegeven waarde wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
+      delete data.NAAM;
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      const result = data as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
+      const voornaam = result.VOORNAAM as string | null | undefined;
+      const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
+      const achternaam = result.ACHTERNAAM as string | null | undefined;
+
+      // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
+      // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+      if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+      {
+         result.NAAM = [voornaam, tussenvoegsel, achternaam]
+            .map(deel => (deel ?? "").trim())
+            .filter(deel => deel.length > 0)
+            .join(" ");
+      }
+
+      // encrypt het wachtwoord voordat het opgeslagen wordt in de database
+      if (result.WACHTWOORD)
+         result.WACHTWOORD = await hash(result.WACHTWOORD as string, 10);
+
+      // zorg dat de datums omgezet worden in ISO 8601 formaat
+      result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
+      result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
+
+      return result;
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Leden.DeleteObject');
+      this.logger.verbose(`LedenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.DeleteObject');
 
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: true
       }
-      await this.ledenService.UpdateObject(id, data);
+      await this.ledenService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Leden.RemoveObject');
-      await this.ledenService.RemoveObject(id);
+      this.logger.verbose(`LedenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.RemoveObject');
+      if (currentUser.ID === id) {
+         throw new HttpException(`Je kunt jezelf niet verwijderen`, HttpStatus.UNAUTHORIZED);
+      }
+      await this.ledenService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Leden.RestoreObject');
+      this.logger.verbose(`LedenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.RestoreObject');
 
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: false
       }
-      await this.ledenService.UpdateObject(id, data);
+      await this.ledenService.UpdateObject(id, data, currentUser.ID);
    }
 
 
-   // remove the privacy sensitive data in the response
-   privacyMask(obj: RefLid, user: RefLid): RefLid
+   // verwijder de privacygevoelige data uit de response
+   privacyMask(obj: RefLid, currentUser: RefLid): RefLid
    {
-      if ((user.ID === obj.ID) || this.permissieService.isBeheerder(user)) {
-         obj.SECRET = authenticator.keyuri(obj.INLOGNAAM, this.configService.get('Authenticator.Vereniging'), obj.SECRET);
-      }
-      else {
-         // remove the secret info from the response
+      const ikBenHetZelf = this.permissieService.ikBenHetZelf(obj, currentUser);
+      const isBeheerder = this.permissieService.isBeheerder(currentUser);
+      const isBeheerderDDWV = this.permissieService.isBeheerderDDWV(currentUser);
+      const isInstructeur = this.permissieService.isInstructeur(currentUser);
+      const isCIMT = this.permissieService.isCIMT(currentUser);
+      const isStarttoren = this.permissieService.isStarttoren(currentUser);
+
+      this.logger.verbose(`LedenController.privacyMask(${safeStringify({obj, currentUser})})`);
+      if (!ikBenHetZelf && !isBeheerder && !isBeheerderDDWV) {
+         // verwijder de geheime info uit de response
          obj.INLOGNAAM = null;
-         obj.SECRET = null;
-         obj.WACHTWOORD = null;
          obj.AUTH = false;
       }
 
-      // startverbod mag alleen door beheerder, instructeur of CIMT worden gezien. Of door het lid natuurlijk
-      if (!this.permissieService.isBeheerder(user) &&
-          !this.permissieService.isInstructeur(user) &&
-          !this.permissieService.isCIMT(user) && (obj.ID !== user.ID)) {
+      obj.SECRET = null;
+      obj.WACHTWOORD = null;
+
+      // startverbod mag alleen door beheerder, instructeur of CIMT worden gezien. Of door het lid zelf natuurlijk
+      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !ikBenHetZelf) {
          obj.STARTVERBOD = false;
       }
 
       // brevetnummer, knvvl nummer & zusterclub is alleen zichtbaar voor beheerders en beheerders DDWV, of het lid zelf
-      if (!this.permissieService.isBeheerder(user) &&
-          !this.permissieService.isBeheerderDDWV(user) &&
-          !this.permissieService.isCIMT(user) && (obj.ID !== user.ID)) {
+      if (!isBeheerder && !isBeheerderDDWV && !isCIMT && !ikBenHetZelf) {
          obj.BREVET_NUMMER = null;
          obj.KNVVL_LIDNUMMER = null;
          obj.ZUSTERCLUB_ID = null;
       }
 
       // tegoed is alleen intressant voor beheerders en beheerders DDWV, of het lid zelf
-      if (!this.permissieService.isBeheerder(user) &&
-         !this.permissieService.isBeheerderDDWV(user) && (obj.ID !== user.ID)) {
+      if (!isBeheerder && !isBeheerderDDWV && !ikBenHetZelf) {
          obj.TEGOED = null;
       }
 
       // buddy is alleen zichtbaar voor beheerders, instructeurs en CIMT, of het lid zelf
-      if (!this.permissieService.isBeheerder(user) &&
-          !this.permissieService.isInstructeur(user) &&
-          !this.permissieService.isCIMT(user) && (obj.ID !== user.ID)) {
-         obj.BUDDY_ID = null;
-         obj.BUDDY_ID2 = null;
+      if (!isBeheerder && !isInstructeur && !isCIMT && !ikBenHetZelf) {
+          obj.BUDDY_ID = null;
+          obj.BUDDY_ID2 = null;
+      }
 
-         // starttoren heeeft medical info nodig
-         if (!this.permissieService.isStarttoren(user)) {
-            obj.MEDICAL = null
-         }
+      // medical is alleen zichtbaar voor beheerders, instructeurs, CIMT, starttoren, of het lid zelf
+      if (!isBeheerder && !isInstructeur && !isCIMT && !ikBenHetZelf && !isStarttoren) {
+          obj.MEDICAL = null
       }
 
       // als gebruiker privacy settings heeft, dan worden de gegevens gemaskeerd
-      if (this.permissieService.hasPrivacy(user) && (obj.ID !== user.ID))
+      if (this.permissieService.hasPrivacy(currentUser) && !ikBenHetZelf)
       {
-         // check if the user has privacy settings enabled
-         // if the user is a beheerder, beheerder DDWV, instructeur or CIMT, the privacy settings are ignored
+         // controleer of de gebruiker privacy-instellingen heeft ingeschakeld
+         // als de gebruiker een beheerder, beheerder DDWV, instructeur of CIMT is, worden de privacy-instellingen genegeerd
          obj.ADRES = "****";
          obj.POSTCODE = "****";
          obj.WOONPLAATS = "****";
@@ -219,22 +263,13 @@ export class LedenController extends HeliosController
          obj.STATUSTYPE_ID = null;
       }
 
-      return  obj as RefLid
+      // GEBOORTE_DATUM en MEDICAL zijn datums zonder tijdscomponent, geef enkel de datum (yyyy-MM-dd) terug
+      obj.GEBOORTE_DATUM = toDateOnly(obj.GEBOORTE_DATUM) as unknown as Date;
+      obj.MEDICAL = toDateOnly(obj.MEDICAL) as unknown as Date;
+
+      return obj as RefLid;
    }
 
-   privacyMaskGetObjects(obj: GetObjectsRefLedenResponse, user: RefLid): GetObjectsRefLedenResponse
-   {
-      const responseObj = this.privacyMask(obj, user) as GetObjectsRefLedenResponse;
-
-      responseObj.BUDDY       = responseObj.BUDDY_ID ? obj.BUDDY : null;
-      responseObj.BUDDY2      = responseObj.BUDDY_ID2 ? obj.BUDDY2 : null;
-      responseObj.LIDTYPE     = responseObj.LIDTYPE_ID ? obj.LIDTYPE : null;
-      responseObj.STATUS      = responseObj.STATUSTYPE_ID ? obj.STATUS : null;
-      responseObj.LIDTYPE_REF = responseObj.LIDTYPE_ID ? obj.LIDTYPE_REF : null;
-      responseObj.ZUSTERCLUB  = responseObj.ZUSTERCLUB_ID ? obj.ZUSTERCLUB : null;
-
-      return responseObj;
-   }
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
@@ -254,10 +289,11 @@ export class LedenController extends HeliosController
             }
       }})
    async GetVerjaardagen(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('AANTAL') aantal?: number): Promise<VerjaardagenResponse[]>
    {
-      this.permissieService.heeftToegang(user, 'Leden.GetVerjaardagen');
-      return this.ledenService.GetVerjaardagen(aantal);
+      this.logger.verbose(`LedenController.GetVerjaardagen(${safeStringify({currentUser, aantal})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.GetVerjaardagen');
+      return await this.ledenService.GetVerjaardagen(aantal);
    }
 }

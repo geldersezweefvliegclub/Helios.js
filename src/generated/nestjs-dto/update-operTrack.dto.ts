@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class UpdateOperTrackDto {
   @ApiProperty({
@@ -37,11 +43,10 @@ export class UpdateOperTrackDto {
     description: "Omschrijving van de track",
     type: "string",
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsString()
-  TEKST?: string | null;
+  TEKST?: string;
   @ApiProperty({
     description: "Verwijzing naar de startlijst waar deze track bij hoort",
     type: "integer",
@@ -64,14 +69,21 @@ export class UpdateOperTrackDto {
   @IsDateString()
   INGEVOERD?: Date | null;
   @ApiProperty({
-    description:
-      "De track kan gelinkt zijn aan een andere track (bijv vervolgactie)",
-    type: "integer",
-    format: "int32",
+    description: "Is de track gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
     required: false,
-    nullable: true,
   })
   @IsOptional()
-  @IsInt()
-  LINK_ID?: number | null;
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

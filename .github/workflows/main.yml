@@ -10,8 +10,8 @@ jobs:
     name: Continuous Integration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24' # Active LTS version as of January 2026
 
@@ -31,14 +31,14 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v4
         with:
-          versionSpec: '6.4.x'
+          versionSpec: '6.8.x'
 
       - name: Determine Application Version
         uses: gittools/actions/gitversion/execute@v4.2.0
@@ -79,16 +79,16 @@ jobs:
           echo "CommitDate: ${{ env.GitVersion_CommitDate }}"
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # One build, two targets -> two images
       # Tags produced:

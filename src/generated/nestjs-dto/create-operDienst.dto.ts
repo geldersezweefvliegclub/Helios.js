@@ -80,4 +80,21 @@ export class CreateOperDienstDto {
   @IsOptional()
   @IsBoolean()
   AFWEZIG?: boolean | null;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

@@ -49,10 +49,12 @@ model OperJournaal {
   /// @DtoUpdateOptional
   /// @description Referentie naar wie het heeft afgetekend
   AFGETEKEND_ID      Int?          @db.UnsignedMediumInt
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean       @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime      @updatedAt
   /// @DtoRelationCanConnectOnCreate

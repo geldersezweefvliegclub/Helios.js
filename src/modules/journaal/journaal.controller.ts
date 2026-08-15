@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {
    HeliosController,
    HeliosCreateObject,
@@ -20,11 +20,15 @@ import {ApiTags} from "@nestjs/swagger";
 import {OperJournaalDto} from "../../generated/nestjs-dto/operJournaal.dto";
 import {CreateOperJournaalDto} from "../../generated/nestjs-dto/create-operJournaal.dto";
 import {UpdateOperJournaalDto} from "../../generated/nestjs-dto/update-operJournaal.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
 @Controller('Journaal')
 @ApiTags('Journaal')
 export class JournaalController extends HeliosController
 {
+   private readonly logger = new Logger(JournaalController.name);
+
    constructor(private readonly journaalService: JournaalService,
                private readonly permissieService:PermissieService)
    {
@@ -33,97 +37,104 @@ export class JournaalController extends HeliosController
 
    @HeliosGetObject(OperJournaalDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperJournaalDto>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.GetObject');
+      this.logger.verbose(`JournaalController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.GetObject');
       return await this.journaalService.GetObject(id);
    }
 
    @HeliosGetObjects(GetObjectsOperJournaalResponse)
    async GetObjects(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperJournaalRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperJournaalResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.GetObjects');
+      this.logger.verbose(`JournaalController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.GetObjects');
       return await this.journaalService.GetObjects (queryParams);
    }
 
    @HeliosCreateObject(CreateOperJournaalDto, OperJournaalDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperJournaalDto): Promise<OperJournaalDto>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.AddObject');
+      this.logger.verbose(`JournaalController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
 
-      // remove MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID from the data
-      // and add them as connect to the insertData object
-      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID,  ...insertData} = data;
-      (insertData as Prisma.OperJournaalCreateInput).Vliegtuig = (VLIEGTUIG_ID !== undefined) ? { connect: {ID: VLIEGTUIG_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Rollend = (ROLLEND_ID !== undefined) ? { connect: {ID: ROLLEND_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Status = (STATUS_ID !== undefined) ? { connect: {ID: STATUS_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Categorie = (CATEGORIE_ID !== undefined) ? { connect: {ID: CATEGORIE_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Melder = (MELDER_ID !== undefined) ? { connect: {ID: MELDER_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Technicus = (TECHNICUS_ID !== undefined) ? { connect: {ID: TECHNICUS_ID }} : undefined;
-      (insertData as Prisma.OperJournaalCreateInput).Afgetekend = (AFGETEKEND_ID !== undefined) ? { connect: {ID: AFGETEKEND_ID }} : undefined;
-
-      return await this.journaalService.AddObject(insertData as Prisma.OperJournaalCreateInput);
+      const insert = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedCreateInput;
+      return await this.journaalService.AddObject(insert, currentUser.ID);
    }
 
    @HeliosUpdateObject(UpdateOperJournaalDto, OperJournaalDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperJournaalDto): Promise<OperJournaal>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
+      this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
 
-      // remove MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID from the data
-      // and add them as connect to the updateData object
-      const { MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID, VLIEGTUIG_ID,  ...updateData} = data;
-      (updateData as Prisma.OperJournaalCreateInput).Vliegtuig = (VLIEGTUIG_ID !== undefined) ? { connect: {ID: VLIEGTUIG_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Rollend = (ROLLEND_ID !== undefined) ? { connect: {ID: ROLLEND_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Status = (STATUS_ID !== undefined) ? { connect: {ID: STATUS_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Categorie = (CATEGORIE_ID !== undefined) ? { connect: {ID: CATEGORIE_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Melder = (MELDER_ID !== undefined) ? { connect: {ID: MELDER_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Technicus = (TECHNICUS_ID !== undefined) ? { connect: {ID: TECHNICUS_ID }} : undefined;
-      (updateData as Prisma.OperJournaalCreateInput).Afgetekend = (AFGETEKEND_ID !== undefined) ? { connect: {ID: AFGETEKEND_ID }} : undefined;
+      const update = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedUpdateInput;
+      return await this.journaalService.UpdateObject(id, update, currentUser.ID);
+   }
 
-      return await this.journaalService.UpdateObject(id, updateData as Prisma.OperJournaalUpdateInput);
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID en VLIEGTUIG_ID hoeven niet
+   // omgezet te worden naar relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable
+   // kolommen, dus een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.DeleteObject');
+      this.logger.verbose(`JournaalController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.DeleteObject');
 
-      const data: Prisma.OperJournaalUpdateInput = {
+      const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: true
       }
-      await this.journaalService.UpdateObject(id, data);
+      await this.journaalService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.RemoveObject');
-      await this.journaalService.RemoveObject(id);
+      this.logger.verbose(`JournaalController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.RemoveObject');
+      await this.journaalService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Journaal.RestoreObject');
+      this.logger.verbose(`JournaalController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Journaal.RestoreObject');
 
-      const data: Prisma.OperJournaalUpdateInput = {
+      const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: false
       }
-      await this.journaalService.UpdateObject(id, data);
+      await this.journaalService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

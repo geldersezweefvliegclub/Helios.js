@@ -64,7 +64,7 @@ export class UpdateOperAanwezigLidDto {
     nullable: true,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   AANKOMST?: Date | null;
   @ApiProperty({
     description:
@@ -75,7 +75,7 @@ export class UpdateOperAanwezigLidDto {
     nullable: true,
   })
   @IsOptional()
-  @IsDateString()
+  @IsString()
   VERTREK?: Date | null;
   @ApiProperty({
     description: "Referentie naar het vliegtuig in de vliegtuigen tabel",
@@ -127,4 +127,22 @@ export class UpdateOperAanwezigLidDto {
   @IsOptional()
   @IsString()
   OPMERKINGEN?: string | null;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

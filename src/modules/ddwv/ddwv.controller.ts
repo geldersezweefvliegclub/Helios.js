@@ -7,15 +7,14 @@ import {JwtAuthGuard} from "../login/guards/jwt-auth.guard";
 @Controller('DDWV')
 @ApiTags('DDWV')
 export class DdwvController extends HeliosController {
-    constructor(private readonly logger: Logger) {
-        super();
-    }
+    private readonly logger = new Logger(DdwvController.name);
 
     @Get('GetConfiguratie')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     async getConfiguratie(): Promise<DDWVConfiguratie> {
-        // TODO: Implement this!
+        this.logger.verbose(`DdwvController.getConfiguratie()`);
+        // TODO: dit implementeren!
         this.logger.warn("DDWV configuratie endpoint called, but not implemented yet.");
         return {
             DDWV: false,
@@ -23,6 +22,6 @@ export class DdwvController extends HeliosController {
             MAX_STRIPPEN: 0,
             START: new Date().toISOString(),
             STRIPPEN_RETOUR_OP_VLIEGDAG: 0
-        }
+        };
     }
 }

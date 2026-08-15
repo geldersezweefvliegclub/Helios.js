@@ -34,8 +34,12 @@ model OperDienst {
   UITBETAALD         Boolean     @default(false)
   /// @description True als het lid afwezig was tijdens deze dienst
   AFWEZIG            Boolean?
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean     @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   LAATSTE_AANPASSING DateTime    @updatedAt
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly

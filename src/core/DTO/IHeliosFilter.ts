@@ -8,7 +8,7 @@ import {
 } from "../helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
 
-// class as query parameter to get a single object
+// class als query parameter om een enkel object op te halen
 export class GetObjectRequest {
     @IsInt()
     @Type(() => Number)
@@ -21,7 +21,7 @@ export class GetObjectRequest {
     public ID: number;
 }
 
-// base class as query parameter to get multiple objects via the GetObjects call
+// base class als query parameter om meerdere objects op te halen via de GetObjects call
 export class GetObjectsRequest {
     @IsOptional()
     @OptionalNumberTransform()
@@ -116,7 +116,7 @@ export interface IVanTotDatum {
     eind: Date
 }
 
-// The generic class when a DATUM field is available in the object
+// De generieke class voor wanneer een DATUM veld aanwezig is in het object
 export class GetObjectsDateRequest extends GetObjectsRequest {
     @IsOptional()
     @OptionalDateTransform()

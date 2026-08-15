@@ -1,4 +1,4 @@
-import {Injectable, UnauthorizedException} from '@nestjs/common';
+import {Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {LedenService} from "../leden/leden.service";
 import {ConfigService} from "@nestjs/config";
 import {JwtService} from '@nestjs/jwt';
@@ -10,10 +10,13 @@ import {AuthUserDto} from "../../generated/nestjs-dto/authUser.dto";
 import {LoginResponse, UserInfo} from "./loginDTO";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AanwezigLedenService} from "../aanwezig-leden/aanwezig-leden.service";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
 @Injectable()
 export class LoginService
 {
+   private readonly logger = new Logger(LoginService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly ledenService: LedenService,
                private readonly aanwezigLedenService: AanwezigLedenService,
@@ -24,6 +27,7 @@ export class LoginService
    }
 
    async login(lid: RefLid): Promise<LoginResponse> {
+      this.logger.verbose(`LoginService.login(${safeStringify({lid})})`);
       const expiresAccessTokenMs =  parseInt(this.configService.getOrThrow<string>('JWT.JWT_ACCESS_TOKEN_EXPIRATION_MS'));
       const expiresRefreshTokenMs = parseInt(this.configService.getOrThrow<string>('JWT.JWT_REFRESH_TOKEN_EXPIRATION_MS'));
 
@@ -43,7 +47,7 @@ export class LoginService
       await this.storeRefreshToken(lid.ID, await hash(refreshToken, 10));
 
 
-      return {
+      const result = {
          Refresh: {
             AccessToken: refreshToken,
             ExpiresInMs: expiresRefreshTokenMs,
@@ -52,39 +56,50 @@ export class LoginService
             AccessToken: accessToken,
             ExpiresInMs: expiresAccessTokenMs,
          }
-      }
+      };
+      this.logger.verbose(`LoginService.login() => ${safeStringify(result)}`);
+      return result;
    }
 
    async verifyUser(inlognaam: string, wachtwoord: string): Promise<RefLid> {
+      this.logger.verbose(`LoginService.verifyUser(${safeStringify({inlognaam, wachtwoord})})`);
       const lid = await this.ledenService.GetObjectByInlognaam(inlognaam);
-      // todo: check password with current implementation
+      // todo: wachtwoord controleren met huidige implementatie
 
       const authenticated = (this.configService.get("DEMO_MODE") === true) ? true : await compare(wachtwoord, lid.WACHTWOORD);
       if (!authenticated) {
          throw new UnauthorizedException('Credentials are not valid.');
       }
-      return lid; // return the user object for upcomming actions
+      this.logger.verbose(`LoginService.verifyUser() => ${safeStringify(lid)}`);
+      return lid; // geeft het user object terug voor volgende acties
    }
 
    async veryifyUserRefreshToken(refreshToken: string, userId: number) {
+      this.logger.verbose(`LoginService.veryifyUserRefreshToken(${safeStringify({refreshToken, userId})})`);
       const token = await this.getRefreshToken(userId);
       const authenticated = await compare(refreshToken, token.REFRESH_TOKEN);
       if (!authenticated) {
          throw new UnauthorizedException('Refresh token is not valid.');
       }
-      return await this.ledenService.GetObject(userId);
+      const result = await this.ledenService.GetObject(userId);
+      this.logger.verbose(`LoginService.veryifyUserRefreshToken() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // Get the refresh token from the database
+   // Haal de refresh token op uit de database
    async getRefreshToken(lidID: number): Promise<AuthUserDto > {
-      return await this.dbService.authUser.findUnique({
+      this.logger.verbose(`LoginService.getRefreshToken(${safeStringify({lidID})})`);
+      const result = await this.dbService.authUser.findUnique({
          where: {
             LID_ID: lidID
          }
       });
+      this.logger.verbose(`LoginService.getRefreshToken() => ${safeStringify(result)}`);
+      return result;
    }
-   // Save the refresh token in the database, in a separate table
+   // Sla de refresh token op in de database, in een aparte tabel
    async storeRefreshToken(lidID: number, refreshToken: string) {
+      this.logger.verbose(`LoginService.storeRefreshToken(${safeStringify({lidID, refreshToken})})`);
       const record= await this.getRefreshToken(lidID);
 
       if (record) {
@@ -108,7 +123,8 @@ export class LoginService
    }
 
     async GetUserInfo(currentUser: RefLid): Promise<UserInfo> {
-        return {
+        this.logger.verbose(`LoginService.GetUserInfo(${safeStringify({currentUser})})`);
+        const result = {
             Userinfo: {
                 isAangemeld: await this.aanwezigLedenService.IsAangemeld(currentUser),
                 isBeheerder: this.permissieService.isBeheerder(currentUser),
@@ -123,7 +139,9 @@ export class LoginService
                 isDDWVCrew: this.permissieService.isDDWVCrew(currentUser)
             },
             LidData: currentUser
-        }
+        };
+        this.logger.verbose(`LoginService.GetUserInfo() => ${safeStringify(result)}`);
+        return result;
     }
 }
 

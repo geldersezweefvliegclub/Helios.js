@@ -1,6 +1,6 @@
 import {GetObjectsDateRequest } from "../../core/DTO/IHeliosFilter";
 import {IsInt, IsOptional} from "class-validator";
-import {OptionalNumberTransform} from "../../core/helpers/Transformers";
+import {OptionalBooleanTransform, OptionalNumberTransform} from "../../core/helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
 
 
@@ -18,5 +18,25 @@ export class GetObjectsOperDienstenRequest extends GetObjectsDateRequest
             type: Number
         })
     LID_ID?: number;
+
+    @IsOptional()
+    @OptionalBooleanTransform()
+    @ApiProperty(
+        {
+            required: false,
+            description: 'Als "true", dan enkel diensten waarbij het lid aanwezig was',
+            type: "boolean"
+        })
+    AANWEZIG?: boolean;
+
+    @IsOptional()
+    @OptionalBooleanTransform()
+    @ApiProperty(
+        {
+            required: false,
+            description: 'Als "true", dan enkel diensten waarbij het lid afwezig was',
+            type: "boolean"
+        })
+    AFWEZIG?: boolean;
 }
 

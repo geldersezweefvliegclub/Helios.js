@@ -3,6 +3,8 @@ model OperTransactie {
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de transactie
   ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Datum van aanmaken van de transactie
   DATUM              DateTime  @default(now()) @db.DateTime(0)
   /// @description Transactie heeft betrekking op een DDWV vliegdag, dit is de datum van de vliegdag
@@ -29,7 +31,7 @@ model OperTransactie {
   /// @description Het bedrag wat gefactureerd wordt per eenheid
   BEDRAG             Decimal?  @db.Decimal(10, 2)
   /// @description De eenheden om te kunnen boeken, bijvoorbeeld aantal lierstarts, of aantal strippen
-  EENHEDEN           Decimal?  @db.Decimal(10, 0)
+  EENHEDEN           Int?
   /// @description Aantal strippen voordat de transcatie verwerkt is.
   SALDO_VOOR         Decimal?  @db.Decimal(8, 2)
   /// @description Aantal strippen NA de transactie, dus het nieuwe saldo
@@ -44,13 +46,20 @@ model OperTransactie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OMSCHRIJVING       String    @db.VarChar(150)
-  /// @DtoReadOnly
-  /// @description Is de transactie betaald bijv Mollie
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Is de transactie betaald bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)
   BETAALD            Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description URL naar de betaalpagina van een extern systeem, bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)
+  BETAAL_URL         String?   @db.VarChar(250)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean   @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime  @updatedAt
   /// @DtoRelationCanConnectOnCreate

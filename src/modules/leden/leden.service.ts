@@ -1,29 +1,34 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, RefLid } from '@prisma/client';
+import {Prisma, RefLid} from '@prisma/client';
 import {GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
 import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+import {LidType} from "../../core/enums/LidType";
+import {safeStringify} from "../../core/helpers/LogHelper";
 
-import { hash } from "bcryptjs";
+const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
 
 @Injectable()
 export class LedenService extends IHeliosService
 {
+   private readonly logger = new Logger(LedenService.name);
+
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation:string = undefined): Promise<RefLid>
    {
+      this.logger.verbose(`LedenService.GetObject(${safeStringify({id, relation})})`);
       const db = await this.dbService.refLid.findUnique({
          where: {
             ID: id
@@ -32,21 +37,40 @@ export class LedenService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Lid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+
+      const result = db;
+      this.logger.verbose(`LedenService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve a single object from the database based on the inlognaam
+   // haal een enkel object op uit de database op basis van de inlognaam
    async GetObjectByInlognaam(loginname: string): Promise<RefLid>
    {
-      return this.dbService.refLid.findFirstOrThrow({
+      this.logger.verbose(`LedenService.GetObjectByInlognaam(${safeStringify({loginname})})`);
+      const result = await this.dbService.refLid.findMany({
          where: {
-            INLOGNAAM: loginname
+            INLOGNAAM: loginname,
+            VERWIJDERD: false,
          }
       });
+
+      if (!result) {
+         this.logger.warn(`LedenService.GetObjectByInlognaam() => Lid record met INLOGNAAM ${loginname} niet gevonden`);
+         throw new HttpException(`Lid met INLOGNAAM ${loginname} niet gevonden`, HttpStatus.NOT_FOUND);
+      }
+
+      if (result.length > 1) {
+         this.logger.error(`LedenService.GetObjectByInlognaam() => Meerdere leden gevonden met INLOGNAAM ${loginname}`);
+         throw new HttpException(`Meerdere lid records gevonden met INLOGNAAM ${loginname}`, HttpStatus.CONFLICT);
+      }
+
+      this.logger.verbose(`LedenService.GetObjectByInlognaam() => ${safeStringify(result[0])}`);
+      return result[0];
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
+      this.logger.verbose(`LedenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsRefLedenRequest();
@@ -76,7 +100,10 @@ export class LedenService extends IHeliosService
                { LIERIST_IO: params.LIO},
                { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
                { LIDTYPE_ID: { in: params.TYPES}},
-               { LIDTYPE_ID: params.CLUBLEDEN ? {in: [600, 601, 602, 603, 604, 605, 606]} : undefined}
+               { LIDTYPE_ID: params.CLUBLEDEN ? {in: [
+                  LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
+                  LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur, LidType.Rittenkaart
+               ]} : undefined}
             ]
       }
       let count: number | undefined;
@@ -97,10 +124,18 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
-      // TODO progressiekaart voor pax bevoegdheid
+      // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
+      const paxProgressies = await this.dbService.operProgressie.findMany({
+         where: {
+            COMPETENTIE_ID: PAX_COMPETENTIE_ID,
+            LID_ID: {in: objs.map(obj => obj.ID)}
+         },
+         select: {LID_ID: true}
+      });
+      const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
 
       const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
+         // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
             LIDTYPE: obj.LidType?.OMSCHRIJVING ?? null,
@@ -109,9 +144,10 @@ export class LedenService extends IHeliosService
             ZUSTERCLUB: obj.Zusterclub?.NAAM ?? null,
             BUDDY: obj.Buddy?.NAAM ?? null,
             BUDDY2: obj.Buddy2?.NAAM ?? null,
+            PAX: ledenMetPax.has(obj.ID),
          } ;
 
-         // delete child objects from the response
+         // verwijder child objects uit de response
          delete retObj.LidType;
          delete retObj.VliegStatus;
          delete retObj.Zusterclub;
@@ -120,38 +156,27 @@ export class LedenService extends IHeliosService
 
          return  retObj as GetObjectsRefLedenResponse
       });
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`LedenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.RefLidCreateInput ): Promise<RefLid>
+   async AddObject(data: Prisma.RefLidUncheckedCreateInput, actorId: number): Promise<RefLid>
    {
-      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
-      data.NAAM = data.VOORNAAM
-      data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
-      data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
-
-      if (data.WACHTWOORD)
-         data.WACHTWOORD = await hash(data.WACHTWOORD, 10)
-
+      this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refLid.create({
          data: data
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`LedenService.AddObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefLidUpdateInput): Promise<RefLid>
+   async UpdateObject(id: number, data: Prisma.RefLidUncheckedUpdateInput, actorId: number): Promise<RefLid>
    {
+      this.logger.verbose(`LedenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
-
-      // bouw de naam op uit voornaaam, tussenvoegsel en achternaam
-      data.NAAM = data.VOORNAAM
-      data.NAAM += (data.NAAM ? " " : "") + data.TUSSENVOEGSEL
-      data.NAAM += (data.NAAM ? " " : "") + data.ACHTERNAAM
-
-      if (data.WACHTWOORD)
-         data.WACHTWOORD = await hash(data.WACHTWOORD as string, 10)
 
       const obj = await this.dbService.refLid.update({
          where: {
@@ -159,23 +184,29 @@ export class LedenService extends IHeliosService
          },
          data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`LedenService.UpdateObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`LedenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.refLid.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
    }
 
    async GetVerjaardagen(aantal:number): Promise<VerjaardagenResponse[]>
    {
+      this.logger.verbose(`LedenService.GetVerjaardagen(${safeStringify({aantal})})`);
       const leden = await this.GetObjects()
       let l = leden.dataset.filter((f) => f.GEBOORTE_DATUM).map((lid) =>
       {
@@ -203,24 +234,8 @@ export class LedenService extends IHeliosService
       })
       l = l.sort((a, b) => a.SORT - b.SORT).slice(0, aantal);
       l.forEach(item => { delete item.SORT });
-      return l as VerjaardagenResponse[];
-   }
-
-   /**
-    * Returns true if the given member ID is part of this club
-    */
-   GetIsClubMember(lid: RefLid): boolean{
-      // List of type ID's which are considered a member of this club.
-      // If the type ID of the member is in this list, he's considered a member of this club.
-      return [
-         601, // Erelid
-         602, // Lid,
-         603, // Jeugdlid
-         604, // Private owner (mag ook op club vliegtuigen vliegen voor trainingsvlucht)
-         605, // Donateur
-         606, // Veteraan
-         608, // 5 Rittenkaart
-         611  // Cursist
-      ].includes(lid.LIDTYPE_ID);
+      const result = l as VerjaardagenResponse[];
+      this.logger.verbose(`LedenService.GetVerjaardagen() => ${safeStringify(result)}`);
+      return result;
    }
 }

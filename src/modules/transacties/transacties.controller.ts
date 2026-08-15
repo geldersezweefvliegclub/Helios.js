@@ -1,4 +1,4 @@
-import {Body, Controller, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query} from '@nestjs/common';
 import {TransactiesService} from "./transacties.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -17,11 +17,16 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {ApiTags} from "@nestjs/swagger";
 import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTransactie.dto";
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {bodyHeeftData} from "../../core/helpers/RequestGuards";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
 
 @Controller('Transacties')
 @ApiTags('Transacties')
 export class TransactiesController  extends HeliosController
 {
+   private readonly logger = new Logger(TransactiesController.name);
+
    constructor(private readonly TransactiesService: TransactiesService,
                private readonly permissieService:PermissieService)
    {
@@ -30,73 +35,123 @@ export class TransactiesController  extends HeliosController
 
    @HeliosGetObject(OperTransactieDto)
    async GetObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.GetObject');
-      return await this.TransactiesService.GetObject(id);
+      this.logger.verbose(`TransactiesController.GetObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.GetObject');
+      const obj = await this.TransactiesService.GetObject(id);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperTransactiesResponse)
-   GetObjects(
-      @CurrentUser() user: RefLid,
+   async GetObjects(
+      @CurrentUser() currentUser: RefLid,
       @Query() queryParams: GetObjectsOperTransactiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperTransactiesResponse>>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.GetObjects');
-      return this.TransactiesService.GetObjects(queryParams);
+      this.logger.verbose(`TransactiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.GetObjects');
+      return await this.TransactiesService.GetObjects(queryParams);
    }
 
    @HeliosCreateObject(CreateOperTransactieDto, OperTransactieDto)
    async AddObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperTransactieDto): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.AddObject');
-      return await this.TransactiesService.AddObject(data as Prisma.OperTransactieCreateInput);
+      this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
+      bodyHeeftData(data);
+
+      const insert = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedCreateInput;
+      const obj = await this.TransactiesService.AddObject(insert, currentUser.ID);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
    @HeliosUpdateObject(UpdateOperTransactieDto, OperTransactieDto)
    async UpdateObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<OperTransactieDto>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.UpdateObject');
-      return await this.TransactiesService.UpdateObject(id, data as Prisma.OperTransactieCreateInput);
+      this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
+      bodyHeeftData(data);
+      id = id ?? data.ID;
+
+      const update = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedUpdateInput;
+      const obj = await this.TransactiesService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
+   private async normaliserenData(
+      currentUser: RefLid,
+      data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
+   {
+      const db = this.TransactiesService.GetObject(data.ID ?? -1);
+
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // Alleen bij nieuwe invoer
+      if (db) {
+         data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
+      }
+
+      // BETAALD en BETAAL_URL mogen alleen gezet worden door een Systeem account (bijv. Mollie/e-boekhouden
+      // koppeling); voor alle andere gebruikers wordt een meegegeven waarde, net als bij VERWIJDERD, genegeerd
+      if (!this.permissieService.isSysteemAccount(currentUser))
+      {
+         delete data.BETAALD;
+         delete data.BETAAL_URL;
+      }
+
+      // zorg dat VLIEGDAG omgezet wordt in ISO 8601 formaat
+      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
+
+      return data as Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
    async DeleteObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.DeleteObject');
+      this.logger.verbose(`TransactiesController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.DeleteObject');
 
-      const data: Prisma.OperTransactieUpdateInput = {
+      const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: true
       }
-      await this.TransactiesService.UpdateObject(id, data);
+      await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    @HeliosRemoveObject()
    async RemoveObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.RemoveObject');
-      await this.TransactiesService.RemoveObject(id);
+      this.logger.verbose(`TransactiesController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.RemoveObject');
+      await this.TransactiesService.RemoveObject(id, currentUser.ID);
    }
 
    @HeliosRestoreObject()
    async RestoreObject(
-      @CurrentUser() user: RefLid,
+      @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
    {
-      this.permissieService.heeftToegang(user, 'Transacties.RestoreObject');
+      this.logger.verbose(`TransactiesController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'Transacties.RestoreObject');
 
-      const data: Prisma.OperTransactieUpdateInput = {
+      const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: false
       }
-      await this.TransactiesService.UpdateObject(id, data);
+      await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -1,5 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class UpdateOperBrandstofDto {
   @ApiProperty({
@@ -72,4 +79,23 @@ export class UpdateOperBrandstofDto {
   @IsOptional()
   @IsString()
   EXT_REF?: string | null;
+  @ApiProperty({
+    description: "Is het record gemarkeerd als verwijderd",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  VERWIJDERD?: boolean;
+  @ApiProperty({
+    description: "Tijdstempel met de laatste wijziging van het record",
+    type: "string",
+    format: "date-time",
+    default: new Date().toISOString(),
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  LAATSTE_AANPASSING?: Date;
 }

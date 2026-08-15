@@ -1,7 +1,7 @@
 import {GetObjectsDateRequest} from "../../core/DTO/IHeliosFilter";
-import {CSVTransform } from "../../core/helpers/Transformers";
+import {CSVTransform, OptionalBooleanTransform} from "../../core/helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
-import {IsNumber, IsOptional} from "class-validator";
+import {IsOptional} from "class-validator";
 
 export class GetObjectsOperJournaalRequest extends GetObjectsDateRequest
 {
@@ -36,24 +36,44 @@ export class GetObjectsOperJournaalRequest extends GetObjectsDateRequest
    ROLLEND_ID?:  number[];
 
    @IsOptional()
-   @IsNumber()
+   @CSVTransform()
    @ApiProperty(
       {
          required: false,
-         description: 'Zoek alle journaals op die ingevoerd zijn door dit lid',
+         description: 'Zoek alle journaals op die ingevoerd zijn door dit lid. In CSV formaat',
          type: String
       })
    MELDER_ID?:  number[];
 
    @IsOptional()
-   @IsNumber()
+   @CSVTransform()
    @ApiProperty(
       {
          required: false,
-         description: 'Zoek alle journaals op die toegekend zijn aan deze technicus',
+         description: 'Zoek alle journaals op die toegekend zijn aan deze technicus. In CSV formaat',
          type: String
       })
    TECHNICUS_ID?:  number[];
+
+   @IsOptional()
+   @OptionalBooleanTransform()
+   @ApiProperty(
+      {
+         required: false,
+         description: 'Als "true", dan enkel journaals met rollend materieel (ROLLEND_ID niet leeg), als "false" enkel zonder',
+         type: "boolean"
+      })
+   ROLLEND?: boolean;
+
+   @IsOptional()
+   @OptionalBooleanTransform()
+   @ApiProperty(
+      {
+         required: false,
+         description: 'Als "true", dan enkel journaals met een vliegtuig (VLIEGTUIG_ID niet leeg), als "false" enkel zonder',
+         type: "boolean"
+      })
+   VLIEGEND?: boolean;
 
    @IsOptional()
    @CSVTransform()

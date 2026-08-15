@@ -60,10 +60,12 @@ model RefVliegtuig {
   /// @maxLength 1024
   URL                     String?                 @db.VarChar(1024)
   /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig lokaal te mogen vliegen
+  /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   BEVOEGDHEID_LOKAAL_ID   Int?                    @db.UnsignedMediumInt
   /// @description Welke competenties heeft de piloot nodig om met dit vliegtuig overland te mogen gaan
+  /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   BEVOEGDHEID_OVERLAND_ID Int?                    @db.UnsignedMediumInt
@@ -71,10 +73,12 @@ model RefVliegtuig {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OPMERKINGEN             String?                 @db.Text
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD              Boolean                 @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING      DateTime                @updatedAt
   /// @DtoRelationCanConnectOnCreate

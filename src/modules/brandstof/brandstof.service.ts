@@ -1,26 +1,35 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperBrandstof} from '@prisma/client';
+import {Prisma, OperBrandstof, RefLid} from '@prisma/client';
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
+import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";
+import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
+import {LedenService} from "../leden/leden.service";
+import {safeStringify} from "../../core/helpers/LogHelper";
+import {toDateOnly} from "../../core/helpers/DateOnly";
 
 @Injectable()
 export class BrandstofService extends IHeliosService
 {
+   private readonly logger = new Logger(BrandstofService.name);
+
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly ledenService: LedenService)
    {
       super();
    }
 
-   // retrieve a single object from the database based on the id
+   // haal een enkel object op uit de database op basis van het ID
    async GetObject(id: number, relation :string = undefined): Promise<OperBrandstof>
    {
+      this.logger.verbose(`BrandstofService.GetObject(${safeStringify({id, relation})})`);
       const db = await this.dbService.operBrandstof.findUnique({
          where: {
             ID: id
@@ -29,12 +38,15 @@ export class BrandstofService extends IHeliosService
       });
       if (!db)
          throw new HttpException(`Brandstof record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
-      return db;
+      const result = db;
+      this.logger.verbose(`BrandstofService.GetObject() => ${safeStringify(result)}`);
+      return result;
    }
 
-   // retrieve objects from the database based on the query parameters
+   // haal objects op uit de database op basis van de query parameters
    async GetObjects(params?: GetObjectsOperBrandstofRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperBrandstofResponse>>
    {
+      this.logger.verbose(`BrandstofService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
       {
          params = new GetObjectsOperBrandstofRequest();
@@ -65,51 +77,96 @@ export class BrandstofService extends IHeliosService
       });
 
       const response = objs.map((obj) => {
-         // copy relevant fields from child objects to the parent object
+         // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
+            TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date,
             BRANDSTOF_TYPE: obj.BrandstofType?.OMSCHRIJVING ?? null,
          } ;
 
-         // delete child objects from the response
+         // verwijder child objects uit de response
          delete retObj.BrandstofType;
 
          return  retObj as GetObjectsOperBrandstofResponse
       });
-      return this.buildGetObjectsResponse(response, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`BrandstofService.GetObjects() => ${safeStringify(result)}`);
+      return result;
    }
 
-   async AddObject(data: Prisma.OperBrandstofCreateInput ): Promise<OperBrandstof>
+   async AddObject(data: CreateOperBrandstofDto, actorId: number): Promise<OperBrandstof>
    {
+      this.logger.verbose(`BrandstofService.AddObject(${safeStringify({data})})`);
+      const lid = await this.ledenService.GetObject(data.LID_ID);
+      if (!lid)
+         throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
+
+      // verwijder BRANDSTOF_TYPE_ID en LID_ID uit de data
+      // en voeg ze toe aan de BrandstofType, RefLid property
+      const {BRANDSTOF_TYPE_ID, LID_ID, ...rest} = data;
+      const connect = (id?: number) => id ? {connect: {ID: id}} : undefined;
+      const insertData: Prisma.OperBrandstofCreateInput = {
+         ...rest,
+         BrandstofType: connect(BRANDSTOF_TYPE_ID),
+         RefLid: connect(LID_ID),
+         NAAM: lid.NAAM,
+      };
+
       const obj = await this.dbService.operBrandstof.create({
-         data: data
+         data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, actorId);
+      this.logger.verbose(`BrandstofService.AddObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperBrandstofUpdateInput): Promise<OperBrandstof>
+   async UpdateObject(id: number, data: UpdateOperBrandstofDto | Prisma.OperBrandstofUpdateInput, actorId: number): Promise<OperBrandstof>
    {
+      this.logger.verbose(`BrandstofService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+
+      let updateData: Prisma.OperBrandstofUpdateInput = data as Prisma.OperBrandstofUpdateInput;
+      if ('LID_ID' in data)
+      {
+         const lid = await this.ledenService.GetObject(data.LID_ID);
+         if (!lid)
+            throw new HttpException(`Lid with ID ${data.LID_ID} not found`, HttpStatus.NOT_FOUND);
+
+         // verwijder BRANDSTOF_TYPE_ID en LID_ID uit de data
+         // en voeg ze toe aan de BrandstofType, RefLid property
+         const {BRANDSTOF_TYPE_ID, LID_ID, ...rest} = data;
+         updateData = {
+            ...rest,
+            BrandstofType: (BRANDSTOF_TYPE_ID !== undefined) ? {connect: {ID: BRANDSTOF_TYPE_ID}} : undefined,
+            RefLid: LID_ID ? {connect: {ID: LID_ID}} : undefined,
+            NAAM: lid.NAAM,
+         };
+      }
+
       const obj = await this.dbService.operBrandstof.update({
          where: {
             ID: id
          },
-         data: data
+         data: updateData
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, data, obj);
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id,  db, updateData, obj, actorId);
+      this.logger.verbose(`BrandstofService.UpdateObject() => ${safeStringify(obj)}`);
       return obj;
    }
 
-   async RemoveObject(id: number): Promise<void>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
+      this.logger.verbose(`BrandstofService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
       await this.dbService.operBrandstof.delete({
          where: {
             ID: id
          }
       });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db);
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

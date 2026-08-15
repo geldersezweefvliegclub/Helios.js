@@ -4,8 +4,8 @@ import {RefType} from "@prisma/client";
 export class GetRefTypesResponse extends RefTypeDto
 {
     /**
-     * Creates an instance from a model object from Primsa.
-     * If you get an error when instantiating this class after quering using Primsa, make sure you included all necessary relations in your Prisma query!
+     * Maakt een instantie op basis van een model object van Prisma.
+     * Als je een error krijgt bij het instantiëren van deze class na een Prisma query, zorg er dan voor dat je alle benodigde relaties in je Prisma query hebt opgenomen!
      */
     constructor(obj?: RefType) {
         super();

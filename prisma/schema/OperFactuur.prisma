@@ -31,10 +31,12 @@ model OperFactuur {
   OMSCHRIJVING       String?  @db.VarChar(50)
   /// @description Bedrag wat gefactureerd is
   GEFACTUREERD       Decimal? @db.Decimal(50, 0)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Is het record gemarkeerd als verwijderd
   VERWIJDERD         Boolean  @default(false)
-  /// @DtoReadOnly
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Tijdstempel met de laatste wijziging van het record
   LAATSTE_AANPASSING DateTime @updatedAt
   RefLid             RefLid?  @relation(fields: [LID_ID], references: [ID], onDelete: Restrict, onUpdate: Restrict, map: "oper_facturen_ibfk_1")

@@ -3,8 +3,9 @@ model RefLid {
   /// @DtoUpdateOptional
   /// @description De primary ID van het lid, andere objecten refereren naar dit ID
   ID                   Int       @id @default(autoincrement()) @db.UnsignedMediumInt
-  /// @DtoReadOnly
-  /// @description De naam van het lid, wordt gegenereerd uit de voornaam, tussenvoegsel en achternaam
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De naam van het lid, altijd server-side herberekend uit voornaam/tussenvoegsel/achternaam - een meegegeven waarde wordt genegeerd
   NAAM                 String    @db.VarChar(255)
   /// @description De voornaam van het lid
   /// @maxLength 15
@@ -188,15 +189,23 @@ model RefLid {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   TEGOED               Float     @default(0) @db.Float
-  /// @DtoReadOnly
-  /// @description Is het record gemarkeerd als verwijderd
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk
   VERWIJDERD           Boolean   @default(false)
-  /// @DtoReadOnly
-  /// @description Tijdstempel met de laatste wijziging van het record
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tijdstempel met de laatste wijziging van het record, altijd automatisch gezet - een meegegeven waarde wordt genegeerd
   LAATSTE_AANPASSING   DateTime  @updatedAt
   /// @description Sleutelnummer om te kunnen tanken
   /// @maxLength 25
   BRANDSTOF_PAS        String?   @db.VarChar(25)
+  /// @description Gmail adres van het lid
+  /// @maxLength 150
+  GMAIL                String?   @db.VarChar(150)
+  /// @description Specifieke zaken/wensen/vrijstellngen voor diensten tbv roostermaker
+  /// @maxLength 250
+  DIENSTEN             String?   @db.VarChar(250)
 
   Audit                Audit[]
   AanwezigLid          OperAanwezigLid[]

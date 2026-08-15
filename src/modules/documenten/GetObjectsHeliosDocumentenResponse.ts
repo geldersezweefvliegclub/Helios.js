@@ -10,13 +10,6 @@ export class GetObjectsHeliosDocumentenResponse extends HeliosDocumentDto
    @ApiProperty({
       type: String,
       required: true,
-      description: 'Naam van het lid',
-   })
-   NAAM?: string
-
-   @ApiProperty({
-      type: String,
-      required: true,
       description: 'In welke groep hoort dit document',
    })
    GROEP: string
