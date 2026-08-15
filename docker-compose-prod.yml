@@ -1,0 +1,102 @@
+﻿# Assumes you built/pushed two images from the same Dockerfile:
+#   - <your-registry>/<your-app>:app     (target: app)
+#   - <your-registry>/<your-app>:migrate (target: migrate)
+#
+# The flow is:
+#   1) Start MariaDB
+#   2) Run Prisma migrations once (migrate service)
+#   3) Start the application (app service)
+
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -u root -p$$MARIADB_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  # Dump PHP DB -> restore into new DB (one-shot)
+  # WIP: Untested
+  refresh_from_php:
+    image: mariadb:11
+    restart: "no"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - default
+      - shared-db-sync
+    environment:
+      # PHP DB (source)
+      PHP_DB_HOST: php_mariadb
+      PHP_DB_USER: ${PHP_DB_USER}
+      PHP_DB_PASSWORD: ${PHP_DB_PASSWORD}
+      PHP_DB_NAME: ${PHP_DB_NAME}
+
+      # New DB (target)
+      NEW_DB_HOST: mariadb
+      NEW_DB_USER: app
+      NEW_DB_PASSWORD: app_password
+      NEW_DB_NAME: app
+    entrypoint: [ "sh", "-lc" ]
+    command:
+      - | 
+        set -euo pipefail
+        echo "Dumping PHP DB..."
+        mariadb-dump --single-transaction --routines --triggers --events -h "$PHP_DB_HOST" -u "$PHP_DB_USER" -p"$PHP_DB_PASSWORD" "$PHP_DB_NAME" > /tmp/php.sql
+        echo "Recreating target DB..."
+        mariadb -h "$NEW_DB_HOST" -u "$NEW_DB_USER" -p"$NEW_DB_PASSWORD" -e "DROP DATABASE IF EXISTS \`$NEW_DB_NAME\`; CREATE DATABASE \`$NEW_DB_NAME\`;"
+        echo "Restoring into target DB...";
+        mariadb -h "$NEW_DB_HOST" -u "$NEW_DB_USER" -p"$NEW_DB_PASSWORD" "$NEW_DB_NAME" < /tmp/php.sql
+        echo "Refresh completed."
+
+  migrate:
+    image: helios:migrate
+    container_name: app_migrate
+    restart: "no"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      # Prisma expects DATABASE_URL. Example for MariaDB:
+      # mysql://USER:PASSWORD@HOST:PORT/DATABASE
+      DATABASE_URL: ${DATABASE_URL}
+    # Run Prisma migrate resolve to mark the initial migration as applied, then deploy any pending migrations
+    # Assumes initial Helios DB is already loaded!
+    command: >
+      npx prisma migrate resolve --applied 0_init &&
+      npx prisma migrate deploy
+
+  app:
+    image: helios:app
+    container_name: app
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ./helios-config.json:/app/helios-config.json
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      # Add any other app env vars below (JWT_SECRET, PORT, etc.)
+    ports:
+      - "3000:3000"
+
+volumes:
+  mariadb_data:
