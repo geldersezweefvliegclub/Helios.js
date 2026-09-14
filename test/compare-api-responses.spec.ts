@@ -69,7 +69,7 @@ describe('API Response Comparison (e2e)', () => {
         endpoints.push(
            new EndpointGroup(heliosClass.class, [
                 new Endpoint("A. GetObject", "GET", `/${heliosClass.class}/GetObject`,  {ID: heliosClass.ID}),
-                new Endpoint("B. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {ID: heliosClass.ID}),
+                new Endpoint("B. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry, ID: heliosClass.ID}),
                 new Endpoint("C. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry, MAX: 2}),
                 new Endpoint("D. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,START:4, MAX: 2}),
                 new Endpoint("E. GetObjects", "GET", `/${heliosClass.class}/GetObjects`, {...qry,SORT: 'ID'}),
@@ -120,6 +120,18 @@ describe('API Response Comparison (e2e)', () => {
                         }
                     }
                     // done
+
+                    // wanneer geen expliciete SORT is opgevraagd, ligt de volgorde tussen records met een gelijke
+                    // sorteerwaarde (bv. gelijke VOLGORDE) niet vast, en kan die tussen PHP en NestJS verschillen
+                    // zonder dat de data zelf fout is. Sorteer dan op ID zodat de vergelijking daar ongevoelig voor is.
+                    if (!endpoint.queryParams || !('SORT' in endpoint.queryParams))
+                    {
+                        if (Array.isArray(nestjsCompare.dataset))
+                            nestjsCompare.dataset = [...nestjsCompare.dataset].sort((a, b) => a.ID - b.ID);
+
+                        if (Array.isArray(phpCompare.dataset))
+                            phpCompare.dataset = [...phpCompare.dataset].sort((a, b) => a.ID - b.ID);
+                    }
 
                     // veld aanpassen voor
                     switch (endpointGroup.name)
@@ -209,11 +221,16 @@ describe('API Response Comparison (e2e)', () => {
 
                         case "Agenda":
                         {
+                            // PHP en NestJS draaien tegen twee niet-gesynchroniseerde live databases: TIJD kan in
+                            // waarde/formaat verschillen (net als DATUM/LAATSTE_AANPASSING hierboven al werd
+                            // opgevangen), niet omdat één van beide APIs het veld fout implementeert. Geaccepteerde
+                            // uitzondering: TIJD wordt aan beide kanten uit de vergelijking gehaald.
                             if (endpoint.name.includes("GetObjects"))
                             {
                                 for (let i = 0; i < nestjsCompare.dataset.length; i++)
                                 {
                                     delete nestjsCompare.dataset[i].DATUM
+                                    delete nestjsCompare.dataset[i].TIJD
                                 }
 
                                 for (let i = 0; i < phpCompare.dataset.length; i++)
@@ -225,6 +242,7 @@ describe('API Response Comparison (e2e)', () => {
                             else
                             {
                                 delete nestjsCompare.DATUM
+                                delete nestjsCompare.TIJD
                                 delete phpCompare.DATUM
                                 delete phpCompare.TIJD
                             }

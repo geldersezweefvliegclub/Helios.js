@@ -9,10 +9,14 @@
 import {compareModule} from "../testing-utils/ModuleComparison";
 
 // Documenten heeft geen DATUM veld. module-specifieke GetObjects opties, zie route.Documenten.php / class.Documenten.inc.php
+// Let op: de PHP implementatie geeft een 500 terug op GetObjects met GROEPEN="22" voor deze module
+// (zie class.Documenten.inc.php). Die test wordt daarom niet met PHP vergeleken — dit is een beperking
+// van de legacy PHP API, geen bug. Geaccepteerde uitzondering.
 compareModule({
     className: "Documenten",
     extraGetObjectsOptions: [
         {name: "LID_ID", params: {LID_ID: 10267}},
         {name: "GROEPEN", params: {GROEPEN: "22"}},
     ],
+    knownPhpFailures: ["GetObjects (GROEPEN)"],
 });

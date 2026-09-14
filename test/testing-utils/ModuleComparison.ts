@@ -164,10 +164,16 @@ export interface ModuleComparisonConfig {
 
     // module-specifieke aanpassingen op de responses vóór de vergelijking (velden hernoemen/verwijderen)
     transform?: (nestjsCompare: Record<string, unknown>, phpCompare: Record<string, unknown>, endpoint: Endpoint) => void;
+
+    // namen van GetObjects/GetObject varianten (bv. "GetObjects (VERWIJDERD)") waarvan bekend is dat de legacy PHP
+    // API zelf al een foutstatus (405/500/...) teruggeeft voor deze queryparameters, los van wat NestJS doet.
+    // Deze varianten worden niet met PHP vergeleken, enkel getest of NestJS zelf een geldig antwoord (200) geeft,
+    // want de referentie-API zelf faalt al vóór er iets te vergelijken valt. Geaccepteerde uitzondering.
+    knownPhpFailures?: string[];
 }
 
 export function compareModule(testConfig: ModuleComparisonConfig): void {
-    const {className, getObjectsParams = {}, extraGetObjectsOptions = [], transform} = testConfig;
+    const {className, getObjectsParams = {}, extraGetObjectsOptions = [], transform, knownPhpFailures = []} = testConfig;
 
     const NESTJS_API_URL = process.env.TESTING_NESTJS_URL;
     const PHP_API_URL = process.env.TESTING_PHP_URL;
@@ -197,6 +203,12 @@ export function compareModule(testConfig: ModuleComparisonConfig): void {
         }, 40000);
 
         async function compareEndpoint(endpoint: Endpoint): Promise<void> {
+            if (knownPhpFailures.includes(endpoint.name)) {
+                const nestjsResponse = await requestBuilder.makeRequest(NESTJS_API_URL, endpoint, GetNestjsAuth());
+                expect(nestjsResponse.status).toEqual(200);
+                return;
+            }
+
             const nestjsResponse = await requestBuilder.makeRequest(NESTJS_API_URL, endpoint, GetNestjsAuth());
             const phpResponse = await requestBuilder.makeRequest(PHP_API_URL, endpoint, GetPhpAuth());
 

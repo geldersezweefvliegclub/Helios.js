@@ -12,7 +12,8 @@ import {compareModule} from "../testing-utils/ModuleComparison";
 // die tussen PHP en NestJS kan verschillen.
 // Let op: de PHP implementatie ondersteunt geen VERWIJDERD parameter op deze module (zie class.Reservering.inc.php
 // GetObjects(), geen "VERWIJDERD" case in de switch) en geeft daar een 405 op terug. De generieke
-// "GetObjects (VERWIJDERD)" test faalt daarom hier bewust — dit is een beperking van de legacy PHP API, geen bug.
+// "GetObjects (VERWIJDERD)" test wordt daarom niet met PHP vergeleken — dit is een beperking van de legacy PHP API,
+// geen bug. Geaccepteerde uitzondering.
 compareModule({
     className: "Reservering",
     getObjectsParams: {
@@ -24,4 +25,5 @@ compareModule({
         {name: "LID_ID", params: {LID_ID: 10395}},
         {name: "VLIEGTUIG_ID", params: {VLIEGTUIG_ID: 223}},
     ],
+    knownPhpFailures: ["GetObjects (VERWIJDERD)"],
 });

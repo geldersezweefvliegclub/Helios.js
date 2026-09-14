@@ -10,6 +10,9 @@ import {compareModule} from "../testing-utils/ModuleComparison";
 
 // Facturen heeft geen DATUM veld (geen BEGIN_DATUM/EIND_DATUM in PHP), dus geen getObjectsParams nodig.
 // module-specifieke GetObjects opties, zie route.Facturen.php / class.Facturen.inc.php
+// Let op: de PHP implementatie geeft een 500 terug op GetObjects met VERWIJDERD=true voor deze module
+// (zie class.Facturen.inc.php). De generieke "GetObjects (VERWIJDERD)" test wordt daarom niet met PHP
+// vergeleken — dit is een beperking van de legacy PHP API, geen bug. Geaccepteerde uitzondering.
 compareModule({
     className: "Facturen",
     extraGetObjectsOptions: [
@@ -17,4 +20,5 @@ compareModule({
         {name: "LID_ID", params: {LID_ID: "11001"}},
         {name: "SELECTIE", params: {SELECTIE: "a"}},
     ],
+    knownPhpFailures: ["GetObjects (VERWIJDERD)"],
 });

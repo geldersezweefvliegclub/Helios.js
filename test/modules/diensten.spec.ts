@@ -10,6 +10,9 @@ import {compareModule} from "../testing-utils/ModuleComparison";
 
 // BEGIN/EIND_DATUM expliciet meegeven zodat GetObjects geen impliciete default (huidig jaar) gebruikt,
 // die tussen PHP en NestJS kan verschillen.
+// Let op: de PHP implementatie geeft een 500 terug op GetObjects met SORT=ID (asc/desc) voor deze module
+// (zie class.Diensten.inc.php). De generieke "GetObjects (SORT asc/desc)" testen worden daarom niet met PHP
+// vergeleken — dit is een beperking van de legacy PHP API, geen bug. Geaccepteerde uitzondering.
 compareModule({
     className: "Diensten",
     getObjectsParams: {
@@ -22,4 +25,5 @@ compareModule({
         {name: "AANWEZIG", params: {AANWEZIG: true}},
         {name: "AFWEZIG", params: {AFWEZIG: true}},
     ],
+    knownPhpFailures: ["GetObjects (SORT asc)", "GetObjects (SORT desc)"],
 });

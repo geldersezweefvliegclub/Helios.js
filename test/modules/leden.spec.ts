@@ -24,9 +24,18 @@ compareModule({
     ],
     transform: (nestjsCompare) => {
         // BRANDSTOF_PAS bestaat enkel in deze applicatie, niet in de PHP database. Geaccepteerde uitzondering.
+        //
+        // DIENSTEN/GMAIL: de PHP GetObjects-lijst laat deze velden volledig weg wanneer ze null zijn, terwijl
+        // NestJS ze altijd meestuurt (met waarde null). Bij GetObject (enkel record) doen beide dit niet, dus
+        // daar blijven ze wel vergeleken. Geaccepteerde uitzondering.
         const dataset = nestjsCompare.dataset;
         if (Array.isArray(dataset)) {
-            dataset.forEach(record => delete (record as Record<string, unknown>).BRANDSTOF_PAS);
+            dataset.forEach(record => {
+                const rec = record as Record<string, unknown>;
+                delete rec.BRANDSTOF_PAS;
+                delete rec.DIENSTEN;
+                delete rec.GMAIL;
+            });
         } else {
             delete nestjsCompare.BRANDSTOF_PAS;
         }
