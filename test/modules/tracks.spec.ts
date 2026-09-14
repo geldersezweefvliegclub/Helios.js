@@ -31,4 +31,8 @@ compareModule({
             }
         }
     },
+    crud: {
+        createPayload: {LID_ID: 10480, TEKST: "E2E test track"},
+        updatePayload: {TEKST: "E2E test track (updated)"},
+    },
 });

@@ -16,4 +16,8 @@ compareModule({
         {name: "INSTRUCTEUR_ID", params: {INSTRUCTEUR_ID: 100}},
         {name: "IN", params: {IN: "255,253"}},
     ],
+    crud: {
+        createPayload: {LID_ID: 10118, COMPETENTIE_ID: 35, INSTRUCTEUR_ID: 100},
+        updatePayload: {OPMERKINGEN: "E2E test (updated)"},
+    },
 });

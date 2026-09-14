@@ -96,8 +96,11 @@ export class VliegtuigenController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // Registratie moet uniek zijn, dus spaties verwijderen om te voorkomen dat er meerdere vliegtuigen met dezelfde registratie bestaan
-      data.REGISTRATIE = data.REGISTRATIE.trim();
+      // Registratie moet uniek zijn, dus spaties verwijderen om te voorkomen dat er meerdere vliegtuigen met dezelfde registratie bestaan.
+      // Bij UpdateObject is REGISTRATIE optioneel (een partiële update kan het veld weglaten), dus enkel trimmen als het is meegegeven.
+      if (data.REGISTRATIE !== undefined) {
+         data.REGISTRATIE = data.REGISTRATIE.trim();
+      }
 
       return data as Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput;
    }

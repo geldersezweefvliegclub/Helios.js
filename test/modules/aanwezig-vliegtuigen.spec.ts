@@ -20,4 +20,8 @@ compareModule({
     extraGetObjectsOptions: [
         {name: "NIET_VERTROKKEN", params: {NIET_VERTROKKEN: true}},
     ],
+    crud: {
+        createPayload: {DATUM: "2030-06-15", VLIEGTUIG_ID: 223},
+        updatePayload: {SNELHEID: 42},
+    },
 });

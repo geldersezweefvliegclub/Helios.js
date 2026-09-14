@@ -28,4 +28,9 @@ compareModule({
         {name: "ROLLEND", params: {ROLLEND: true}},
         {name: "VLIEGEND", params: {VLIEGEND: true}},
     ],
+    crud: {
+        // CATEGORIE_ID/STATUS_ID zijn optioneel in de DTO, maar PHP eist ze toch bij het aanmaken.
+        createPayload: {DATUM: "2099-01-01T00:00:00.000Z", VLIEGTUIG_ID: 295, STATUS_ID: 2501, CATEGORIE_ID: 2403, TITEL: "E2E test", OMSCHRIJVING: "E2E test journal entry"},
+        updatePayload: {OMSCHRIJVING: "E2E test journal entry (updated)"},
+    },
 });

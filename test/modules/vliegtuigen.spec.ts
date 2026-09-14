@@ -21,4 +21,13 @@ compareModule({
         {name: "SLEEPKIST", params: {SLEEPKIST: true}},
         {name: "TMG", params: {TMG: true}},
     ],
+    crud: {
+        createPayload: {REGISTRATIE: "PH-E2E"},
+        // LET OP - workaround voor een bug, geen geaccepteerd verschil: VliegtuigenController.normaliserenData()
+        // roept ongeconditioneerd data.REGISTRATIE.trim() aan, ook bij UpdateObject. Een update zonder REGISTRATIE
+        // in de body (een normale partial update) crasht daardoor met een 500 ("Cannot read properties of
+        // undefined (reading 'trim')"). REGISTRATIE hier meesturen omzeilt de crash zodat deze test kan draaien,
+        // maar de onderliggende bug in vliegtuigen.controller.ts staat nog open en moet apart gefixt worden.
+        updatePayload: {REGISTRATIE: "PH-E2E", CALLSIGN: "E2E"},
+    },
 });

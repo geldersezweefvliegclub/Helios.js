@@ -19,6 +19,14 @@ export class UpdateOperGastDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
+    description: "De naam van de gast",
+    type: "string",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  NAAM?: string;
+  @ApiProperty({
     description: "Datum van de daginfo",
     type: "string",
     format: "date-time",

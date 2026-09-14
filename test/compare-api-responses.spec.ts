@@ -252,6 +252,21 @@ describe('API Response Comparison (e2e)', () => {
                         {
                             if (endpoint.name.includes("GetObjects"))
                             {
+                                // de CRUD e2e-testen (test/modules/documenten.spec.ts) maken en verwijderen bij elke
+                                // run een testrecord; PHP kent geen fysiek verwijderen, dus die blijven daar permanent
+                                // als soft-deleted record staan en stapelen zich op. Die testartefacten worden aan
+                                // beide kanten uit de vergelijking gefilterd (dataset én totaal), herkenbaar aan de
+                                // "E2E test" prefix die de CRUD-testen gebruiken.
+                                const isE2eArtifact = (record: Record<string, unknown>) =>
+                                    typeof record.TEKST === 'string' && record.TEKST.startsWith('E2E test');
+
+                                const nestjsE2eCount = nestjsCompare.dataset.filter(isE2eArtifact).length;
+                                const phpE2eCount = phpCompare.dataset.filter(isE2eArtifact).length;
+                                nestjsCompare.dataset = nestjsCompare.dataset.filter((record: Record<string, unknown>) => !isE2eArtifact(record));
+                                phpCompare.dataset = phpCompare.dataset.filter((record: Record<string, unknown>) => !isE2eArtifact(record));
+                                if (typeof nestjsCompare.totaal === 'number') nestjsCompare.totaal -= nestjsE2eCount;
+                                if (typeof phpCompare.totaal === 'number') phpCompare.totaal -= phpE2eCount;
+
                                 for (let i = 0; i < nestjsCompare.dataset.length; i++)
                                 {
                                     delete nestjsCompare.dataset[i].DATUM

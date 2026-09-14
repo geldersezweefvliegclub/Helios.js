@@ -26,5 +26,11 @@ compareModule({
         {name: "EXT_REF", params: {EXT_REF: "190538178"}},
         {name: "VLIEGDAG", params: {VLIEGDAG: "2023-04-03"}},
     ],
-    knownPhpFailures: ["GetObjects (VERWIJDERD)"],
+    // PHP's Transacties route heeft geen RestoreObject (404, de route bestaat niet), wordt overgeslagen net als
+    // een GetObjects-optie.
+    knownPhpFailures: ["GetObjects (VERWIJDERD)", "RestoreObject"],
+    crud: {
+        createPayload: {LID_ID: 20958, TYPE_ID: 2095, OMSCHRIJVING: "E2E test", BEDRAG: "10.00"},
+        updatePayload: {OMSCHRIJVING: "E2E test (updated)"},
+    },
 });

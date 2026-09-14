@@ -25,5 +25,13 @@ compareModule({
         {name: "LID_ID", params: {LID_ID: 10395}},
         {name: "VLIEGTUIG_ID", params: {VLIEGTUIG_ID: 223}},
     ],
-    knownPhpFailures: ["GetObjects (VERWIJDERD)"],
+    // De legacy PHP route voor deze module ondersteunt enkel POST SaveObject (AddObject) en DELETE DeleteObject —
+    // PUT SaveObject (UpdateObject) geeft een 405 "Method not allowed" terug (Allow: POST) en PATCH RestoreObject
+    // bestaat helemaal niet (404). Beide stappen worden daarom overgeslagen, net als een GetObjects-optie.
+    knownPhpFailures: ["GetObjects (VERWIJDERD)", "UpdateObject", "RestoreObject"],
+    crud: {
+        // datum ver in de toekomst zodat deze niet botst met bestaande reserveringen
+        createPayload: {DATUM: "2099-06-15", VLIEGTUIG_ID: 223, LID_ID: 10395},
+        updatePayload: {OPMERKINGEN: "E2E test (updated)"},
+    },
 });

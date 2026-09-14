@@ -17,4 +17,8 @@ compareModule({
         BEGIN_DATUM: "2020-01-01",
         EIND_DATUM: "2026-12-31",
     },
+    crud: {
+        createPayload: {DATUM: "2099-06-15", VELD_ID: 901, INGEVOERD_ID: 10267},
+        updatePayload: {VLIEGBEDRIJF: "E2E test (updated)"},
+    },
 });

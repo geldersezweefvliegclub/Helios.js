@@ -40,4 +40,8 @@ compareModule({
             delete nestjsCompare.BRANDSTOF_PAS;
         }
     },
+    crud: {
+        createPayload: {VOORNAAM: "E2E", ACHTERNAAM: "Testlid", LIDTYPE_ID: 602},
+        updatePayload: {WOONPLAATS: "Teststad"},
+    },
 });

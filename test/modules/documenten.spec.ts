@@ -19,4 +19,8 @@ compareModule({
         {name: "GROEPEN", params: {GROEPEN: "22"}},
     ],
     knownPhpFailures: ["GetObjects (GROEPEN)"],
+    crud: {
+        createPayload: {GROEP_ID: 4148, TEKST: "E2E test document", VOLGORDE: 99},
+        updatePayload: {TEKST: "E2E test document (updated)"},
+    },
 });

@@ -151,6 +151,25 @@ export interface GetObjectsOption {
     params: Record<string, unknown> | IdDependentParams;
 }
 
+export interface CrudTestConfig {
+    // payload voor AddObject. ID/VERWIJDERD/LAATSTE_AANPASSING hoeven niet meegegeven te worden, de server
+    // negeert/overschrijft ze toch. Moet minstens de verplichte velden bevatten om een geldig record aan te maken,
+    // inclusief eventuele foreign keys (bv. een bestaand LID_ID/GROEP_ID). Wordt naar NestJS gestuurd, en ook naar
+    // PHP tenzij phpCreatePayload is opgegeven.
+    createPayload: Record<string, unknown>;
+
+    // payload voor UpdateObject, toegepast op het net via createPayload aangemaakte record. Wordt naar NestJS
+    // gestuurd, en ook naar PHP tenzij phpUpdatePayload is opgegeven.
+    updatePayload: Record<string, unknown>;
+
+    // enkele modules gebruiken in PHP andere veldnamen dan in NestJS voor hetzelfde concept (bv. Competenties:
+    // PHP verwacht ONDERWERP/BLOK_ID, NestJS OMSCHRIJVING/OUDER_ID - zie ook de `transform` optie hierboven, die
+    // hetzelfde doet voor het lezen van responses). Geef hier de PHP-specifieke payload op indien nodig; standaard
+    // wordt dezelfde payload als createPayload/updatePayload naar beide APIs gestuurd.
+    phpCreatePayload?: Record<string, unknown>;
+    phpUpdatePayload?: Record<string, unknown>;
+}
+
 export interface ModuleComparisonConfig {
     // naam van de Helios class, gebruikt als route prefix, bv. "AanwezigLeden"
     className: string;
@@ -170,10 +189,14 @@ export interface ModuleComparisonConfig {
     // Deze varianten worden niet met PHP vergeleken, enkel getest of NestJS zelf een geldig antwoord (200) geeft,
     // want de referentie-API zelf faalt al vóór er iets te vergelijken valt. Geaccepteerde uitzondering.
     knownPhpFailures?: string[];
+
+    // configuratie voor de CRUD-vergelijking (AddObject/UpdateObject/DeleteObject/RestoreObject). Als dit ontbreekt
+    // worden enkel de (read-only) GetObject/GetObjects testen uitgevoerd.
+    crud?: CrudTestConfig;
 }
 
 export function compareModule(testConfig: ModuleComparisonConfig): void {
-    const {className, getObjectsParams = {}, extraGetObjectsOptions = [], transform, knownPhpFailures = []} = testConfig;
+    const {className, getObjectsParams = {}, extraGetObjectsOptions = [], transform, knownPhpFailures = [], crud} = testConfig;
 
     const NESTJS_API_URL = process.env.TESTING_NESTJS_URL;
     const PHP_API_URL = process.env.TESTING_PHP_URL;
@@ -263,5 +286,117 @@ export function compareModule(testConfig: ModuleComparisonConfig): void {
 
             await compareEndpoint(new Endpoint("GetObject", "GET", `/${className}/GetObject`, {ID: discoveredId}));
         }, 40000);
+
+        if (crud) {
+            // De legacy PHP "SaveObject"/"DeleteObject"/"RestoreObject" routes volgen een aantal vaste conventies
+            // die stelselmatig afwijken van de NestJS implementatie (bevestigd via handmatige tests tegen de
+            // draaiende servers, onafhankelijk van de module). Geaccepteerde verschillen van de legacy API:
+            // - AddObject (POST SaveObject): PHP geeft status 200 terug. Sommige modules geven daarbij enkel het
+            //   nieuwe ID terug (geen JSON object, bv. Documenten), andere geven net als NestJS het volledige
+            //   aangemaakte record terug (bv. Leden, Progressie) - dit verschilt per module en wordt dus per geval
+            //   gedetecteerd. NestJS geeft status 201 met het volledige aangemaakte record.
+            // - UpdateObject (PUT SaveObject): het ID moet in de body zitten, niet als query parameter (PHP geeft
+            //   anders een 406 "ID moet ingevuld zijn"). Beide geven status 200 terug (NestJS' PUT-route heeft geen
+            //   expliciete @HttpCode() override, dus dat is de standaard Nest-status voor PUT, niet de CREATED uit
+            //   de Swagger-documentatie) en het volledige bijgewerkte record, dus dat wordt wel op vorm vergeleken.
+            // - RestoreObject (PATCH): PHP geeft status 202 Accepted terug, NestJS status 200 OK.
+            // - DeleteObject (DELETE): beide geven status 204 No Content terug.
+            // - RemoveObject (DELETE, fysiek verwijderen): bestaat niet in de PHP API. NestJS staat dit pas toe
+            //   nadat het record al gemarkeerd is als verwijderd via DeleteObject. Wordt apart, enkel tegen
+            //   NestJS, getest.
+            it('AddObject / UpdateObject / DeleteObject / RestoreObject - Compare PHP API and NestJS API response', async () => {
+                const addEndpoint = new Endpoint("AddObject", "POST", `/${className}/SaveObject`);
+
+                const nestjsCreate = await requestBuilder.makeRequest(NESTJS_API_URL, addEndpoint, GetNestjsAuth(), crud.createPayload);
+                const phpCreate = await requestBuilder.makeRequest(PHP_API_URL, addEndpoint, GetPhpAuth(), crud.phpCreatePayload ?? crud.createPayload);
+
+                expect(nestjsCreate.status).toEqual(201);
+                expect(phpCreate.status).toEqual(200);
+
+                const nestjsId = (nestjsCreate.data as { ID?: number }).ID;
+                expect(typeof nestjsId).toEqual('number');
+
+                // sommige modules geven bij AddObject enkel het nieuwe ID terug (scalar), andere het volledige
+                // record (object) - bepaal dit al vóór de try/finally, zodat een fout hierin de cleanup hieronder
+                // niet overslaat (beide records zijn op dit punt al aangemaakt, ook al faalt een latere assertie)
+                const phpId: number | undefined = typeof phpCreate.data === 'number'
+                    ? phpCreate.data
+                    : (phpCreate.data as { ID?: number }).ID;
+                expect(typeof phpId).toEqual('number');
+
+                try {
+                    // enkel wanneer PHP het volledige record teruggeeft (niet enkel het kale ID) valt er iets op
+                    // vorm te vergelijken
+                    if (typeof phpCreate.data !== 'number') {
+                        const nestjsCreateCompare = normalize(nestjsCreate.data);
+                        const phpCreateCompare = normalize(phpCreate.data);
+                        transform?.(nestjsCreateCompare, phpCreateCompare, addEndpoint);
+                        const [nestjsCreateShape, phpCreateShape] = reconcile(shapeOf(nestjsCreateCompare), shapeOf(phpCreateCompare));
+                        expect(nestjsCreateShape).toEqual(phpCreateShape);
+                    }
+
+                    const updateEndpoint = new Endpoint("UpdateObject", "PUT", `/${className}/SaveObject`);
+
+                    const nestjsUpdate = await requestBuilder.makeRequest(NESTJS_API_URL, updateEndpoint, GetNestjsAuth(), {...crud.updatePayload, ID: nestjsId});
+                    expect(nestjsUpdate.status).toEqual(200);
+
+                    // sommige modules ondersteunen UpdateObject helemaal niet in de legacy PHP API (bv.
+                    // Reservering: PUT SaveObject geeft een 405 "Method not allowed", enkel POST wordt ondersteund).
+                    // Net als bij GetObjects/RestoreObject wordt dat via knownPhpFailures overgeslagen.
+                    if (!knownPhpFailures.includes('UpdateObject')) {
+                        const phpUpdate = await requestBuilder.makeRequest(PHP_API_URL, updateEndpoint, GetPhpAuth(), {...(crud.phpUpdatePayload ?? crud.updatePayload), ID: phpId});
+                        expect(phpUpdate.status).toEqual(200);
+
+                        const nestjsUpdateCompare = normalize(nestjsUpdate.data);
+                        const phpUpdateCompare = normalize(phpUpdate.data);
+                        transform?.(nestjsUpdateCompare, phpUpdateCompare, updateEndpoint);
+                        const [nestjsUpdateShape, phpUpdateShape] = reconcile(shapeOf(nestjsUpdateCompare), shapeOf(phpUpdateCompare));
+                        expect(nestjsUpdateShape).toEqual(phpUpdateShape);
+                    }
+
+                    const nestjsDelete = await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("DeleteObject", "DELETE", `/${className}/DeleteObject`, {ID: nestjsId}), GetNestjsAuth());
+                    const phpDelete = await requestBuilder.makeRequest(PHP_API_URL, new Endpoint("DeleteObject", "DELETE", `/${className}/DeleteObject`, {ID: phpId}), GetPhpAuth());
+                    expect(nestjsDelete.status).toEqual(204);
+                    expect(phpDelete.status).toEqual(204);
+
+                    const nestjsRestore = await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("RestoreObject", "PATCH", `/${className}/RestoreObject`, {ID: nestjsId}), GetNestjsAuth());
+                    expect(nestjsRestore.status).toEqual(200);
+
+                    // sommige modules hebben geen werkende RestoreObject in de legacy PHP API (bv. Facturen:
+                    // "Call to undefined method Facturen::HerstelObject()", een 500). Net als bij GetObjects wordt
+                    // dat via knownPhpFailures overgeslagen in plaats van vergeleken.
+                    if (!knownPhpFailures.includes('RestoreObject')) {
+                        const phpRestore = await requestBuilder.makeRequest(PHP_API_URL, new Endpoint("RestoreObject", "PATCH", `/${className}/RestoreObject`, {ID: phpId}), GetPhpAuth());
+                        expect(phpRestore.status).toEqual(202);
+                    }
+                } finally {
+                    // opruimen: eerst soft-delete (nodig voordat RemoveObject wordt geaccepteerd). PHP kent geen
+                    // fysiek verwijderen, dus daar blijft de soft-delete als eindstaat staan. NestJS wordt nadien
+                    // wél volledig verwijderd zodat er geen testdata blijft hangen. Best-effort: als de test
+                    // hierboven al faalde, mag een mislukte cleanup dat niet overschrijven.
+                    await requestBuilder.makeRequest(PHP_API_URL, new Endpoint("DeleteObject (cleanup)", "DELETE", `/${className}/DeleteObject`, {ID: phpId}), GetPhpAuth()).catch(() => undefined);
+                    await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("DeleteObject (cleanup)", "DELETE", `/${className}/DeleteObject`, {ID: nestjsId}), GetNestjsAuth()).catch(() => undefined);
+                    await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("RemoveObject (cleanup)", "DELETE", `/${className}/RemoveObject`, {ID: nestjsId}), GetNestjsAuth()).catch(() => undefined);
+                }
+            }, 40000);
+
+            // RemoveObject (fysiek verwijderen) bestaat niet in de legacy PHP API, dus dit wordt enkel tegen NestJS
+            // zelf getest: een record aanmaken, markeren als verwijderd (vereist voor RemoveObject), fysiek
+            // verwijderen, en controleren dat het nadien echt weg is (404).
+            it('RemoveObject (NestJS only, geen PHP-equivalent) - permanently deletes the record', async () => {
+                const addEndpoint = new Endpoint("AddObject", "POST", `/${className}/SaveObject`);
+                const nestjsCreate = await requestBuilder.makeRequest(NESTJS_API_URL, addEndpoint, GetNestjsAuth(), crud.createPayload);
+                const nestjsId = (nestjsCreate.data as { ID?: number }).ID;
+
+                await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("DeleteObject", "DELETE", `/${className}/DeleteObject`, {ID: nestjsId}), GetNestjsAuth());
+
+                // 410 Gone is geen 2xx, dus axios verwerpt de promise net als bij elke andere foutstatus
+                await expect(requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("RemoveObject", "DELETE", `/${className}/RemoveObject`, {ID: nestjsId}), GetNestjsAuth()))
+                    .rejects.toMatchObject({response: {status: 410}});
+
+                await expect(requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("GetObject", "GET", `/${className}/GetObject`, {ID: nestjsId}), GetNestjsAuth()))
+                    .rejects.toMatchObject({response: {status: 404}});
+            }, 40000);
+        }
     });
 }

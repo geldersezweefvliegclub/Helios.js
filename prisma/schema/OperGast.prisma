@@ -3,7 +3,7 @@ model OperGast {
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de gast
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
-  /// @DtoReadOnly
+  /// @DtoUpdateOptional
   /// @description De naam van de gast
   NAAM               String   @db.VarChar(75)
   /// @DtoCreateOptional

@@ -14,4 +14,8 @@ compareModule({
     extraGetObjectsOptions: [
         {name: "GROEP", params: {GROEP: 4}},
     ],
+    crud: {
+        createPayload: {GROEP: 4, OMSCHRIJVING: "E2E test type"},
+        updatePayload: {OMSCHRIJVING: "E2E test type (updated)"},
+    },
 });

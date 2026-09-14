@@ -14,20 +14,32 @@ export class EndpointGroup {
 export class RequestBuilder {
     private readonly logger = new Logger(RequestBuilder.name);
 
-    async makeRequest(baseurl: string, endpoint: Endpoint, auth: AxiosBasicCredentials | null): Promise<AxiosResponse> {
+    async makeRequest(baseurl: string, endpoint: Endpoint, auth: AxiosBasicCredentials | null, body?: unknown): Promise<AxiosResponse> {
         let request: Promise<AxiosResponse>;
 
         const url = baseurl + endpoint.path;
+        const config = {
+            params: endpoint.queryParams,
+            auth: auth,
+            timeout: 30000,
+        };
 
         switch (endpoint.method) {
             case 'GET':
-                request = axios.get(url, {
-                    params: endpoint.queryParams,
-                    auth: auth,
-                    timeout: 30000,
-                });
+                request = axios.get(url, config);
                 break;
-            // Add other HTTP methods as needed
+            case 'POST':
+                request = axios.post(url, body, config);
+                break;
+            case 'PUT':
+                request = axios.put(url, body, config);
+                break;
+            case 'PATCH':
+                request = axios.patch(url, body, config);
+                break;
+            case 'DELETE':
+                request = axios.delete(url, config);
+                break;
             default:
                 throw new Error(`Unsupported method: ${endpoint.method}`);
         }

@@ -63,7 +63,7 @@ export class TransactiesController  extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
       bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedCreateInput;
+      const insert = await this.normaliserenData(currentUser, data, true) as Prisma.OperTransactieUncheckedCreateInput;
       const obj = await this.TransactiesService.AddObject(insert, currentUser.ID);
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
@@ -78,7 +78,7 @@ export class TransactiesController  extends HeliosController
       bodyHeeftData(data);
       id = id ?? data.ID;
 
-      const update = await this.normaliserenData(currentUser, data) as Prisma.OperTransactieUncheckedUpdateInput;
+      const update = await this.normaliserenData(currentUser, data, false) as Prisma.OperTransactieUncheckedUpdateInput;
       const obj = await this.TransactiesService.UpdateObject(id, update, currentUser.ID);
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
@@ -86,10 +86,9 @@ export class TransactiesController  extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
    private async normaliserenData(
       currentUser: RefLid,
-      data: CreateOperTransactieDto | UpdateOperTransactieDto): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
+      data: CreateOperTransactieDto | UpdateOperTransactieDto,
+      isNieuw: boolean): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
    {
-      const db = await this.TransactiesService.GetObject(data.ID ?? -1);
-
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
       // waarde wordt hier altijd genegeerd
@@ -98,7 +97,7 @@ export class TransactiesController  extends HeliosController
       delete data.ID;
 
       // Alleen bij nieuwe invoer
-      if (db) {
+      if (isNieuw) {
          data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
       }
 

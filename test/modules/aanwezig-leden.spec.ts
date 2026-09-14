@@ -25,4 +25,8 @@ compareModule({
         {name: "NIET_VERTROKKEN", params: {NIET_VERTROKKEN: true}},
         {name: "VLIEGVELD", params: {VLIEGVELD: 901}},
     ],
+    crud: {
+        createPayload: {DATUM: "2030-06-15", LID_ID: 10267},
+        updatePayload: {OPMERKINGEN: "E2E test opmerking"},
+    },
 });

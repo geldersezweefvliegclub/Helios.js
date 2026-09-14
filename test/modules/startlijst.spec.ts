@@ -25,4 +25,9 @@ compareModule({
         {name: "OPEN_STARTS", params: {OPEN_STARTS: true}},
         {name: "DDWV", params: {DDWV: true}},
     ],
+    crud: {
+        // datum ver in de toekomst zodat deze niet botst met bestaande vluchten
+        createPayload: {DATUM: "2099-06-15", VLIEGTUIG_ID: 296},
+        updatePayload: {OPMERKINGEN: "E2E test (updated)"},
+    },
 });

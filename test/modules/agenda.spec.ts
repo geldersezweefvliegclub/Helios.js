@@ -16,4 +16,8 @@ compareModule({
         BEGIN_DATUM: "2020-01-01",
         EIND_DATUM: "2026-12-31",
     },
+    crud: {
+        createPayload: {DATUM: "2030-06-15", KORT: "E2E test agenda-item"},
+        updatePayload: {KORT: "E2E test agenda-item (updated)"},
+    },
 });

@@ -35,4 +35,12 @@ compareModule({
             hernoemBlokIdEnOnderwerp(phpCompare);
         }
     },
+    // PHP verwacht bij het aanmaken/bijwerken nog de oorspronkelijke veldnamen ONDERWERP/BLOK_ID, terwijl NestJS
+    // de nieuwe namen OMSCHRIJVING/OUDER_ID verwacht (zie de veldhernoeming hierboven). Geaccepteerd verschil.
+    crud: {
+        createPayload: {LEERFASE_ID: 1000, OMSCHRIJVING: "E2E test competentie"},
+        updatePayload: {OMSCHRIJVING: "E2E test competentie (updated)"},
+        phpCreatePayload: {LEERFASE_ID: 1000, ONDERWERP: "E2E test competentie"},
+        phpUpdatePayload: {ONDERWERP: "E2E test competentie (updated)"},
+    },
 });

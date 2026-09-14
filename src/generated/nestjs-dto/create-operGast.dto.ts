@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -18,6 +19,13 @@ export class CreateOperGastDto {
   @IsOptional()
   @IsInt()
   ID?: number;
+  @ApiProperty({
+    description: "De naam van de gast",
+    type: "string",
+  })
+  @IsNotEmpty()
+  @IsString()
+  NAAM: string;
   @ApiProperty({
     description: "Datum van de daginfo",
     type: "string",

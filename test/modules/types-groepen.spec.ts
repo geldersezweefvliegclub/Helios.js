@@ -12,4 +12,8 @@ import {compareModule} from "../testing-utils/ModuleComparison";
 // enkel de generieke ID/IDs/VERWIJDERD/SORT/MAX/START varianten uit GetObjectsRequest.
 compareModule({
     className: "TypesGroepen",
+    crud: {
+        createPayload: {OMSCHRIJVING: "E2E test groep", CODE: "E2ETST"},
+        updatePayload: {OMSCHRIJVING: "E2E test groep (updated)"},
+    },
 });

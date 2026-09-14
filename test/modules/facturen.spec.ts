@@ -20,5 +20,12 @@ compareModule({
         {name: "LID_ID", params: {LID_ID: "11001"}},
         {name: "SELECTIE", params: {SELECTIE: "a"}},
     ],
-    knownPhpFailures: ["GetObjects (VERWIJDERD)"],
+    // PHP's Facturen class heeft geen RestoreObject-implementatie ("Call to undefined method
+    // Facturen::HerstelObject()", route.Facturen.php:182, een 500). Wordt overgeslagen net als een GetObjects-optie.
+    knownPhpFailures: ["GetObjects (VERWIJDERD)", "RestoreObject"],
+    crud: {
+        // LID_ID is optioneel/nullable, maar PHP eist het toch bij het aanmaken ("LID_ID is verplicht").
+        createPayload: {JAAR: 2099, LID_ID: 10395, OMSCHRIJVING: "E2E test", GEFACTUREERD: "12"},
+        updatePayload: {OMSCHRIJVING: "E2E test (updated)"},
+    },
 });
