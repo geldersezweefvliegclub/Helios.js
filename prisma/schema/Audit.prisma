@@ -12,9 +12,9 @@ model Audit {
   /// @description Lid dat de wijziging heeft gedaan
   LID_ID     Int     @db.UnsignedMediumInt
   /// @description De database tabel waar de wijziging is gedaan
-  TABEL      String? @db.VarChar(25)
+  TABEL      String? @db.VarChar(50)
   /// @description De naam van de tabel waar de wijziging is gedaan
-  TABEL_NAAM String? @db.VarChar(25)
+  TABEL_NAAM String? @db.VarChar(50)
   /// @description De actie die is uitgevoerd
   ACTIE      String? @db.VarChar(15)
   /// @description Het object ID waar de wijziging is gedaan
