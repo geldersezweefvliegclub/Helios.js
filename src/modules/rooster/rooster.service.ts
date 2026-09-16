@@ -10,7 +10,7 @@ import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
 export class RoosterService extends IHeliosService

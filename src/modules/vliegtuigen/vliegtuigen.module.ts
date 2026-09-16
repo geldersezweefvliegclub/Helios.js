@@ -7,6 +7,7 @@ import {HeliosCoreModule} from "../../core/helios.core.module";
 @Module({
   imports: [AuthorisatieModule, HeliosCoreModule],
   providers: [VliegtuigenService],
-  controllers: [VliegtuigenController]
+  controllers: [VliegtuigenController],
+  exports: [VliegtuigenService]
 })
 export class VliegtuigenModule {}

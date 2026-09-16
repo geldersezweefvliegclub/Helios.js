@@ -20,7 +20,7 @@ import {CreateOperWinterwerkDto} from "../../generated/nestjs-dto/create-operWin
 import {UpdateOperWinterwerkDto} from "../../generated/nestjs-dto/update-operWinterwerk.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Winterwerk')
 @ApiTags('Winterwerk')

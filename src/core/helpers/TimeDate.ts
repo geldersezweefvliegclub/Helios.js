@@ -43,3 +43,26 @@ export function parseTimeOnly(value: Date | string | null | undefined): Date | n
    if (value instanceof Date) return value;
    return new Date(value.includes("T") ? value : `1970-01-01T${value}`);
 }
+
+// formatteert een aantal seconden als "HH:mm" tijdsduur
+export function SecondenNaarTijd(seconden: number): string
+{
+   const uren = Math.floor(seconden / 3600);
+   const minuten = Math.floor((seconden % 3600) / 60);
+   return `${String(uren).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
+}
+
+// formatteert een aantal minuten als "HH:mm" tijdsduur
+export function MinutenNaarTijd(minuten: number): string
+{
+   const uren = Math.floor(minuten / 60);
+   const resterendeMinuten = Math.floor(minuten % 60);
+   return `${String(uren).padStart(2, '0')}:${String(resterendeMinuten).padStart(2, '0')}`;
+}
+
+// normaliseert een tijdstip naar de kalenderdatum ervan (UTC-middernacht), zodat deze vergeleken kan worden
+// met een @db.Date kolom
+export function DatumZonderTijd(tijdstip: Date): Date
+{
+   return new Date(Date.UTC(tijdstip.getFullYear(), tijdstip.getMonth(), tijdstip.getDate()));
+}

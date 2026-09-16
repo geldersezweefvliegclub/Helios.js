@@ -7,6 +7,7 @@ import {HeliosCoreModule} from "../../core/helios.core.module";
 @Module({
   imports: [AuthorisatieModule, HeliosCoreModule],
   controllers: [StartlijstController],
-  providers: [StartlijstService]
+  providers: [StartlijstService],
+  exports: [StartlijstService]
 })
 export class StartlijstModule {}

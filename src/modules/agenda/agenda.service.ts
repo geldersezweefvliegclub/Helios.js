@@ -9,7 +9,7 @@ import {Prisma, OperAgenda} from "@prisma/client";
 import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
 import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
 export class AgendaService extends IHeliosService

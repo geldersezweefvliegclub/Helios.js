@@ -26,7 +26,7 @@ import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 // competentie IDs voor de startmethodes die op de startaantekeningen kaart getoond worden, zie
 // StartAantekeningen() in class.Progressie.inc.php

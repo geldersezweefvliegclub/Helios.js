@@ -25,7 +25,7 @@ import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBran
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Brandstof')
 @ApiTags('Brandstof')

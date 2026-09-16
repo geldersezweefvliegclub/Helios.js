@@ -1,4 +1,4 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Query, UseGuards} from '@nestjs/common';
 import {StartlijstService} from "./startlijst.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -16,10 +16,12 @@ import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperStartlijstDto} from "../../generated/nestjs-dto/create-operStartlijst.dto";
 import {UpdateOperStartlijstDto} from "../../generated/nestjs-dto/update-operStartlijst.dto";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
+import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {RecencyResponse} from "./RecencyResponse";
 
 @Controller('Startlijst')
 @ApiTags('Startlijst')
@@ -159,4 +161,25 @@ export class StartlijstController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   @Get("GetRecency")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(RecencyResponse)
+   @ApiOperation({summary: 'Vliegcurrency-statistieken van een lid.'})
+   @ApiResponse({status: HttpStatus.NOT_ACCEPTABLE, description: 'VLIEGER_ID ontbreekt.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Recency opgehaald.', schema: {'$ref': getSchemaPath(RecencyResponse)}})
+   async GetRecency(
+      @CurrentUser() currentUser: RefLid,
+      @Query('VLIEGER_ID') vliegerId: number,
+      @Query('DATUM') datum?: string): Promise<RecencyResponse>
+   {
+      this.logger.verbose(`StartlijstController.GetRecency(${safeStringify({currentUser, vliegerId, datum})})`);
+      if (vliegerId === undefined)
+         throw new HttpException("VLIEGER_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetRecency');
+
+      const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : undefined;
+      return await this.startlijstService.GetRecency(Number(vliegerId), gevraagdeDatum);
+   }
 }

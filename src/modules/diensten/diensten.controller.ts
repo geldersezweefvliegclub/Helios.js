@@ -21,7 +21,7 @@ import {UpdateOperDienstDto} from "../../generated/nestjs-dto/update-operDienst.
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Diensten')
 @ApiTags('Diensten')

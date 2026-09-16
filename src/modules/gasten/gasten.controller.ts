@@ -19,7 +19,7 @@ import {CreateOperGastDto} from "../../generated/nestjs-dto/create-operGast.dto"
 import {UpdateOperGastDto} from "../../generated/nestjs-dto/update-operGast.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Gasten')
 @ApiTags('Gasten')

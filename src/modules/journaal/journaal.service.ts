@@ -9,6 +9,7 @@ import {Prisma, OperJournaal} from "@prisma/client";
 import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {RegCall} from "../../core/helpers/RegCall";
 
 // journaal record inclusief de relaties die de PHP journaal_view samenvoegt
 type JournaalMetRelaties = Prisma.OperJournaalGetPayload<{
@@ -142,7 +143,7 @@ export class JournaalService extends IHeliosService
             STATUS_CODE: obj.Status?.CODE ?? null,
             CATEGORIE: obj.Categorie?.OMSCHRIJVING ?? null,
             CATEGORIE_CODE: obj.Categorie?.CODE ?? null,
-            REG_CALL: obj.Vliegtuig === null ? " ()" : obj.Vliegtuig?.REGISTRATIE + (obj.Vliegtuig?.CALLSIGN ?  " (" + obj.Vliegtuig.CALLSIGN + ")" : "")
+            REG_CALL: obj.Vliegtuig === null ? " ()" : RegCall(obj.Vliegtuig.REGISTRATIE, obj.Vliegtuig.CALLSIGN)
          } ;
 
          // verwijder child objects uit de response

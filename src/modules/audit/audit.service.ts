@@ -6,7 +6,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
 import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // audit record inclusief de relatie die de PHP audit_view samenvoegt
 type AuditMetRelaties = Prisma.AuditGetPayload<{

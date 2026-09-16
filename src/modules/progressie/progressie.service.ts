@@ -9,7 +9,7 @@ import {Prisma, OperProgressie} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 export interface UpdateProgressieData {
    LID_ID?: number;

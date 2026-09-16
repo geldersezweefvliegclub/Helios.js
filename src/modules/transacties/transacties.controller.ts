@@ -19,7 +19,7 @@ import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTra
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Transacties')
 @ApiTags('Transacties')

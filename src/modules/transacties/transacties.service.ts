@@ -9,7 +9,7 @@ import {Prisma, OperTransactie, RefLid} from "@prisma/client";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // transactie record inclusief de relaties die de PHP transacties_view samenvoegt
 type TransactieMetRelaties = Prisma.OperTransactieGetPayload<{

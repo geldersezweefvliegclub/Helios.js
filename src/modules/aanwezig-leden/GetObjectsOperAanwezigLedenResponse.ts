@@ -22,6 +22,7 @@ export class GetObjectsOperAanwezigLedenResponse extends OperAanwezigLidDto
    @ApiProperty({type: String, required: false, description: 'Achternaam van het lid'})
    ACHTERNAAM?: string | null;
 
+   // TODO: Deze velden zijn niet nodig voor aanmelding, check Pegasus of ze nog gebruikt worden in de frontend, anders verwijderen
    @ApiProperty({type: String, required: false, description: 'Adres van het lid'})
    ADRES?: string | null;
 

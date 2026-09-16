@@ -19,7 +19,7 @@ import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Controller('AanwezigVliegtuigen')
 @ApiTags('AanwezigVliegtuigen')

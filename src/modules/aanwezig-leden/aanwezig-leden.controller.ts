@@ -20,10 +20,12 @@ import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSch
 import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 import {AanmeldenRequest} from "./AanmeldenRequest";
 import {AfmeldenRequest} from "./AfmeldenRequest";
 import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
+import {StartlijstService} from "../startlijst/startlijst.service";
+import {LidType} from "../../core/enums/LidType";
 
 @Controller('AanwezigLeden')
 @ApiTags('AanwezigLeden')
@@ -32,6 +34,7 @@ export class AanwezigLedenController  extends HeliosController
    private readonly logger = new Logger(AanwezigLedenController.name);
 
    constructor(private readonly AanwezigLedenService: AanwezigLedenService,
+               private readonly startlijstService: StartlijstService,
                private readonly permissieService:PermissieService)
    {
       super()
@@ -64,11 +67,45 @@ export class AanwezigLedenController  extends HeliosController
 
       if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isInstructeur(currentUser) || this.permissieService.isCIMT(currentUser))
       {
-         const barometers = await this.AanwezigLedenService.GetStatusBarometers(objs.dataset);
+         const barometers = await this.startlijstService.GetStatusBarometers(objs.dataset);
          objs.dataset = objs.dataset.map(obj => ({...obj, STATUS_BAROMETER: barometers.get(obj.LID_ID)}));
       }
 
+      objs.dataset = this.PrivacyMask(currentUser, objs.dataset);
       return objs;
+   }
+
+   // een DDWV-lid mag andere DDWV-leden (LIDTYPE_ID = LidType.DDWV) wel herkennen, maar geen persoonsgegevens
+   // van de overige (niet-DDWV) leden zien - vergelijkbaar met privacyMask() in de PHP implementatie
+   private PrivacyMask(currentUser: RefLid, dataset: GetObjectsOperAanwezigLedenResponse[]): GetObjectsOperAanwezigLedenResponse[]
+   {
+      if (currentUser.LIDTYPE_ID !== LidType.DDWV)
+         return dataset;
+
+      const MASK = "***";
+      return dataset.map(aanmelding =>
+      {
+         if (aanmelding.LIDTYPE_ID === LidType.DDWV)
+            return aanmelding;
+
+         return {
+            ...aanmelding,
+            NAAM: MASK,
+            VOORNAAM: MASK,
+            TUSSENVOEGSEL: MASK,
+            ACHTERNAAM: MASK,
+            ADRES: MASK,
+            POSTCODE: MASK,
+            WOONPLAATS: MASK,
+            LIDNR: MASK,
+            MOBIEL: MASK,
+            EMAIL: MASK,
+            NOODNUMMER: MASK,
+            TELEFOON: MASK,
+            INLOGNAAM: MASK,
+            AVATAR: MASK,
+         };
+      });
    }
 
    @HeliosCreateObject(CreateOperAanwezigLidDto, OperAanwezigLidDto)

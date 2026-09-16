@@ -4,6 +4,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
+import {RegCall} from "../../core/helpers/RegCall";
 
 import {Prisma} from "@prisma/client";
 import {GetObjectsRefVliegtuigenRequest} from "./GetObjectsRefVliegtuigenRequest";
@@ -132,7 +133,7 @@ export class VliegtuigenService extends IHeliosService
 
       const result = objs.map((obj) => {
          const resp = new GetRefVliegtuigenResponse(obj);
-         resp.REG_CALL = `${obj.REGISTRATIE ?? ''} (${obj.CALLSIGN ?? ''})`;
+         resp.REG_CALL = RegCall(obj.REGISTRATIE, obj.CALLSIGN);
          resp.BEVOEGDHEID_LOKAAL = obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null;
          resp.BEVOEGDHEID_OVERLAND = obj.BevoegdheidOverland?.OMSCHRIJVING ?? null;
          resp.JOURNAAL_AANTAL = journaalAantalPerVliegtuig.get(obj.ID) ?? 0;

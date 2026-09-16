@@ -9,7 +9,8 @@ import {Prisma, OperAanwezigVliegtuig} from "@prisma/client";
 import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezigVliegtuigenRequest";
 import {GetObjectsOperAanwezigVliegtuigenResponse} from "./GetObjectsOperAanwezigVliegtuigenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {RegCall} from "../../core/helpers/RegCall";
 
 // aanwezig vliegtuig record inclusief de relaties die de PHP aanwezig_vliegtuigen_view samenvoegt
 type AanwezigVliegtuigMetRelaties = Prisma.OperAanwezigVliegtuigGetPayload<{
@@ -134,7 +135,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
             VERTREK: toTimeOnly(aanwezigVliegtuig.VERTREK) as unknown as Date,
             REGISTRATIE: vliegtuig.REGISTRATIE,
             CALLSIGN: vliegtuig.CALLSIGN,
-            REG_CALL: `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})`,
+            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
             ZITPLAATSEN: vliegtuig.ZITPLAATSEN,
             CLUBKIST: vliegtuig.CLUBKIST,
             FLARMCODE: vliegtuig.FLARMCODE,

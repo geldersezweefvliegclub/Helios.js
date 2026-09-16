@@ -19,7 +19,7 @@ import {UpdateOperRoosterDto} from "../../generated/nestjs-dto/update-operRooste
 import {ApiTags} from "@nestjs/swagger";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Rooster')
 @ApiTags('Rooster')

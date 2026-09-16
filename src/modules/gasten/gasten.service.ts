@@ -9,7 +9,7 @@ import {Prisma, OperGast} from "@prisma/client";
 import {GetObjectsOperGastenRequest} from "./GetObjectsOperGastenRequest";
 import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // gast record inclusief de relatie die de PHP gasten_view samenvoegt
 type GastMetRelaties = Prisma.OperGastGetPayload<{

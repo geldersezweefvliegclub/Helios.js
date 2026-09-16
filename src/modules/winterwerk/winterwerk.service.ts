@@ -9,7 +9,7 @@ import {Prisma, OperWinterwerk} from "@prisma/client";
 import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
 import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
 export class WinterwerkService extends IHeliosService

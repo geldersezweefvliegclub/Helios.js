@@ -19,7 +19,7 @@ import {CreateOperAgendaDto} from "../../generated/nestjs-dto/create-operAgenda.
 import {UpdateOperAgendaDto} from "../../generated/nestjs-dto/update-operAgenda.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Controller('Agenda')
 @ApiTags('Agenda')

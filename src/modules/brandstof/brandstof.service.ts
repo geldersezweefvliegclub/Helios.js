@@ -12,7 +12,7 @@ import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBran
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {LedenService} from "../leden/leden.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // brandstof record inclusief de relatie die de PHP brandstof_view samenvoegt
 type BrandstofMetRelaties = Prisma.OperBrandstofGetPayload<{

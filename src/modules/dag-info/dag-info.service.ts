@@ -9,7 +9,7 @@ import {Prisma, OperDagInfo} from "@prisma/client";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // daginfo record inclusief de relaties die de PHP daginfo_view samenvoegt
 type DagInfoMetRelaties = Prisma.OperDagInfoGetPayload<{

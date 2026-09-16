@@ -28,7 +28,7 @@ import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 import { hash } from "bcryptjs";
 

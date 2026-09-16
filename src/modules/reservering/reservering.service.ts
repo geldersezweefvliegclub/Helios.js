@@ -11,7 +11,8 @@ import {GetObjectsOperReserveringResponse} from "./GetObjectsOperReserveringResp
 import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operReservering.dto";
 import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly} from "../../core/helpers/DateOnly";
+import {toDateOnly} from "../../core/helpers/TimeDate";
+import {RegCall} from "../../core/helpers/RegCall";
 
 // reservering record inclusief de relaties die de PHP reservering_view samenvoegt
 type ReserveringMetRelaties = Prisma.OperReserveringGetPayload<{
@@ -145,7 +146,7 @@ export class ReserveringService extends IHeliosService
             INGEVOERD_DOOR: invoerderPerId.get(obj.INGEVOERD_ID)?.NAAM,
             REGISTRATIE: vliegtuig.REGISTRATIE,
             CALLSIGN: vliegtuig.CALLSIGN,
-            REG_CALL: `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})`,
+            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
          } as GetObjectsOperReserveringResponse;
       });
       this.logger.verbose(`ReserveringService.NaarGetObjectsResponse() => ${safeStringify(result)}`);

@@ -11,11 +11,18 @@ import {GetObjectsOperAanwezigLedenResponse} from "./GetObjectsOperAanwezigLeden
 import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {TypesGroep} from "../../core/enums/TypesGroep";
+import {VliegStatus} from "../../core/enums/VliegStatus";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {parseDateOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {DatumZonderTijd, MinutenNaarTijd, parseDateOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {RegCall} from "../../core/helpers/RegCall";
 import {AanmeldenRequest} from "./AanmeldenRequest";
 import {AfmeldenRequest} from "./AfmeldenRequest";
 import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
+import {StartlijstService} from "../startlijst/startlijst.service";
+import {TypesService} from "../types/types.service";
+import {GetObjectsRefTypesRequest} from "../types/GetObjectsRefTypesRequest";
+import {VliegtuigenService} from "../vliegtuigen/vliegtuigen.service";
+import {GetObjectsRefVliegtuigenRequest} from "../vliegtuigen/GetObjectsRefVliegtuigenRequest";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -32,7 +39,10 @@ export class AanwezigLedenService extends IHeliosService
    private readonly logger = new Logger(AanwezigLedenService.name);
 
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly startlijstService: StartlijstService,
+               private readonly typesService: TypesService,
+               private readonly vliegtuigenService: VliegtuigenService)
    {
       super();
    }
@@ -124,8 +134,6 @@ export class AanwezigLedenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP aanwezig_leden_view samenvoegt: leden-, vliegtuig- en type-gegevens via joins,
-   // en de vliegtijd/starts van vandaag via een gebatchte aggregatie op oper_startlijst (was per record een subquery)
    private async NaarGetObjectsResponse(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
    {
       this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
@@ -136,47 +144,30 @@ export class AanwezigLedenService extends IHeliosService
          return result;
       }
 
-      const vliegtuigTypes = await this.dbService.refType.findMany({where: {GROEP: TypesGroep.VliegtuigTypes}});
+      const dbVliegtuigTypes = await this.typesService.GetObjects(Object.assign(new GetObjectsRefTypesRequest(), {
+         GROEP: TypesGroep.VliegtuigTypes,
+      }));
+      const vliegtuigTypes = dbVliegtuigTypes.dataset;
 
-      const lidIds = [...new Set(objs.map(obj => obj.LID_ID))];
-      const datums = [...new Map(objs.map(obj => [obj.DATUM.getTime(), obj.DATUM])).values()];
-      const vluchtenVanVandaag = await this.dbService.operStartlijst.findMany({
-         where: {
-            VERWIJDERD: false,
-            VLIEGER_ID: {in: lidIds},
-            DATUM: {in: datums}
-         }
-      });
-
-      const vluchtenPerLidEnDatum = new Map<string, typeof vluchtenVanVandaag>();
-      for (const vlucht of vluchtenVanVandaag)
-      {
-         const key = `${vlucht.VLIEGER_ID}_${vlucht.DATUM.getTime()}`;
-         if (!vluchtenPerLidEnDatum.has(key))
-            vluchtenPerLidEnDatum.set(key, []);
-         vluchtenPerLidEnDatum.get(key).push(vlucht);
-      }
-
-      const result = objs.map(obj =>
+      const result = await Promise.all(objs.map(async obj =>
       {
          const {RefLid: lid, RefVliegtuig: vliegtuig, Veld: veld, ...aanwezigLid} = obj;
 
-         const vluchten = vluchtenPerLidEnDatum.get(`${obj.LID_ID}_${obj.DATUM.getTime()}`) ?? [];
-         const vluchtenMetStart = vluchten.filter(vlucht => vlucht.STARTTIJD !== null);
-         const totaalSeconden = vluchtenMetStart.reduce((totaal, vlucht) =>
-         {
-            const eind = vlucht.LANDINGSTIJD ?? new Date();
-            return totaal + Math.max(0, (eind.getTime() - vlucht.STARTTIJD.getTime()) / 1000);
-         }, 0);
-
          const gewensteTypes = vliegtuigTypes.filter(type => aanwezigLid.VOORKEUR_VLIEGTUIG_TYPE?.includes(String(type.ID)));
+
+         // VLIEGT / VLIEGTIJD / STARTS: rechtstreekse, lichtgewicht queries op Startlijst
+         const [vliegtNu, vliegtijdMinuten, starts] = await Promise.all([
+            this.startlijstService.LidVliegt(obj.LID_ID, obj.DATUM),
+            this.startlijstService.LidVliegtijd(obj.LID_ID, obj.DATUM),
+            this.startlijstService.LidStarts(obj.LID_ID, obj.DATUM),
+         ]);
 
          return {
             ...aanwezigLid,
             DATUM: toDateOnly(aanwezigLid.DATUM) as unknown as Date,
             AANKOMST: toTimeOnly(aanwezigLid.AANKOMST) as unknown as Date,
             VERTREK: toTimeOnly(aanwezigLid.VERTREK) as unknown as Date,
-            REG_CALL: vliegtuig ? `${vliegtuig.REGISTRATIE ?? ''} (${vliegtuig.CALLSIGN ?? ''})` : null,
+            REG_CALL: vliegtuig ? RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN) : null,
             NAAM: lid.NAAM,
             VOORNAAM: lid.VOORNAAM,
             TUSSENVOEGSEL: lid.TUSSENVOEGSEL,
@@ -216,79 +207,12 @@ export class AanwezigLedenService extends IHeliosService
             STATUS_SORTEER_VOLGORDE: lid.VliegStatus?.SORTEER_VOLGORDE ?? null,
             VLIEGTUIGTYPE_CODE: gewensteTypes.length ? gewensteTypes.map(type => type.CODE).join(',') : null,
             VLIEGTUIGTYPE_OMS: gewensteTypes.length ? gewensteTypes.map(type => type.OMSCHRIJVING).join(',') : null,
-            VLIEGTIJD: vluchtenMetStart.length ? this.SecondenNaarTijd(totaalSeconden) : null,
-            STARTS: vluchten.length,
-            VLIEGT: vluchten.some(vlucht => vlucht.STARTTIJD !== null && vlucht.LANDINGSTIJD === null) ? 1 : 0,
+            VLIEGTIJD: vliegtijdMinuten > 0 ? MinutenNaarTijd(vliegtijdMinuten) : null,
+            STARTS: starts,
+            VLIEGT: vliegtNu ? 1 : 0,
          } as GetObjectsOperAanwezigLedenResponse;
-      });
+      }));
       this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // vliegcurrency-indicator (rood/geel/groen) per lid over de laatste 26 weken, gebaseerd op de gewogen
-   // gemiddelde van vlieguren en starts, zie Startlijst.GetRecency() in de PHP implementatie
-   async GetStatusBarometers(leden: {LID_ID: number, INSTRUCTEUR?: boolean}[]): Promise<Map<number, string>>
-   {
-      this.logger.verbose(`AanwezigLedenService.GetStatusBarometers(${safeStringify({leden})})`);
-      const lidIds = [...new Set(leden.map(lid => lid.LID_ID))];
-      const instructeurIds = [...new Set(leden.filter(lid => lid.INSTRUCTEUR).map(lid => lid.LID_ID))];
-
-      const vandaag = new Date();
-      const vandaagDatum = new Date(vandaag.getFullYear(), vandaag.getMonth(), vandaag.getDate());
-      const windowStart = new Date(vandaagDatum);
-      windowStart.setDate(windowStart.getDate() - 182); // laatste 26 weken
-
-      const vluchten = await this.dbService.operStartlijst.findMany({
-         where: {
-            VERWIJDERD: false,
-            STARTTIJD: {not: null},
-            LANDINGSTIJD: {not: null},
-            DATUM: {gte: windowStart, lte: vandaagDatum},
-            OR: [
-               {VLIEGER_ID: {in: lidIds}},
-               {INZITTENDE_ID: {in: instructeurIds}, INSTRUCTIEVLUCHT: true},
-            ]
-         }
-      });
-
-      const lidIdSet = new Set(lidIds);
-      const instructeurIdSet = new Set(instructeurIds);
-      const perLid = new Map<number, {starts: number, minuten: number}>();
-      const voegVluchtToe = (lidId: number, vlucht: typeof vluchten[number]) =>
-      {
-         const stats = perLid.get(lidId) ?? {starts: 0, minuten: 0};
-         stats.starts++;
-         stats.minuten += (vlucht.LANDINGSTIJD.getTime() - vlucht.STARTTIJD.getTime()) / 60000;
-         perLid.set(lidId, stats);
-      };
-
-      for (const vlucht of vluchten)
-      {
-         if (vlucht.VLIEGER_ID !== null && lidIdSet.has(vlucht.VLIEGER_ID))
-            voegVluchtToe(vlucht.VLIEGER_ID, vlucht);
-         if (vlucht.INSTRUCTIEVLUCHT && vlucht.INZITTENDE_ID !== null && instructeurIdSet.has(vlucht.INZITTENDE_ID))
-            voegVluchtToe(vlucht.INZITTENDE_ID, vlucht);
-      }
-
-      const barometers = new Map<number, string>();
-      for (const lidId of lidIds)
-      {
-         const stats = perLid.get(lidId) ?? {starts: 0, minuten: 0};
-         const gemiddelde = (stats.minuten / 60 + stats.starts * 25 / 35) / 2;
-         barometers.set(lidId, gemiddelde < 10 ? 'rood' : gemiddelde < 20 ? 'geel' : 'groen');
-      }
-      const result = barometers;
-      this.logger.verbose(`AanwezigLedenService.GetStatusBarometers() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   private SecondenNaarTijd(seconden: number): string
-   {
-      this.logger.verbose(`AanwezigLedenService.SecondenNaarTijd(${safeStringify({seconden})})`);
-      const uren = Math.floor(seconden / 3600);
-      const minuten = Math.floor((seconden % 3600) / 60);
-      const result = `${String(uren).padStart(2, '0')}:${String(minuten).padStart(2, '0')}`;
-      this.logger.verbose(`AanwezigLedenService.SecondenNaarTijd() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -374,8 +298,8 @@ export class AanwezigLedenService extends IHeliosService
          throw new HttpException("LID_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
 
       const tijdstip = data.TIJDSTIP ? new Date(data.TIJDSTIP) : new Date();
-      const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : this.DatumZonderTijd(tijdstip);
-      const isVandaag = datum.getTime() === this.DatumZonderTijd(new Date()).getTime();
+      const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : DatumZonderTijd(tijdstip);
+      const isVandaag = datum.getTime() === DatumZonderTijd(new Date()).getTime();
 
       const bestaand = await this.AanmeldingLidDatum(data.LID_ID, datum);
 
@@ -462,10 +386,7 @@ export class AanwezigLedenService extends IHeliosService
       return result;
    }
 
-   // Afmelden van een aangemeld lid. Zie AanwezigLeden.Afmelden() in de PHP implementatie - het strippen-
-   // bijboeken voor DDWV staat daar al sinds "mei 2024" in commentaar en is dan ook niet overgenomen. PHP's
-   // TIJDSTIP-parameter (afmelden op een ander moment dan nu) is hier niet overgenomen - de enige bestaande
-   // client (Pegasus) gebruikt hem nooit, afmelden gebeurt altijd voor het huidige moment.
+   // Afmelden van een aangemeld lid.
    async Afmelden(data: AfmeldenRequest, actorId: number): Promise<OperAanwezigLid>
    {
       this.logger.verbose(`AanwezigLedenService.Afmelden(${safeStringify({data})})`);
@@ -474,11 +395,9 @@ export class AanwezigLedenService extends IHeliosService
 
       const nu = new Date();
 
-      // net als in PHP: als een ID is meegegeven wordt uitsluitend daarop gezocht (LID_ID/datum spelen dan
-      // geen rol meer bij het opzoeken)
       const bestaand = (data.ID !== undefined && data.ID !== null)
-         ? await this.dbService.operAanwezigLid.findUnique({where: {ID: data.ID}})
-         : await this.AanmeldingLidDatum(data.LID_ID, this.DatumZonderTijd(nu));
+         ? await this.GetObject(data.ID).catch(() => null)
+         : await this.AanmeldingLidDatum(data.LID_ID, DatumZonderTijd(nu));
 
       if (!bestaand)
          throw new HttpException("Kan een lid alleen afmelden als het eerst aangemeld is", HttpStatus.CONFLICT);
@@ -499,10 +418,10 @@ export class AanwezigLedenService extends IHeliosService
       this.logger.verbose(`AanwezigLedenService.Samenvatting(${safeStringify({datum})})`);
 
       // clubvliegtuigen en de types waarnaar ze verwijzen (equivalent van Types.GetClubVliegtuigenTypes())
-      const clubVliegtuigen = await this.dbService.refVliegtuig.findMany({
-         where: {VERWIJDERD: false, CLUBKIST: true},
-         select: {ID: true, TYPE_ID: true},
-      });
+      const clubVliegtuigenResultaat = await this.vliegtuigenService.GetObjects(Object.assign(new GetObjectsRefVliegtuigenRequest(), {
+         CLUBKIST: true,
+      }));
+      const clubVliegtuigen = clubVliegtuigenResultaat.dataset;
       const clubkistIds = new Set(clubVliegtuigen.map(v => v.ID));
       const clubTypeIds = [...new Set(clubVliegtuigen.map(v => v.TYPE_ID).filter((id): id is number => id !== null))];
       const clubTypes = clubTypeIds.length
@@ -527,10 +446,9 @@ export class AanwezigLedenService extends IHeliosService
          if (aanmelding.OVERLAND_VLIEGTUIG_ID != null && clubkistIds.has(aanmelding.OVERLAND_VLIEGTUIG_ID))
             overland.push({reg_call: aanmelding.REG_CALL ?? null, naam: aanmelding.NAAM});
 
-         // 1901 = DBO, 1902 = Solist, 1903 = Brevethouder (RefType records onder TypesGroep.Status)
-         if (aanmelding.STATUSTYPE_ID === 1901) dbo++;
-         else if (aanmelding.STATUSTYPE_ID === 1902) solisten++;
-         else if (aanmelding.STATUSTYPE_ID === 1903) brevethouders++;
+         if (aanmelding.STATUSTYPE_ID === VliegStatus.DBO) dbo++;
+         else if (aanmelding.STATUSTYPE_ID === VliegStatus.Solist) solisten++;
+         else if (aanmelding.STATUSTYPE_ID === VliegStatus.Brevethouder) brevethouders++;
 
          if (aanmelding.LIERIST) lieristen++;
          if (aanmelding.INSTRUCTEUR) instructeurs++;
@@ -545,12 +463,5 @@ export class AanwezigLedenService extends IHeliosService
       };
       this.logger.verbose(`AanwezigLedenService.Samenvatting() => ${safeStringify(result)}`);
       return result;
-   }
-
-   // normaliseert een tijdstip naar de kalenderdatum ervan (UTC-middernacht), zodat deze vergeleken kan
-   // worden met een @db.Date kolom zoals OperAanwezigLid.DATUM
-   private DatumZonderTijd(tijdstip: Date): Date
-   {
-      return new Date(Date.UTC(tijdstip.getFullYear(), tijdstip.getMonth(), tijdstip.getDate()));
    }
 }
