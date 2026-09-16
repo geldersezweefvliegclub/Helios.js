@@ -10,6 +10,15 @@ import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 
+// dienst record inclusief de relaties die de PHP diensten_view samenvoegt
+type DienstMetRelaties = Prisma.OperDienstGetPayload<{
+   include: {
+      TypeDienst: true,
+      RefLid: true,
+      RefIngevoerd: true,
+   }
+}>;
+
 @Injectable()
 export class DienstenService extends IHeliosService
 {
@@ -81,7 +90,7 @@ export class DienstenService extends IHeliosService
       {
          count = await this.dbService.operDienst.count({where: where});
       }
-      const rawObjs = await this.dbService.operDienst.findMany({
+      const objs = await this.dbService.operDienst.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperDienstOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
@@ -93,11 +102,19 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      const objs = rawObjs.map((o) => new GetOperDienstenResponse(o))
+      const response = await this.NaarGetObjectsResponse(objs);
 
-
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`DienstenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP diensten_view samenvoegt
+   private async NaarGetObjectsResponse(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
+   {
+      this.logger.verbose(`DienstenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((o) => new GetOperDienstenResponse(o));
+      this.logger.verbose(`DienstenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

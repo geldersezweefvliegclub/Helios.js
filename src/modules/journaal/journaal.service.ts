@@ -10,6 +10,19 @@ import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 
+// journaal record inclusief de relaties die de PHP journaal_view samenvoegt
+type JournaalMetRelaties = Prisma.OperJournaalGetPayload<{
+   include: {
+      Vliegtuig: true,
+      Rollend: true,
+      Melder: true,
+      Technicus: true,
+      Status: true,
+      Categorie: true,
+      Afgetekend: true,
+   }
+}>;
+
 @Injectable()
 export class JournaalService extends IHeliosService
 {
@@ -107,7 +120,17 @@ export class JournaalService extends IHeliosService
          },
       });
 
-      const response = objs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`JournaalService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP journaal_view samenvoegt
+   private async NaarGetObjectsResponse(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
+   {
+      this.logger.verbose(`JournaalService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
@@ -133,8 +156,7 @@ export class JournaalService extends IHeliosService
 
          return  retObj as GetObjectsOperJournaalResponse
       });
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`JournaalService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`JournaalService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -11,6 +11,15 @@ import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResp
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// transactie record inclusief de relaties die de PHP transacties_view samenvoegt
+type TransactieMetRelaties = Prisma.OperTransactieGetPayload<{
+   include: {
+      RefLid: true,
+      RefIngevoerd: true,
+      TypeTransactie: true,
+   }
+}>;
+
 @Injectable()
 export class TransactiesService extends IHeliosService
 {
@@ -80,7 +89,7 @@ export class TransactiesService extends IHeliosService
       {
          count = await this.dbService.operTransactie.count({where: where});
       }
-      const rawObjs = await this.dbService.operTransactie.findMany({
+      const objs = await this.dbService.operTransactie.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperTransactieOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
@@ -92,7 +101,18 @@ export class TransactiesService extends IHeliosService
          }
       });
 
-      const objs = rawObjs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`TransactiesService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP transacties_view samenvoegt
+   private async NaarGetObjectsResponse(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
+   {
+      this.logger.verbose(`TransactiesService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          const retObj = {
             ...obj,
             VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date,
@@ -107,9 +127,7 @@ export class TransactiesService extends IHeliosService
 
          return retObj as GetObjectsOperTransactiesResponse;
       });
-
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
-      this.logger.verbose(`TransactiesService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`TransactiesService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -8,6 +8,13 @@ import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// audit record inclusief de relatie die de PHP audit_view samenvoegt
+type AuditMetRelaties = Prisma.AuditGetPayload<{
+   include: {
+      RefLid: true,
+   }
+}>;
+
 @Injectable()
 export class AuditService extends IHeliosService
 {
@@ -98,7 +105,18 @@ export class AuditService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`AuditService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP audit_view samenvoegt
+   private async NaarGetObjectsResponse(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
+   {
+      this.logger.verbose(`AuditService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
@@ -111,9 +129,7 @@ export class AuditService extends IHeliosService
 
          return  retObj as GetObjectsAuditResponse
       });
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`AuditService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`AuditService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

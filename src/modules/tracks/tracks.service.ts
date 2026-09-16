@@ -10,6 +10,14 @@ import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 
+// track record inclusief de relaties die de PHP tracks_view samenvoegt
+type TrackMetRelaties = Prisma.OperTrackGetPayload<{
+   include: {
+      Lid: true,
+      Instructeur: true,
+   }
+}>;
+
 @Injectable()
 export class TracksService extends IHeliosService
 {
@@ -76,7 +84,18 @@ export class TracksService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) =>
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`TracksService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP tracks_view samenvoegt
+   private async NaarGetObjectsResponse(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
+   {
+      this.logger.verbose(`TracksService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) =>
       {
          const {Lid: lid, Instructeur: instructeur, ...track} = obj;
          return {
@@ -85,9 +104,7 @@ export class TracksService extends IHeliosService
             INSTRUCTEUR_NAAM: instructeur?.NAAM ?? null,
          } as GetObjectsOperTracksResponse;
       });
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`TracksService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`TracksService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

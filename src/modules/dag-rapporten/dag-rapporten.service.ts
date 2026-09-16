@@ -11,6 +11,14 @@ import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenRe
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// dagrapport record inclusief de relaties die de PHP dagrapporten_view samenvoegt
+type DagRapportMetRelaties = Prisma.OperDagRapportGetPayload<{
+   include: {
+      Veld: true,
+      RefLid: true,
+   }
+}>;
+
 @Injectable()
 export class DagRapportenService extends IHeliosService
 {
@@ -87,7 +95,18 @@ export class DagRapportenService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`DagRapportenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP dagrapporten_view samenvoegt
+   private async NaarGetObjectsResponse(objs: DagRapportMetRelaties[]): Promise<GetObjectsOperDagRapportenResponse[]>
+   {
+      this.logger.verbose(`DagRapportenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          const {Veld: veld, RefLid: lid, ...dagRapport} = obj;
          return {
             ...dagRapport,
@@ -97,9 +116,7 @@ export class DagRapportenService extends IHeliosService
             VELD_OMS: veld.OMSCHRIJVING,
          } as GetObjectsOperDagRapportenResponse;
       });
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`DagRapportenService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`DagRapportenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -16,6 +16,15 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 // t/m JournaalStatus.Uitgesteld telt een journaal als openstaand (Opgelost/Afgetekend niet)
 const JOURNAAL_STATUS_LAATSTE_OPENSTAAND = JournaalStatus.Uitgesteld;
 
+// vliegtuig record inclusief de relaties die de PHP vliegtuigen_view samenvoegt
+type VliegtuigMetRelaties = Prisma.RefVliegtuigGetPayload<{
+   include: {
+      VliegtuigType: true,
+      BevoegdheidLokaal: true,
+      BevoegdheidOverland: true,
+   }
+}>;
+
 @Injectable()
 export class VliegtuigenService extends IHeliosService
 {
@@ -95,6 +104,20 @@ export class VliegtuigenService extends IHeliosService
          }
       });
 
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`VliegtuigenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP vliegtuigen_view samenvoegt: VliegtuigType/BevoegdheidLokaal/
+   // BevoegdheidOverland via reeds ge-include-de relaties, en JOURNAAL_AANTAL via een aparte gebatchte
+   // groupBy op OperJournaal (was per record een subquery)
+   private async NaarGetObjectsResponse(objs: VliegtuigMetRelaties[]): Promise<GetRefVliegtuigenResponse[]>
+   {
+      this.logger.verbose(`VliegtuigenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+
       // aantal openstaande journaals per vliegtuig, gebatched voor alle opgehaalde vliegtuigen (was per record een subquery)
       const openJournaalsPerVliegtuig = await this.dbService.operJournaal.groupBy({
          by: ['VLIEGTUIG_ID'],
@@ -107,7 +130,7 @@ export class VliegtuigenService extends IHeliosService
       });
       const journaalAantalPerVliegtuig = new Map(openJournaalsPerVliegtuig.map(row => [row.VLIEGTUIG_ID, row._count._all]));
 
-      const response = objs.map((obj) => {
+      const result = objs.map((obj) => {
          const resp = new GetRefVliegtuigenResponse(obj);
          resp.REG_CALL = `${obj.REGISTRATIE ?? ''} (${obj.CALLSIGN ?? ''})`;
          resp.BEVOEGDHEID_LOKAAL = obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null;
@@ -120,9 +143,7 @@ export class VliegtuigenService extends IHeliosService
 
          return resp;
       });
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`VliegtuigenService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`VliegtuigenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

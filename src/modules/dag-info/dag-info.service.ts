@@ -11,6 +11,18 @@ import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// daginfo record inclusief de relaties die de PHP daginfo_view samenvoegt
+type DagInfoMetRelaties = Prisma.OperDagInfoGetPayload<{
+   include: {
+      Veld: true,
+      Baan: true,
+      StartMethode: true,
+      Veld2: true,
+      Baan2: true,
+      StartMethode2: true,
+   }
+}>;
+
 @Injectable()
 export class DagInfoService extends IHeliosService
 {
@@ -66,7 +78,7 @@ export class DagInfoService extends IHeliosService
       {
          count = await this.dbService.operDagInfo.count({where: where});
       }
-      const rawObjs = await this.dbService.operDagInfo.findMany({
+      const objs = await this.dbService.operDagInfo.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperDagInfoOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
@@ -81,7 +93,18 @@ export class DagInfoService extends IHeliosService
          }
       });
 
-      const objs = rawObjs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`DagInfoService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP daginfo_view samenvoegt
+   private async NaarGetObjectsResponse(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
+   {
+      this.logger.verbose(`DagInfoService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          const retObj = {
             ...obj,
             DATUM: toDateOnly(obj.DATUM) as unknown as Date,
@@ -108,9 +131,7 @@ export class DagInfoService extends IHeliosService
 
          return retObj as GetObjectsOperDagInfoResponse;
       });
-
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
-      this.logger.verbose(`DagInfoService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`DagInfoService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

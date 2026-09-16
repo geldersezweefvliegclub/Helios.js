@@ -5,7 +5,7 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma} from "@prisma/client";
+import {Prisma, OperRooster} from "@prisma/client";
 import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
@@ -82,9 +82,18 @@ export class RoosterService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
+      const response = await this.NaarGetObjectsResponse(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`RoosterService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // normaliseert de datumvelden van de ruwe database-records naar de response-vorm
+   private async NaarGetObjectsResponse(objs: OperRooster[]): Promise<GetObjectsOperRoosterResponse[]>
+   {
+      this.logger.verbose(`RoosterService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
+      this.logger.verbose(`RoosterService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

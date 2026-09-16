@@ -10,6 +10,13 @@ import {GetObjectsHeliosDocumentenRequest} from "./GetObjectsHeliosDocumentenReq
 import {GetObjectsHeliosDocumentenResponse} from "./GetObjectsHeliosDocumentenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 
+// document record inclusief de relatie die de PHP documenten_view samenvoegt
+type DocumentMetRelaties = Prisma.HeliosDocumentGetPayload<{
+   include: {
+      DocumentGroep: true,
+   }
+}>;
+
 @Injectable()
 export class DocumentenService extends IHeliosService
 {
@@ -73,7 +80,17 @@ export class DocumentenService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`DocumentenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP documenten_view samenvoegt
+   private async NaarGetObjectsResponse(objs: DocumentMetRelaties[]): Promise<GetObjectsHeliosDocumentenResponse[]>
+   {
+      this.logger.verbose(`DocumentenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
@@ -85,8 +102,7 @@ export class DocumentenService extends IHeliosService
 
          return  retObj as GetObjectsHeliosDocumentenResponse;
       });
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`DocumentenService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`DocumentenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

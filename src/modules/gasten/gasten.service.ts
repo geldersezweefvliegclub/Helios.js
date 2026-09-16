@@ -11,6 +11,13 @@ import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// gast record inclusief de relatie die de PHP gasten_view samenvoegt
+type GastMetRelaties = Prisma.OperGastGetPayload<{
+   include: {
+      Veld: true,
+   }
+}>;
+
 @Injectable()
 export class GastenService extends IHeliosService
 {
@@ -63,7 +70,7 @@ export class GastenService extends IHeliosService
       {
          count = await this.dbService.operGast.count({where: where});
       }
-      const rawObjs = await this.dbService.operGast.findMany({
+      const objs = await this.dbService.operGast.findMany({
          where: where,
          orderBy: this.SortStringToSortObj<Prisma.OperGastOrderByWithRelationInput>(params.SORT ?? "DATUM"),
          take: params.MAX,
@@ -73,7 +80,18 @@ export class GastenService extends IHeliosService
          }
       });
 
-      const objs = rawObjs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`GastenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP gasten_view samenvoegt
+   private async NaarGetObjectsResponse(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
+   {
+      this.logger.verbose(`GastenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          const retObj = {
             ...obj,
             DATUM: toDateOnly(obj.DATUM) as unknown as Date,
@@ -84,9 +102,7 @@ export class GastenService extends IHeliosService
 
          return retObj as GetObjectsOperGastenResponse;
       });
-
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
-      this.logger.verbose(`GastenService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`GastenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

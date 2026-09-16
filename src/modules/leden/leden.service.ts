@@ -14,6 +14,17 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 
 const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
 
+// lid record inclusief de relaties die de PHP leden_view samenvoegt
+type LidMetRelaties = Prisma.RefLidGetPayload<{
+   include: {
+      LidType: true,
+      VliegStatus: true,
+      Zusterclub: true,
+      Buddy: true,
+      Buddy2: true,
+   }
+}>;
+
 @Injectable()
 export class LedenService extends IHeliosService
 {
@@ -124,6 +135,18 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
+      const response = await this.NaarGetObjectsResponse(objs);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`LedenService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP leden_view samenvoegt: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
+   // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
+   private async NaarGetObjectsResponse(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
+   {
+      this.logger.verbose(`LedenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+
       // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
       const paxProgressies = await this.dbService.operProgressie.findMany({
          where: {
@@ -134,7 +157,7 @@ export class LedenService extends IHeliosService
       });
       const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
 
-      const response = objs.map((obj) => {
+      const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
@@ -156,8 +179,7 @@ export class LedenService extends IHeliosService
 
          return  retObj as GetObjectsRefLedenResponse
       });
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`LedenService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`LedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

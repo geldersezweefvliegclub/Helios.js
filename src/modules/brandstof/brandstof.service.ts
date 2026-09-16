@@ -14,6 +14,13 @@ import {LedenService} from "../leden/leden.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {toDateOnly} from "../../core/helpers/DateOnly";
 
+// brandstof record inclusief de relatie die de PHP brandstof_view samenvoegt
+type BrandstofMetRelaties = Prisma.OperBrandstofGetPayload<{
+   include: {
+      BrandstofType: true,
+   }
+}>;
+
 @Injectable()
 export class BrandstofService extends IHeliosService
 {
@@ -76,7 +83,17 @@ export class BrandstofService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => {
+      const response = await this.NaarGetObjectsResponse(objs);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`BrandstofService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP brandstof_view samenvoegt
+   private async NaarGetObjectsResponse(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
+   {
+      this.logger.verbose(`BrandstofService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
             ...obj,
@@ -89,8 +106,7 @@ export class BrandstofService extends IHeliosService
 
          return  retObj as GetObjectsOperBrandstofResponse
       });
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`BrandstofService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`BrandstofService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

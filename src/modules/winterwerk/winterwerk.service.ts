@@ -69,14 +69,23 @@ export class WinterwerkService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = objs.map(obj => ({
+      const response = await this.NaarGetObjectsResponse(objs);
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`WinterwerkService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // normaliseert de datum-/tijdvelden van de ruwe database-records naar de response-vorm
+   private async NaarGetObjectsResponse(objs: OperWinterwerk[]): Promise<GetObjectsOperWinterwerkResponse[]>
+   {
+      this.logger.verbose(`WinterwerkService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map(obj => ({
          ...obj,
          DATUM: toDateOnly(obj.DATUM) as unknown as Date,
          AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
          EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
       }));
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`WinterwerkService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`WinterwerkService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

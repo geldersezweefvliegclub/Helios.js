@@ -20,6 +20,15 @@ export interface UpdateProgressieData {
    GELDIG_TOT?: Date | null;
 }
 
+// progressie record inclusief de relaties die de PHP progressie_view samenvoegt
+type ProgressieMetRelaties = Prisma.OperProgressieGetPayload<{
+   include: {
+      RefCompetentie: {include: {LeerfaseType: true}},
+      RefLid: true,
+      Instructeur: true,
+   }
+}>;
+
 @Injectable()
 export class ProgressieService extends IHeliosService
 {
@@ -88,7 +97,18 @@ export class ProgressieService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) =>
+      const response = await this.NaarGetObjectsResponse(objs);
+
+      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      this.logger.verbose(`ProgressieService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP progressie_view samenvoegt
+   private async NaarGetObjectsResponse(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
+   {
+      this.logger.verbose(`ProgressieService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) =>
       {
          const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
          return {
@@ -101,9 +121,7 @@ export class ProgressieService extends IHeliosService
             INSTRUCTEUR_NAAM: instructeur.NAAM,
          } as GetObjectsOperProgressieResponse;
       });
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
-      this.logger.verbose(`ProgressieService.GetObjects() => ${safeStringify(result)}`);
+      this.logger.verbose(`ProgressieService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 

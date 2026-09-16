@@ -1,4 +1,4 @@
-import {Body, Controller, HttpException, HttpStatus, Logger, Query} from '@nestjs/common';
+import {Body, Controller, Get, HttpException, HttpStatus, Logger, Post, Query, UseGuards} from '@nestjs/common';
 import {AanwezigLedenService} from "./aanwezig-leden.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -16,10 +16,14 @@ import {GetObjectsOperAanwezigLedenRequest} from "./GetObjectsOperAanwezigLedenR
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAanwezigLid.dto";
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
+import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {AanmeldenRequest} from "./AanmeldenRequest";
+import {AfmeldenRequest} from "./AfmeldenRequest";
+import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
 
 @Controller('AanwezigLeden')
 @ApiTags('AanwezigLeden')
@@ -171,5 +175,72 @@ export class AanwezigLedenController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   @Post("Aanmelden")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(OperAanwezigLidDto)
+   @ApiOperation({summary: 'Aanmelden van een lid als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding van dat lid op die dag aan.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Aanmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigLidDto)}})
+   async Aanmelden(
+      @CurrentUser() currentUser: RefLid,
+      @Body() data: AanmeldenRequest): Promise<OperAanwezigLidDto>
+   {
+      this.logger.verbose(`AanwezigLedenController.Aanmelden(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Aanmelden');
 
+      const obj = await this.AanwezigLedenService.Aanmelden(data, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
+
+   @Post("Afmelden")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(OperAanwezigLidDto)
+   @ApiOperation({summary: 'Afmelden van een aangemeld lid.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.CONFLICT, description: 'Lid is niet aangemeld.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Afmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigLidDto)}})
+   async Afmelden(
+      @CurrentUser() currentUser: RefLid,
+      @Body() data: AfmeldenRequest): Promise<OperAanwezigLidDto>
+   {
+      this.logger.verbose(`AanwezigLedenController.Afmelden(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Afmelden');
+
+      const obj = await this.AanwezigLedenService.Afmelden(data, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
+
+   @Get("Samenvatting")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(AanwezigLedenSamenvattingResponse)
+   @ApiOperation({summary: 'Samenvatting van de aanmeldingen van een vliegdag.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Samenvatting opgehaald.', schema: {'$ref': getSchemaPath(AanwezigLedenSamenvattingResponse)}})
+   async Samenvatting(
+      @CurrentUser() currentUser: RefLid,
+      @Query('DATUM') datum?: string): Promise<AanwezigLedenSamenvattingResponse>
+   {
+      this.logger.verbose(`AanwezigLedenController.Samenvatting(${safeStringify({currentUser, datum})})`);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Samenvatting');
+
+      const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : parseDateOnly(new Date().toISOString().slice(0, 10)) as Date;
+      return await this.AanwezigLedenService.Samenvatting(gevraagdeDatum);
+   }
 }

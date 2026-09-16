@@ -12,7 +12,10 @@ import {CreateOperAanwezigLidDto} from "../../generated/nestjs-dto/create-operAa
 import {UpdateOperAanwezigLidDto} from "../../generated/nestjs-dto/update-operAanwezigLid.dto";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {parseDateOnly, toDateOnly, toTimeOnly} from "../../core/helpers/DateOnly";
+import {AanmeldenRequest} from "./AanmeldenRequest";
+import {AfmeldenRequest} from "./AfmeldenRequest";
+import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
 
 // aanwezig lid record inclusief de relaties die de PHP aanwezig_leden_view samenvoegt
 type AanwezigLidMetRelaties = Prisma.OperAanwezigLidGetPayload<{
@@ -349,5 +352,205 @@ export class AanwezigLedenService extends IHeliosService
       const result = !!rec;
       this.logger.verbose(`AanwezigLedenService.IsAangemeld() => ${safeStringify(result)}`);
       return result;
+   }
+
+   // zoekt de actieve aanmelding van dit lid op deze datum, of null
+   private async AanmeldingLidDatum(lidId: number, datum: Date): Promise<OperAanwezigLid | null>
+   {
+      this.logger.verbose(`AanwezigLedenService.AanmeldingLidDatum(${safeStringify({lidId, datum})})`);
+      const result = await this.dbService.operAanwezigLid.findFirst({
+         where: {LID_ID: lidId, DATUM: datum, VERWIJDERD: false}
+      });
+      this.logger.verbose(`AanwezigLedenService.AanmeldingLidDatum() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Aanmelden van een lid als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding van
+   // dat lid op die dag aan (bv. tweede aanmelding met een ander gewenst vliegtuigtype).
+   async Aanmelden(data: AanmeldenRequest, actorId: number): Promise<OperAanwezigLid>
+   {
+      this.logger.verbose(`AanwezigLedenService.Aanmelden(${safeStringify({data})})`);
+      if (data.LID_ID === undefined || data.LID_ID === null)
+         throw new HttpException("LID_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
+
+      const tijdstip = data.TIJDSTIP ? new Date(data.TIJDSTIP) : new Date();
+      const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : this.DatumZonderTijd(tijdstip);
+      const isVandaag = datum.getTime() === this.DatumZonderTijd(new Date()).getTime();
+
+      const bestaand = await this.AanmeldingLidDatum(data.LID_ID, datum);
+
+      if (bestaand)
+      {
+         const update: Prisma.OperAanwezigLidUpdateInput = {};
+         let aanpassen = false;
+
+         // Bouw een CSV-unie van de gewenste vliegtuigtypes op i.p.v. het bestaande type te overschrijven -
+         // zo blijft een eerdere aanmelding met ASK21 behouden als er nu ook een LS4-aanmelding bijkomt.
+         if (data.VOORKEUR_VLIEGTUIG_TYPE)
+         {
+            const bestaandeTypes = (bestaand.VOORKEUR_VLIEGTUIG_TYPE ?? "").split(",").filter(Boolean);
+            if (!bestaandeTypes.includes(data.VOORKEUR_VLIEGTUIG_TYPE))
+            {
+               update.VOORKEUR_VLIEGTUIG_TYPE = bestaandeTypes.length
+                  ? `${bestaand.VOORKEUR_VLIEGTUIG_TYPE},${data.VOORKEUR_VLIEGTUIG_TYPE}`
+                  : data.VOORKEUR_VLIEGTUIG_TYPE;
+               aanpassen = true;
+            }
+         }
+
+         if (isVandaag && bestaand.AANKOMST === null)
+         {
+            update.AANKOMST = tijdstip;
+            aanpassen = true;
+         }
+
+         if (bestaand.VERTREK !== null)
+         {
+            update.VERTREK = null;
+            aanpassen = true;
+         }
+
+         const overigeVelden = ["POSITIE", "VOORAANMELDING", "OVERLAND_VLIEGTUIG_ID", "OPMERKINGEN"] as const;
+         for (const veld of overigeVelden)
+         {
+            if (data[veld] !== undefined && data[veld] !== bestaand[veld])
+            {
+               (update as Record<string, unknown>)[veld] = data[veld];
+               aanpassen = true;
+            }
+         }
+
+         if (!aanpassen)
+         {
+            this.logger.verbose(`AanwezigLedenService.Aanmelden: niet aangepast, id=${bestaand.ID}`);
+            return bestaand;
+         }
+
+         await this.UpdateObject(bestaand.ID, update, actorId);
+         const result = await this.GetObject(bestaand.ID);
+         this.logger.verbose(`AanwezigLedenService.Aanmelden() => ${safeStringify(result)}`);
+         return result;
+      }
+
+      // Achteraan de lijst van aanwezigen toevoegen door de hoogste bestaande POSITIE die dag met 1 te verhogen
+      let positie = data.POSITIE;
+      if (positie === undefined)
+      {
+         const laatste = await this.dbService.operAanwezigLid.findFirst({
+            where: {DATUM: datum, VERWIJDERD: false},
+            orderBy: {POSITIE: "desc"},
+         });
+         positie = (laatste?.POSITIE ?? 0) + 1;
+      }
+
+      const insertData: CreateOperAanwezigLidDto = {
+         DATUM: datum,
+         LID_ID: data.LID_ID,
+         POSITIE: positie,
+         VOORAANMELDING: data.VOORAANMELDING,
+         AANKOMST: (isVandaag && data.AANKOMST === undefined) ? tijdstip : (data.AANKOMST as Date ?? null),
+         VERTREK: null, // zeker weten dat vertrek niet gezet wordt bij een nieuwe aanmelding
+         OVERLAND_VLIEGTUIG_ID: data.OVERLAND_VLIEGTUIG_ID,
+         VOORKEUR_VLIEGTUIG_TYPE: data.VOORKEUR_VLIEGTUIG_TYPE,
+         VELD_ID: data.VELD_ID,
+         OPMERKINGEN: data.OPMERKINGEN,
+      };
+
+      const aangemeld = await this.AddObject(insertData, actorId);
+      const result = await this.GetObject(aangemeld.ID);
+      this.logger.verbose(`AanwezigLedenService.Aanmelden() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Afmelden van een aangemeld lid. Zie AanwezigLeden.Afmelden() in de PHP implementatie - het strippen-
+   // bijboeken voor DDWV staat daar al sinds "mei 2024" in commentaar en is dan ook niet overgenomen. PHP's
+   // TIJDSTIP-parameter (afmelden op een ander moment dan nu) is hier niet overgenomen - de enige bestaande
+   // client (Pegasus) gebruikt hem nooit, afmelden gebeurt altijd voor het huidige moment.
+   async Afmelden(data: AfmeldenRequest, actorId: number): Promise<OperAanwezigLid>
+   {
+      this.logger.verbose(`AanwezigLedenService.Afmelden(${safeStringify({data})})`);
+      if (data.LID_ID === undefined || data.LID_ID === null)
+         throw new HttpException("LID_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
+
+      const nu = new Date();
+
+      // net als in PHP: als een ID is meegegeven wordt uitsluitend daarop gezocht (LID_ID/datum spelen dan
+      // geen rol meer bij het opzoeken)
+      const bestaand = (data.ID !== undefined && data.ID !== null)
+         ? await this.dbService.operAanwezigLid.findUnique({where: {ID: data.ID}})
+         : await this.AanmeldingLidDatum(data.LID_ID, this.DatumZonderTijd(nu));
+
+      if (!bestaand)
+         throw new HttpException("Kan een lid alleen afmelden als het eerst aangemeld is", HttpStatus.CONFLICT);
+
+      const update: Prisma.OperAanwezigLidUpdateInput = {
+         VERTREK: data.VERTREK !== undefined ? data.VERTREK as Date : nu,
+      };
+
+      await this.UpdateObject(bestaand.ID, update, actorId);
+      const result = await this.GetObject(bestaand.ID);
+      this.logger.verbose(`AanwezigLedenService.Afmelden() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Samenvatting van de aanmeldingen van een vliegdag, zie AanwezigLeden.Samenvatting() in de PHP implementatie
+   async Samenvatting(datum: Date): Promise<AanwezigLedenSamenvattingResponse>
+   {
+      this.logger.verbose(`AanwezigLedenService.Samenvatting(${safeStringify({datum})})`);
+
+      // clubvliegtuigen en de types waarnaar ze verwijzen (equivalent van Types.GetClubVliegtuigenTypes())
+      const clubVliegtuigen = await this.dbService.refVliegtuig.findMany({
+         where: {VERWIJDERD: false, CLUBKIST: true},
+         select: {ID: true, TYPE_ID: true},
+      });
+      const clubkistIds = new Set(clubVliegtuigen.map(v => v.ID));
+      const clubTypeIds = [...new Set(clubVliegtuigen.map(v => v.TYPE_ID).filter((id): id is number => id !== null))];
+      const clubTypes = clubTypeIds.length
+         ? await this.dbService.refType.findMany({where: {ID: {in: clubTypeIds}}, orderBy: {SORTEER_VOLGORDE: "asc"}})
+         : [];
+      const typesAangevraagd = clubTypes.map(type => ({id: type.ID, type: type.OMSCHRIJVING, aantal: 0}));
+
+      const aanmeldingen = await this.GetObjects(Object.assign(new GetObjectsOperAanwezigLedenRequest(), {DATUM: datum}));
+
+      let dbo = 0, solisten = 0, brevethouders = 0, instructeurs = 0, lieristen = 0, startleiders = 0;
+      const overland: {reg_call: string | null, naam: string}[] = [];
+
+      for (const aanmelding of aanmeldingen.dataset)
+      {
+         const gewensteTypeIds = (aanmelding.VOORKEUR_VLIEGTUIG_TYPE ?? "").split(",").filter(Boolean).map(Number);
+         for (const type of typesAangevraagd)
+         {
+            if (gewensteTypeIds.includes(type.id))
+               type.aantal++;
+         }
+
+         if (aanmelding.OVERLAND_VLIEGTUIG_ID != null && clubkistIds.has(aanmelding.OVERLAND_VLIEGTUIG_ID))
+            overland.push({reg_call: aanmelding.REG_CALL ?? null, naam: aanmelding.NAAM});
+
+         // 1901 = DBO, 1902 = Solist, 1903 = Brevethouder (RefType records onder TypesGroep.Status)
+         if (aanmelding.STATUSTYPE_ID === 1901) dbo++;
+         else if (aanmelding.STATUSTYPE_ID === 1902) solisten++;
+         else if (aanmelding.STATUSTYPE_ID === 1903) brevethouders++;
+
+         if (aanmelding.LIERIST) lieristen++;
+         if (aanmelding.INSTRUCTEUR) instructeurs++;
+         if (aanmelding.STARTLEIDER) startleiders++;
+      }
+
+      const result: AanwezigLedenSamenvattingResponse = {
+         aanmeldingen: aanmeldingen.totaal,
+         dbo, solisten, brevethouders, lieristen, instructeurs, startleiders,
+         types: typesAangevraagd,
+         overland,
+      };
+      this.logger.verbose(`AanwezigLedenService.Samenvatting() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // normaliseert een tijdstip naar de kalenderdatum ervan (UTC-middernacht), zodat deze vergeleken kan
+   // worden met een @db.Date kolom zoals OperAanwezigLid.DATUM
+   private DatumZonderTijd(tijdstip: Date): Date
+   {
+      return new Date(Date.UTC(tijdstip.getFullYear(), tijdstip.getMonth(), tijdstip.getDate()));
    }
 }

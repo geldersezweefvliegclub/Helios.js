@@ -5,7 +5,7 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma} from '@prisma/client';
+import {Prisma, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
@@ -74,9 +74,18 @@ export class TypesService extends IHeliosService
          }
       });
 
-      const response = objs.map((obj) => new GetRefTypesResponse(obj));
+      const response = await this.NaarGetObjectsResponse(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`TypesService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // voegt de velden toe die de PHP types_view samenvoegt
+   private async NaarGetObjectsResponse(objs: RefType[]): Promise<GetRefTypesResponse[]>
+   {
+      this.logger.verbose(`TypesService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      const result = objs.map((obj) => new GetRefTypesResponse(obj));
+      this.logger.verbose(`TypesService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
       return result;
    }
 
