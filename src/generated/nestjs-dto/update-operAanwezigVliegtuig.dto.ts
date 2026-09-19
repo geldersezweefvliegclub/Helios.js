@@ -1,6 +1,12 @@
 import { Prisma } from "@prisma/client";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsDateString, IsDecimal, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsDecimal,
+  IsInt,
+  IsOptional,
+} from "class-validator";
 
 export class UpdateOperAanwezigVliegtuigDto {
   @ApiProperty({
@@ -39,7 +45,7 @@ export class UpdateOperAanwezigVliegtuigDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   AANKOMST?: Date | null;
   @ApiProperty({
     description:
@@ -50,7 +56,7 @@ export class UpdateOperAanwezigVliegtuigDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   VERTREK?: Date | null;
   @ApiProperty({
     description: "Laaste bekende Latitude van het vliegtuig",

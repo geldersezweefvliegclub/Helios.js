@@ -28,24 +28,14 @@ export class CreateOperDagRapportDto {
   @IsDateString()
   DATUM: Date;
   @ApiProperty({
-    description: "Referentie naar het vliegveld in de type tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-  })
-  @IsOptional()
-  @IsInt()
-  VELD_ID?: number;
-  @ApiProperty({
     description:
-      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
+      "Referentie naar het vliegveld in de type tabel. Verplicht bij het aanmaken van een nieuw dagrapport, optioneel bij het bijwerken van een bestaand record.",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  INGEVOERD_ID?: number;
+  VELD_ID: number;
   @ApiProperty({
     description: "Beschrijving van de incidenten",
     type: "string",

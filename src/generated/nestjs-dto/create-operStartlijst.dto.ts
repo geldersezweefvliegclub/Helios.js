@@ -43,7 +43,7 @@ export class CreateOperStartlijstDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   STARTTIJD?: Date | null;
   @ApiProperty({
     description: "De landingtijd van de vlucht",
@@ -53,7 +53,7 @@ export class CreateOperStartlijstDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsDateString()
   LANDINGSTIJD?: Date | null;
   @ApiProperty({
     description: "De startmethode die gebruikt is voor de vlucht",

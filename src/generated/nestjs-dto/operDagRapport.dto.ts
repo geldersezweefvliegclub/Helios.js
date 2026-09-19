@@ -14,14 +14,15 @@ export class OperDagRapportDto {
   })
   DATUM: Date;
   @ApiProperty({
-    description: "Referentie naar het vliegveld in de type tabel",
+    description:
+      "Referentie naar het vliegveld in de type tabel. Verplicht bij het aanmaken van een nieuw dagrapport, optioneel bij het bijwerken van een bestaand record.",
     type: "integer",
     format: "int32",
   })
   VELD_ID: number;
   @ApiProperty({
     description:
-      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
+      "Verwijzing naar het lid ID van degene die het rapport heeft ingevoerd, link naar de leden tabel. Wordt bij het aanmaken altijd server-side gezet op de ingelogde gebruiker en kan niet door de client opgegeven of gewijzigd worden (alleen-lezen veld, niet aanwezig in de create/update request body).",
     type: "integer",
     format: "int32",
   })

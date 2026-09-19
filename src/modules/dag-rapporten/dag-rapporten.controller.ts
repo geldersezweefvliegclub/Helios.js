@@ -1,6 +1,11 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Logger, Query} from '@nestjs/common';
 import {DagRapportenService} from "./dag-rapporten.service";
 import {PermissieService} from "../authorisatie/permissie.service";
+import {RoosterService} from "../rooster/rooster.service";
+import {DienstenService} from "../diensten/diensten.service";
+import {GetObjectsOperRoosterRequest} from "../rooster/GetObjectsOperRoosterRequest";
+import {GetObjectsOperDienstenRequest} from "../diensten/GetObjectsOperDienstenRequest";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -28,7 +33,9 @@ export class DagRapportenController extends HeliosController
    private readonly logger = new Logger(DagRapportenController.name);
 
    constructor(private readonly DagRapportenService: DagRapportenService,
-               private readonly permissieService:PermissieService)
+               private readonly permissieService:PermissieService,
+               private readonly roosterService: RoosterService,
+               private readonly dienstenService: DienstenService)
    {
       super()
    }
@@ -51,7 +58,51 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObjects');
-      return await this.DagRapportenService.GetObjects(queryParams);
+
+      const toegestaneDatums = await this.bepaalToegestaneDatums(currentUser, queryParams);
+      return await this.DagRapportenService.GetObjects(queryParams, toegestaneDatums);
+   }
+
+   // PHP class.DagRapporten.inc.php::GetObjects() - Beheerder/Instructeur/CIMT mogen alle dagrapporten
+   // zien (undefined = geen beperking); DDWV-Beheerder/DDWV-Crew mogen enkel DDWV-dagen zien binnen het
+   // opgevraagde datumbereik, Crew bovendien enkel de dagen waarop ze zelf dienst hadden; alle andere
+   // gebruikers mogen helemaal geen dagrapporten opvragen
+   private async bepaalToegestaneDatums(
+      currentUser: RefLid, queryParams: GetObjectsOperDagRapportenRequest): Promise<Date[] | undefined>
+   {
+      if (this.permissieService.isBeheerder(currentUser) ||
+          this.permissieService.isInstructeur(currentUser) ||
+          this.permissieService.isCIMT(currentUser))
+      {
+         return undefined;
+      }
+
+      if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isDDWVCrew(currentUser))
+      {
+         throw new HttpException("Gebruiker mag dagrapport niet opvragen", HttpStatus.UNAUTHORIZED);
+      }
+
+      const dtSpanne = queryParams.VanTot(queryParams.DATUM, queryParams.BEGIN_DATUM, queryParams.EIND_DATUM);
+
+      const roosterResult = await this.roosterService.GetObjects(
+         MaakGetObjectsRequest(GetObjectsOperRoosterRequest, {BEGIN_DATUM: dtSpanne.start, EIND_DATUM: dtSpanne.eind})
+      );
+      let toegestaneDatums = roosterResult.dataset
+         .filter(rooster => rooster.DDWV)
+         .map(rooster => new Date(rooster.DATUM));
+
+      if (this.permissieService.isDDWVCrew(currentUser))
+      {
+         const dienstenResult = await this.dienstenService.GetObjects(
+            MaakGetObjectsRequest(GetObjectsOperDienstenRequest, {
+               BEGIN_DATUM: dtSpanne.start, EIND_DATUM: dtSpanne.eind, LID_ID: currentUser.ID
+            })
+         );
+         const dienstDatums = new Set(dienstenResult.dataset.map(dienst => toDateOnly(dienst.DATUM)));
+         toegestaneDatums = toegestaneDatums.filter(datum => dienstDatums.has(toDateOnly(datum)));
+      }
+
+      return toegestaneDatums;
    }
 
    @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
@@ -64,6 +115,9 @@ export class DagRapportenController extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
 
       const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
+      // PHP class.DagRapporten.inc.php::AddObject() - INGEVOERD_ID wordt altijd server-side gezet op de
+      // ingelogde gebruiker, nooit overgenomen uit de aanvraag, en blijft na aanmaken onveranderlijk
+      insert.INGEVOERD_ID = currentUser.ID;
       const obj = await this.DagRapportenService.AddObject(insert, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -88,9 +142,11 @@ export class DagRapportenController extends HeliosController
    private async normaliserenData(
       data: CreateOperDagRapportDto | UpdateOperDagRapportDto): Promise<Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput>
    {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd. INGEVOERD_ID is @DtoReadOnly in het Prisma schema en zit daarom
+      // al helemaal niet in Create/UpdateOperDagRapportDto - het wordt enkel bij het aanmaken server-side
+      // gezet (zie AddObject) en blijft daarna onveranderlijk.
       delete data.VERWIJDERD;
       delete data.LAATSTE_AANPASSING;
       delete data.ID;

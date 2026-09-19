@@ -49,9 +49,11 @@ export class DagRapportenService extends IHeliosService
    }
 
    // haal objects op uit de database op basis van de query parameters
-   async GetObjects(params?: GetObjectsOperDagRapportenRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagRapportenResponse>>
+   // toegestaneDatums: optionele lijst van DATUMs om het resultaat tot te beperken (mechanisch toegepast -
+   // de PermissieService-afweging welke datums dat zijn gebeurt in de controller, zie DagRapportenController)
+   async GetObjects(params?: GetObjectsOperDagRapportenRequest, toegestaneDatums?: Date[]): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagRapportenResponse>>
    {
-      this.logger.verbose(`DagRapportenService.GetObjects(${safeStringify({params})})`);
+      this.logger.verbose(`DagRapportenService.GetObjects(${safeStringify({params, toegestaneDatums})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperDagRapportenRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
@@ -62,6 +64,7 @@ export class DagRapportenService extends IHeliosService
                     {ID: params.ID},
                     {VERWIJDERD: params.VERWIJDERD ?? false},
                     {ID: {in: params.IDs}},
+                    {DATUM: toegestaneDatums ? {in: toegestaneDatums} : undefined},
 
                     {
                        OR: [

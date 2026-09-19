@@ -5,15 +5,13 @@ model OperDagRapport {
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Datum van het dagrapport
   DATUM              DateTime @db.Date
+  /// @description Referentie naar het vliegveld in de type tabel. Verplicht bij het aanmaken van een nieuw dagrapport, optioneel bij het bijwerken van een bestaand record.
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar het vliegveld in de type tabel
   VELD_ID            Int      @db.UnsignedMediumInt
-  /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
+  /// @description Verwijzing naar het lid ID van degene die het rapport heeft ingevoerd, link naar de leden tabel. Wordt bij het aanmaken altijd server-side gezet op de ingelogde gebruiker en kan niet door de client opgegeven of gewijzigd worden (alleen-lezen veld, niet aanwezig in de create/update request body).
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
+  /// @DtoReadOnly
   INGEVOERD_ID       Int      @db.UnsignedMediumInt
   /// @description Beschrijving van de incidenten
   /// @DtoCreateOptional
