@@ -219,6 +219,7 @@ export class AanwezigLedenController  extends HeliosController
    @ApiOperation({summary: 'Aanmelden van een lid als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding van dat lid op die dag aan.'})
    @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.NOT_ACCEPTABLE, description: 'LID_ID ontbreekt.'})
    @ApiResponse({status: HttpStatus.OK, description: 'Aanmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigLidDto)}})
    async Aanmelden(
       @CurrentUser() currentUser: RefLid,
@@ -244,6 +245,7 @@ export class AanwezigLedenController  extends HeliosController
    @ApiOperation({summary: 'Afmelden van een aangemeld lid.'})
    @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.NOT_ACCEPTABLE, description: 'LID_ID ontbreekt.'})
    @ApiResponse({status: HttpStatus.CONFLICT, description: 'Lid is niet aangemeld.'})
    @ApiResponse({status: HttpStatus.OK, description: 'Afmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigLidDto)}})
    async Afmelden(

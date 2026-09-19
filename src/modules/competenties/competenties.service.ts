@@ -30,14 +30,13 @@ export class CompetentiesService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation:string = undefined): Promise<RefCompetentie>
+   async GetObject(id: number): Promise<RefCompetentie>
    {
-      this.logger.verbose(`CompetentiesService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`CompetentiesService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.refCompetentie.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.RefCompetentieInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Competentie record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -83,21 +82,17 @@ export class CompetentiesService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP competenties_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: CompetentieMetRelaties[]): Promise<GetObjectsRefCompetentiesResponse[]>
    {
       this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            LEERFASE: obj.LeerfaseType?.OMSCHRIJVING ?? null
-         } ;
+         const {LeerfaseType: leerfaseType, ...competentie} = obj;
 
-         // verwijder child objects uit de response
-         delete retObj.LeerfaseType;
-
-         return  retObj as GetObjectsRefCompetentiesResponse
+         return {
+            ...competentie,
+            LEERFASE: leerfaseType?.OMSCHRIJVING ?? null
+         } as GetObjectsRefCompetentiesResponse
       });
       this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

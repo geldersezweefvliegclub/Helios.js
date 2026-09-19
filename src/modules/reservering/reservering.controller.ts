@@ -56,6 +56,7 @@ export class ReserveringController extends HeliosController
    }
 
    @HeliosCreateObject(CreateOperReserveringDto, OperReserveringDto)
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Geen rechten om IS_GEBOEKT te zetten.'})
    async AddObject(
       @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperReserveringDto): Promise<OperReserveringDto>
@@ -84,6 +85,7 @@ export class ReserveringController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateOperReserveringDto, OperReserveringDto)
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Geen rechten om IS_GEBOEKT te zetten.'})
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperReserveringDto): Promise<OperReserveringDto>

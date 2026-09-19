@@ -25,10 +25,9 @@ export class RoosterService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperRoosterDto>
+   async GetObject(id: number): Promise<OperRoosterDto>
    {
-      this.logger.verbose(`RoosterService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`RoosterService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operRooster.findUnique({
          where: {
             ID: id

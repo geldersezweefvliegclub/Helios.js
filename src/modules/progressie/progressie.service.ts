@@ -42,10 +42,9 @@ export class ProgressieService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperProgressie>
+   async GetObject(id: number): Promise<OperProgressie>
    {
-      this.logger.verbose(`ProgressieService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
+      this.logger.verbose(`ProgressieService.GetObject(${safeStringify({id})})`);
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de progressie_view.
       const db = await this.dbService.operProgressie.findUnique({
          where: {
@@ -102,7 +101,7 @@ export class ProgressieService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP progressie_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
    {
       this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);

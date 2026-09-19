@@ -49,10 +49,9 @@ export class AanwezigLedenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperAanwezigLid>
+   async GetObject(id: number): Promise<OperAanwezigLid>
    {
-      this.logger.verbose(`AanwezigLedenService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`AanwezigLedenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operAanwezigLid.findUnique({
          where: {
             ID: id
@@ -132,6 +131,7 @@ export class AanwezigLedenService extends IHeliosService
       return result;
    }
 
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
    {
       this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);

@@ -23,10 +23,9 @@ export class FacturenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperFactuur>
+   async GetObject(id: number): Promise<OperFactuur>
    {
-      this.logger.verbose(`FacturenService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`FacturenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operFactuur.findUnique({
          where: {
             ID: id

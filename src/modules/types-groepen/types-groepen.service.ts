@@ -31,14 +31,13 @@ export class TypesGroepenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<RefTypesGroep>
+   async GetObject(id: number): Promise<RefTypesGroep>
    {
-      this.logger.verbose(`TypesGroepenService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`TypesGroepenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.refTypesGroep.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.RefTypesGroepInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Typegroep record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);

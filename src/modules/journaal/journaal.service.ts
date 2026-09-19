@@ -37,14 +37,13 @@ export class JournaalService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation:string = undefined): Promise<OperJournaal>
+   async GetObject(id: number): Promise<OperJournaal>
    {
-      this.logger.verbose(`JournaalService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`JournaalService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operJournaal.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.OperJournaalInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Journaal record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -125,35 +124,28 @@ export class JournaalService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP journaal_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
    {
       this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            MELDER: obj.Melder?.NAAM ?? null,
-            TECHNICUS: obj.Technicus?.NAAM ?? null,
-            AFGETEKEND: obj.Afgetekend?.NAAM ?? null,
-            ROLLEND: obj.Rollend?.OMSCHRIJVING ?? null,
-            STATUS: obj.Status?.OMSCHRIJVING ?? null,
-            STATUS_CODE: obj.Status?.CODE ?? null,
-            CATEGORIE: obj.Categorie?.OMSCHRIJVING ?? null,
-            CATEGORIE_CODE: obj.Categorie?.CODE ?? null,
-            REG_CALL: obj.Vliegtuig === null ? " ()" : RegCall(obj.Vliegtuig.REGISTRATIE, obj.Vliegtuig.CALLSIGN)
-         } ;
+         const {
+            Vliegtuig: vliegtuig, Rollend: rollend, Status: status, Categorie: categorie,
+            Melder: melder, Technicus: technicus, Afgetekend: afgetekend, ...journaal
+         } = obj;
 
-         // verwijder child objects uit de response
-         delete retObj.Vliegtuig;
-         delete retObj.Rollend;
-         delete retObj.Status;
-         delete retObj.Categorie;
-         delete retObj.Melder;
-         delete retObj.Technicus;
-         delete retObj.Afgetekend
-
-         return  retObj as GetObjectsOperJournaalResponse
+         return {
+            ...journaal,
+            MELDER: melder?.NAAM ?? null,
+            TECHNICUS: technicus?.NAAM ?? null,
+            AFGETEKEND: afgetekend?.NAAM ?? null,
+            ROLLEND: rollend?.OMSCHRIJVING ?? null,
+            STATUS: status?.OMSCHRIJVING ?? null,
+            STATUS_CODE: status?.CODE ?? null,
+            CATEGORIE: categorie?.OMSCHRIJVING ?? null,
+            CATEGORIE_CODE: categorie?.CODE ?? null,
+            REG_CALL: vliegtuig === null ? " ()" : RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN)
+         } as GetObjectsOperJournaalResponse
       });
       this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

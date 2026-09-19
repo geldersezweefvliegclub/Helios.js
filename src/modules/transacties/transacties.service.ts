@@ -33,10 +33,9 @@ export class TransactiesService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperTransactie>
+   async GetObject(id: number): Promise<OperTransactie>
    {
-      this.logger.verbose(`TransactiesService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`TransactiesService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operTransactie.findUnique({
          where: {
             ID: id
@@ -106,24 +105,20 @@ export class TransactiesService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP transacties_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
    {
       this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         const retObj = {
-            ...obj,
-            VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date,
-            NAAM: obj.RefLid?.NAAM ?? null,
-            INGEVOERD: obj.RefIngevoerd?.NAAM ?? null,
-            TYPE: obj.TypeTransactie?.OMSCHRIJVING ?? null,
-         };
+         const {RefLid: lid, RefIngevoerd: ingevoerd, TypeTransactie: typeTransactie, ...transactie} = obj;
 
-         delete retObj.RefLid;
-         delete retObj.RefIngevoerd;
-         delete retObj.TypeTransactie;
-
-         return retObj as GetObjectsOperTransactiesResponse;
+         return {
+            ...transactie,
+            VLIEGDAG: toDateOnly(transactie.VLIEGDAG) as unknown as Date,
+            NAAM: lid?.NAAM ?? null,
+            INGEVOERD: ingevoerd?.NAAM ?? null,
+            TYPE: typeTransactie?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperTransactiesResponse;
       });
       this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

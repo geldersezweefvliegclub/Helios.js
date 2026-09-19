@@ -39,14 +39,13 @@ export class VliegtuigenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation:string = undefined): Promise<RefVliegtuigDto>
+   async GetObject(id: number): Promise<RefVliegtuigDto>
    {
-      this.logger.verbose(`VliegtuigenService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`VliegtuigenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.refVliegtuig.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.RefVliegtuigInclude>(relation)
+         }
       });
       if (!db) {
          throw new HttpException(`Vliegtuig record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -110,7 +109,7 @@ export class VliegtuigenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP vliegtuigen_view samenvoegt: VliegtuigType/BevoegdheidLokaal/
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: VliegtuigType/BevoegdheidLokaal/
    // BevoegdheidOverland via reeds ge-include-de relaties, en JOURNAAL_AANTAL via een aparte gebatchte
    // groupBy op OperJournaal (was per record een subquery)
    private async MaakGetObjectsResponseDataset(objs: VliegtuigMetRelaties[]): Promise<GetRefVliegtuigenResponse[]>

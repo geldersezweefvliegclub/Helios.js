@@ -24,10 +24,9 @@ export class AgendaService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperAgenda>
+   async GetObject(id: number): Promise<OperAgenda>
    {
-      this.logger.verbose(`AgendaService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`AgendaService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operAgenda.findUnique({
          where: {
             ID: id

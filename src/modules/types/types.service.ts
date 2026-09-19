@@ -24,14 +24,13 @@ export class TypesService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation :string = undefined): Promise<GetRefTypesResponse>
+   async GetObject(id: number): Promise<GetRefTypesResponse>
    {
-      this.logger.verbose(`TypesService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`TypesService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.refType.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.RefTypeInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Type record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -78,7 +77,7 @@ export class TypesService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP types_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: RefType[]): Promise<GetRefTypesResponse[]>
    {
       this.logger.verbose(`TypesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);

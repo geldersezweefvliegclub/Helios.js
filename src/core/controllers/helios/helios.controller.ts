@@ -35,7 +35,8 @@ export const HeliosGetObject = <DataDto extends Type<unknown>>(dataDto: DataDto)
       ApiResponse({ status: HttpStatus.OK, description: 'Record opgehaald.',   schema: {
             '$ref': getSchemaPath(dataDto)
          }}),
-      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 
 
@@ -64,7 +65,8 @@ export const HeliosGetObjects = <DataDto extends Type<unknown>>(dataDto: DataDto
                   totaal: {type: 'number'},
                   hash: {type: 'string'},
                }
-         }})
+         }}),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 
 
@@ -79,10 +81,12 @@ export const HeliosCreateObject = <InputDto extends Type<unknown>, OutputDto ext
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Aanmaken nieuw record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
       ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data bestaat al.' }),
       ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangemaakt.', schema: {
             '$ref': getSchemaPath(outputDto)
-         }})
+         }}),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 
 // Swagger definitie voor een update van een bestaand record. Dit is universeel en kan in elke controller gebruikt worden.
@@ -95,10 +99,14 @@ export const HeliosUpdateObject = <InputDto extends Type<unknown>, OutputDto ext
       ApiExtraModels(inputDto),
       ApiOperation({ summary: 'Update van bestaand record.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
       ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data bestaat al.' }),
-      ApiResponse({ status: HttpStatus.CREATED, description: 'Record aangepast.', schema: {
+      // geen expliciete @HttpCode() op deze PUT-route, dus NestJS' standaard statuscode (200) wordt teruggegeven
+      ApiResponse({ status: HttpStatus.OK, description: 'Record aangepast.', schema: {
             '$ref': getSchemaPath(outputDto)
-         }})
+         }}),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 
 // Swagger definitie voor het verwijderen van een record. Dit is universeel en kan in elke controller gebruikt worden.
@@ -113,7 +121,9 @@ export const HeliosDeleteObject = () =>
       ApiOperation({ summary: 'Markeer record als verwijderd door VERWIJDERD op true te zetten.' }),
       ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Het record is succesvol verwijderd.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
       ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' }),
    );
 
 // Swagger definitie voor het fysiek verwijderen van een record. Dit is universeel en kan in elke controller gebruikt worden.
@@ -128,7 +138,11 @@ export const HeliosRemoveObject = () =>
       ApiOperation({ summary: 'Verwijderen record uit de database, herstel niet mogelijk.' }),
       ApiResponse({ status: HttpStatus.GONE, description: 'Het record is succesvol verwijderd.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
-      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
+      // service werpt dit wanneer het record nog niet als verwijderd is gemarkeerd (VERWIJDERD moet eerst true zijn)
+      ApiResponse({ status: HttpStatus.METHOD_NOT_ALLOWED, description: 'Record moet eerst gemarkeerd worden als verwijderd voordat het permanent verwijderd kan worden.' }),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 
 // Swagger definitie voor het herstellen van een record. Dit is universeel en kan in elke controller gebruikt worden.
@@ -142,6 +156,10 @@ export const HeliosRestoreObject = () =>
       ApiOperation({ summary: 'Maak de verwijdering ongedaan door VERWIJDERD op false te zetten.' }),
       ApiResponse({ status: HttpStatus.OK, description: 'Het record is succesvol hersteld.' }),
       ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.' }),
-      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' })
+      ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.' }),
+      ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Record niet gevonden.' }),
+      // sommige modules (bv. Daginfo) controleren bij het herstellen opnieuw op een uniciteitsconflict
+      ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data bestaat al.' }),
+      ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Database fout.' })
    );
 

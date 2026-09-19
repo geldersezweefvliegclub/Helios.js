@@ -24,10 +24,9 @@ export class WinterwerkService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperWinterwerk>
+   async GetObject(id: number): Promise<OperWinterwerk>
    {
-      this.logger.verbose(`WinterwerkService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`WinterwerkService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operWinterwerk.findUnique({
          where: {
             ID: id

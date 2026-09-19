@@ -35,10 +35,9 @@ export class ReserveringService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperReservering>
+   async GetObject(id: number): Promise<OperReservering>
    {
-      this.logger.verbose(`ReserveringService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
+      this.logger.verbose(`ReserveringService.GetObject(${safeStringify({id})})`);
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de reservering_view.
       const db = await this.dbService.operReservering.findUnique({
          where: {
@@ -117,7 +116,7 @@ export class ReserveringService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP reservering_view samenvoegt. INGEVOERD_ID heeft geen Prisma relatie (enkel een
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen. INGEVOERD_ID heeft geen Prisma relatie (enkel een
    // los ID veld), daarom wordt de naam van de invoerder via een aparte gebatchte RefLid lookup opgehaald.
    private async MaakGetObjectsResponseDataset(objs: ReserveringMetRelaties[]): Promise<GetObjectsOperReserveringResponse[]>
    {

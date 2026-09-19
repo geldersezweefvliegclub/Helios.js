@@ -56,10 +56,9 @@ export class StartlijstService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperStartlijst>
+   async GetObject(id: number): Promise<OperStartlijst>
    {
-      this.logger.verbose(`StartlijstService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt.
+      this.logger.verbose(`StartlijstService.GetObject(${safeStringify({id})})`);
       // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de startlijst_view.
       const db = await this.dbService.operStartlijst.findUnique({
          where: {
@@ -682,7 +681,7 @@ export class StartlijstService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP startlijst_view samenvoegt: vliegtuig-, lid-, en type-gegevens via joins,
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig-, lid-, en type-gegevens via joins,
    // de berekende vliegduur, en de DDWV vlag via een gebatchte datum-lookup op oper_daginfo/oper_rooster
    private async MaakGetObjectsResponseDataset(objs: StartlijstMetRelaties[]): Promise<GetObjectsOperStartlijstResponse[]>
    {

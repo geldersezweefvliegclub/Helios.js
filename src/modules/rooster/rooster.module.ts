@@ -7,6 +7,7 @@ import {HeliosCoreModule} from "../../core/helios.core.module";
 @Module({
   imports: [AuthorisatieModule, HeliosCoreModule],
   controllers: [RoosterController],
-  providers: [RoosterService]
+  providers: [RoosterService],
+  exports: [RoosterService]
 })
 export class RoosterModule {}

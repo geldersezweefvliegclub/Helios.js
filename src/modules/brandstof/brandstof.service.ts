@@ -35,14 +35,13 @@ export class BrandstofService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation :string = undefined): Promise<OperBrandstof>
+   async GetObject(id: number): Promise<OperBrandstof>
    {
-      this.logger.verbose(`BrandstofService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`BrandstofService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operBrandstof.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.OperBrandstofInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Brandstof record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -87,22 +86,18 @@ export class BrandstofService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP brandstof_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
    {
       this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date,
-            BRANDSTOF_TYPE: obj.BrandstofType?.OMSCHRIJVING ?? null,
-         } ;
+         const {BrandstofType: brandstofType, ...brandstof} = obj;
 
-         // verwijder child objects uit de response
-         delete retObj.BrandstofType;
-
-         return  retObj as GetObjectsOperBrandstofResponse
+         return {
+            ...brandstof,
+            TIJDSTIP: toDateOnly(brandstof.TIJDSTIP) as unknown as Date,
+            BRANDSTOF_TYPE: brandstofType?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperBrandstofResponse
       });
       this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

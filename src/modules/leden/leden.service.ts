@@ -38,14 +38,13 @@ export class LedenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation:string = undefined): Promise<RefLid>
+   async GetObject(id: number): Promise<RefLid>
    {
-      this.logger.verbose(`LedenService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`LedenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.refLid.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.RefLidInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Lid record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -138,7 +137,7 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP leden_view samenvoegt: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
    // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
    private async MaakGetObjectsResponseDataset(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
    {
@@ -155,26 +154,21 @@ export class LedenService extends IHeliosService
       const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
 
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            LIDTYPE: obj.LidType?.OMSCHRIJVING ?? null,
-            LIDTYPE_REF: obj.LidType?.EXT_REF ?? null,
-            STATUS: obj.VliegStatus?.OMSCHRIJVING ?? null,
-            ZUSTERCLUB: obj.Zusterclub?.NAAM ?? null,
-            BUDDY: obj.Buddy?.NAAM ?? null,
-            BUDDY2: obj.Buddy2?.NAAM ?? null,
+         const {
+            LidType: lidType, VliegStatus: vliegStatus, Zusterclub: zusterclub,
+            Buddy: buddy, Buddy2: buddy2, ...lid
+         } = obj;
+
+         return {
+            ...lid,
+            LIDTYPE: lidType?.OMSCHRIJVING ?? null,
+            LIDTYPE_REF: lidType?.EXT_REF ?? null,
+            STATUS: vliegStatus?.OMSCHRIJVING ?? null,
+            ZUSTERCLUB: zusterclub?.NAAM ?? null,
+            BUDDY: buddy?.NAAM ?? null,
+            BUDDY2: buddy2?.NAAM ?? null,
             PAX: ledenMetPax.has(obj.ID),
-         } ;
-
-         // verwijder child objects uit de response
-         delete retObj.LidType;
-         delete retObj.VliegStatus;
-         delete retObj.Zusterclub;
-         delete retObj.Buddy;
-         delete retObj.Buddy2;
-
-         return  retObj as GetObjectsRefLedenResponse
+         } as GetObjectsRefLedenResponse
       });
       this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

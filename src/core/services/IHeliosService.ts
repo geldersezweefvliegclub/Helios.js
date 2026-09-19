@@ -47,18 +47,4 @@ export abstract class IHeliosService
       });
       return retVal;
    }
-
-   // Zet een string zoals "table1,table2" om naar een object zoals {table1: true, table2: true}
-   // Dit wordt gebruikt in de include (of select) optie van prisma om gerelateerde tabellen mee op te halen
-   protected SelectStringToInclude<oType>(tables: string): oType
-   {
-      if (!tables) return undefined;
-
-      const retObj: oType = {} as oType;
-      tables.split(',').forEach(field =>  // splits op komma
-      {
-         retObj[field.trim()] = true
-      });
-      return retObj;
-   }
 }

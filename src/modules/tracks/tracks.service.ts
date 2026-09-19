@@ -31,9 +31,9 @@ export class TracksService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperTrack>
+   async GetObject(id: number): Promise<OperTrack>
    {
-      this.logger.verbose(`TracksService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`TracksService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operTrack.findUnique({
          where: {
             ID: id
@@ -89,7 +89,7 @@ export class TracksService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP tracks_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
    {
       this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);

@@ -22,6 +22,11 @@ import {GetObjectOperDagInfoRequest} from "./GetObjectOperDagInfoRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
+import {RoosterService} from "../rooster/rooster.service";
+import {DienstenService} from "../diensten/diensten.service";
+import {GetObjectsOperRoosterRequest} from "../rooster/GetObjectsOperRoosterRequest";
+import {GetObjectsOperDienstenRequest} from "../diensten/GetObjectsOperDienstenRequest";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 @Controller('Daginfo')
 @ApiTags('Daginfo')
@@ -30,7 +35,9 @@ export class DagInfoController  extends HeliosController
    private readonly logger = new Logger(DagInfoController.name);
 
    constructor(private readonly DagInfoService: DagInfoService,
-               private readonly permissieService:PermissieService)
+               private readonly permissieService:PermissieService,
+               private readonly roosterService: RoosterService,
+               private readonly dienstenService: DienstenService)
    {
       super()
    }
@@ -44,7 +51,8 @@ export class DagInfoController  extends HeliosController
       this.logger.verbose(`DagInfoController.GetObject(${safeStringify({currentUser, params})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObject');
       const obj = await this.DagInfoService.GetObject(params.ID, params.DATUM);
-      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+      const masked = await this.maskeerDienstenVoorGebruiker(obj, currentUser);
+      return {...masked, DATUM: toDateOnly(masked.DATUM) as unknown as Date};
    }
 
    @HeliosGetObjects(GetObjectsOperDagInfoResponse)
@@ -54,7 +62,60 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObjects');
-      return await this.DagInfoService.GetObjects(queryParams);
+      const result = await this.DagInfoService.GetObjects(queryParams);
+      result.dataset = await Promise.all(
+         result.dataset.map(record => this.maskeerDienstenVoorGebruiker(record, currentUser))
+      );
+      return result;
+   }
+
+   // PHP class.Daginfo.inc.php::RecordToOutput() - DIENSTEN mag enkel gezien worden door Beheerder/Instructeur/CIMT
+   // (altijd), Starttoren (enkel voor vandaag), en DDWV-Beheerder/DDWV-Crew (enkel op DDWV-dagen, Crew bovendien
+   // enkel als ze zelf op die dag zijn ingedeeld). Alle andere gebruikers zien DIENSTEN nooit.
+   private async maskeerDienstenVoorGebruiker<T extends { DATUM: Date | string; DIENSTEN: string | null }>(
+      record: T, currentUser: RefLid): Promise<T>
+   {
+      if (record.DIENSTEN == null)
+         return record;
+
+      if (this.permissieService.isBeheerder(currentUser) ||
+          this.permissieService.isInstructeur(currentUser) ||
+          this.permissieService.isCIMT(currentUser))
+      {
+         return record;
+      }
+
+      const datum = record.DATUM instanceof Date ? record.DATUM : new Date(record.DATUM);
+
+      if (this.permissieService.isStarttoren(currentUser))
+      {
+         if (toDateOnly(datum) !== toDateOnly(new Date()))
+            return {...record, DIENSTEN: null};
+         return record;
+      }
+
+      if (this.permissieService.isBeheerderDDWV(currentUser) || this.permissieService.isDDWVCrew(currentUser))
+      {
+         const roosterResult = await this.roosterService.GetObjects(
+            MaakGetObjectsRequest(GetObjectsOperRoosterRequest, {DATUM: datum})
+         );
+         const isDDWVDag = roosterResult.dataset[0]?.DDWV ?? false;
+
+         if (!isDDWVDag)
+            return {...record, DIENSTEN: null};
+
+         if (this.permissieService.isDDWVCrew(currentUser))
+         {
+            const dienstenResult = await this.dienstenService.GetObjects(
+               MaakGetObjectsRequest(GetObjectsOperDienstenRequest, {DATUM: datum, LID_ID: currentUser.ID})
+            );
+            if (dienstenResult.totaal === 0)
+               return {...record, DIENSTEN: null};
+         }
+         return record;
+      }
+
+      return {...record, DIENSTEN: null};
    }
 
    @HeliosCreateObject(CreateOperDagInfoDto, OperDagInfoDto)

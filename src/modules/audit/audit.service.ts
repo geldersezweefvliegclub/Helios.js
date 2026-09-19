@@ -27,14 +27,13 @@ export class AuditService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<Audit>
+   async GetObject(id: number): Promise<Audit>
    {
-      this.logger.verbose(`AuditService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`AuditService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.audit.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.AuditInclude>(relation)
+         }
       });
 
       if (!db)
@@ -109,22 +108,18 @@ export class AuditService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP audit_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
    {
       this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-            NAAM: obj.RefLid?.NAAM ?? null,
-         } ;
+         const {RefLid: lid, ...audit} = obj;
 
-         // verwijder child objects uit de response
-         delete retObj.RefLid;
-
-         return  retObj as GetObjectsAuditResponse
+         return {
+            ...audit,
+            DATUM: toDateOnly(audit.DATUM) as unknown as Date,
+            NAAM: lid?.NAAM ?? null,
+         } as GetObjectsAuditResponse
       });
       this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

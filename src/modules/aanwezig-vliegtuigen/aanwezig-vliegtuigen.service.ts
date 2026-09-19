@@ -37,10 +37,9 @@ export class AanwezigVliegtuigenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperAanwezigVliegtuig>
+   async GetObject(id: number): Promise<OperAanwezigVliegtuig>
    {
-      this.logger.verbose(`AanwezigVliegtuigenService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`AanwezigVliegtuigenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operAanwezigVliegtuig.findUnique({
          where: {
             ID: id
@@ -97,7 +96,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP aanwezig_vliegtuigen_view samenvoegt: vliegtuig- en type-gegevens via joins,
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig- en type-gegevens via joins,
    // en of het vliegtuig momenteel aan het vliegen is via StartlijstService.VliegtuigVliegt()
    private async MaakGetObjectsResponseDataset(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
    {

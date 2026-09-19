@@ -30,14 +30,13 @@ export class DocumentenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<HeliosDocument>
+   async GetObject(id: number): Promise<HeliosDocument>
    {
-      this.logger.verbose(`DocumentenService.GetObject(${safeStringify({id, relation})})`);
+      this.logger.verbose(`DocumentenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.heliosDocument.findUnique({
          where: {
             ID: id
-         },
-         include: this.SelectStringToInclude<Prisma.HeliosDocumentInclude>(relation)
+         }
       });
       if (!db)
          throw new HttpException(`Document record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
@@ -84,21 +83,17 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP documenten_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: DocumentMetRelaties[]): Promise<GetObjectsHeliosDocumentenResponse[]>
    {
       this.logger.verbose(`DocumentenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         // kopieer relevante velden van child objects naar het parent object
-         const retObj = {
-            ...obj,
-            GROEP: obj.DocumentGroep?.OMSCHRIJVING ?? null
-         } ;
+         const {DocumentGroep: documentGroep, ...document} = obj;
 
-         // verwijder child objects uit de response
-         delete retObj.DocumentGroep;
-
-         return  retObj as GetObjectsHeliosDocumentenResponse;
+         return {
+            ...document,
+            GROEP: documentGroep?.OMSCHRIJVING ?? null
+         } as GetObjectsHeliosDocumentenResponse;
       });
       this.logger.verbose(`DocumentenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

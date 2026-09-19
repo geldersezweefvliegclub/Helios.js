@@ -35,15 +35,17 @@ export class DagInfoService extends IHeliosService
       super();
    }
 
-   // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, date?: Date, relation: string = undefined): Promise<OperDagInfo>
+   // haal een enkel object op uit de database op basis van het ID, of op basis van DATUM
+   // PHP class.Daginfo.inc.php::GetObject() - bij opzoeken op DATUM wordt een verwijderd record genegeerd;
+   // bij opzoeken op ID geldt deze beperking niet
+   async GetObject(id: number, date?: Date): Promise<OperDagInfo>
    {
-      this.logger.verbose(`DagInfoService.GetObject(${safeStringify({id, date, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`DagInfoService.GetObject(${safeStringify({id, date})})`);
       const db = await this.dbService.operDagInfo.findFirst({
          where: {
             ID: id ? id : undefined,
-            DATUM: date ? date : undefined
+            DATUM: date ? date : undefined,
+            VERWIJDERD: (!id && date) ? false : undefined
          },
       });
 
@@ -62,13 +64,26 @@ export class DagInfoService extends IHeliosService
       this.logger.verbose(`DagInfoService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperDagInfoRequest, {VERWIJDERD: false});
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperDagInfoWhereInput =
          {
             AND:
                [
                   { ID: params.ID},
                   { VERWIJDERD: params.VERWIJDERD ?? false},
-                  { ID: { in: params.IDs }}
+                  { ID: { in: params.IDs }},
+
+                  {
+                     OR: [
+                        {
+                           DATUM:
+                               {
+                                  gte: dtSpanne.start,
+                                  lte: dtSpanne.eind
+                               }
+                        }
+                     ]
+                  }
                ]
          }
       let count: number | undefined;
@@ -98,36 +113,32 @@ export class DagInfoService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP daginfo_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
    {
       this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         const retObj = {
-            ...obj,
-            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-            VELD_CODE: obj.Veld?.CODE ?? null,
-            VELD_OMS: obj.Veld?.OMSCHRIJVING ?? null,
-            BAAN_CODE: obj.Baan?.CODE ?? null,
-            BAAN_OMS: obj.Baan?.OMSCHRIJVING ?? null,
-            STARTMETHODE_CODE: obj.StartMethode?.CODE ?? null,
-            STARTMETHODE_OMS: obj.StartMethode?.OMSCHRIJVING ?? null,
-            VELD_CODE2: obj.Veld2?.CODE ?? null,
-            VELD_OMS2: obj.Veld2?.OMSCHRIJVING ?? null,
-            BAAN_CODE2: obj.Baan2?.CODE ?? null,
-            BAAN_OMS2: obj.Baan2?.OMSCHRIJVING ?? null,
-            STARTMETHODE_CODE2: obj.StartMethode2?.CODE ?? null,
-            STARTMETHODE_OMS2: obj.StartMethode2?.OMSCHRIJVING ?? null,
-         };
+         const {
+            Veld: veld, Baan: baan, StartMethode: startMethode,
+            Veld2: veld2, Baan2: baan2, StartMethode2: startMethode2, ...dagInfo
+         } = obj;
 
-         delete retObj.Veld;
-         delete retObj.Baan;
-         delete retObj.StartMethode;
-         delete retObj.Veld2;
-         delete retObj.Baan2;
-         delete retObj.StartMethode2;
-
-         return retObj as GetObjectsOperDagInfoResponse;
+         return {
+            ...dagInfo,
+            DATUM: toDateOnly(dagInfo.DATUM) as unknown as Date,
+            VELD_CODE: veld?.CODE ?? null,
+            VELD_OMS: veld?.OMSCHRIJVING ?? null,
+            BAAN_CODE: baan?.CODE ?? null,
+            BAAN_OMS: baan?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE: startMethode?.CODE ?? null,
+            STARTMETHODE_OMS: startMethode?.OMSCHRIJVING ?? null,
+            VELD_CODE2: veld2?.CODE ?? null,
+            VELD_OMS2: veld2?.OMSCHRIJVING ?? null,
+            BAAN_CODE2: baan2?.CODE ?? null,
+            BAAN_OMS2: baan2?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE2: startMethode2?.CODE ?? null,
+            STARTMETHODE_OMS2: startMethode2?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperDagInfoResponse;
       });
       this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
@@ -136,6 +147,9 @@ export class DagInfoService extends IHeliosService
    async AddObject(data: Prisma.OperDagInfoUncheckedCreateInput, actorId: number): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.AddObject(${safeStringify({data})})`);
+      if (data.DATUM != null) {
+         await this.BestaandeDatum(data.DATUM as Date);
+      }
       const obj = await this.dbService.operDagInfo.create({
          data: data
       });
@@ -149,6 +163,13 @@ export class DagInfoService extends IHeliosService
    {
       this.logger.verbose(`DagInfoService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+      if (db.VERWIJDERD == true && data.VERWIJDERD == false) {
+         // als het record gemarkeerd was als verwijderd en nu weer actief wordt, checken we of er al een ander actief record is met dezelfde datum
+         await this.BestaandeDatum(db.DATUM);
+      }
+      else if (data.DATUM != null && toDateOnly(data.DATUM as Date) !== toDateOnly(db.DATUM)) {
+         await this.BestaandeDatum(data.DATUM as Date);
+      }
       const obj = await this.dbService.operDagInfo.update({
          where: {
             ID: id
@@ -173,5 +194,20 @@ export class DagInfoService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // Een DATUM mag maar bij één actief (niet-verwijderd) record voorkomen
+   private async BestaandeDatum(datum: Date): Promise<void>
+   {
+      const bestaand = await this.dbService.operDagInfo.findFirst({
+         where: {
+            DATUM: datum,
+            VERWIJDERD: false
+         }
+      });
+
+      if (bestaand) {
+         throw new HttpException(`Er bestaat al een DagInfo record voor DATUM ${toDateOnly(datum)}`, HttpStatus.CONFLICT);
+      }
    }
 }

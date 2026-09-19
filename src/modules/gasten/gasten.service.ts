@@ -31,10 +31,9 @@ export class GastenService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID
-   async GetObject(id: number, relation: string = undefined): Promise<OperGast>
+   async GetObject(id: number): Promise<OperGast>
    {
-      this.logger.verbose(`GastenService.GetObject(${safeStringify({id, relation})})`);
-      // relatie wordt meegenomen voor consistentie met andere services, maar wordt niet gebruikt
+      this.logger.verbose(`GastenService.GetObject(${safeStringify({id})})`);
       const db = await this.dbService.operGast.findUnique({
          where: {
             ID: id
@@ -85,20 +84,18 @@ export class GastenService extends IHeliosService
       return result;
    }
 
-   // voegt de velden toe die de PHP gasten_view samenvoegt
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
    {
       this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
-         const retObj = {
-            ...obj,
-            DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-            VELD: obj.Veld?.OMSCHRIJVING ?? null,
-         };
+         const {Veld: veld, ...gast} = obj;
 
-         delete retObj.Veld;
-
-         return retObj as GetObjectsOperGastenResponse;
+         return {
+            ...gast,
+            DATUM: toDateOnly(gast.DATUM) as unknown as Date,
+            VELD: veld?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperGastenResponse;
       });
       this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;

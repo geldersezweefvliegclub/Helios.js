@@ -78,6 +78,7 @@ export class ProgressieController extends HeliosController
    }
 
    @HeliosCreateObject(CreateOperProgressieDto, OperProgressieDto)
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Mag geen eigen progressie toevoegen.'})
    async AddObject(
       @CurrentUser() currentUser: RefLid,
       @Body() data: CreateOperProgressieDto): Promise<OperProgressieDto>
