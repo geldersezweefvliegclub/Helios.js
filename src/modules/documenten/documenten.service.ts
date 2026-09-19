@@ -9,6 +9,7 @@ import {Prisma, HeliosDocument} from "@prisma/client";
 import {GetObjectsHeliosDocumentenRequest} from "./GetObjectsHeliosDocumentenRequest";
 import {GetObjectsHeliosDocumentenResponse} from "./GetObjectsHeliosDocumentenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 // document record inclusief de relatie die de PHP documenten_view samenvoegt
 type DocumentMetRelaties = Prisma.HeliosDocumentGetPayload<{
@@ -50,10 +51,7 @@ export class DocumentenService extends IHeliosService
    {
       this.logger.verbose(`DocumentenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsHeliosDocumentenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsHeliosDocumentenRequest, {VERWIJDERD: false});
       const where: Prisma.HeliosDocumentWhereInput =
          {
             AND:
@@ -80,16 +78,16 @@ export class DocumentenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`DocumentenService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // voegt de velden toe die de PHP documenten_view samenvoegt
-   private async NaarGetObjectsResponse(objs: DocumentMetRelaties[]): Promise<GetObjectsHeliosDocumentenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: DocumentMetRelaties[]): Promise<GetObjectsHeliosDocumentenResponse[]>
    {
-      this.logger.verbose(`DocumentenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`DocumentenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
@@ -102,7 +100,7 @@ export class DocumentenService extends IHeliosService
 
          return  retObj as GetObjectsHeliosDocumentenResponse;
       });
-      this.logger.verbose(`DocumentenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`DocumentenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

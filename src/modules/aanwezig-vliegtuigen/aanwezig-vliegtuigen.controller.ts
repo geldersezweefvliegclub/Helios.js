@@ -1,4 +1,4 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, HttpStatus, Logger, Post, Query, UseGuards} from '@nestjs/common';
 import {AanwezigVliegtuigenService} from "./aanwezig-vliegtuigen.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -16,10 +16,13 @@ import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezig
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {CreateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/create-operAanwezigVliegtuig.dto";
 import {UpdateOperAanwezigVliegtuigDto} from "../../generated/nestjs-dto/update-operAanwezigVliegtuig.dto";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
+import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {AanmeldenVliegtuigRequest} from "./AanmeldenVliegtuigRequest";
+import {AfmeldenVliegtuigRequest} from "./AfmeldenVliegtuigRequest";
 
 @Controller('AanwezigVliegtuigen')
 @ApiTags('AanwezigVliegtuigen')
@@ -68,7 +71,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedCreateInput;
       const obj = await this.AanwezigVliegtuigenService.AddObject(insert, currentUser.ID);
       return {
          ...obj,
@@ -88,7 +91,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigCreateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
       const obj = await this.AanwezigVliegtuigenService.UpdateObject(id, update, currentUser.ID);
       return {
          ...obj,
@@ -101,7 +104,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
    // de datum- en tijdvelden
    private async normaliserenData(
-      data: CreateOperAanwezigVliegtuigDto | UpdateOperAanwezigVliegtuigDto): Promise<Prisma.OperAanwezigVliegtuigCreateInput | Prisma.OperAanwezigVliegtuigUpdateInput>
+      data: CreateOperAanwezigVliegtuigDto | UpdateOperAanwezigVliegtuigDto): Promise<Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -114,7 +117,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
       data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
 
-      return data as Prisma.OperAanwezigVliegtuigCreateInput | Prisma.OperAanwezigVliegtuigUpdateInput;
+      return data as Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -125,7 +128,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.DeleteObject');
 
-      const data: Prisma.OperAanwezigVliegtuigUpdateInput = {
+      const data: Prisma.OperAanwezigVliegtuigUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.AanwezigVliegtuigenService.UpdateObject(id, data, currentUser.ID);
@@ -149,7 +152,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.RestoreObject');
 
-      const data: Prisma.OperAanwezigVliegtuigUpdateInput = {
+      const data: Prisma.OperAanwezigVliegtuigUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.AanwezigVliegtuigenService.UpdateObject(id, data, currentUser.ID);
@@ -157,5 +160,54 @@ export class AanwezigVliegtuigenController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   @Post("Aanmelden")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(OperAanwezigVliegtuigDto)
+   @ApiOperation({summary: 'Aanmelden van een vliegtuig als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding van dat vliegtuig op die dag aan.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Aanmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigVliegtuigDto)}})
+   async Aanmelden(
+      @CurrentUser() currentUser: RefLid,
+      @Body() data: AanmeldenVliegtuigRequest): Promise<OperAanwezigVliegtuigDto>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenController.Aanmelden(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Aanmelden');
 
+      const obj = await this.AanwezigVliegtuigenService.Aanmelden(data, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
+
+   @Post("Afmelden")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(OperAanwezigVliegtuigDto)
+   @ApiOperation({summary: 'Afmelden van een aangemeld vliegtuig.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.CONFLICT, description: 'Vliegtuig is niet aangemeld.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Afmelding verwerkt.', schema: {'$ref': getSchemaPath(OperAanwezigVliegtuigDto)}})
+   async Afmelden(
+      @CurrentUser() currentUser: RefLid,
+      @Body() data: AfmeldenVliegtuigRequest): Promise<OperAanwezigVliegtuigDto>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenController.Afmelden(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Afmelden');
+
+      const obj = await this.AanwezigVliegtuigenService.Afmelden(data, currentUser.ID);
+      return {
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
+         VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
+      };
+   }
 }

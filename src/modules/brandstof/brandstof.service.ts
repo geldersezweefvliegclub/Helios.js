@@ -12,6 +12,7 @@ import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBran
 import {UpdateOperBrandstofDto} from "../../generated/nestjs-dto/update-operBrandstof.dto";
 import {LedenService} from "../leden/leden.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // brandstof record inclusief de relatie die de PHP brandstof_view samenvoegt
@@ -55,10 +56,7 @@ export class BrandstofService extends IHeliosService
    {
       this.logger.verbose(`BrandstofService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperBrandstofRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperBrandstofRequest, {VERWIJDERD: false});
       const where: Prisma.OperBrandstofWhereInput =
          {
             AND:
@@ -83,16 +81,16 @@ export class BrandstofService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`BrandstofService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // voegt de velden toe die de PHP brandstof_view samenvoegt
-   private async NaarGetObjectsResponse(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
    {
-      this.logger.verbose(`BrandstofService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
@@ -106,7 +104,7 @@ export class BrandstofService extends IHeliosService
 
          return  retObj as GetObjectsOperBrandstofResponse
       });
-      this.logger.verbose(`BrandstofService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

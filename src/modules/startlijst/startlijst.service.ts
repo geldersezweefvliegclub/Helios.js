@@ -9,11 +9,22 @@ import {Prisma, OperStartlijst} from "@prisma/client";
 import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest";
 import {GetObjectsOperStartlijstResponse} from "./GetObjectsOperStartlijstResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {DatumZonderTijd, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
+import {DatumZonderTijd, MinutenNaarTijd, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 import {RegCall} from "../../core/helpers/RegCall";
 import {getSunset} from "sunrise-sunset-js";
 import {StartMethode} from "../../core/enums/StartMethode";
 import {RecencyResponse} from "./RecencyResponse";
+import {GetLogboekRequest} from "./GetLogboekRequest";
+import {GetLogboekResponse} from "./GetLogboekResponse";
+import {GetVliegtuigLogboekRequest} from "./GetVliegtuigLogboekRequest";
+import {GetVliegtuigLogboekResponse} from "./GetVliegtuigLogboekResponse";
+import {GetVliegtuigLogboekTotalenRequest} from "./GetVliegtuigLogboekTotalenRequest";
+import {
+   GetVliegtuigLogboekTotalenJaarResponse,
+   GetVliegtuigLogboekTotalenMaandResponse,
+   GetVliegtuigLogboekTotalenResponse
+} from "./GetVliegtuigLogboekTotalenResponse";
 
 // coördinaten van Vliegveld Terlet (Vliegveld.Terlet, zie enums/Vliegveld.ts) - zelfde waarden als de
 // "airport"-configuratie in Pegasus (pegasus.config.json), voor consistente zonsondergangberekeningen
@@ -68,10 +79,7 @@ export class StartlijstService extends IHeliosService
    {
       this.logger.verbose(`StartlijstService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperStartlijstRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperStartlijstRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
 
       // DDWV is geen kolom op oper_startlijst maar afgeleid van oper_daginfo/oper_rooster op DATUM, zie startlijst_view
@@ -131,16 +139,236 @@ export class StartlijstService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`StartlijstService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
-   // Is dit lid op dit moment aan het vliegen op deze datum, als vlieger of als inzittende? Een lichtgewicht,
-   // rechtstreekse query op oper_startlijst i.p.v. via GetObjects() - enkel een bestaans-check op een open start
-   // (geen LANDINGSTIJD), dus geen joins of response-opbouw nodig.
+   // logboek van een lid (of vliegtuig): alle starts van dat lid (of vliegtuig) in een bepaalde periode, inclusief de naam van de vlieger en inzittende (lid-naam of vrije-tekst naam)
+   async GetLogboek(params: GetLogboekRequest, lidId: number): Promise<IHeliosGetObjectsResponse<GetLogboekResponse>>
+   {
+      this.logger.verbose(`StartlijstService.GetLogboek(${safeStringify({params, lidId})})`);
+
+      // JAAR vertaalt naar BEGIN_DATUM/EIND_DATUM van dat jaar, tenzij die al expliciet zijn opgegeven
+      let beginDatum = params.BEGIN_DATUM ?? (params.JAAR !== undefined ? new Date(Date.UTC(params.JAAR, 0, 1)) : undefined);
+      const eindDatum = params.EIND_DATUM ?? (params.JAAR !== undefined ? new Date(Date.UTC(params.JAAR, 11, 31)) : undefined);
+
+      // anders dan de generieke GetObjects()/VanTot(), kent GetLogboek() in PHP geen standaard tijdsvenster:
+      // zonder DATUM/BEGIN_DATUM/EIND_DATUM/JAAR wordt het volledige logboek teruggegeven. VanTot() valt bij
+      // afwezigheid van alle drie de datumparameters echter terug op "enkel het huidige kalenderjaar" - dat
+      // wordt hier voorkomen door een ruim genoeg beginpunt te forceren.
+      if (params.DATUM === undefined && beginDatum === undefined && eindDatum === undefined)
+         beginDatum = new Date(Date.UTC(1900, 0, 1));
+
+      // HASH wordt hier bewust niet doorgegeven aan de interne GetObjects() call: de hash/304-controle moet
+      // plaatsvinden op de uiteindelijke logboek-projectie hieronder, niet op de ruwe Startlijst-respons
+      const resultaat = await this.GetObjects(MaakGetObjectsRequest(GetObjectsOperStartlijstRequest, {
+         DATUM: params.DATUM,
+         BEGIN_DATUM: beginDatum,
+         EIND_DATUM: eindDatum,
+         LID_ID: lidId,
+         VLIEGTUIG_ID: params.VLIEGTUIG_ID,
+         SORT: params.SORT ?? "DATUM DESC, STARTTIJD DESC",
+         MAX: params.MAX,
+         START: params.START,
+      }));
+
+      const dataset = resultaat.dataset.map(vlucht => ({
+         ID: vlucht.ID,
+         DATUM: vlucht.DATUM,
+         REG_CALL: vlucht.REG_CALL,
+         VLIEGTUIG_ID: vlucht.VLIEGTUIG_ID,
+         STARTTIJD: vlucht.STARTTIJD,
+         LANDINGSTIJD: vlucht.LANDINGSTIJD,
+         DUUR: vlucht.DUUR,
+         VLIEGERNAAM: this.CombineerNaam(vlucht.VLIEGERNAAM_LID, vlucht.VLIEGERNAAM),
+         INZITTENDENAAM: vlucht.PAX ? vlucht.INZITTENDENAAM : this.CombineerNaam(vlucht.INZITTENDENAAM_LID, vlucht.INZITTENDENAAM),
+         VLIEGER_ID: vlucht.VLIEGER_ID,
+         INZITTENDE_ID: vlucht.INZITTENDE_ID,
+         STARTMETHODE: vlucht.STARTMETHODE,
+         VELD: vlucht.VELD,
+         PAX: vlucht.PAX,
+         INSTRUCTIEVLUCHT: vlucht.INSTRUCTIEVLUCHT,
+         CHECKSTART: vlucht.CHECKSTART,
+         VLIEGTUIGTYPE: vlucht.VLIEGTUIGTYPE,
+         OPMERKINGEN: vlucht.OPMERKINGEN,
+      } as GetLogboekResponse));
+
+      const result = this.buildGetObjectsResponse(dataset, resultaat.totaal, params.HASH);
+      this.logger.verbose(`StartlijstService.GetLogboek() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // combineert de lid-naam met de vrije-tekst naam (voor een vlieger/inzittende die niet als lid ingevoerd
+   // staat), zie VLIEGERNAAM/INZITTENDENAAM in de $velden lijst van GetLogboek() in class.Startlijst.inc.php.
+   // PHP gebruikt hiervoor CONCAT(lidNaam, '(', vrijeTekst, ')'), en MySQL's CONCAT() geeft NULL terug zodra
+   // een van de argumenten NULL is - dat gedrag wordt hier expliciet nagebootst
+   private CombineerNaam(lidNaam: string | null, vrijeTekst: string | null): string | null
+   {
+      if (!vrijeTekst) return lidNaam;
+      return lidNaam === null ? null : `${lidNaam}(${vrijeTekst})`;
+   }
+
+   // logboek van een vliegtuig: per gevlogen dag het aantal starts, lierstarts, sleepstarts en de totale
+   // vliegtijd, zie GetVliegtuigLogboek() in class.Startlijst.inc.php. De privacy-check (CLUBKIST / recent
+   // zelf gevlogen / beheerder-achtige rol) gebeurt in de controller, waar currentUser beschikbaar is - deze
+   // functie krijgt het REG_CALL van het vliegtuig al aangeleverd (elke rij heeft toch hetzelfde vliegtuig).
+   async GetVliegtuigLogboek(params: GetVliegtuigLogboekRequest, regCall: string): Promise<IHeliosGetObjectsResponse<GetVliegtuigLogboekResponse>>
+   {
+      this.logger.verbose(`StartlijstService.GetVliegtuigLogboek(${safeStringify({params, regCall})})`);
+
+      // zonder BEGIN_DATUM/EIND_DATUM valt GetVliegtuigLogboek() in PHP terug op het huidige kalenderjaar -
+      // dat is toevallig ook precies VanTot()'s eigen standaardgedrag, dus geen speciale behandeling nodig
+      // zoals bij GetLogboek()
+      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
+
+      const vluchten = await this.dbService.operStartlijst.findMany({
+         where: {
+            VERWIJDERD: false,
+            VLIEGTUIG_ID: params.ID,
+            STARTTIJD: {not: null},
+            LANDINGSTIJD: {not: null},
+            DATUM: {gte: dtSpanne.start, lte: dtSpanne.eind},
+         },
+         select: {DATUM: true, STARTTIJD: true, LANDINGSTIJD: true, STARTMETHODE_ID: true},
+      });
+
+      const perDag = new Map<number, {vluchten: number, lierstarts: number, sleepstarts: number, minuten: number}>();
+      for (const vlucht of vluchten)
+      {
+         const dag = vlucht.DATUM.getTime();
+         const stats = perDag.get(dag) ?? {vluchten: 0, lierstarts: 0, sleepstarts: 0, minuten: 0};
+         stats.vluchten++;
+         // PHP: STARTMETHODE_ID >= 550 (lieren is de hoogste ID in gebruik, dus functioneel gelijk aan "=550")
+         if ((vlucht.STARTMETHODE_ID ?? 0) >= StartMethode.Lieren)
+            stats.lierstarts++;
+         if (vlucht.STARTMETHODE_ID === StartMethode.Slepen)
+            stats.sleepstarts++;
+         stats.minuten += this.BerekenDuurMinutes(vlucht.DATUM, vlucht.STARTTIJD, vlucht.LANDINGSTIJD) ?? 0;
+         perDag.set(dag, stats);
+      }
+
+      // totaal = aantal gevlogen dagen (COUNT(DISTINCT(DATUM)) in PHP), vóór MAX/START paginering
+      const totaal = perDag.size;
+
+      let dagen = [...perDag.entries()]
+         .sort(([a], [b]) => b - a) // DATUM DESC
+         .map(([dag, stats]) => ({
+            DATUM: toDateOnly(new Date(dag)) as unknown as Date,
+            VLUCHTEN: stats.vluchten,
+            LIERSTARTS: stats.lierstarts,
+            SLEEPSTARTS: stats.sleepstarts,
+            VLIEGTIJD: MinutenNaarTijd(stats.minuten),
+            REG_CALL: regCall,
+         } as GetVliegtuigLogboekResponse));
+
+      if (params.MAX !== undefined || params.START !== undefined)
+      {
+         const start = params.START ?? 0;
+         dagen = dagen.slice(start, params.MAX !== undefined ? start + params.MAX : undefined);
+      }
+
+      const result = this.buildGetObjectsResponse(dagen, totaal, params.HASH);
+      this.logger.verbose(`StartlijstService.GetVliegtuigLogboek() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // logboek-totalen van een vliegtuig per maand, voor een heel jaar (standaard het huidige jaar), altijd 12
+   // maanden (leeg gevuld waar niet gevlogen is) plus een totaal over het hele jaar, zie
+   // GetVliegtuigLogboekTotalen() in class.Startlijst.inc.php. Zelfde privacy-check als GetVliegtuigLogboek()
+   // hierboven (gebeurt in de controller), en hergebruikt daarom ook HeeftRecentGevlogen() hieronder.
+   async GetVliegtuigLogboekTotalen(params: GetVliegtuigLogboekTotalenRequest, regCall: string): Promise<GetVliegtuigLogboekTotalenResponse>
+   {
+      this.logger.verbose(`StartlijstService.GetVliegtuigLogboekTotalen(${safeStringify({params, regCall})})`);
+
+      const jaar = params.JAAR ?? new Date().getFullYear();
+      const jaarStart = new Date(Date.UTC(jaar, 0, 1));
+      const jaarEind = new Date(Date.UTC(jaar, 11, 31));
+
+      const vluchten = await this.dbService.operStartlijst.findMany({
+         where: {
+            VERWIJDERD: false,
+            VLIEGTUIG_ID: params.ID,
+            STARTTIJD: {not: null},
+            LANDINGSTIJD: {not: null},
+            DATUM: {gte: jaarStart, lte: jaarEind},
+         },
+         select: {DATUM: true, STARTTIJD: true, LANDINGSTIJD: true, STARTMETHODE_ID: true},
+      });
+
+      const perMaand = new Map<number, {vluchten: number, lierstarts: number, sleepstarts: number, minuten: number}>();
+      for (const vlucht of vluchten)
+      {
+         const maand = vlucht.DATUM.getUTCMonth() + 1;
+         const stats = perMaand.get(maand) ?? {vluchten: 0, lierstarts: 0, sleepstarts: 0, minuten: 0};
+         stats.vluchten++;
+         // PHP: STARTMETHODE_ID >= 550 (lieren is de hoogste ID in gebruik, dus functioneel gelijk aan "=550")
+         if ((vlucht.STARTMETHODE_ID ?? 0) >= StartMethode.Lieren)
+            stats.lierstarts++;
+         if (vlucht.STARTMETHODE_ID === StartMethode.Slepen)
+            stats.sleepstarts++;
+         stats.minuten += this.BerekenDuurMinutes(vlucht.DATUM, vlucht.STARTTIJD, vlucht.LANDINGSTIJD) ?? 0;
+         perMaand.set(maand, stats);
+      }
+
+      const maanden: GetVliegtuigLogboekTotalenMaandResponse[] = [];
+      let totaalVluchten = 0, totaalLierstarts = 0, totaalSleepstarts = 0, totaalMinuten = 0;
+      for (let maand = 1; maand <= 12; maand++)
+      {
+         const stats = perMaand.get(maand) ?? {vluchten: 0, lierstarts: 0, sleepstarts: 0, minuten: 0};
+         maanden.push({
+            MAAND: maand,
+            VLUCHTEN: stats.vluchten,
+            LIERSTARTS: stats.lierstarts,
+            SLEEPSTARTS: stats.sleepstarts,
+            // PHP formatteert dit veld hier als HH:mm:ss (SEC_TO_TIME), anders dan de HH:mm van GetVliegtuigLogboek()
+            VLIEGTIJD: `${MinutenNaarTijd(stats.minuten)}:00`,
+            REG_CALL: stats.vluchten > 0 ? regCall : '',
+         });
+         totaalVluchten += stats.vluchten;
+         totaalLierstarts += stats.lierstarts;
+         totaalSleepstarts += stats.sleepstarts;
+         totaalMinuten += stats.minuten;
+      }
+
+      const totalen: GetVliegtuigLogboekTotalenJaarResponse = {
+         VLUCHTEN: totaalVluchten,
+         LIERSTARTS: totaalLierstarts,
+         SLEEPSTARTS: totaalSleepstarts,
+         VLIEGTIJD: `${MinutenNaarTijd(totaalMinuten)}:00`,
+      };
+
+      const basis = this.buildGetObjectsResponse(maanden, maanden.length, params.HASH);
+      const result: GetVliegtuigLogboekTotalenResponse = {...basis, totalen};
+      this.logger.verbose(`StartlijstService.GetVliegtuigLogboekTotalen() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // heeft dit lid in de afgelopen 6 maanden als vlieger op dit vliegtuig gevlogen? Rechtstreekse query op
+   // oper_startlijst, gebruikt in de privacy-check van GetVliegtuigLogboek() in class.Startlijst.inc.php
+   async HeeftRecentGevlogen(lidId: number, vliegtuigId: number): Promise<boolean>
+   {
+      this.logger.verbose(`StartlijstService.HeeftRecentGevlogen(${safeStringify({lidId, vliegtuigId})})`);
+      const zesMaandenGeleden = new Date();
+      zesMaandenGeleden.setMonth(zesMaandenGeleden.getMonth() - 6);
+
+      const aantal = await this.dbService.operStartlijst.count({
+         where: {
+            VERWIJDERD: false,
+            STARTTIJD: {not: null},
+            VLIEGTUIG_ID: vliegtuigId,
+            VLIEGER_ID: lidId,
+            DATUM: {gt: zesMaandenGeleden},
+         }
+      });
+      const result = aantal > 0;
+      this.logger.verbose(`StartlijstService.HeeftRecentGevlogen() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Is dit lid op dit moment aan het vliegen op deze datum, als vlieger of als inzittende?
    async LidVliegt(lidId: number, datum: Date): Promise<boolean>
    {
       this.logger.verbose(`StartlijstService.LidVliegt(${safeStringify({lidId, datum})})`);
@@ -158,6 +386,24 @@ export class StartlijstService extends IHeliosService
       });
       const result = openeStart !== null;
       this.logger.verbose(`StartlijstService.LidVliegt() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Is dit vliegtuig op dit moment aan het vliegen op deze datum?
+   async VliegtuigVliegt(vliegtuigId: number, datum: Date): Promise<boolean>
+   {
+      this.logger.verbose(`StartlijstService.VliegtuigVliegt(${safeStringify({vliegtuigId, datum})})`);
+      const openeStart = await this.dbService.operStartlijst.findFirst({
+         where: {
+            DATUM: datum,
+            VERWIJDERD: false,
+            LANDINGSTIJD: null,
+            VLIEGTUIG_ID: vliegtuigId,
+         },
+         select: {ID: true}
+      });
+      const result = openeStart !== null;
+      this.logger.verbose(`StartlijstService.VliegtuigVliegt() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -438,13 +684,13 @@ export class StartlijstService extends IHeliosService
 
    // voegt de velden toe die de PHP startlijst_view samenvoegt: vliegtuig-, lid-, en type-gegevens via joins,
    // de berekende vliegduur, en de DDWV vlag via een gebatchte datum-lookup op oper_daginfo/oper_rooster
-   private async NaarGetObjectsResponse(objs: StartlijstMetRelaties[]): Promise<GetObjectsOperStartlijstResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: StartlijstMetRelaties[]): Promise<GetObjectsOperStartlijstResponse[]>
    {
-      this.logger.verbose(`StartlijstService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`StartlijstService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       if (objs.length === 0)
       {
          const result: GetObjectsOperStartlijstResponse[] = [];
-         this.logger.verbose(`StartlijstService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         this.logger.verbose(`StartlijstService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
          return result;
       }
 
@@ -478,7 +724,7 @@ export class StartlijstService extends IHeliosService
             DDWV: ddwvDatums.has(startlijst.DATUM.getTime()),
          } as GetObjectsOperStartlijstResponse;
       });
-      this.logger.verbose(`StartlijstService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`StartlijstService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

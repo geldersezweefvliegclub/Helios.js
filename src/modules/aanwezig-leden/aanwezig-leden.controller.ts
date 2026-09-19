@@ -180,7 +180,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.DeleteObject');
 
-      const data: Prisma.OperAanwezigLidUpdateInput = {
+      const data: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.AanwezigLedenService.UpdateObject(id, data, currentUser.ID);
@@ -204,7 +204,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.RestoreObject');
 
-      const data: Prisma.OperAanwezigLidUpdateInput = {
+      const data: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.AanwezigLedenService.UpdateObject(id, data, currentUser.ID);

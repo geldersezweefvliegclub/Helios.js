@@ -9,6 +9,7 @@ import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 // dienst record inclusief de relaties die de PHP diensten_view samenvoegt
 type DienstMetRelaties = Prisma.OperDienstGetPayload<{
@@ -55,10 +56,7 @@ export class DienstenService extends IHeliosService
    {
       this.logger.verbose(`DienstenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperDienstenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperDienstenRequest, {VERWIJDERD: false});
 
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperDienstWhereInput =
@@ -102,7 +100,7 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`DienstenService.GetObjects() => ${safeStringify(result)}`);
@@ -110,15 +108,15 @@ export class DienstenService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP diensten_view samenvoegt
-   private async NaarGetObjectsResponse(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
    {
-      this.logger.verbose(`DienstenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((o) => new GetOperDienstenResponse(o));
-      this.logger.verbose(`DienstenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperDienstCreateInput, actorId: number): Promise<GetOperDienstenResponse>
+   async AddObject(data: Prisma.OperDienstUncheckedCreateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operDienst.create({
@@ -134,7 +132,7 @@ export class DienstenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDienstUpdateInput, actorId: number): Promise<GetOperDienstenResponse>
+   async UpdateObject(id: number, data: Prisma.OperDienstUncheckedUpdateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

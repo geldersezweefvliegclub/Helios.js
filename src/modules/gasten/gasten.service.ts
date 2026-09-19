@@ -9,6 +9,7 @@ import {Prisma, OperGast} from "@prisma/client";
 import {GetObjectsOperGastenRequest} from "./GetObjectsOperGastenRequest";
 import {GetObjectsOperGastenResponse} from "./GetObjectsOperGastenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // gast record inclusief de relatie die de PHP gasten_view samenvoegt
@@ -52,10 +53,7 @@ export class GastenService extends IHeliosService
    {
       this.logger.verbose(`GastenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperGastenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperGastenRequest, {VERWIJDERD: false});
       const where: Prisma.OperGastWhereInput =
          {
             AND:
@@ -80,7 +78,7 @@ export class GastenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`GastenService.GetObjects() => ${safeStringify(result)}`);
@@ -88,9 +86,9 @@ export class GastenService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP gasten_view samenvoegt
-   private async NaarGetObjectsResponse(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
    {
-      this.logger.verbose(`GastenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          const retObj = {
             ...obj,
@@ -102,11 +100,11 @@ export class GastenService extends IHeliosService
 
          return retObj as GetObjectsOperGastenResponse;
       });
-      this.logger.verbose(`GastenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperGastCreateInput, actorId: number): Promise<OperGast>
+   async AddObject(data: Prisma.OperGastUncheckedCreateInput, actorId: number): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operGast.create({
@@ -118,7 +116,7 @@ export class GastenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperGastUpdateInput, actorId: number): Promise<OperGast>
+   async UpdateObject(id: number, data: Prisma.OperGastUncheckedUpdateInput, actorId: number): Promise<OperGast>
    {
       this.logger.verbose(`GastenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

@@ -11,6 +11,7 @@ import {GetObjectsOperReserveringResponse} from "./GetObjectsOperReserveringResp
 import {CreateOperReserveringDto} from "../../generated/nestjs-dto/create-operReservering.dto";
 import {UpdateOperReserveringDto} from "../../generated/nestjs-dto/update-operReservering.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 import {RegCall} from "../../core/helpers/RegCall";
 
@@ -72,10 +73,7 @@ export class ReserveringService extends IHeliosService
    {
       this.logger.verbose(`ReserveringService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperReserveringRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperReserveringRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperReserveringWhereInput =
          {
@@ -112,7 +110,7 @@ export class ReserveringService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`ReserveringService.GetObjects() => ${safeStringify(result)}`);
@@ -121,13 +119,13 @@ export class ReserveringService extends IHeliosService
 
    // voegt de velden toe die de PHP reservering_view samenvoegt. INGEVOERD_ID heeft geen Prisma relatie (enkel een
    // los ID veld), daarom wordt de naam van de invoerder via een aparte gebatchte RefLid lookup opgehaald.
-   private async NaarGetObjectsResponse(objs: ReserveringMetRelaties[]): Promise<GetObjectsOperReserveringResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: ReserveringMetRelaties[]): Promise<GetObjectsOperReserveringResponse[]>
    {
-      this.logger.verbose(`ReserveringService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       if (objs.length === 0)
       {
          const result: GetObjectsOperReserveringResponse[] = [];
-         this.logger.verbose(`ReserveringService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
          return result;
       }
 
@@ -149,7 +147,7 @@ export class ReserveringService extends IHeliosService
             REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
          } as GetObjectsOperReserveringResponse;
       });
-      this.logger.verbose(`ReserveringService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -180,10 +178,10 @@ export class ReserveringService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUpdateInput, actorId: number): Promise<OperReservering>
+   async UpdateObject(id: number, data: UpdateOperReserveringDto | Prisma.OperReserveringUncheckedUpdateInput, actorId: number): Promise<OperReservering>
    {
       this.logger.verbose(`ReserveringService.UpdateObject(${safeStringify({id, data})})`);
-      const update = data as Prisma.OperReserveringUpdateInput;
+      const update = data as Prisma.OperReserveringUncheckedUpdateInput;
 
       const db = await this.GetObject(id);
       const obj = await this.dbService.operReservering.update({

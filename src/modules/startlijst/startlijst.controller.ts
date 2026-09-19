@@ -22,6 +22,15 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 import {RecencyResponse} from "./RecencyResponse";
+import {GetLogboekRequest} from "./GetLogboekRequest";
+import {GetLogboekResponse} from "./GetLogboekResponse";
+import {GetVliegtuigLogboekRequest} from "./GetVliegtuigLogboekRequest";
+import {GetVliegtuigLogboekResponse} from "./GetVliegtuigLogboekResponse";
+import {GetVliegtuigLogboekTotalenRequest} from "./GetVliegtuigLogboekTotalenRequest";
+import {GetVliegtuigLogboekTotalenResponse} from "./GetVliegtuigLogboekTotalenResponse";
+import {VliegtuigenService} from "../vliegtuigen/vliegtuigen.service";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
+import {RegCall} from "../../core/helpers/RegCall";
 
 @Controller('Startlijst')
 @ApiTags('Startlijst')
@@ -30,6 +39,7 @@ export class StartlijstController extends HeliosController
    private readonly logger = new Logger(StartlijstController.name);
 
    constructor(private readonly startlijstService: StartlijstService,
+               private readonly vliegtuigenService: VliegtuigenService,
                private readonly permissieService: PermissieService)
    {
       super()
@@ -181,5 +191,106 @@ export class StartlijstController extends HeliosController
 
       const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : undefined;
       return await this.startlijstService.GetRecency(Number(vliegerId), gevraagdeDatum);
+   }
+
+   @Get("GetLogboek")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(GetLogboekResponse)
+   @ApiOperation({summary: 'Logboek van een lid, standaard het ingelogde lid.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({
+      status: HttpStatus.OK, description: 'Logboek opgehaald.', schema: {
+         type: 'object',
+         properties: {
+            dataset: {type: 'array', items: {'$ref': getSchemaPath(GetLogboekResponse)}},
+            totaal: {type: 'number'},
+            hash: {type: 'string'},
+         }
+      }
+   })
+   async GetLogboek(
+      @CurrentUser() currentUser: RefLid,
+      @Query() queryParams: GetLogboekRequest): Promise<IHeliosGetObjectsResponse<GetLogboekResponse>>
+   {
+      this.logger.verbose(`StartlijstController.GetLogboek(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetLogboek');
+
+      const lidId = queryParams.LID_ID ?? currentUser.ID;
+      return await this.startlijstService.GetLogboek(queryParams, lidId);
+   }
+
+   @Get("GetVliegtuigLogboek")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(GetVliegtuigLogboekResponse)
+   @ApiOperation({summary: 'Logboek van een vliegtuig: gevlogen dagen met aantal starts en vliegtijd per dag.'})
+   @ApiResponse({status: HttpStatus.NOT_ACCEPTABLE, description: 'ID ontbreekt, of geen rechten om dit logboek te bekijken.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({
+      status: HttpStatus.OK, description: 'Logboek opgehaald.', schema: {
+         type: 'object',
+         properties: {
+            dataset: {type: 'array', items: {'$ref': getSchemaPath(GetVliegtuigLogboekResponse)}},
+            totaal: {type: 'number'},
+            hash: {type: 'string'},
+         }
+      }
+   })
+   async GetVliegtuigLogboek(
+      @CurrentUser() currentUser: RefLid,
+      @Query() queryParams: GetVliegtuigLogboekRequest): Promise<IHeliosGetObjectsResponse<GetVliegtuigLogboekResponse>>
+   {
+      this.logger.verbose(`StartlijstController.GetVliegtuigLogboek(${safeStringify({currentUser, queryParams})})`);
+      if (queryParams.ID === undefined)
+         throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboek');
+
+      const vliegtuig = await this.VliegtuigLogboekToegang(currentUser, queryParams.ID);
+      const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
+      return await this.startlijstService.GetVliegtuigLogboek(queryParams, regCall);
+   }
+
+   @Get("GetVliegtuigLogboekTotalen")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiExtraModels(GetVliegtuigLogboekTotalenResponse)
+   @ApiOperation({summary: 'Logboek-totalen per maand van een vliegtuig, voor een heel jaar (standaard het huidige jaar).'})
+   @ApiResponse({status: HttpStatus.NOT_ACCEPTABLE, description: 'ID ontbreekt, of geen rechten om dit logboek te bekijken.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Totalen opgehaald.', schema: {'$ref': getSchemaPath(GetVliegtuigLogboekTotalenResponse)}})
+   async GetVliegtuigLogboekTotalen(
+      @CurrentUser() currentUser: RefLid,
+      @Query() queryParams: GetVliegtuigLogboekTotalenRequest): Promise<GetVliegtuigLogboekTotalenResponse>
+   {
+      this.logger.verbose(`StartlijstController.GetVliegtuigLogboekTotalen(${safeStringify({currentUser, queryParams})})`);
+      if (queryParams.ID === undefined)
+         throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
+      this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboekTotalen');
+
+      const vliegtuig = await this.VliegtuigLogboekToegang(currentUser, queryParams.ID);
+      const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
+      return await this.startlijstService.GetVliegtuigLogboekTotalen(queryParams, regCall);
+   }
+
+   // privacy-check gedeeld door GetVliegtuigLogboek en GetVliegtuigLogboekTotalen, zie beide functies in
+   // class.Startlijst.inc.php: beheerder-achtige rollen en clubkisten mag iedereen bekijken, voor een
+   // privékist moet de gebruiker er zelf recent (afgelopen 6 maanden) op gevlogen zijn. Geeft het
+   // opgevraagde vliegtuig terug (nodig voor CLUBKIST en REG_CALL) zodat de aanroeper het niet opnieuw hoeft op te halen.
+   private async VliegtuigLogboekToegang(currentUser: RefLid, vliegtuigId: number): Promise<RefVliegtuigDto>
+   {
+      const vliegtuig = await this.vliegtuigenService.GetObject(vliegtuigId);
+      const heeftVrijeToegang =
+         this.permissieService.isBeheerder(currentUser) ||
+         this.permissieService.isBeheerderDDWV(currentUser) ||
+         this.permissieService.isStarttoren(currentUser) ||
+         this.permissieService.isRapporteur(currentUser) ||
+         this.permissieService.isInstructeur(currentUser) ||
+         vliegtuig.CLUBKIST;
+
+      if (!heeftVrijeToegang && !(await this.startlijstService.HeeftRecentGevlogen(currentUser.ID, vliegtuigId)))
+         throw new HttpException("Niet gemachtigd om logboek te bekijken", HttpStatus.NOT_ACCEPTABLE);
+
+      return vliegtuig;
    }
 }

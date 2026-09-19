@@ -15,6 +15,7 @@ import {VliegStatus} from "../../core/enums/VliegStatus";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {DatumZonderTijd, MinutenNaarTijd, parseDateOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 import {RegCall} from "../../core/helpers/RegCall";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {AanmeldenRequest} from "./AanmeldenRequest";
 import {AfmeldenRequest} from "./AfmeldenRequest";
 import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
@@ -70,10 +71,7 @@ export class AanwezigLedenService extends IHeliosService
    {
       this.logger.verbose(`AanwezigLedenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperAanwezigLedenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperAanwezigLedenRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperAanwezigLidWhereInput =
           {
@@ -127,24 +125,24 @@ export class AanwezigLedenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`AanwezigLedenService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
-   private async NaarGetObjectsResponse(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
    {
-      this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       if (objs.length === 0)
       {
          const result = [];
-         this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
          return result;
       }
 
-      const dbVliegtuigTypes = await this.typesService.GetObjects(Object.assign(new GetObjectsRefTypesRequest(), {
+      const dbVliegtuigTypes = await this.typesService.GetObjects(MaakGetObjectsRequest(GetObjectsRefTypesRequest, {
          GROEP: TypesGroep.VliegtuigTypes,
       }));
       const vliegtuigTypes = dbVliegtuigTypes.dataset;
@@ -212,7 +210,7 @@ export class AanwezigLedenService extends IHeliosService
             VLIEGT: vliegtNu ? 1 : 0,
          } as GetObjectsOperAanwezigLedenResponse;
       }));
-      this.logger.verbose(`AanwezigLedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -238,10 +236,10 @@ export class AanwezigLedenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUpdateInput, actorId: number): Promise<OperAanwezigLid>
+   async UpdateObject(id: number, data: UpdateOperAanwezigLidDto | Prisma.OperAanwezigLidUncheckedUpdateInput, actorId: number): Promise<OperAanwezigLid>
    {
       this.logger.verbose(`AanwezigLedenService.UpdateObject(${safeStringify({id, data})})`);
-      const update = data as Prisma.OperAanwezigLidUpdateInput;
+      const update = data as Prisma.OperAanwezigLidUncheckedUpdateInput;
 
       const db = await this.GetObject(id);
       const obj = await this.dbService.operAanwezigLid.update({
@@ -279,13 +277,13 @@ export class AanwezigLedenService extends IHeliosService
    }
 
    // zoekt de actieve aanmelding van dit lid op deze datum, of null
-   private async AanmeldingLidDatum(lidId: number, datum: Date): Promise<OperAanwezigLid | null>
+   private async BestaandeAanmelding(lidId: number, datum: Date): Promise<OperAanwezigLid | null>
    {
-      this.logger.verbose(`AanwezigLedenService.AanmeldingLidDatum(${safeStringify({lidId, datum})})`);
+      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding(${safeStringify({lidId, datum})})`);
       const result = await this.dbService.operAanwezigLid.findFirst({
          where: {LID_ID: lidId, DATUM: datum, VERWIJDERD: false}
       });
-      this.logger.verbose(`AanwezigLedenService.AanmeldingLidDatum() => ${safeStringify(result)}`);
+      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -301,11 +299,11 @@ export class AanwezigLedenService extends IHeliosService
       const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : DatumZonderTijd(tijdstip);
       const isVandaag = datum.getTime() === DatumZonderTijd(new Date()).getTime();
 
-      const bestaand = await this.AanmeldingLidDatum(data.LID_ID, datum);
+      const bestaand = await this.BestaandeAanmelding(data.LID_ID, datum);
 
       if (bestaand)
       {
-         const update: Prisma.OperAanwezigLidUpdateInput = {};
+         const update: Prisma.OperAanwezigLidUncheckedUpdateInput = {};
          let aanpassen = false;
 
          // Bouw een CSV-unie van de gewenste vliegtuigtypes op i.p.v. het bestaande type te overschrijven -
@@ -397,12 +395,12 @@ export class AanwezigLedenService extends IHeliosService
 
       const bestaand = (data.ID !== undefined && data.ID !== null)
          ? await this.GetObject(data.ID).catch(() => null)
-         : await this.AanmeldingLidDatum(data.LID_ID, DatumZonderTijd(nu));
+         : await this.BestaandeAanmelding(data.LID_ID, DatumZonderTijd(nu));
 
       if (!bestaand)
          throw new HttpException("Kan een lid alleen afmelden als het eerst aangemeld is", HttpStatus.CONFLICT);
 
-      const update: Prisma.OperAanwezigLidUpdateInput = {
+      const update: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERTREK: data.VERTREK !== undefined ? data.VERTREK as Date : nu,
       };
 
@@ -417,10 +415,8 @@ export class AanwezigLedenService extends IHeliosService
    {
       this.logger.verbose(`AanwezigLedenService.Samenvatting(${safeStringify({datum})})`);
 
-      // clubvliegtuigen en de types waarnaar ze verwijzen (equivalent van Types.GetClubVliegtuigenTypes())
-      const clubVliegtuigenResultaat = await this.vliegtuigenService.GetObjects(Object.assign(new GetObjectsRefVliegtuigenRequest(), {
-         CLUBKIST: true,
-      }));
+      const req = MaakGetObjectsRequest(GetObjectsRefVliegtuigenRequest, { CLUBKIST: true})
+      const clubVliegtuigenResultaat = await this.vliegtuigenService.GetObjects(req);
       const clubVliegtuigen = clubVliegtuigenResultaat.dataset;
       const clubkistIds = new Set(clubVliegtuigen.map(v => v.ID));
       const clubTypeIds = [...new Set(clubVliegtuigen.map(v => v.TYPE_ID).filter((id): id is number => id !== null))];
@@ -429,7 +425,7 @@ export class AanwezigLedenService extends IHeliosService
          : [];
       const typesAangevraagd = clubTypes.map(type => ({id: type.ID, type: type.OMSCHRIJVING, aantal: 0}));
 
-      const aanmeldingen = await this.GetObjects(Object.assign(new GetObjectsOperAanwezigLedenRequest(), {DATUM: datum}));
+      const aanmeldingen = await this.GetObjects(MaakGetObjectsRequest(GetObjectsOperAanwezigLedenRequest, {DATUM: datum}));
 
       let dbo = 0, solisten = 0, brevethouders = 0, instructeurs = 0, lieristen = 0, startleiders = 0;
       const overland: {reg_call: string | null, naam: string}[] = [];

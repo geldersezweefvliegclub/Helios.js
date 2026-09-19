@@ -64,7 +64,7 @@ export class DienstenController  extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperDienstCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperDienstUncheckedCreateInput;
       return await this.DienstenService.AddObject(insert, currentUser.ID);
    }
 
@@ -78,14 +78,14 @@ export class DienstenController  extends HeliosController
       this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperDienstUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperDienstUncheckedUpdateInput;
       return await this.DienstenService.UpdateObject(id, update, currentUser.ID);
    }
 
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
    // normaliseert het datumveld
    private async normaliserenData(
-      data: CreateOperDienstDto | UpdateOperDienstDto): Promise<Prisma.OperDienstCreateInput | Prisma.OperDienstUpdateInput>
+      data: CreateOperDienstDto | UpdateOperDienstDto): Promise<Prisma.OperDienstUncheckedCreateInput | Prisma.OperDienstUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -97,7 +97,7 @@ export class DienstenController  extends HeliosController
       // zorg dat de datum omgezet wordt in ISO 8601 formaat
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
 
-      return data as Prisma.OperDienstCreateInput | Prisma.OperDienstUpdateInput;
+      return data as Prisma.OperDienstUncheckedCreateInput | Prisma.OperDienstUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -108,7 +108,7 @@ export class DienstenController  extends HeliosController
       this.logger.verbose(`DienstenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.DeleteObject');
 
-      const data: Prisma.OperDienstUpdateInput = {
+      const data: Prisma.OperDienstUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.DienstenService.UpdateObject(id, data, currentUser.ID);
@@ -132,7 +132,7 @@ export class DienstenController  extends HeliosController
       this.logger.verbose(`DienstenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.RestoreObject');
 
-      const data: Prisma.OperDienstUpdateInput = {
+      const data: Prisma.OperDienstUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.DienstenService.UpdateObject(id, data, currentUser.ID);

@@ -66,7 +66,7 @@ export class DagInfoController  extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperDagInfoCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedCreateInput;
       const obj = await this.DagInfoService.AddObject(insert, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -81,7 +81,7 @@ export class DagInfoController  extends HeliosController
       this.logger.verbose(`DagInfoController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperDagInfoUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedUpdateInput;
       const obj = await this.DagInfoService.UpdateObject(id, update, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -89,7 +89,7 @@ export class DagInfoController  extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
    // normaliseert het datumveld
    private async normaliserenData(
-      data: CreateOperDagInfoDto | UpdateOperDagInfoDto): Promise<Prisma.OperDagInfoCreateInput | Prisma.OperDagInfoUpdateInput>
+      data: CreateOperDagInfoDto | UpdateOperDagInfoDto): Promise<Prisma.OperDagInfoUncheckedCreateInput | Prisma.OperDagInfoUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -101,7 +101,7 @@ export class DagInfoController  extends HeliosController
       // zorg dat de datum omgezet wordt in ISO 8601 formaat
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
 
-      return data as Prisma.OperDagInfoCreateInput | Prisma.OperDagInfoUpdateInput;
+      return data as Prisma.OperDagInfoUncheckedCreateInput | Prisma.OperDagInfoUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -112,7 +112,7 @@ export class DagInfoController  extends HeliosController
       this.logger.verbose(`DagInfoController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.DeleteObject');
 
-      const data: Prisma.OperDagInfoUpdateInput = {
+      const data: Prisma.OperDagInfoUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.DagInfoService.UpdateObject(id, data, currentUser.ID);
@@ -136,7 +136,7 @@ export class DagInfoController  extends HeliosController
       this.logger.verbose(`DagInfoController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.RestoreObject');
 
-      const data: Prisma.OperDagInfoUpdateInput = {
+      const data: Prisma.OperDagInfoUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.DagInfoService.UpdateObject(id, data, currentUser.ID);

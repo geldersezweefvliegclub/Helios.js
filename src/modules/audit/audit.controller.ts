@@ -83,13 +83,9 @@ export class AuditController extends HeliosController {
         if (this.excludeClasses.includes(objNaam))
             return;
 
-        const record: Prisma.AuditCreateInput = {
+        const record: Prisma.AuditUncheckedCreateInput = {
             DATUM: new Date(),
-            RefLid: {
-                connect: {
-                    ID: actorId
-                }
-            },
+            LID_ID: actorId,
             OBJECT_ID: id,
             TABEL_NAAM: objNaam,
             DATA: JSON.stringify(data),
@@ -112,13 +108,9 @@ export class AuditController extends HeliosController {
         if (this.excludeClasses.includes(objNaam))
             return;
 
-        const record: Prisma.AuditCreateInput = {
+        const record: Prisma.AuditUncheckedCreateInput = {
             DATUM: new Date(),
-            RefLid: {
-                connect: {
-                    ID: actorId
-                }
-            },
+            LID_ID: actorId,
             OBJECT_ID: id,
             TABEL_NAAM: objNaam,
             VOOR: JSON.stringify(before),
@@ -139,9 +131,9 @@ export class AuditController extends HeliosController {
         if (this.excludeClasses.includes(objNaam))
             return;
 
-        const record: Prisma.AuditCreateInput = {
+        const record: Prisma.AuditUncheckedCreateInput = {
             DATUM: new Date(),
-            RefLid: {connect: {ID: actorId}},
+            LID_ID: actorId,
             TABEL_NAAM: objNaam,
             OBJECT_ID: id,
             VOOR: JSON.stringify(data),

@@ -9,6 +9,7 @@ import {Prisma, RefTypesGroep} from '@prisma/client';
 import {GetObjectsRefTypesGroepenRequest} from "./GetObjectsRefTypesGroepenRequest";
 import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 export type OptionalKeysOf<Obj> = keyof {
    [Key
@@ -52,10 +53,7 @@ export class TypesGroepenService extends IHeliosService
    {
       this.logger.verbose(`TypesGroepenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsRefTypesGroepenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsRefTypesGroepenRequest, {VERWIJDERD: false});
       const where: Prisma.RefTypesGroepWhereInput =
          {
             AND:
@@ -81,7 +79,7 @@ export class TypesGroepenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.RefTypesGroepCreateInput, actorId: number): Promise<RefTypesGroep>
+   async AddObject(data: Prisma.RefTypesGroepUncheckedCreateInput, actorId: number): Promise<RefTypesGroep>
    {
       this.logger.verbose(`TypesGroepenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refTypesGroep.create({
@@ -94,7 +92,7 @@ export class TypesGroepenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypesGroepUpdateInput, actorId: number): Promise<RefTypesGroep>
+   async UpdateObject(id: number, data: Prisma.RefTypesGroepUncheckedUpdateInput, actorId: number): Promise<RefTypesGroep>
    {
       this.logger.verbose(`TypesGroepenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

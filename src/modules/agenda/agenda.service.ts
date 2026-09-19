@@ -9,6 +9,7 @@ import {Prisma, OperAgenda} from "@prisma/client";
 import {GetObjectsOperAgendaRequest} from "./GetObjectsOperAgendaRequest";
 import {GetObjectsOperAgendaResponse} from "./GetObjectsOperAgendaResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
@@ -45,10 +46,7 @@ export class AgendaService extends IHeliosService
    {
       this.logger.verbose(`AgendaService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperAgendaRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperAgendaRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperAgendaWhereInput =
          {
@@ -82,26 +80,26 @@ export class AgendaService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`AgendaService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // normaliseert de datum-/tijdvelden van de ruwe database-records naar de response-vorm
-   private async NaarGetObjectsResponse(objs: OperAgenda[]): Promise<GetObjectsOperAgendaResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: OperAgenda[]): Promise<GetObjectsOperAgendaResponse[]>
    {
-      this.logger.verbose(`AgendaService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map(obj => ({
          ...obj,
          DATUM: toDateOnly(obj.DATUM) as unknown as Date,
          TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
       }));
-      this.logger.verbose(`AgendaService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperAgendaCreateInput, actorId: number): Promise<OperAgenda>
+   async AddObject(data: Prisma.OperAgendaUncheckedCreateInput, actorId: number): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operAgenda.create({
@@ -113,7 +111,7 @@ export class AgendaService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperAgendaUpdateInput, actorId: number): Promise<OperAgenda>
+   async UpdateObject(id: number, data: Prisma.OperAgendaUncheckedUpdateInput, actorId: number): Promise<OperAgenda>
    {
       this.logger.verbose(`AgendaService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

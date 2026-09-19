@@ -9,6 +9,7 @@ import {Prisma, OperDagRapport, RefLid} from "@prisma/client";
 import {GetObjectsOperDagRapportenRequest} from "./GetObjectsOperDagRapportenRequest";
 import {GetObjectsOperDagRapportenResponse} from "./GetObjectsOperDagRapportenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // dagrapport record inclusief de relaties die de PHP dagrapporten_view samenvoegt
@@ -53,10 +54,7 @@ export class DagRapportenService extends IHeliosService
    {
       this.logger.verbose(`DagRapportenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperDagRapportenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperDagRapportenRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperDagRapportWhereInput =
           {
@@ -95,7 +93,7 @@ export class DagRapportenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`DagRapportenService.GetObjects() => ${safeStringify(result)}`);
@@ -103,9 +101,9 @@ export class DagRapportenService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP dagrapporten_view samenvoegt
-   private async NaarGetObjectsResponse(objs: DagRapportMetRelaties[]): Promise<GetObjectsOperDagRapportenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: DagRapportMetRelaties[]): Promise<GetObjectsOperDagRapportenResponse[]>
    {
-      this.logger.verbose(`DagRapportenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`DagRapportenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          const {Veld: veld, RefLid: lid, ...dagRapport} = obj;
          return {
@@ -116,11 +114,11 @@ export class DagRapportenService extends IHeliosService
             VELD_OMS: veld.OMSCHRIJVING,
          } as GetObjectsOperDagRapportenResponse;
       });
-      this.logger.verbose(`DagRapportenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`DagRapportenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperDagRapportCreateInput, actorId: number): Promise<OperDagRapport>
+   async AddObject(data: Prisma.OperDagRapportUncheckedCreateInput, actorId: number): Promise<OperDagRapport>
    {
       this.logger.verbose(`DagRapportenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operDagRapport.create({
@@ -132,7 +130,7 @@ export class DagRapportenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDagRapportUpdateInput, actorId: number): Promise<OperDagRapport>
+   async UpdateObject(id: number, data: Prisma.OperDagRapportUncheckedUpdateInput, actorId: number): Promise<OperDagRapport>
    {
       this.logger.verbose(`DagRapportenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

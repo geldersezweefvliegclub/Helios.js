@@ -9,6 +9,7 @@ import {Prisma, RefCompetentie} from "@prisma/client";
 import {GetObjectsRefCompetentiesRequest} from "./GetObjectsRefCompetentiesRequest";
 import {GetObjectsRefCompetentiesResponse} from "./GetObjectsRefCompetentiesResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 // competentie record inclusief de relatie die de PHP competenties_view samenvoegt
 type CompetentieMetRelaties = Prisma.RefCompetentieGetPayload<{
@@ -50,10 +51,7 @@ export class CompetentiesService extends IHeliosService
    {
       this.logger.verbose(`CompetentiesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsRefCompetentiesRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsRefCompetentiesRequest, {VERWIJDERD: false});
       const where: Prisma.RefCompetentieWhereInput =
          {
             AND:
@@ -79,16 +77,16 @@ export class CompetentiesService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`CompetentiesService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // voegt de velden toe die de PHP competenties_view samenvoegt
-   private async NaarGetObjectsResponse(objs: CompetentieMetRelaties[]): Promise<GetObjectsRefCompetentiesResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: CompetentieMetRelaties[]): Promise<GetObjectsRefCompetentiesResponse[]>
    {
-      this.logger.verbose(`CompetentiesService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
@@ -101,11 +99,11 @@ export class CompetentiesService extends IHeliosService
 
          return  retObj as GetObjectsRefCompetentiesResponse
       });
-      this.logger.verbose(`CompetentiesService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.RefCompetentieCreateInput , actorId: number): Promise<RefCompetentie>
+   async AddObject(data: Prisma.RefCompetentieUncheckedCreateInput , actorId: number): Promise<RefCompetentie>
    {
       this.logger.verbose(`CompetentiesService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refCompetentie.create({
@@ -118,7 +116,7 @@ export class CompetentiesService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefCompetentieUpdateInput, actorId: number): Promise<RefCompetentie>
+   async UpdateObject(id: number, data: Prisma.RefCompetentieUncheckedUpdateInput, actorId: number): Promise<RefCompetentie>
    {
       this.logger.verbose(`CompetentiesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

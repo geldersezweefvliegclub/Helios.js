@@ -64,7 +64,7 @@ export class RoosterController  extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Rooster.AddObject');
 
       const insert = await this.normaliserenData(data) as CreateOperRoosterDto;
-      const obj = await this.RoosterService.AddObject(insert as Prisma.OperRoosterCreateInput, currentUser.ID);
+      const obj = await this.RoosterService.AddObject(insert as Prisma.OperRoosterUncheckedCreateInput, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
@@ -79,7 +79,7 @@ export class RoosterController  extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Rooster.UpdateObject');
 
       const update = await this.normaliserenData(data) as UpdateOperRoosterDto;
-      const obj = await this.RoosterService.UpdateObject(id, update as Prisma.OperRoosterCreateInput, currentUser.ID);
+      const obj = await this.RoosterService.UpdateObject(id, update as Prisma.OperRoosterUncheckedUpdateInput, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
@@ -110,7 +110,7 @@ export class RoosterController  extends HeliosController
       this.logger.verbose(`RoosterController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.DeleteObject');
 
-      const data: Prisma.OperRoosterUpdateInput = {
+      const data: Prisma.OperRoosterUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.RoosterService.UpdateObject(id, data, currentUser.ID);
@@ -134,7 +134,7 @@ export class RoosterController  extends HeliosController
       this.logger.verbose(`RoosterController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.RestoreObject');
 
-      const data: Prisma.OperRoosterUpdateInput = {
+      const data: Prisma.OperRoosterUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.RoosterService.UpdateObject(id, data, currentUser.ID);

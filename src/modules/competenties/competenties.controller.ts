@@ -71,7 +71,7 @@ export class CompetentiesController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.RefCompetentieCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedCreateInput;
       return await this.competentiesService.AddObject(insert, currentUser.ID);
    }
 
@@ -85,14 +85,14 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.RefCompetentieUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedUpdateInput;
       return await this.competentiesService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet
-   // LEERFASE_ID om naar een relatie-connect
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   // (LEERFASE_ID is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
    private async normaliserenData(
-      data: CreateRefCompetentieDto | UpdateRefCompetentieDto): Promise<Prisma.RefCompetentieCreateInput | Prisma.RefCompetentieUpdateInput>
+      data: CreateRefCompetentieDto | UpdateRefCompetentieDto): Promise<Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -101,13 +101,7 @@ export class CompetentiesController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder LEERFASE_ID uit de data
-      // en voeg het toe als connect aan het insert-/updateData object
-      const { LEERFASE_ID, ...rest } = data;
-      const result = rest as Prisma.RefCompetentieCreateInput | Prisma.RefCompetentieUpdateInput;
-      result.LeerfaseType = LEERFASE_ID !== undefined ? { connect: { ID: LEERFASE_ID } } : undefined;
-
-      return result;
+      return data as Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -118,7 +112,7 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.DeleteObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.RefCompetentieUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.competentiesService.UpdateObject(id, data, currentUser.ID);
@@ -142,7 +136,7 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.RestoreObject');
 
-      const data: Prisma.RefCompetentieUpdateInput = {
+      const data: Prisma.RefCompetentieUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.competentiesService.UpdateObject(id, data, currentUser.ID);

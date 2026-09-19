@@ -9,6 +9,7 @@ import {Prisma, OperDagInfo} from "@prisma/client";
 import {GetObjectsOperDagInfoRequest} from "./GetObjectsOperDagInfoRequest";
 import {GetObjectsOperDagInfoResponse} from "./GetObjectsOperDagInfoResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // daginfo record inclusief de relaties die de PHP daginfo_view samenvoegt
@@ -60,10 +61,7 @@ export class DagInfoService extends IHeliosService
    {
       this.logger.verbose(`DagInfoService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperDagInfoRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperDagInfoRequest, {VERWIJDERD: false});
       const where: Prisma.OperDagInfoWhereInput =
          {
             AND:
@@ -93,7 +91,7 @@ export class DagInfoService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`DagInfoService.GetObjects() => ${safeStringify(result)}`);
@@ -101,9 +99,9 @@ export class DagInfoService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP daginfo_view samenvoegt
-   private async NaarGetObjectsResponse(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
    {
-      this.logger.verbose(`DagInfoService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          const retObj = {
             ...obj,
@@ -131,11 +129,11 @@ export class DagInfoService extends IHeliosService
 
          return retObj as GetObjectsOperDagInfoResponse;
       });
-      this.logger.verbose(`DagInfoService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperDagInfoCreateInput, actorId: number): Promise<OperDagInfo>
+   async AddObject(data: Prisma.OperDagInfoUncheckedCreateInput, actorId: number): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operDagInfo.create({
@@ -147,7 +145,7 @@ export class DagInfoService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperDagInfoUpdateInput, actorId: number): Promise<OperDagInfo>
+   async UpdateObject(id: number, data: Prisma.OperDagInfoUncheckedUpdateInput, actorId: number): Promise<OperDagInfo>
    {
       this.logger.verbose(`DagInfoService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

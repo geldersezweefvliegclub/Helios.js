@@ -5,7 +5,7 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+  <p align="center">Een progressief <a href="http://nodejs.org" target="_blank">Node.js</a> framework voor het bouwen van efficiënte en schaalbare server-side applicaties.</p>
     <p align="center">
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
@@ -22,17 +22,17 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Beschrijving
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Project opzetten
 
 ```bash
 $ npm install
 ```
 
-## Compile and run the project
+## Project compileren en uitvoeren
 
 ```bash
 # development
@@ -45,7 +45,7 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Run tests
+## Tests uitvoeren
 
 ```bash
 # unit tests
@@ -58,28 +58,57 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Resources
+## Prisma: waarom deze codebase overal "Unchecked" gebruikt
 
-Check out a few resources that may come in handy when working with NestJS:
+Elk Prisma-model met een foreign-key-relatie krijgt **twee** gegenereerde input-types
+voor `create`/`update`-aanroepen:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Checked** (bijv. `Prisma.OperStartlijstCreateInput`) — een foreign key moet worden
+  gezet via het *relatie*-veld met een geneste operatie, bijv.
+  `Vliegtuig: { connect: { ID: 604 } }`.
+- **Unchecked** (bijv. `Prisma.OperStartlijstUncheckedCreateInput`) — de foreign key mag
+  rechtstreeks als scalaire kolom gezet worden, bijv. `VLIEGTUIG_ID: 604`.
 
-## Support
+Beide leveren identieke SQL op: Prisma Client kijkt tijdens het uitvoeren alleen naar de
+vorm van het object dat je meegeeft, nooit naar welk TypeScript-type je hebt
+gedeclareerd. De referentiële integriteit van de foreign keys wordt volledig door MySQL
+zelf afgedwongen (dit project gebruikt Prisma's standaard `relationMode = "foreignKeys"`,
+dus echte database-constraints) — dat heeft niets te maken met welke van de twee
+input-varianten je gebruikt.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Deze codebase gebruikt overal het Unchecked-type**, om twee redenen die specifiek voor
+dit project gelden:
+- Elke module is verantwoordelijk voor precies één databasetabel. Er wordt nergens een
+  nieuw gerelateerd (kind-)record aangemaakt als onderdeel van het schrijven van een
+  eigen record — een foreign key verwijst altijd naar een record dat al bestaat, exact
+  zoals de oorspronkelijke PHP-implementatie dat ook aannam. Dat is precies de situatie
+  waarvoor `Unchecked` bedoeld is; het enige echte voordeel van `Checked` — geneste
+  schrijfacties zoals `create`/`connectOrCreate` voor een *nieuw* gerelateerd record in
+  dezelfde aanroep — komt in dit project dus nooit van pas.
+- Eén consistent patroon is eenvoudiger aan te leren voor nieuwe engineers dan twee
+  patronen naast elkaar, zeker omdat request bodies toch al kale foreign-key-nummers
+  meesturen (bijv. `VLIEGTUIG_ID`) die 1-op-1 overeenkomen met de gegenereerde DTO's.
 
-## Stay in touch
+**Conventie in deze codebase**: elke `AddObject`/`UpdateObject`-servicefunctie declareert
+het **Unchecked**-type, en geeft `data` rechtstreeks door aan `.create()`/`.update()` met
+kale scalaire FK-velden — zonder relatie-objecten op te bouwen. Mocht een toekomstige
+functie ooit echt een geneste schrijfactie nodig hebben, dan is `Checked` daarvoor de
+juiste keuze; tot die tijd houdt één consistent patroon de codebase eenvoudig.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Meer lezen:
+- [Prisma Client Reference](https://www.prisma.io/docs/orm/reference/prisma-client-reference)
+  — toont beide input-varianten in de daadwerkelijk gegenereerde methode-signaturen.
+- ["What does 'Unchecked' mean?"](https://github.com/prisma/orm/discussions/10121) — een
+  directe uitleg van het verschil door een Prisma-maintainer.
 
-## License
+## Bronnen
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Bekijk een aantal bronnen die van pas kunnen komen bij het werken met NestJS:
+
+- Bezoek de [NestJS Documentation](https://docs.nestjs.com) voor meer informatie over het framework.
+- Ga voor vragen en ondersteuning naar ons [Discord-kanaal](https://discord.gg/G7Qnnhy).
+- Wil je dieper de materie in en meer praktijkervaring opdoen, bekijk dan onze officiële video[cursussen](https://courses.nestjs.com/).
+- Visualiseer de grafiek van je applicatie en interacteer in real-time met je NestJS-applicatie via [NestJS Devtools](https://devtools.nestjs.com).
+- Hulp nodig bij je project (parttime tot fulltime)? Bekijk onze officiële [enterprise support](https://enterprise.nestjs.com).
+- Blijf op de hoogte en volg ons op [X](https://x.com/nestframework) en [LinkedIn](https://linkedin.com/company/nestjs).
+- Op zoek naar een baan, of heb je een baan te bieden? Bekijk ons officiële [vacatureoverzicht](https://jobs.nestjs.com).

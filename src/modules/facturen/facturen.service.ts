@@ -9,6 +9,7 @@ import {Prisma, OperFactuur} from "@prisma/client";
 import {GetObjectsOperFacturenRequest} from "./GetObjectsOperFacturenRequest";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 @Injectable()
 export class FacturenService extends IHeliosService
@@ -44,10 +45,7 @@ export class FacturenService extends IHeliosService
    {
       this.logger.verbose(`FacturenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperFacturenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperFacturenRequest, {VERWIJDERD: false});
       const where: Prisma.OperFactuurWhereInput =
          {
             AND:
@@ -83,7 +81,7 @@ export class FacturenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.OperFactuurCreateInput, actorId: number): Promise<OperFactuur>
+   async AddObject(data: Prisma.OperFactuurUncheckedCreateInput, actorId: number): Promise<OperFactuur>
    {
       this.logger.verbose(`FacturenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operFactuur.create({
@@ -96,7 +94,7 @@ export class FacturenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperFactuurUpdateInput, actorId: number): Promise<OperFactuur>
+   async UpdateObject(id: number, data: Prisma.OperFactuurUncheckedUpdateInput, actorId: number): Promise<OperFactuur>
    {
       this.logger.verbose(`FacturenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

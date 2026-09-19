@@ -10,6 +10,7 @@ import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {GetRefTypesResponse} from "./GetRefTypesResponse";
 import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 @Injectable()
 export class TypesService extends IHeliosService
@@ -45,10 +46,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperBrandstofRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperBrandstofRequest, {VERWIJDERD: false});
       const where: Prisma.RefTypeWhereInput =
       {
          AND:
@@ -74,22 +72,22 @@ export class TypesService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`TypesService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // voegt de velden toe die de PHP types_view samenvoegt
-   private async NaarGetObjectsResponse(objs: RefType[]): Promise<GetRefTypesResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: RefType[]): Promise<GetRefTypesResponse[]>
    {
-      this.logger.verbose(`TypesService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`TypesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => new GetRefTypesResponse(obj));
-      this.logger.verbose(`TypesService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`TypesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.RefTypeCreateInput , actorId: number): Promise<GetRefTypesResponse>
+   async AddObject(data: Prisma.RefTypeUncheckedCreateInput , actorId: number): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.refType.create({
@@ -102,7 +100,7 @@ export class TypesService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.RefTypeUpdateInput, actorId: number): Promise<GetRefTypesResponse>
+   async UpdateObject(id: number, data: Prisma.RefTypeUncheckedUpdateInput, actorId: number): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

@@ -61,7 +61,7 @@ export class FacturenController  extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Facturen.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperFactuurCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedCreateInput;
       return await this.FacturenService.AddObject(insert, currentUser.ID);
    }
 
@@ -75,13 +75,13 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperFactuurUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedUpdateInput;
       return await this.FacturenService.UpdateObject(id, update, currentUser.ID);
    }
 
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
    private async normaliserenData(
-      data: CreateOperFactuurDto | UpdateOperFactuurDto): Promise<Prisma.OperFactuurCreateInput | Prisma.OperFactuurUpdateInput>
+      data: CreateOperFactuurDto | UpdateOperFactuurDto): Promise<Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -90,7 +90,7 @@ export class FacturenController  extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      return data as Prisma.OperFactuurCreateInput | Prisma.OperFactuurUpdateInput;
+      return data as Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -101,7 +101,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.DeleteObject');
 
-      const data: Prisma.OperFactuurUpdateInput = {
+      const data: Prisma.OperFactuurUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.FacturenService.UpdateObject(id, data, currentUser.ID);
@@ -125,7 +125,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.RestoreObject');
 
-      const data: Prisma.OperFactuurUpdateInput = {
+      const data: Prisma.OperFactuurUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.FacturenService.UpdateObject(id, data, currentUser.ID);

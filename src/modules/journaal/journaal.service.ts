@@ -9,6 +9,7 @@ import {Prisma, OperJournaal} from "@prisma/client";
 import {GetObjectsOperJournaalRequest} from "./GetObjectsOperJournaalRequest";
 import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {RegCall} from "../../core/helpers/RegCall";
 
 // journaal record inclusief de relaties die de PHP journaal_view samenvoegt
@@ -57,10 +58,7 @@ export class JournaalService extends IHeliosService
    {
       this.logger.verbose(`JournaalService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperJournaalRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperJournaalRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperJournaalWhereInput =
          {
@@ -121,16 +119,16 @@ export class JournaalService extends IHeliosService
          },
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`JournaalService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // voegt de velden toe die de PHP journaal_view samenvoegt
-   private async NaarGetObjectsResponse(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
    {
-      this.logger.verbose(`JournaalService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
@@ -157,7 +155,7 @@ export class JournaalService extends IHeliosService
 
          return  retObj as GetObjectsOperJournaalResponse
       });
-      this.logger.verbose(`JournaalService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

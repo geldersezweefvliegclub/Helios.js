@@ -63,7 +63,7 @@ export class DagRapportenController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperDagRapportCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
       const obj = await this.DagRapportenService.AddObject(insert, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -78,7 +78,7 @@ export class DagRapportenController extends HeliosController
       this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperDagRapportUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedUpdateInput;
       const obj = await this.DagRapportenService.UpdateObject(id, update, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -86,7 +86,7 @@ export class DagRapportenController extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
    // normaliseert het datumveld
    private async normaliserenData(
-      data: CreateOperDagRapportDto | UpdateOperDagRapportDto): Promise<Prisma.OperDagRapportCreateInput | Prisma.OperDagRapportUpdateInput>
+      data: CreateOperDagRapportDto | UpdateOperDagRapportDto): Promise<Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -98,7 +98,7 @@ export class DagRapportenController extends HeliosController
       // zorg dat de datum omgezet wordt in ISO 8601 formaat
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
 
-      return data as Prisma.OperDagRapportCreateInput | Prisma.OperDagRapportUpdateInput;
+      return data as Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -109,7 +109,7 @@ export class DagRapportenController extends HeliosController
       this.logger.verbose(`DagRapportenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.DeleteObject');
 
-      const data: Prisma.OperDagRapportUpdateInput = {
+      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);
@@ -133,7 +133,7 @@ export class DagRapportenController extends HeliosController
       this.logger.verbose(`DagRapportenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.RestoreObject');
 
-      const data: Prisma.OperDagRapportUpdateInput = {
+      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);

@@ -10,6 +10,7 @@ import {GetObjectsOperRoosterRequest} from "./GetObjectsOperRoosterRequest";
 import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
@@ -46,10 +47,7 @@ export class RoosterService extends IHeliosService
    {
       this.logger.verbose(`RoosterService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperRoosterRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperRoosterRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperRoosterWhereInput =
          {
@@ -82,22 +80,22 @@ export class RoosterService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`RoosterService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // normaliseert de datumvelden van de ruwe database-records naar de response-vorm
-   private async NaarGetObjectsResponse(objs: OperRooster[]): Promise<GetObjectsOperRoosterResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: OperRooster[]): Promise<GetObjectsOperRoosterResponse[]>
    {
-      this.logger.verbose(`RoosterService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
-      this.logger.verbose(`RoosterService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperRoosterCreateInput, actorId: number): Promise<OperRoosterDto>
+   async AddObject(data: Prisma.OperRoosterUncheckedCreateInput, actorId: number): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operRooster.create({
@@ -109,7 +107,7 @@ export class RoosterService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperRoosterUpdateInput, actorId: number): Promise<OperRoosterDto>
+   async UpdateObject(id: number, data: Prisma.OperRoosterUncheckedUpdateInput, actorId: number): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

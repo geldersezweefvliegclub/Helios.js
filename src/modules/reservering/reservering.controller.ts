@@ -130,7 +130,7 @@ export class ReserveringController extends HeliosController
       this.logger.verbose(`ReserveringController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.DeleteObject');
 
-      const data: Prisma.OperReserveringUpdateInput = {
+      const data: Prisma.OperReserveringUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.reserveringService.UpdateObject(id, data, currentUser.ID);
@@ -154,7 +154,7 @@ export class ReserveringController extends HeliosController
       this.logger.verbose(`ReserveringController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.RestoreObject');
 
-      const data: Prisma.OperReserveringUpdateInput = {
+      const data: Prisma.OperReserveringUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.reserveringService.UpdateObject(id, data, currentUser.ID);

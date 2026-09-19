@@ -63,7 +63,7 @@ export class GastenController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Gasten.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperGastCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperGastUncheckedCreateInput;
       const obj = await this.GastenService.AddObject(insert, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -78,7 +78,7 @@ export class GastenController extends HeliosController
       this.logger.verbose(`GastenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperGastUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperGastUncheckedUpdateInput;
       const obj = await this.GastenService.UpdateObject(id, update, currentUser.ID);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -86,7 +86,7 @@ export class GastenController extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
    // normaliseert het datumveld
    private async normaliserenData(
-      data: CreateOperGastDto | UpdateOperGastDto): Promise<Prisma.OperGastCreateInput | Prisma.OperGastUpdateInput>
+      data: CreateOperGastDto | UpdateOperGastDto): Promise<Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -98,7 +98,7 @@ export class GastenController extends HeliosController
       // zorg dat de datum omgezet wordt in ISO 8601 formaat
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
 
-      return data as Prisma.OperGastCreateInput | Prisma.OperGastUpdateInput;
+      return data as Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -109,7 +109,7 @@ export class GastenController extends HeliosController
       this.logger.verbose(`GastenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.DeleteObject');
 
-      const data: Prisma.OperGastUpdateInput = {
+      const data: Prisma.OperGastUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.GastenService.UpdateObject(id, data, currentUser.ID);
@@ -133,7 +133,7 @@ export class GastenController extends HeliosController
       this.logger.verbose(`GastenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Gasten.RestoreObject');
 
-      const data: Prisma.OperGastUpdateInput = {
+      const data: Prisma.OperGastUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.GastenService.UpdateObject(id, data, currentUser.ID);

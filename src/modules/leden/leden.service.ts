@@ -11,6 +11,7 @@ import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
 
@@ -83,11 +84,7 @@ export class LedenService extends IHeliosService
    async GetObjects(params?: GetObjectsRefLedenRequest | undefined): Promise<IHeliosGetObjectsResponse<GetObjectsRefLedenResponse>> {
       this.logger.verbose(`LedenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsRefLedenRequest();
-         params.VERWIJDERD = false;
-         params.CLUBLEDEN = true;
-      }
+         params = MaakGetObjectsRequest(GetObjectsRefLedenRequest, {VERWIJDERD: false, CLUBLEDEN: true});
       const where: Prisma.RefLidWhereInput = {
          AND:
             [
@@ -135,7 +132,7 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`LedenService.GetObjects() => ${safeStringify(result)}`);
       return result;
@@ -143,9 +140,9 @@ export class LedenService extends IHeliosService
 
    // voegt de velden toe die de PHP leden_view samenvoegt: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
    // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
-   private async NaarGetObjectsResponse(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
    {
-      this.logger.verbose(`LedenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
 
       // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
       const paxProgressies = await this.dbService.operProgressie.findMany({
@@ -179,7 +176,7 @@ export class LedenService extends IHeliosService
 
          return  retObj as GetObjectsRefLedenResponse
       });
-      this.logger.verbose(`LedenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -9,6 +9,7 @@ import {Prisma, OperProgressie} from "@prisma/client";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 
 export interface UpdateProgressieData {
@@ -64,10 +65,7 @@ export class ProgressieService extends IHeliosService
    {
       this.logger.verbose(`ProgressieService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperProgressieRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperProgressieRequest, {VERWIJDERD: false});
       const where: Prisma.OperProgressieWhereInput =
          {
             AND:
@@ -97,7 +95,7 @@ export class ProgressieService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`ProgressieService.GetObjects() => ${safeStringify(result)}`);
@@ -105,9 +103,9 @@ export class ProgressieService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP progressie_view samenvoegt
-   private async NaarGetObjectsResponse(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
    {
-      this.logger.verbose(`ProgressieService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) =>
       {
          const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
@@ -121,7 +119,7 @@ export class ProgressieService extends IHeliosService
             INSTRUCTEUR_NAAM: instructeur.NAAM,
          } as GetObjectsOperProgressieResponse;
       });
-      this.logger.verbose(`ProgressieService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

@@ -6,6 +6,7 @@ import {IHeliosService} from "../../core/services/IHeliosService";
 import {GetObjectsAuditRequest} from "./GetObjectsAuditRequest";
 import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // audit record inclusief de relatie die de PHP audit_view samenvoegt
@@ -48,11 +49,7 @@ export class AuditService extends IHeliosService
    {
       this.logger.verbose(`AuditService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsAuditRequest();
-         params.VERWIJDERD = false;
-         params.MAX = 1000;
-      }
+         params = MaakGetObjectsRequest(GetObjectsAuditRequest, {VERWIJDERD: false, MAX: 1000});
       const sort = params.SORT ? params.SORT : "ID DESC";         // stel de sorteervolgorde in; standaard SORTEER_VOLGORDE indien niet opgegeven
 
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
@@ -105,7 +102,7 @@ export class AuditService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`AuditService.GetObjects() => ${safeStringify(result)}`);
@@ -113,9 +110,9 @@ export class AuditService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP audit_view samenvoegt
-   private async NaarGetObjectsResponse(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
    {
-      this.logger.verbose(`AuditService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          // kopieer relevante velden van child objects naar het parent object
          const retObj = {
@@ -129,12 +126,12 @@ export class AuditService extends IHeliosService
 
          return  retObj as GetObjectsAuditResponse
       });
-      this.logger.verbose(`AuditService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
 
-   async AddObject(data: Prisma.AuditCreateInput ): Promise<Audit>
+   async AddObject(data: Prisma.AuditUncheckedCreateInput ): Promise<Audit>
    {
       this.logger.verbose(`AuditService.AddObject(${safeStringify({data})})`);
       const result = await this.dbService.audit.create({
@@ -144,7 +141,7 @@ export class AuditService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.AuditUpdateInput): Promise<Audit>
+   async UpdateObject(id: number, data: Prisma.AuditUncheckedUpdateInput): Promise<Audit>
    {
       this.logger.verbose(`AuditService.UpdateObject(${safeStringify({id, data})})`);
       await this.GetObject(id);   // controleer of het record bestaat

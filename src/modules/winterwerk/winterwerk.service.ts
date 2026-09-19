@@ -9,6 +9,7 @@ import {Prisma, OperWinterwerk} from "@prisma/client";
 import {GetObjectsOperWinterwerkRequest} from "./GetObjectsOperWinterwerkRequest";
 import {GetObjectsOperWinterwerkResponse} from "./GetObjectsOperWinterwerkResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 
 @Injectable()
@@ -45,10 +46,7 @@ export class WinterwerkService extends IHeliosService
    {
       this.logger.verbose(`WinterwerkService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperWinterwerkRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperWinterwerkRequest, {VERWIJDERD: false});
       const where: Prisma.OperWinterwerkWhereInput =
          {
             AND:
@@ -69,27 +67,27 @@ export class WinterwerkService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`WinterwerkService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
 
    // normaliseert de datum-/tijdvelden van de ruwe database-records naar de response-vorm
-   private async NaarGetObjectsResponse(objs: OperWinterwerk[]): Promise<GetObjectsOperWinterwerkResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: OperWinterwerk[]): Promise<GetObjectsOperWinterwerkResponse[]>
    {
-      this.logger.verbose(`WinterwerkService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`WinterwerkService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map(obj => ({
          ...obj,
          DATUM: toDateOnly(obj.DATUM) as unknown as Date,
          AANVANG: toTimeOnly(obj.AANVANG) as unknown as Date,
          EINDE: toTimeOnly(obj.EINDE) as unknown as Date,
       }));
-      this.logger.verbose(`WinterwerkService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`WinterwerkService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperWinterwerkCreateInput, actorId: number): Promise<OperWinterwerk>
+   async AddObject(data: Prisma.OperWinterwerkUncheckedCreateInput, actorId: number): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operWinterwerk.create({
@@ -101,7 +99,7 @@ export class WinterwerkService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperWinterwerkUpdateInput, actorId: number): Promise<OperWinterwerk>
+   async UpdateObject(id: number, data: Prisma.OperWinterwerkUncheckedUpdateInput, actorId: number): Promise<OperWinterwerk>
    {
       this.logger.verbose(`WinterwerkService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);

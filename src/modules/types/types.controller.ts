@@ -64,7 +64,7 @@ export class TypesController extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Types.AddObject');
       bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(data) as Prisma.RefTypeCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.RefTypeUncheckedCreateInput;
       return await this.typesService.AddObject(insert, currentUser.ID);
    }
 
@@ -78,14 +78,14 @@ export class TypesController extends HeliosController
       bodyHeeftData(data);
       id = id ?? data.ID;
 
-      const update = await this.normaliserenData(data) as Prisma.RefTypeUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.RefTypeUncheckedUpdateInput;
       return await this.typesService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en zet
-   // de GROEP FK om naar een TypesGroep connect-relatie
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   // (GROEP is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
    private async normaliserenData(
-      data: CreateRefTypeDto | UpdateRefTypeDto): Promise<Prisma.RefTypeCreateInput | Prisma.RefTypeUpdateInput>
+      data: CreateRefTypeDto | UpdateRefTypeDto): Promise<Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -94,12 +94,7 @@ export class TypesController extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // verwijder GROEP uit de data en voeg het toe aan de TypesGroep property
-      const { GROEP, ...rest } = data;
-      const result = rest as Prisma.RefTypeCreateInput | Prisma.RefTypeUpdateInput;
-      result.TypesGroep = GROEP !== undefined ? { connect: { ID: GROEP } } : undefined;
-
-      return result;
+      return data as Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -110,7 +105,7 @@ export class TypesController extends HeliosController
       this.logger.verbose(`TypesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.DeleteObject');
 
-      const data: Prisma.RefTypeUpdateInput = {
+      const data: Prisma.RefTypeUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.typesService.UpdateObject(id, data, currentUser.ID);
@@ -134,7 +129,7 @@ export class TypesController extends HeliosController
       this.logger.verbose(`TypesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.RestoreObject');
 
-      const data: Prisma.RefTypeUpdateInput = {
+      const data: Prisma.RefTypeUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.typesService.UpdateObject(id, data, currentUser.ID);

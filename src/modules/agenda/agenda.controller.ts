@@ -67,7 +67,7 @@ async AddObject(
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Agenda.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperAgendaCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperAgendaUncheckedCreateInput;
       const obj = await this.agendaService.AddObject(insert, currentUser.ID);
       return {
          ...obj,
@@ -86,7 +86,7 @@ async UpdateObject(
       this.logger.verbose(`AgendaController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperAgendaCreateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperAgendaUncheckedUpdateInput;
       const obj = await this.agendaService.UpdateObject(id, update, currentUser.ID);
       return {
          ...obj,
@@ -98,7 +98,7 @@ async UpdateObject(
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
    // de datum- en tijdvelden
    private async normaliserenData(
-      data: CreateOperAgendaDto | UpdateOperAgendaDto): Promise<Prisma.OperAgendaCreateInput | Prisma.OperAgendaUpdateInput>
+      data: CreateOperAgendaDto | UpdateOperAgendaDto): Promise<Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -110,7 +110,7 @@ async UpdateObject(
       data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
       data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
 
-      return data as Prisma.OperAgendaCreateInput | Prisma.OperAgendaUpdateInput;
+      return data as Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput;
    }
 
 @HeliosDeleteObject()
@@ -121,7 +121,7 @@ async DeleteObject(
       this.logger.verbose(`AgendaController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.DeleteObject');
 
-      const data: Prisma.OperAgendaUpdateInput = {
+      const data: Prisma.OperAgendaUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.agendaService.UpdateObject(id, data, currentUser.ID);
@@ -145,7 +145,7 @@ async RestoreObject(
       this.logger.verbose(`AgendaController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.RestoreObject');
 
-      const data: Prisma.OperAgendaUpdateInput = {
+      const data: Prisma.OperAgendaUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.agendaService.UpdateObject(id, data, currentUser.ID);

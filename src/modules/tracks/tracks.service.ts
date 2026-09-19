@@ -9,6 +9,7 @@ import {Prisma, OperTrack} from "@prisma/client";
 import {GetObjectsOperTracksRequest} from "./GetObjectsOperTracksRequest";
 import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
 // track record inclusief de relaties die de PHP tracks_view samenvoegt
 type TrackMetRelaties = Prisma.OperTrackGetPayload<{
@@ -52,10 +53,7 @@ export class TracksService extends IHeliosService
    {
       this.logger.verbose(`TracksService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperTracksRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperTracksRequest, {VERWIJDERD: false});
       const where: Prisma.OperTrackWhereInput =
          {
             AND:
@@ -84,7 +82,7 @@ export class TracksService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`TracksService.GetObjects() => ${safeStringify(result)}`);
@@ -92,9 +90,9 @@ export class TracksService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP tracks_view samenvoegt
-   private async NaarGetObjectsResponse(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
    {
-      this.logger.verbose(`TracksService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) =>
       {
          const {Lid: lid, Instructeur: instructeur, ...track} = obj;
@@ -104,7 +102,7 @@ export class TracksService extends IHeliosService
             INSTRUCTEUR_NAAM: instructeur?.NAAM ?? null,
          } as GetObjectsOperTracksResponse;
       });
-      this.logger.verbose(`TracksService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

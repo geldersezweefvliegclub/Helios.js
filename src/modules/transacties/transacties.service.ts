@@ -9,6 +9,7 @@ import {Prisma, OperTransactie, RefLid} from "@prisma/client";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // transactie record inclusief de relaties die de PHP transacties_view samenvoegt
@@ -55,10 +56,7 @@ export class TransactiesService extends IHeliosService
    {
       this.logger.verbose(`TransactiesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperTransactiesRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperTransactiesRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
       const where: Prisma.OperTransactieWhereInput =
          {
@@ -101,7 +99,7 @@ export class TransactiesService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`TransactiesService.GetObjects() => ${safeStringify(result)}`);
@@ -109,9 +107,9 @@ export class TransactiesService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP transacties_view samenvoegt
-   private async NaarGetObjectsResponse(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
+   private async MaakGetObjectsResponseDataset(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
    {
-      this.logger.verbose(`TransactiesService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       const result = objs.map((obj) => {
          const retObj = {
             ...obj,
@@ -127,7 +125,7 @@ export class TransactiesService extends IHeliosService
 
          return retObj as GetObjectsOperTransactiesResponse;
       });
-      this.logger.verbose(`TransactiesService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 

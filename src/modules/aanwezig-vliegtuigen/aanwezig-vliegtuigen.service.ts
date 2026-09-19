@@ -9,8 +9,12 @@ import {Prisma, OperAanwezigVliegtuig} from "@prisma/client";
 import {GetObjectsOperAanwezigVliegtuigenRequest} from "./GetObjectsOperAanwezigVliegtuigenRequest";
 import {GetObjectsOperAanwezigVliegtuigenResponse} from "./GetObjectsOperAanwezigVliegtuigenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
-import {toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
+import {DatumZonderTijd, parseDateOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
 import {RegCall} from "../../core/helpers/RegCall";
+import {StartlijstService} from "../startlijst/startlijst.service";
+import {AanmeldenVliegtuigRequest} from "./AanmeldenVliegtuigRequest";
+import {AfmeldenVliegtuigRequest} from "./AfmeldenVliegtuigRequest";
 
 // aanwezig vliegtuig record inclusief de relaties die de PHP aanwezig_vliegtuigen_view samenvoegt
 type AanwezigVliegtuigMetRelaties = Prisma.OperAanwezigVliegtuigGetPayload<{
@@ -26,7 +30,8 @@ export class AanwezigVliegtuigenService extends IHeliosService
    private readonly logger = new Logger(AanwezigVliegtuigenService.name);
 
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly startlijstService: StartlijstService)
    {
       super();
    }
@@ -54,10 +59,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
    {
       this.logger.verbose(`AanwezigVliegtuigenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-      {
-         params = new GetObjectsOperAanwezigVliegtuigenRequest();
-         params.VERWIJDERD = false;
-      }
+         params = MaakGetObjectsRequest(GetObjectsOperAanwezigVliegtuigenRequest, {VERWIJDERD: false});
       const where: Prisma.OperAanwezigVliegtuigWhereInput =
          {
             AND:
@@ -88,7 +90,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
          }
       });
 
-      const response = await this.NaarGetObjectsResponse(objs);
+      const response = await this.MaakGetObjectsResponseDataset(objs);
 
       const result = this.buildGetObjectsResponse(response, count, params.HASH);
       this.logger.verbose(`AanwezigVliegtuigenService.GetObjects() => ${safeStringify(result)}`);
@@ -96,37 +98,22 @@ export class AanwezigVliegtuigenService extends IHeliosService
    }
 
    // voegt de velden toe die de PHP aanwezig_vliegtuigen_view samenvoegt: vliegtuig- en type-gegevens via joins,
-   // en of het vliegtuig momenteel aan het vliegen is via een gebatchte aggregatie op oper_startlijst
-   private async NaarGetObjectsResponse(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
+   // en of het vliegtuig momenteel aan het vliegen is via StartlijstService.VliegtuigVliegt()
+   private async MaakGetObjectsResponseDataset(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
    {
-      this.logger.verbose(`AanwezigVliegtuigenService.NaarGetObjectsResponse(${safeStringify({objs})})`);
+      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
       if (objs.length === 0)
       {
          const result = [];
-         this.logger.verbose(`AanwezigVliegtuigenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+         this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
          return result;
       }
 
-      const vliegtuigIds = [...new Set(objs.map(obj => obj.VLIEGTUIG_ID))];
-      const datums = [...new Map(objs.map(obj => [obj.DATUM.getTime(), obj.DATUM])).values()];
-      const vluchtenVanVandaag = await this.dbService.operStartlijst.findMany({
-         where: {
-            VERWIJDERD: false,
-            VLIEGTUIG_ID: {in: vliegtuigIds},
-            DATUM: {in: datums}
-         }
-      });
-
-      const vliegtVliegtuigenPerDatum = new Set<string>();
-      for (const vlucht of vluchtenVanVandaag)
-      {
-         if (vlucht.STARTTIJD !== null && vlucht.LANDINGSTIJD === null)
-            vliegtVliegtuigenPerDatum.add(`${vlucht.VLIEGTUIG_ID}_${vlucht.DATUM.getTime()}`);
-      }
-
-      const result = objs.map(obj =>
+      const result = await Promise.all(objs.map(async obj =>
       {
          const {Vliegtuig: vliegtuig, Veld: veld, ...aanwezigVliegtuig} = obj;
+
+         const vliegtNu = await this.startlijstService.VliegtuigVliegt(obj.VLIEGTUIG_ID, obj.DATUM);
 
          return {
             ...aanwezigVliegtuig,
@@ -149,14 +136,14 @@ export class AanwezigVliegtuigenService extends IHeliosService
             TRAINER: vliegtuig.TRAINER,
             OPMERKINGEN: vliegtuig.OPMERKINGEN,
             VELD: veld?.OMSCHRIJVING ?? null,
-            VLIEGT: vliegtVliegtuigenPerDatum.has(`${obj.VLIEGTUIG_ID}_${obj.DATUM.getTime()}`) ? 1 : 0,
+            VLIEGT: vliegtNu ? 1 : 0,
          } as GetObjectsOperAanwezigVliegtuigenResponse;
-      });
-      this.logger.verbose(`AanwezigVliegtuigenService.NaarGetObjectsResponse() => ${safeStringify(result)}`);
+      }));
+      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
-   async AddObject(data: Prisma.OperAanwezigVliegtuigCreateInput, actorId: number): Promise<OperAanwezigVliegtuig>
+   async AddObject(data: Prisma.OperAanwezigVliegtuigUncheckedCreateInput, actorId: number): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.AddObject(${safeStringify({data})})`);
       const obj = await this.dbService.operAanwezigVliegtuig.create({
@@ -168,7 +155,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
       return obj;
    }
 
-   async UpdateObject(id: number, data: Prisma.OperAanwezigVliegtuigUpdateInput, actorId: number): Promise<OperAanwezigVliegtuig>
+   async UpdateObject(id: number, data: Prisma.OperAanwezigVliegtuigUncheckedUpdateInput, actorId: number): Promise<OperAanwezigVliegtuig>
    {
       this.logger.verbose(`AanwezigVliegtuigenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
@@ -196,5 +183,112 @@ export class AanwezigVliegtuigenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // zoekt de actieve aanmelding van dit vliegtuig op deze datum, of null
+   private async BestaandeAanmelding(vliegtuigId: number, datum: Date): Promise<OperAanwezigVliegtuig | null>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding(${safeStringify({vliegtuigId, datum})})`);
+      const result = await this.dbService.operAanwezigVliegtuig.findFirst({
+         where: {VLIEGTUIG_ID: vliegtuigId, DATUM: datum, VERWIJDERD: false}
+      });
+      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Aanmelden van een vliegtuig als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding
+   // van dat vliegtuig op die dag aan, zie AanwezigVliegtuigen.Aanmelden() in de PHP implementatie.
+   async Aanmelden(data: AanmeldenVliegtuigRequest, actorId: number): Promise<OperAanwezigVliegtuig>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenService.Aanmelden(${safeStringify({data})})`);
+      if (data.VLIEGTUIG_ID === undefined || data.VLIEGTUIG_ID === null)
+         throw new HttpException("VLIEGTUIG_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
+
+      const tijdstip = new Date();
+      const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : DatumZonderTijd(tijdstip);
+
+      const bestaand = await this.BestaandeAanmelding(data.VLIEGTUIG_ID, datum);
+
+      if (bestaand)
+      {
+         const update: Prisma.OperAanwezigVliegtuigUpdateInput = {};
+         let aanpassen = false;
+
+         if (bestaand.AANKOMST === null)
+         {
+            update.AANKOMST = tijdstip;
+            aanpassen = true;
+         }
+
+         if (bestaand.VERTREK !== null)
+         {
+            update.VERTREK = null;
+            aanpassen = true;
+         }
+
+         const overigeVelden = ["LATITUDE", "LONGITUDE", "HOOGTE", "SNELHEID", "VELD_ID"] as const;
+         for (const veld of overigeVelden)
+         {
+            if (data[veld] !== undefined && data[veld] !== bestaand[veld])
+            {
+               (update as Record<string, unknown>)[veld] = data[veld];
+               aanpassen = true;
+            }
+         }
+
+         if (!aanpassen)
+         {
+            this.logger.verbose(`AanwezigVliegtuigenService.Aanmelden: niet aangepast, id=${bestaand.ID}`);
+            return bestaand;
+         }
+
+         await this.UpdateObject(bestaand.ID, update, actorId);
+         const result = await this.GetObject(bestaand.ID);
+         this.logger.verbose(`AanwezigVliegtuigenService.Aanmelden() => ${safeStringify(result)}`);
+         return result;
+      }
+
+      const insertData: Prisma.OperAanwezigVliegtuigUncheckedCreateInput = {
+         DATUM: datum,
+         VLIEGTUIG_ID: data.VLIEGTUIG_ID,
+         AANKOMST: data.AANKOMST as Date ?? tijdstip,
+         VERTREK: null, // zeker weten dat vertrek niet gezet wordt bij een nieuwe aanmelding
+         LATITUDE: data.LATITUDE,
+         LONGITUDE: data.LONGITUDE,
+         HOOGTE: data.HOOGTE,
+         SNELHEID: data.SNELHEID,
+         VELD_ID: data.VELD_ID,
+      };
+
+      const aangemeld = await this.AddObject(insertData, actorId);
+      const result = await this.GetObject(aangemeld.ID);
+      this.logger.verbose(`AanwezigVliegtuigenService.Aanmelden() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Afmelden van een aangemeld vliegtuig, zie AanwezigVliegtuigen.Afmelden() in de PHP implementatie.
+   async Afmelden(data: AfmeldenVliegtuigRequest, actorId: number): Promise<OperAanwezigVliegtuig>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenService.Afmelden(${safeStringify({data})})`);
+      if (data.VLIEGTUIG_ID === undefined || data.VLIEGTUIG_ID === null)
+         throw new HttpException("VLIEGTUIG_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
+
+      const nu = new Date();
+
+      const bestaand = (data.ID !== undefined && data.ID !== null)
+         ? await this.GetObject(data.ID).catch(() => null)
+         : await this.BestaandeAanmelding(data.VLIEGTUIG_ID, DatumZonderTijd(nu));
+
+      if (!bestaand)
+         throw new HttpException("Kan een vliegtuig alleen afmelden als het eerst aangemeld is", HttpStatus.CONFLICT);
+
+      const update: Prisma.OperAanwezigVliegtuigUpdateInput = {
+         VERTREK: data.VERTREK !== undefined ? data.VERTREK as Date : nu,
+      };
+
+      await this.UpdateObject(bestaand.ID, update, actorId);
+      const result = await this.GetObject(bestaand.ID);
+      this.logger.verbose(`AanwezigVliegtuigenService.Afmelden() => ${safeStringify(result)}`);
+      return result;
    }
 }

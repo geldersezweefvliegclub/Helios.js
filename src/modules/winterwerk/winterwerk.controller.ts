@@ -69,7 +69,7 @@ export class WinterwerkController extends HeliosController
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
 
-      const insert = await this.normaliserenData(data) as Prisma.OperWinterwerkCreateInput;
+      const insert = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedCreateInput;
       const obj = await this.WinterwerkService.AddObject(insert, currentUser.ID);
       return {
          ...obj,
@@ -89,7 +89,7 @@ export class WinterwerkController extends HeliosController
       this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
 
-      const update = await this.normaliserenData(data) as Prisma.OperWinterwerkUpdateInput;
+      const update = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedUpdateInput;
       const obj = await this.WinterwerkService.UpdateObject(id, update, currentUser.ID);
       return {
          ...obj,
@@ -102,7 +102,7 @@ export class WinterwerkController extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
    // normaliseert de datum- en tijdvelden
    private async normaliserenData(
-      data: CreateOperWinterwerkDto | UpdateOperWinterwerkDto): Promise<Prisma.OperWinterwerkCreateInput | Prisma.OperWinterwerkUpdateInput>
+      data: CreateOperWinterwerkDto | UpdateOperWinterwerkDto): Promise<Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput>
    {
       // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
@@ -115,7 +115,7 @@ export class WinterwerkController extends HeliosController
       data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
       data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
 
-      return data as Prisma.OperWinterwerkCreateInput | Prisma.OperWinterwerkUpdateInput;
+      return data as Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput;
    }
 
    @HeliosDeleteObject()
@@ -126,7 +126,7 @@ export class WinterwerkController extends HeliosController
       this.logger.verbose(`WinterwerkController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.DeleteObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperWinterwerkUncheckedUpdateInput = {
          VERWIJDERD: true
       }
       await this.WinterwerkService.UpdateObject(id, data, currentUser.ID);
@@ -150,7 +150,7 @@ export class WinterwerkController extends HeliosController
       this.logger.verbose(`WinterwerkController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.RestoreObject');
 
-      const data: Prisma.OperWinterwerkUpdateInput = {
+      const data: Prisma.OperWinterwerkUncheckedUpdateInput = {
          VERWIJDERD: false
       }
       await this.WinterwerkService.UpdateObject(id, data, currentUser.ID);
