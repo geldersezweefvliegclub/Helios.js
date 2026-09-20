@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RefLid} from '@prisma/client';
 import { LidType } from '../../core/enums/LidType';
 import {safeStringify} from "../../core/helpers/LogHelper";

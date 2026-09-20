@@ -5,7 +5,7 @@ import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperBrandstof, RefLid} from '@prisma/client';
+import {Prisma, OperBrandstof} from '@prisma/client';
 import {GetObjectsOperBrandstofRequest} from "./GetObjectsOperBrandstofRequest";
 import {GetObjectsOperBrandstofResponse} from "./GetObjectsOperBrandstofResponse";
 import {CreateOperBrandstofDto} from "../../generated/nestjs-dto/create-operBrandstof.dto";

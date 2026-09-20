@@ -20,7 +20,6 @@ import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
 import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
-import {authenticator } from 'otplib';
 import {ConfigService} from "@nestjs/config";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";

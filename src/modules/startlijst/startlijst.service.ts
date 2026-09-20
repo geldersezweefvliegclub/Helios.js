@@ -511,7 +511,7 @@ export class StartlijstService extends IHeliosService
    // vliegcurrency-statistieken van een lid, zie GetRecency() in class.Startlijst.inc.php. Rechtstreekse
    // query op oper_startlijst i.p.v. via GetObjects(), zelfde reden als LidVliegt()/LidVliegtijd() hierboven -
    // dit is een enkele, in zichzelf staande lookup voor 1 vlieger.
-   async GetRecency(vliegerId: number, datum?: Date, inclusiefInstructie: boolean = true, alleenClubKisten: boolean = false): Promise<RecencyResponse>
+   async GetRecency(vliegerId: number, datum?: Date, inclusiefInstructie = true, alleenClubKisten = false): Promise<RecencyResponse>
    {
       this.logger.verbose(`StartlijstService.GetRecency(${safeStringify({vliegerId, datum, inclusiefInstructie, alleenClubKisten})})`);
 
