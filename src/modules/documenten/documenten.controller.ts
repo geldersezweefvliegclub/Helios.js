@@ -1,4 +1,5 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, Logger, Query, Req} from '@nestjs/common';
+import {Request} from "express";
 import {
    HeliosController,
    HeliosCreateObject, HeliosDeleteObject,
@@ -12,10 +13,10 @@ import {GetObjectsHeliosDocumentenResponse} from "./GetObjectsHeliosDocumentenRe
 import {GetObjectsHeliosDocumentenRequest} from "./GetObjectsHeliosDocumentenRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {HeliosDocumentDto} from "../../generated/nestjs-dto/heliosDocument.dto";
-import {CreateHeliosDocumentDto} from "../../generated/nestjs-dto/create-heliosDocument.dto";
-import {UpdateHeliosDocumentDto} from "../../generated/nestjs-dto/update-heliosDocument.dto";
+import {CreateHeliosDocumentRequest} from "./CreateHeliosDocumentRequest";
+import {UpdateHeliosDocumentRequest} from "./UpdateHeliosDocumentRequest";
 import {ApiTags} from "@nestjs/swagger";
-import {DocumentenService} from "./documenten.service";
+import {DocumentenService, DocumentUpload} from "./documenten.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
 
@@ -55,30 +56,36 @@ export class DocumentenController extends HeliosController
       return await this.documentenService.GetObjects (queryParams);
    }
 
-   @HeliosCreateObject(CreateHeliosDocumentDto, HeliosDocumentDto)
+   @HeliosCreateObject(CreateHeliosDocumentRequest, HeliosDocumentDto)
    async AddObject(
        @CurrentUser() currentUser: RefLid,
-       @Body() data: CreateHeliosDocumentDto): Promise<HeliosDocumentDto> {
+       @Req() request: Request,
+       @Body() data: CreateHeliosDocumentRequest): Promise<HeliosDocumentDto> {
       this.logger.verbose(`DocumentenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
 
+      const upload = this.bepaalUpload(request, data);
       const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedCreateInput;
-      return await this.documentenService.AddObject(insert, currentUser.ID);
+      return await this.documentenService.AddObject(insert, currentUser.ID, upload);
    }
 
-   @HeliosUpdateObject(UpdateHeliosDocumentDto, HeliosDocumentDto)
+   @HeliosUpdateObject(UpdateHeliosDocumentRequest, HeliosDocumentDto)
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateHeliosDocumentDto): Promise<HeliosDocument>
+      @Req() request: Request,
+      @Query('ID') id: number, @Body() data: UpdateHeliosDocumentRequest): Promise<HeliosDocument>
    {
       bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
 
+      const upload = this.bepaalUpload(request, data);
       const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedUpdateInput;
-      return await this.documentenService.UpdateObject(id, update, currentUser.ID);
+      return await this.documentenService.UpdateObject(id, update, currentUser.ID, upload);
    }
 
    @HeliosDeleteObject()
@@ -87,6 +94,7 @@ export class DocumentenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`DocumentenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.DeleteObject');
 
       const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
@@ -111,6 +119,7 @@ export class DocumentenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`DocumentenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.RestoreObject');
 
       const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
@@ -124,16 +133,36 @@ export class DocumentenController extends HeliosController
    // inputtype zijn dit al platte kolommen, dus een meegegeven null zet de relatie direct los
    // (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
-      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
+      data: CreateHeliosDocumentRequest | UpdateHeliosDocumentRequest): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
    {
       // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
       // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
+      // waarde wordt hier altijd genegeerd. DOC_NAAM/BASE64_DOC/OVERSCHRIJVEN zijn geen kolommen van het
+      // record - die zijn al door bepaalUpload() uitgelezen en worden hier alleen nog verwijderd
       delete data.VERWIJDERD;
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
+      delete data.DOC_NAAM;
+      delete data.BASE64_DOC;
+      delete data.OVERSCHRIJVEN;
 
       return data as Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput;
+   }
+
+   // haalt de (niet-persistente) upload-velden uit de request en bouwt daarmee de publieke basis-URL op
+   // basis van het binnenkomende request (schema + host), als vervanging voor het ontbrekende
+   // app_settings.ServerName uit de PHP configuratie
+   private bepaalUpload(request: Request, data: CreateHeliosDocumentRequest | UpdateHeliosDocumentRequest): DocumentUpload | undefined
+   {
+      if (!data.DOC_NAAM || !data.BASE64_DOC)
+         return undefined;
+
+      return {
+         DOC_NAAM: data.DOC_NAAM,
+         BASE64_DOC: data.BASE64_DOC,
+         OVERSCHRIJVEN: data.OVERSCHRIJVEN,
+         baseUrl: `${request.protocol}://${request.get('host')}`
+      };
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -1,5 +1,6 @@
 import {Module} from '@nestjs/common';
-import {ConfigModule} from '@nestjs/config';
+import {ConfigModule, ConfigService} from '@nestjs/config';
+import {ServeStaticModule} from '@nestjs/serve-static';
 import {TypesGroepenModule} from './modules/types-groepen/types-groepen.module';
 import {EventEmitterModule} from '@nestjs/event-emitter';
 import {HeliosController} from './core/controllers/helios/helios.controller';
@@ -38,6 +39,17 @@ import config from './config/configuration';
       ConfigModule.forRoot({                 // Moet als eerste staan
          isGlobal: true,
          load: [config]
+      }),
+      // serveert geuploade documenten (zie DocumentenService) statisch onder /documenten/*,
+      // analoog aan de directe bestandslink die de PHP implementatie teruggeeft
+      ServeStaticModule.forRootAsync({
+         // app_settings.DocDir komt uit het (per omgeving optionele, niet in git opgenomen) helios-config.json
+         // bestand - als die dit niet definieert wordt teruggevallen op dezelfde default als in configuration.ts
+         useFactory: (configService: ConfigService) => [{
+            rootPath: configService.get<string>('app_settings.DocDir') ?? '/var/www/html/documenten',
+            serveRoot: '/documenten',
+         }],
+         inject: [ConfigService],
       }),
       EventEmitterModule.forRoot(),
       ConfigModule,

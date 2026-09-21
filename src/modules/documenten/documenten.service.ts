@@ -1,15 +1,18 @@
 import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {ConfigService} from "@nestjs/config";
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
-
 import {Prisma, HeliosDocument} from "@prisma/client";
 import {GetObjectsHeliosDocumentenRequest} from "./GetObjectsHeliosDocumentenRequest";
 import {GetObjectsHeliosDocumentenResponse} from "./GetObjectsHeliosDocumentenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
+import {hash as bcryptHash} from "bcryptjs";
+import {promises as fs} from "fs";
+import {basename, join} from "path";
 
 // document record inclusief de relatie die de PHP documenten_view samenvoegt
 type DocumentMetRelaties = Prisma.HeliosDocumentGetPayload<{
@@ -18,13 +21,22 @@ type DocumentMetRelaties = Prisma.HeliosDocumentGetPayload<{
    }
 }>;
 
+// input voor het opslaan van een geuploade bestandsbijlage, zie class.Documenten.inc.php AddObject()/UpdateObject()
+export interface DocumentUpload {
+   DOC_NAAM: string;
+   BASE64_DOC: string;
+   OVERSCHRIJVEN?: boolean;
+   baseUrl: string;
+}
+
 @Injectable()
 export class DocumentenService extends IHeliosService
 {
    private readonly logger = new Logger(DocumentenService.name);
 
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly configService: ConfigService)
    {
       super();
    }
@@ -59,7 +71,7 @@ export class DocumentenService extends IHeliosService
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
                   { GROEP_ID: { in: params.GROEPEN }},
-                  { LID_ID: params.LID_ID ?? null}
+                  { LID_ID: params.LID_ID ? { in: params.LID_ID } : null}
                ]
          }
       let count: number | undefined;
@@ -83,9 +95,23 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   async AddObject(data: Prisma.HeliosDocumentUncheckedCreateInput, actorId: number): Promise<HeliosDocument>
+   async AddObject(data: Prisma.HeliosDocumentUncheckedCreateInput, actorId: number, upload?: DocumentUpload): Promise<HeliosDocument>
    {
-      this.logger.verbose(`DocumentenService.AddObject(${safeStringify({data})})`);
+      this.logger.verbose(`DocumentenService.AddObject(${safeStringify({data, upload})})`);
+      // TEKST is enkel verplicht als het geen lege regel is - zie AddObject() in class.Documenten.inc.php
+      if (!data.LEGE_REGEL && data.TEKST === undefined)
+         throw new HttpException(`TEKST is verplicht`, HttpStatus.BAD_REQUEST);
+
+      // een lege regel heeft nooit inhoud, ongeacht wat er verder is meegegeven
+      if (data.LEGE_REGEL)
+      {
+         data.TEKST = null;
+         data.URL = null;
+      }
+
+      if (upload)
+         data.URL = await this.opslaanDocument(data.LID_ID as number | null | undefined, upload);
+
       const obj = await this.dbService.heliosDocument.create({
          data: data
       });
@@ -96,10 +122,21 @@ export class DocumentenService extends IHeliosService
       return result;
    }
 
-   async UpdateObject(id: number, data: Prisma.HeliosDocumentUncheckedUpdateInput, actorId: number): Promise<HeliosDocument>
+   async UpdateObject(id: number, data: Prisma.HeliosDocumentUncheckedUpdateInput, actorId: number, upload?: DocumentUpload): Promise<HeliosDocument>
    {
-      this.logger.verbose(`DocumentenService.UpdateObject(${safeStringify({id, data})})`);
+      this.logger.verbose(`DocumentenService.UpdateObject(${safeStringify({id, data, upload})})`);
       const db = await this.GetObject(id);
+
+      // een lege regel heeft nooit inhoud, ongeacht wat er verder is meegegeven
+      if (data.LEGE_REGEL)
+      {
+         data.TEKST = null;
+         data.URL = null;
+      }
+
+      if (upload)
+         data.URL = await this.opslaanDocument(data.LID_ID as number | null | undefined, upload);
+
       const obj = await this.dbService.heliosDocument.update({
          where: {
             ID: id
@@ -140,6 +177,51 @@ export class DocumentenService extends IHeliosService
          } as GetObjectsHeliosDocumentenResponse;
       });
       this.logger.verbose(`DocumentenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // slaat een geuploade bestandsbijlage op onder app_settings.DocDir en geeft de publieke URL terug.
+   // bij een LID_ID wordt het bestand in een per-upload verduisterde submap gezet (bcrypt hash van het
+   // LID_ID, filesystem/URL-veilig gemaakt)
+   private async opslaanDocument(lidId: number | null | undefined, upload: DocumentUpload): Promise<string>
+   {
+      this.logger.verbose(`DocumentenService.opslaanDocument(${safeStringify({lidId, DOC_NAAM: upload.DOC_NAAM})})`);
+      const docDir = this.configService.get<string>('app_settings.DocDir') ?? '/var/www/html/documenten';
+      const docNaam = basename(upload.DOC_NAAM);
+
+      let subdir: string | undefined;
+      let directory = docDir;
+      let bestandsnaam = docNaam;
+      if (lidId != null)
+      {
+         const ruweHash = await bcryptHash(String(lidId), 12);
+         subdir = Buffer.from(ruweHash).toString('base64url');
+         directory = join(docDir, subdir);
+         bestandsnaam = `${lidId}_${docNaam}`;
+      }
+
+      await fs.mkdir(directory, {recursive: true});
+      const volledigPad = join(directory, bestandsnaam);
+
+      if (upload.OVERSCHRIJVEN === false)
+      {
+         const bestaatAl = await fs.access(volledigPad).then(() => true).catch(() => false);
+         if (bestaatAl)
+            throw new HttpException(`Bestand bestaat al (${docNaam})`, HttpStatus.CONFLICT);
+      }
+
+      try
+      {
+         await fs.writeFile(volledigPad, Buffer.from(upload.BASE64_DOC, 'base64'));
+      }
+      catch
+      {
+         throw new HttpException(`Bestand kan niet worden opgeslagen (${docNaam})`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      const urlPad = subdir ? `${subdir}/${bestandsnaam}` : bestandsnaam;
+      const result = `${upload.baseUrl}/documenten/${urlPad}`;
+      this.logger.verbose(`DocumentenService.opslaanDocument() => ${safeStringify(result)}`);
       return result;
    }
 }
