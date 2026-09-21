@@ -106,24 +106,6 @@ export class ReserveringController extends HeliosController
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
-   private async normaliserenData(
-      data: CreateOperReserveringDto | UpdateOperReserveringDto): Promise<CreateOperReserveringDto | UpdateOperReserveringDto>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
-      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      if (data.DATUM !== undefined)
-         data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-
-      return data;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -176,5 +158,23 @@ export class ReserveringController extends HeliosController
       this.logger.verbose(`ReserveringController.MagNogReserveren(${safeStringify({currentUser})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.MagNogReserveren');
       return await this.reserveringService.MagNogReserveren(currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
+   private async normaliserenData(
+      data: CreateOperReserveringDto | UpdateOperReserveringDto): Promise<CreateOperReserveringDto | UpdateOperReserveringDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      if (data.DATUM !== undefined)
+         data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data;
    }
 }

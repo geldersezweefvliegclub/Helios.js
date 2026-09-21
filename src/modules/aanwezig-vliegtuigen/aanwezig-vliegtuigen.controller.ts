@@ -101,25 +101,6 @@ export class AanwezigVliegtuigenController  extends HeliosController
       };
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de datum- en tijdvelden
-   private async normaliserenData(
-      data: CreateOperAanwezigVliegtuigDto | UpdateOperAanwezigVliegtuigDto): Promise<Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
-      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
-
-      return data as Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -211,5 +192,24 @@ export class AanwezigVliegtuigenController  extends HeliosController
          AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
          VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
       };
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperAanwezigVliegtuigDto | UpdateOperAanwezigVliegtuigDto): Promise<Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
+      return data as Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
    }
 }

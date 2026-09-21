@@ -82,27 +82,9 @@ export class TracksService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`TracksService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
-   {
-      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) =>
-      {
-         const {Lid: lid, Instructeur: instructeur, ...track} = obj;
-         return {
-            ...track,
-            LID_NAAM: lid.NAAM,
-            INSTRUCTEUR_NAAM: instructeur?.NAAM ?? null,
-         } as GetObjectsOperTracksResponse;
-      });
-      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -148,5 +130,22 @@ export class TracksService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: TrackMetRelaties[]): Promise<GetObjectsOperTracksResponse[]>
+   {
+      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) =>
+      {
+         const {Lid: lid, Instructeur: instructeur, ...track} = obj;
+         return {
+            ...track,
+            LID_NAAM: lid.NAAM,
+            INSTRUCTEUR_NAAM: instructeur?.NAAM ?? null,
+         } as GetObjectsOperTracksResponse;
+      });
+      this.logger.verbose(`TracksService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

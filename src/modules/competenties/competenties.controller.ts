@@ -89,21 +89,6 @@ export class CompetentiesController extends HeliosController
       return await this.competentiesService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
-   // (LEERFASE_ID is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
-   private async normaliserenData(
-      data: CreateRefCompetentieDto | UpdateRefCompetentieDto): Promise<Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -198,5 +183,20 @@ export class CompetentiesController extends HeliosController
       }
 
       return Promise.resolve(retValue);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   // (LEERFASE_ID is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
+   private async normaliserenData(
+      data: CreateRefCompetentieDto | UpdateRefCompetentieDto): Promise<Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput;
    }
 }

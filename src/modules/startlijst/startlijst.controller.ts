@@ -110,27 +110,6 @@ export class StartlijstController extends HeliosController
       };
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de datumvelden (DATUM, STARTTIJD, LANDINGSTIJD)
-   private async normaliserenData(
-      data: CreateOperStartlijstDto | UpdateOperStartlijstDto): Promise<CreateOperStartlijstDto | UpdateOperStartlijstDto>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
-      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
-      // toewijzing toe te staan
-      (data as Pick<CreateOperStartlijstDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
-      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
-
-      return data;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -271,6 +250,27 @@ export class StartlijstController extends HeliosController
       const vliegtuig = await this.VliegtuigLogboekToegang(currentUser, queryParams.ID);
       const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
       return await this.startlijstService.GetVliegtuigLogboekTotalen(queryParams, regCall);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datumvelden (DATUM, STARTTIJD, LANDINGSTIJD)
+   private async normaliserenData(
+      data: CreateOperStartlijstDto | UpdateOperStartlijstDto): Promise<CreateOperStartlijstDto | UpdateOperStartlijstDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
+      // toewijzing toe te staan
+      (data as Pick<CreateOperStartlijstDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.STARTTIJD = parseTimeOnly(data.STARTTIJD as Date | string | null);
+      data.LANDINGSTIJD = parseTimeOnly(data.LANDINGSTIJD as Date | string | null);
+
+      return data;
    }
 
    // privacy-check gedeeld door GetVliegtuigLogboek en GetVliegtuigLogboekTotalen, zie beide functies in

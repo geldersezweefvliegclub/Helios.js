@@ -76,25 +76,9 @@ export class CompetentiesService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`CompetentiesService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: CompetentieMetRelaties[]): Promise<GetObjectsRefCompetentiesResponse[]>
-   {
-      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {LeerfaseType: leerfaseType, ...competentie} = obj;
-
-         return {
-            ...competentie,
-            LEERFASE: leerfaseType?.OMSCHRIJVING ?? null
-         } as GetObjectsRefCompetentiesResponse
-      });
-      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -140,5 +124,21 @@ export class CompetentiesService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: CompetentieMetRelaties[]): Promise<GetObjectsRefCompetentiesResponse[]>
+   {
+      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {LeerfaseType: leerfaseType, ...competentie} = obj;
+
+         return {
+            ...competentie,
+            LEERFASE: leerfaseType?.OMSCHRIJVING ?? null
+         } as GetObjectsRefCompetentiesResponse
+      });
+      this.logger.verbose(`CompetentiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

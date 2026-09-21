@@ -84,15 +84,11 @@ export class JournaalService extends IHeliosService
                   { VLIEGTUIG_ID: { in: params.VLIEGTUIG_ID }},
 
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                              {
-                                 gte: dtSpanne.start,
-                                 lte: dtSpanne.eind
-                              }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          };
@@ -118,36 +114,9 @@ export class JournaalService extends IHeliosService
          },
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`JournaalService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
-   {
-      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {
-            Vliegtuig: vliegtuig, Rollend: rollend, Status: status, Categorie: categorie,
-            Melder: melder, Technicus: technicus, Afgetekend: afgetekend, ...journaal
-         } = obj;
-
-         return {
-            ...journaal,
-            MELDER: melder?.NAAM ?? null,
-            TECHNICUS: technicus?.NAAM ?? null,
-            AFGETEKEND: afgetekend?.NAAM ?? null,
-            ROLLEND: rollend?.OMSCHRIJVING ?? null,
-            STATUS: status?.OMSCHRIJVING ?? null,
-            STATUS_CODE: status?.CODE ?? null,
-            CATEGORIE: categorie?.OMSCHRIJVING ?? null,
-            CATEGORIE_CODE: categorie?.CODE ?? null,
-            REG_CALL: vliegtuig === null ? " ()" : RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN)
-         } as GetObjectsOperJournaalResponse
-      });
-      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -193,5 +162,32 @@ export class JournaalService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: JournaalMetRelaties[]): Promise<GetObjectsOperJournaalResponse[]>
+   {
+      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {
+            Vliegtuig: vliegtuig, Rollend: rollend, Status: status, Categorie: categorie,
+            Melder: melder, Technicus: technicus, Afgetekend: afgetekend, ...journaal
+         } = obj;
+
+         return {
+            ...journaal,
+            MELDER: melder?.NAAM ?? null,
+            TECHNICUS: technicus?.NAAM ?? null,
+            AFGETEKEND: afgetekend?.NAAM ?? null,
+            ROLLEND: rollend?.OMSCHRIJVING ?? null,
+            STATUS: status?.OMSCHRIJVING ?? null,
+            STATUS_CODE: status?.CODE ?? null,
+            CATEGORIE: categorie?.OMSCHRIJVING ?? null,
+            CATEGORIE_CODE: categorie?.CODE ?? null,
+            REG_CALL: vliegtuig === null ? " ()" : RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN)
+         } as GetObjectsOperJournaalResponse
+      });
+      this.logger.verbose(`JournaalService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

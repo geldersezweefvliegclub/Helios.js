@@ -82,23 +82,6 @@ export class JournaalController extends HeliosController
       return await this.journaalService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
-   // MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID en VLIEGTUIG_ID hoeven niet
-   // omgezet te worden naar relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable
-   // kolommen, dus een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
-   private async normaliserenData(
-      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -135,6 +118,23 @@ export class JournaalController extends HeliosController
          VERWIJDERD: false
       }
       await this.journaalService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // MELDER_ID, TECHNICUS_ID, AFGETEKEND_ID, CATEGORIE_ID, STATUS_ID, ROLLEND_ID en VLIEGTUIG_ID hoeven niet
+   // omgezet te worden naar relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable
+   // kolommen, dus een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateOperJournaalDto | UpdateOperJournaalDto): Promise<Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.OperJournaalUncheckedCreateInput | Prisma.OperJournaalUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

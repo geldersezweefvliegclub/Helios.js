@@ -80,26 +80,9 @@ export class BrandstofService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`BrandstofService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
-   {
-      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {BrandstofType: brandstofType, ...brandstof} = obj;
-
-         return {
-            ...brandstof,
-            TIJDSTIP: toDateOnly(brandstof.TIJDSTIP) as unknown as Date,
-            BRANDSTOF_TYPE: brandstofType?.OMSCHRIJVING ?? null,
-         } as GetObjectsOperBrandstofResponse
-      });
-      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -177,5 +160,22 @@ export class BrandstofService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: BrandstofMetRelaties[]): Promise<GetObjectsOperBrandstofResponse[]>
+   {
+      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {BrandstofType: brandstofType, ...brandstof} = obj;
+
+         return {
+            ...brandstof,
+            TIJDSTIP: toDateOnly(brandstof.TIJDSTIP) as unknown as Date,
+            BRANDSTOF_TYPE: brandstofType?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperBrandstofResponse
+      });
+      this.logger.verbose(`BrandstofService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

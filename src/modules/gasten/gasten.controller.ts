@@ -83,24 +83,6 @@ export class GastenController extends HeliosController
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
-   // normaliseert het datumveld
-   private async normaliserenData(
-      data: CreateOperGastDto | UpdateOperGastDto): Promise<Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // zorg dat de datum omgezet wordt in ISO 8601 formaat
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-
-      return data as Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -137,6 +119,24 @@ export class GastenController extends HeliosController
          VERWIJDERD: false
       }
       await this.GastenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert het datumveld
+   private async normaliserenData(
+      data: CreateOperGastDto | UpdateOperGastDto): Promise<Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // zorg dat de datum omgezet wordt in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data as Prisma.OperGastUncheckedCreateInput | Prisma.OperGastUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

@@ -82,29 +82,6 @@ export class VliegtuigenController extends HeliosController
       return await this.vliegtuigenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
-   // TYPE_ID, BEVOEGDHEID_LOKAAL_ID en BEVOEGDHEID_OVERLAND_ID hoeven niet omgezet te worden naar
-   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus
-   // een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
-   private async normaliserenData(
-      data: CreateRefVliegtuigDto | UpdateRefVliegtuigDto): Promise<Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
-      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // Registratie moet uniek zijn, dus spaties verwijderen om te voorkomen dat er meerdere vliegtuigen met dezelfde registratie bestaan.
-      // Bij UpdateObject is REGISTRATIE optioneel (een partiële update kan het veld weglaten), dus enkel trimmen als het is meegegeven.
-      if (data.REGISTRATIE !== undefined) {
-         data.REGISTRATIE = data.REGISTRATIE.trim();
-      }
-
-      return data as Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -141,6 +118,29 @@ export class VliegtuigenController extends HeliosController
          VERWIJDERD: false
       }
       await this.vliegtuigenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // TYPE_ID, BEVOEGDHEID_LOKAAL_ID en BEVOEGDHEID_OVERLAND_ID hoeven niet omgezet te worden naar
+   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus
+   // een meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateRefVliegtuigDto | UpdateRefVliegtuigDto): Promise<Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // Registratie moet uniek zijn, dus spaties verwijderen om te voorkomen dat er meerdere vliegtuigen met dezelfde registratie bestaan.
+      // Bij UpdateObject is REGISTRATIE optioneel (een partiële update kan het veld weglaten), dus enkel trimmen als het is meegegeven.
+      if (data.REGISTRATIE !== undefined) {
+         data.REGISTRATIE = data.REGISTRATIE.trim();
+      }
+
+      return data as Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

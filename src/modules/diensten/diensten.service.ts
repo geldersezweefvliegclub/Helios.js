@@ -8,8 +8,12 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma} from "@prisma/client";
 import {GetObjectsOperDienstenRequest} from "./GetObjectsOperDienstenRequest";
 import {GetOperDienstenResponse} from "./GetOperDienstenResponse";
+import {TotaalDienstenResponse} from "./TotaalDienstenResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
+import {toDateOnly} from "../../core/helpers/TimeDate";
+import {RoosterService} from "../rooster/rooster.service";
+import {GetObjectsOperRoosterRequest} from "../rooster/GetObjectsOperRoosterRequest";
 
 // dienst record inclusief de relaties die de PHP diensten_view samenvoegt
 type DienstMetRelaties = Prisma.OperDienstGetPayload<{
@@ -26,7 +30,8 @@ export class DienstenService extends IHeliosService
    private readonly logger = new Logger(DienstenService.name);
 
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly roosterService: RoosterService)
    {
       super();
    }
@@ -51,9 +56,11 @@ export class DienstenService extends IHeliosService
    }
 
    // haal objects op uit de database op basis van de query parameters
-   async GetObjects(params?: GetObjectsOperDienstenRequest): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
+   // toegestaneDatums: optionele lijst van DATUMs om het resultaat tot te beperken (mechanisch toegepast -
+   // de PermissieService-afweging welke datums dat zijn gebeurt in de controller, zie DienstenController)
+   async GetObjects(params?: GetObjectsOperDienstenRequest, toegestaneDatums?: Date[]): Promise<IHeliosGetObjectsResponse<GetOperDienstenResponse>>
    {
-      this.logger.verbose(`DienstenService.GetObjects(${safeStringify({params})})`);
+      this.logger.verbose(`DienstenService.GetObjects(${safeStringify({params, toegestaneDatums})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperDienstenRequest, {VERWIJDERD: false});
 
@@ -68,17 +75,13 @@ export class DienstenService extends IHeliosService
                   { LID_ID: params.LID_ID },
                   { AANWEZIG: params.AANWEZIG },
                   { AFWEZIG: params.AFWEZIG },
-
+                  { DATUM: toegestaneDatums ? { in: toegestaneDatums } : undefined },
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.start,
-                                  lte: dtSpanne.eind
-                               }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          }
@@ -99,25 +102,21 @@ export class DienstenService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`DienstenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
-   {
-      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((o) => new GetOperDienstenResponse(o));
-      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
    async AddObject(data: Prisma.OperDienstUncheckedCreateInput, actorId: number): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenService.AddObject(${safeStringify({data})})`);
+      if (data.DATUM != null) {
+         data.ROOSTER_ID = await this.vindOfMaakRooster(data.DATUM as Date, actorId);
+      }
+      if (data.TYPE_DIENST_ID != null && data.DATUM != null) {
+         await this.uniekeDienst(data.DATUM as Date, data.TYPE_DIENST_ID as number);
+      }
       const obj = await this.dbService.operDienst.create({
          data: data,
          include: {
@@ -135,6 +134,16 @@ export class DienstenService extends IHeliosService
    {
       this.logger.verbose(`DienstenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+
+      const nieuweDatum = data.DATUM != null ? data.DATUM as Date : new Date(db.DATUM);
+      const nieuweTypeDienstId = data.TYPE_DIENST_ID !== undefined ? data.TYPE_DIENST_ID as number | null : db.TYPE_DIENST_ID;
+
+      data.ROOSTER_ID = await this.vindOfMaakRooster(nieuweDatum, actorId);
+
+      if (nieuweTypeDienstId != null) {
+         await this.uniekeDienst(nieuweDatum, nieuweTypeDienstId, id);
+      }
+
       const obj = await this.dbService.operDienst.update({
          where: {
             ID: id
@@ -165,5 +174,120 @@ export class DienstenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // Aantal diensten per lid per maand in een bepaald jaar, enkel voor club-bedrijf dagen (DDWV-dagen tellen niet mee).
+   // Per lid volgt na de maandregels een jaartotaal-rij (MAAND: null).
+   async TotaalDiensten(jaar: number, lidId?: number): Promise<TotaalDienstenResponse[]>
+   {
+      this.logger.verbose(`DienstenService.TotaalDiensten(${safeStringify({jaar, lidId})})`);
+
+      const beginJaar = new Date(Date.UTC(jaar, 0, 1));
+      const eindJaar = new Date(Date.UTC(jaar, 11, 31, 23, 59, 59, 999));
+
+      const diensten = await this.dbService.operDienst.findMany({
+         where: {
+            VERWIJDERD: false,
+            LID_ID: lidId,
+            Rooster: {
+               CLUB_BEDRIJF: true,
+               DATUM: { gte: beginJaar, lte: eindJaar }
+            }
+         },
+         include: {
+            Rooster: true,
+            RefLid: true
+         }
+      });
+
+      // groepeer per lid + maand
+      const perMaand = new Map<string, TotaalDienstenResponse>();
+      for (const dienst of diensten) {
+         const maand = dienst.Rooster.DATUM.getUTCMonth() + 1;
+         const sleutel = `${dienst.LID_ID}-${maand}`;
+         const bestaand = perMaand.get(sleutel);
+         if (bestaand) {
+            bestaand.AANTAL++;
+         } else {
+            perMaand.set(sleutel, {
+               LID_ID: dienst.LID_ID,
+               NAAM: dienst.RefLid.NAAM,
+               JAAR: jaar,
+               MAAND: maand,
+               AANTAL: 1
+            });
+         }
+      }
+
+      const maandRecords = Array.from(perMaand.values())
+         .sort((a, b) => (a.NAAM ?? "").localeCompare(b.NAAM ?? "") || a.MAAND - b.MAAND);
+
+      // control-break: na de maandregels van elk lid volgt een jaartotaal-rij (MAAND: null)
+      const resultaat: TotaalDienstenResponse[] = [];
+      let huidigLidId: number | null = null;
+      let huidigNaam: string | null = null;
+      let totaal = 0;
+
+      for (const record of maandRecords) {
+         if (huidigLidId != null && huidigLidId !== record.LID_ID) {
+            resultaat.push({ LID_ID: huidigLidId, NAAM: huidigNaam, JAAR: jaar, MAAND: null, AANTAL: totaal });
+            totaal = 0;
+         }
+         resultaat.push(record);
+         huidigNaam = record.NAAM;
+         huidigLidId = record.LID_ID;
+         totaal += record.AANTAL;
+      }
+
+      // laatste (of enige) lid moet ook zijn jaartotaal-rij krijgen - PHP doet dit onvoorwaardelijk, ook
+      // wanneer er helemaal geen diensten gevonden zijn (levert dan een rij met LID_ID/NAAM: null op)
+      resultaat.push({ LID_ID: huidigLidId, NAAM: huidigNaam, JAAR: jaar, MAAND: null, AANTAL: totaal });
+
+      this.logger.verbose(`DienstenService.TotaalDiensten() => ${safeStringify(resultaat)}`);
+      return resultaat;
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
+   {
+      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((o) => new GetOperDienstenResponse(o));
+      this.logger.verbose(`DienstenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // zoek het rooster-record voor deze DATUM op,en maak er automatisch één aan als het nog niet bestaat.
+   // De client hoeft daarom nooit zelf een ROOSTER_ID op te geven of te kennen.
+   private async vindOfMaakRooster(datum: Date, actorId: number): Promise<number>
+   {
+      const roosterResult = await this.roosterService.GetObjects(
+         MaakGetObjectsRequest(GetObjectsOperRoosterRequest, {DATUM: datum})
+      );
+
+      if (roosterResult.dataset.length > 0) {
+         return roosterResult.dataset[0].ID;
+      }
+
+      const nieuwRooster = await this.roosterService.AddObject(
+         {DATUM: datum} as Prisma.OperRoosterUncheckedCreateInput, actorId
+      );
+      return nieuwRooster.ID;
+   }
+
+   // Een TYPE_DIENST_ID mag maar één keer per DATUM voorkomen onder de actieve (niet-verwijderde) diensten
+   private async uniekeDienst(datum: Date, typeDienstId: number, uitgezonderdId?: number): Promise<void>
+   {
+      const bestaand = await this.dbService.operDienst.findFirst({
+         where: {
+            DATUM: datum,
+            TYPE_DIENST_ID: typeDienstId,
+            VERWIJDERD: false,
+            ID: uitgezonderdId ? { not: uitgezonderdId } : undefined
+         }
+      });
+
+      if (bestaand) {
+         throw new HttpException(`Dienst ${typeDienstId} op ${toDateOnly(datum)} bestaat al`, HttpStatus.CONFLICT);
+      }
    }
 }

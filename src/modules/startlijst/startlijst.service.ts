@@ -138,9 +138,8 @@ export class StartlijstService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`StartlijstService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
@@ -198,16 +197,6 @@ export class StartlijstService extends IHeliosService
       const result = this.buildGetObjectsResponse(dataset, resultaat.totaal, params.HASH);
       this.logger.verbose(`StartlijstService.GetLogboek() => ${safeStringify(result)}`);
       return result;
-   }
-
-   // combineert de lid-naam met de vrije-tekst naam (voor een vlieger/inzittende die niet als lid ingevoerd
-   // staat), zie VLIEGERNAAM/INZITTENDENAAM in de $velden lijst van GetLogboek() in class.Startlijst.inc.php.
-   // PHP gebruikt hiervoor CONCAT(lidNaam, '(', vrijeTekst, ')'), en MySQL's CONCAT() geeft NULL terug zodra
-   // een van de argumenten NULL is - dat gedrag wordt hier expliciet nagebootst
-   private CombineerNaam(lidNaam: string | null, vrijeTekst: string | null): string | null
-   {
-      if (!vrijeTekst) return lidNaam;
-      return lidNaam === null ? null : `${lidNaam}(${vrijeTekst})`;
    }
 
    // logboek van een vliegtuig: per gevlogen dag het aantal starts, lierstarts, sleepstarts en de totale
@@ -653,32 +642,70 @@ export class StartlijstService extends IHeliosService
       return result;
    }
 
-   // formatteert minuten als "H:MM" (uren niet met voorloopnul, anders dan BerekenDuurString), zie GetRecency()
-   // in class.Startlijst.inc.php
-   private FormatteerUren(minuten: number): string
+   async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput, actorId: number): Promise<OperStartlijst>
    {
-      const uren = Math.trunc(minuten / 60);
-      const resterendeMinuten = Math.round(minuten % 60);
-      return `${uren}:${String(resterendeMinuten).padStart(2, '0')}`;
+      this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
+      this.ValideerStartLandingTijden(data.STARTTIJD as Date | null | undefined, data.LANDINGSTIJD as Date | null | undefined);
+
+      const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID, data.INZITTENDE_ID, data.INSTRUCTIEVLUCHT as boolean | undefined);
+      if (instructievlucht !== undefined)
+         data.INSTRUCTIEVLUCHT = instructievlucht;
+
+      data.DAGNUMMER = await this.NieuwDagNummer(data.DATUM as Date);
+
+      const obj = await this.dbService.operStartlijst.create({
+         data: data
+      });
+
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   // formatteert een datum als "dd-mm-jjjj", zie de CHECKS lijst in GetRecency() in class.Startlijst.inc.php
-   private FormatteerDatumDMY(datum: Date): string
+   async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput, actorId: number): Promise<OperStartlijst>
    {
-      return `${String(datum.getUTCDate()).padStart(2, '0')}-${String(datum.getUTCMonth() + 1).padStart(2, '0')}-${datum.getUTCFullYear()}`;
+      this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
+      const db = await this.GetObject(id);
+
+      const nieuweStarttijd = data.STARTTIJD !== undefined ? data.STARTTIJD as Date | null : db.STARTTIJD;
+      const nieuweLandingstijd = data.LANDINGSTIJD !== undefined ? data.LANDINGSTIJD as Date | null : db.LANDINGSTIJD;
+      this.ValideerStartLandingTijden(nieuweStarttijd, nieuweLandingstijd);
+
+      const nieuweInzittende = data.INZITTENDE_ID !== undefined ? data.INZITTENDE_ID as number | null : db.INZITTENDE_ID;
+      const nieuweInstructievlucht = data.INSTRUCTIEVLUCHT !== undefined ? data.INSTRUCTIEVLUCHT as boolean : undefined;
+      const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID as number | undefined, nieuweInzittende, nieuweInstructievlucht);
+      if (instructievlucht !== undefined)
+         data.INSTRUCTIEVLUCHT = instructievlucht;
+
+      // als de datum aangepast is, dan een nieuw dagnummer toekennen, zie UpdateObject() in class.Startlijst.inc.php
+      const nieuweDatum = data.DATUM as Date | undefined;
+      if (nieuweDatum !== undefined && nieuweDatum.valueOf() !== db.DATUM.valueOf())
+         data.DAGNUMMER = await this.NieuwDagNummer(nieuweDatum);
+
+      const obj = await this.dbService.operStartlijst.update({
+         where: {
+            ID: id
+         },
+         data: data
+      });
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
-   // datums waarop een DDWV bedrijf gepland staat, via oper_daginfo of oper_rooster (zie startlijst_view)
-   private async DDWVDatums(): Promise<Date[]>
+   async RemoveObject(id: number, actorId: number): Promise<void>
    {
-      this.logger.verbose(`StartlijstService.DDWVDatums()`);
-      const [daginfo, rooster] = await Promise.all([
-         this.dbService.operDagInfo.findMany({where: {DDWV: true}, select: {DATUM: true}}),
-         this.dbService.operRooster.findMany({where: {DDWV: true}, select: {DATUM: true}}),
-      ]);
-      const result = [...daginfo, ...rooster].map(record => record.DATUM);
-      this.logger.verbose(`StartlijstService.DDWVDatums() => ${safeStringify(result)}`);
-      return result;
+      this.logger.verbose(`StartlijstService.RemoveObject(${safeStringify({id, actorId})})`);
+      const db = await this.GetObject(id);
+      if (!db.VERWIJDERD) {
+         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
+      }
+      await this.dbService.operStartlijst.delete({
+         where: {
+            ID: id
+         }
+      });
+      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig-, lid-, en type-gegevens via joins,
@@ -724,6 +751,44 @@ export class StartlijstService extends IHeliosService
          } as GetObjectsOperStartlijstResponse;
       });
       this.logger.verbose(`StartlijstService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // combineert de lid-naam met de vrije-tekst naam (voor een vlieger/inzittende die niet als lid ingevoerd
+   // staat), zie VLIEGERNAAM/INZITTENDENAAM in de $velden lijst van GetLogboek() in class.Startlijst.inc.php.
+   // PHP gebruikt hiervoor CONCAT(lidNaam, '(', vrijeTekst, ')'), en MySQL's CONCAT() geeft NULL terug zodra
+   // een van de argumenten NULL is - dat gedrag wordt hier expliciet nagebootst
+   private CombineerNaam(lidNaam: string | null, vrijeTekst: string | null): string | null
+   {
+      if (!vrijeTekst) return lidNaam;
+      return lidNaam === null ? null : `${lidNaam}(${vrijeTekst})`;
+   }
+
+   // formatteert minuten als "H:MM" (uren niet met voorloopnul, anders dan BerekenDuurString), zie GetRecency()
+   // in class.Startlijst.inc.php
+   private FormatteerUren(minuten: number): string
+   {
+      const uren = Math.trunc(minuten / 60);
+      const resterendeMinuten = Math.round(minuten % 60);
+      return `${uren}:${String(resterendeMinuten).padStart(2, '0')}`;
+   }
+
+   // formatteert een datum als "dd-mm-jjjj", zie de CHECKS lijst in GetRecency() in class.Startlijst.inc.php
+   private FormatteerDatumDMY(datum: Date): string
+   {
+      return `${String(datum.getUTCDate()).padStart(2, '0')}-${String(datum.getUTCMonth() + 1).padStart(2, '0')}-${datum.getUTCFullYear()}`;
+   }
+
+   // datums waarop een DDWV bedrijf gepland staat, via oper_daginfo of oper_rooster (zie startlijst_view)
+   private async DDWVDatums(): Promise<Date[]>
+   {
+      this.logger.verbose(`StartlijstService.DDWVDatums()`);
+      const [daginfo, rooster] = await Promise.all([
+         this.dbService.operDagInfo.findMany({where: {DDWV: true}, select: {DATUM: true}}),
+         this.dbService.operRooster.findMany({where: {DDWV: true}, select: {DATUM: true}}),
+      ]);
+      const result = [...daginfo, ...rooster].map(record => record.DATUM);
+      this.logger.verbose(`StartlijstService.DDWVDatums() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -829,71 +894,5 @@ export class StartlijstService extends IHeliosService
       const result = instructievlucht;
       this.logger.verbose(`StartlijstService.ValideerInstructieVlucht() => ${safeStringify(result)}`);
       return result;
-   }
-
-   async AddObject(data: Prisma.OperStartlijstUncheckedCreateInput, actorId: number): Promise<OperStartlijst>
-   {
-      this.logger.verbose(`StartlijstService.AddObject(${safeStringify({data})})`);
-      this.ValideerStartLandingTijden(data.STARTTIJD as Date | null | undefined, data.LANDINGSTIJD as Date | null | undefined);
-
-      const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID, data.INZITTENDE_ID, data.INSTRUCTIEVLUCHT as boolean | undefined);
-      if (instructievlucht !== undefined)
-         data.INSTRUCTIEVLUCHT = instructievlucht;
-
-      data.DAGNUMMER = await this.NieuwDagNummer(data.DATUM as Date);
-
-      const obj = await this.dbService.operStartlijst.create({
-         data: data
-      });
-
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
-      this.logger.verbose(`StartlijstService.AddObject() => ${safeStringify(obj)}`);
-      return obj;
-   }
-
-   async UpdateObject(id: number, data: Prisma.OperStartlijstUncheckedUpdateInput, actorId: number): Promise<OperStartlijst>
-   {
-      this.logger.verbose(`StartlijstService.UpdateObject(${safeStringify({id, data})})`);
-      const db = await this.GetObject(id);
-
-      const nieuweStarttijd = data.STARTTIJD !== undefined ? data.STARTTIJD as Date | null : db.STARTTIJD;
-      const nieuweLandingstijd = data.LANDINGSTIJD !== undefined ? data.LANDINGSTIJD as Date | null : db.LANDINGSTIJD;
-      this.ValideerStartLandingTijden(nieuweStarttijd, nieuweLandingstijd);
-
-      const nieuweInzittende = data.INZITTENDE_ID !== undefined ? data.INZITTENDE_ID as number | null : db.INZITTENDE_ID;
-      const nieuweInstructievlucht = data.INSTRUCTIEVLUCHT !== undefined ? data.INSTRUCTIEVLUCHT as boolean : undefined;
-      const instructievlucht = await this.ValideerInstructieVlucht(data.VLIEGTUIG_ID as number | undefined, nieuweInzittende, nieuweInstructievlucht);
-      if (instructievlucht !== undefined)
-         data.INSTRUCTIEVLUCHT = instructievlucht;
-
-      // als de datum aangepast is, dan een nieuw dagnummer toekennen, zie UpdateObject() in class.Startlijst.inc.php
-      const nieuweDatum = data.DATUM as Date | undefined;
-      if (nieuweDatum !== undefined && nieuweDatum.valueOf() !== db.DATUM.valueOf())
-         data.DAGNUMMER = await this.NieuwDagNummer(nieuweDatum);
-
-      const obj = await this.dbService.operStartlijst.update({
-         where: {
-            ID: id
-         },
-         data: data
-      });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
-      this.logger.verbose(`StartlijstService.UpdateObject() => ${safeStringify(obj)}`);
-      return obj;
-   }
-
-   async RemoveObject(id: number, actorId: number): Promise<void>
-   {
-      this.logger.verbose(`StartlijstService.RemoveObject(${safeStringify({id, actorId})})`);
-      const db = await this.GetObject(id);
-      if (!db.VERWIJDERD) {
-         throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
-      }
-      await this.dbService.operStartlijst.delete({
-         where: {
-            ID: id
-         }
-      });
-      this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 }

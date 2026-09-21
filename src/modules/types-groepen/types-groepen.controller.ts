@@ -83,20 +83,6 @@ export class TypesGroepenController extends HeliosController
       return await this.typesGroepenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
-   private async normaliserenData(
-      data: CreateRefTypesGroepDto | UpdateRefTypesGroepDto): Promise<Prisma.RefTypesGroepUncheckedCreateInput | Prisma.RefTypesGroepUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.RefTypesGroepUncheckedCreateInput | Prisma.RefTypesGroepUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -133,6 +119,20 @@ export class TypesGroepenController extends HeliosController
          VERWIJDERD: false
       }
       await this.typesGroepenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   private async normaliserenData(
+      data: CreateRefTypesGroepDto | UpdateRefTypesGroepDto): Promise<Prisma.RefTypesGroepUncheckedCreateInput | Prisma.RefTypesGroepUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.RefTypesGroepUncheckedCreateInput | Prisma.RefTypesGroepUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

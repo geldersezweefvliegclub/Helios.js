@@ -69,15 +69,11 @@ export class TransactiesService extends IHeliosService
                   { VLIEGDAG: params.VLIEGDAG},
 
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.start,
-                                  lte: dtSpanne.eind
-                               }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          }
@@ -98,29 +94,9 @@ export class TransactiesService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`TransactiesService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
-   {
-      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {RefLid: lid, RefIngevoerd: ingevoerd, TypeTransactie: typeTransactie, ...transactie} = obj;
-
-         return {
-            ...transactie,
-            VLIEGDAG: toDateOnly(transactie.VLIEGDAG) as unknown as Date,
-            NAAM: lid?.NAAM ?? null,
-            INGEVOERD: ingevoerd?.NAAM ?? null,
-            TYPE: typeTransactie?.OMSCHRIJVING ?? null,
-         } as GetObjectsOperTransactiesResponse;
-      });
-      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -164,5 +140,24 @@ export class TransactiesService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
+   {
+      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {RefLid: lid, RefIngevoerd: ingevoerd, TypeTransactie: typeTransactie, ...transactie} = obj;
+
+         return {
+            ...transactie,
+            VLIEGDAG: toDateOnly(transactie.VLIEGDAG) as unknown as Date,
+            NAAM: lid?.NAAM ?? null,
+            INGEVOERD: ingevoerd?.NAAM ?? null,
+            TYPE: typeTransactie?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperTransactiesResponse;
+      });
+      this.logger.verbose(`TransactiesService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

@@ -3,9 +3,8 @@ model OperDienst {
   /// @DtoUpdateOptional
   /// @description Het unieke ID van de dienst
   ID                 Int         @id @default(autoincrement()) @db.UnsignedMediumInt
-  /// @DtoCreateOptional
+  /// @description Datum van de daginfo. Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.
   /// @DtoUpdateOptional
-  /// @description Datum van de daginfo
   DATUM              DateTime    @db.Date
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
@@ -17,15 +16,14 @@ model OperDienst {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   LID_ID             Int         @db.UnsignedMediumInt
+  /// @description Referentie naar het type dienst (startleider, DDI, lierist, etc). Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
+  /// @DtoCreateRequired
   /// @DtoUpdateOptional
-  /// @description Referentie naar hettype dienst (startleider, DDI, lietrist, etc)
   TYPE_DIENST_ID     Int?        @db.UnsignedMediumInt
-  /// @description Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel
+  /// @description Verwijzing naar het lid ID van degene die de dienst heeft ingevoerd, link naar de leden tabel. Wordt bij het aanmaken altijd server-side gezet op de ingelogde gebruiker en kan niet door de client opgegeven of gewijzigd worden (alleen-lezen veld, niet aanwezig in de create/update request body).
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
+  /// @DtoReadOnly
   INGEVOERD_DOOR_ID  Int?        @db.UnsignedMediumInt
   /// @description True als het lid aanwezig was tijdens deze dienst
   AANWEZIG           Boolean?

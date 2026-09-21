@@ -56,15 +56,11 @@ export class AgendaService extends IHeliosService
                   { ID: { in: params.IDs }},
 
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.start,
-                                  lte: dtSpanne.eind
-                               }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          }
@@ -79,22 +75,9 @@ export class AgendaService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`AgendaService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // normaliseert de datum-/tijdvelden van de ruwe database-records naar de response-vorm
-   private async MaakGetObjectsResponseDataset(objs: OperAgenda[]): Promise<GetObjectsOperAgendaResponse[]>
-   {
-      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map(obj => ({
-         ...obj,
-         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
-         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
-      }));
-      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -138,5 +121,18 @@ export class AgendaService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // normaliseert de datum-/tijdvelden van de ruwe database-records naar de response-vorm
+   private async MaakGetObjectsResponseDataset(objs: OperAgenda[]): Promise<GetObjectsOperAgendaResponse[]>
+   {
+      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map(obj => ({
+         ...obj,
+         DATUM: toDateOnly(obj.DATUM) as unknown as Date,
+         TIJD: toTimeOnly(obj.TIJD) as unknown as Date,
+      }));
+      this.logger.verbose(`AgendaService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

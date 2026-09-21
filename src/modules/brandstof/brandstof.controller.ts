@@ -92,28 +92,6 @@ export class BrandstofController  extends HeliosController
       return {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // het TIJDSTIP veld. Bij een insert wordt TIJDSTIP altijd geparsed, bij een update enkel als er
-   // daadwerkelijk een nieuwe waarde is meegegeven
-   private async normaliserenData(
-      data: CreateOperBrandstofDto | UpdateOperBrandstofDto,
-      tijdstipAltijdParsen: boolean): Promise<CreateOperBrandstofDto | UpdateOperBrandstofDto>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // TIJDSTIP zit niet op de DTO maar wel op het Prisma create-/update-input, vandaar de cast
-      const prismaData = data as Prisma.OperBrandstofCreateInput | Prisma.OperBrandstofUpdateInput;
-      if (tijdstipAltijdParsen || prismaData.TIJDSTIP !== undefined)
-         prismaData.TIJDSTIP = parseDateOnly(prismaData.TIJDSTIP as Date | string) as Date;
-
-      return data;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -150,6 +128,28 @@ export class BrandstofController  extends HeliosController
          VERWIJDERD: false
       }
       await this.brandstofService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // het TIJDSTIP veld. Bij een insert wordt TIJDSTIP altijd geparsed, bij een update enkel als er
+   // daadwerkelijk een nieuwe waarde is meegegeven
+   private async normaliserenData(
+      data: CreateOperBrandstofDto | UpdateOperBrandstofDto,
+      tijdstipAltijdParsen: boolean): Promise<CreateOperBrandstofDto | UpdateOperBrandstofDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // TIJDSTIP zit niet op de DTO maar wel op het Prisma create-/update-input, vandaar de cast
+      const prismaData = data as Prisma.OperBrandstofCreateInput | Prisma.OperBrandstofUpdateInput;
+      if (tijdstipAltijdParsen || prismaData.TIJDSTIP !== undefined)
+         prismaData.TIJDSTIP = parseDateOnly(prismaData.TIJDSTIP as Date | string) as Date;
+
+      return data;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

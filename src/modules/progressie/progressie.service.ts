@@ -94,31 +94,9 @@ export class ProgressieService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`ProgressieService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
-   {
-      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) =>
-      {
-         const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
-         return {
-            ...progressie,
-            GELDIG_TOT: toDateOnly(progressie.GELDIG_TOT) as unknown as Date,
-            LEERFASE_ID: competentie.LEERFASE_ID,
-            LEERFASE: competentie.LeerfaseType?.OMSCHRIJVING ?? null,
-            COMPETENTIE: competentie.OMSCHRIJVING,
-            LID_NAAM: lid.NAAM,
-            INSTRUCTEUR_NAAM: instructeur.NAAM,
-         } as GetObjectsOperProgressieResponse;
-      });
-      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -208,5 +186,26 @@ export class ProgressieService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
+   {
+      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) =>
+      {
+         const {RefCompetentie: competentie, RefLid: lid, Instructeur: instructeur, ...progressie} = obj;
+         return {
+            ...progressie,
+            GELDIG_TOT: toDateOnly(progressie.GELDIG_TOT) as unknown as Date,
+            LEERFASE_ID: competentie.LEERFASE_ID,
+            LEERFASE: competentie.LeerfaseType?.OMSCHRIJVING ?? null,
+            COMPETENTIE: competentie.OMSCHRIJVING,
+            LID_NAAM: lid.NAAM,
+            INSTRUCTEUR_NAAM: instructeur.NAAM,
+         } as GetObjectsOperProgressieResponse;
+      });
+      this.logger.verbose(`ProgressieService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

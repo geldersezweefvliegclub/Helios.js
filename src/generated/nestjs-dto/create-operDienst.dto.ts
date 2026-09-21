@@ -1,5 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsDateString, IsInt, IsOptional } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+} from "class-validator";
 
 export class CreateOperDienstDto {
   @ApiProperty({
@@ -13,14 +19,14 @@ export class CreateOperDienstDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Datum van de daginfo",
+    description:
+      "Datum van de daginfo. Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "string",
     format: "date-time",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsDateString()
-  DATUM?: Date;
+  DATUM: Date;
   @ApiProperty({
     description: "Referentie naar het rooster",
     type: "integer",
@@ -42,26 +48,13 @@ export class CreateOperDienstDto {
   LID_ID?: number;
   @ApiProperty({
     description:
-      "Referentie naar hettype dienst (startleider, DDI, lietrist, etc)",
+      "Referentie naar het type dienst (startleider, DDI, lierist, etc). Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "integer",
     format: "int32",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  TYPE_DIENST_ID?: number | null;
-  @ApiProperty({
-    description:
-      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  INGEVOERD_DOOR_ID?: number | null;
+  TYPE_DIENST_ID: number;
   @ApiProperty({
     description: "True als het lid aanwezig was tijdens deze dienst",
     type: "boolean",

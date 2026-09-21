@@ -63,6 +63,96 @@ export class DagRapportenController extends HeliosController
       return await this.DagRapportenService.GetObjects(queryParams, toegestaneDatums);
    }
 
+   @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
+   async AddObject(
+      @CurrentUser() currentUser: RefLid,
+      @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
+   {
+      this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
+      bodyHeeftData(data);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
+
+      const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
+      // PHP class.DagRapporten.inc.php::AddObject() - INGEVOERD_ID wordt altijd server-side gezet op de
+      // ingelogde gebruiker, nooit overgenomen uit de aanvraag, en blijft na aanmaken onveranderlijk
+      insert.INGEVOERD_ID = currentUser.ID;
+      const obj = await this.DagRapportenService.AddObject(insert, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+   }
+
+   @HeliosUpdateObject(UpdateOperDagRapportDto, OperDagRapportDto)
+   async UpdateObject(
+      @CurrentUser() currentUser: RefLid,
+      @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
+   {
+      bodyHeeftData(data);
+      id = id ?? data.ID;
+      this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
+
+      const update = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedUpdateInput;
+      const obj = await this.DagRapportenService.UpdateObject(id, update, currentUser.ID);
+      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
+   }
+
+   @HeliosDeleteObject()
+   async DeleteObject(
+      @CurrentUser() currentUser: RefLid,
+      @Query('ID') id: number): Promise<void>
+   {
+      this.logger.verbose(`DagRapportenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.DeleteObject');
+
+      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
+         VERWIJDERD: true
+      }
+      await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   @HeliosRemoveObject()
+   async RemoveObject(
+      @CurrentUser() currentUser: RefLid,
+      @Query('ID') id: number): Promise<void>
+   {
+      this.logger.verbose(`DagRapportenController.RemoveObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RemoveObject');
+      await this.DagRapportenService.RemoveObject(id, currentUser.ID);
+   }
+
+   @HeliosRestoreObject()
+   async RestoreObject(
+      @CurrentUser() currentUser: RefLid,
+      @Query('ID') id: number): Promise<void>
+   {
+      this.logger.verbose(`DagRapportenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RestoreObject');
+
+      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
+         VERWIJDERD: false
+      }
+      await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert het datumveld
+   private async normaliserenData(
+      data: CreateOperDagRapportDto | UpdateOperDagRapportDto): Promise<Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd. INGEVOERD_ID is @DtoReadOnly in het Prisma schema en zit daarom
+      // al helemaal niet in Create/UpdateOperDagRapportDto - het wordt enkel bij het aanmaken server-side
+      // gezet (zie AddObject) en blijft daarna onveranderlijk.
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // zorg dat de datum omgezet wordt in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data as Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput;
+   }
+
    // PHP class.DagRapporten.inc.php::GetObjects() - Beheerder/Instructeur/CIMT mogen alle dagrapporten
    // zien (undefined = geen beperking); DDWV-Beheerder/DDWV-Crew mogen enkel DDWV-dagen zien binnen het
    // opgevraagde datumbereik, Crew bovendien enkel de dagen waarop ze zelf dienst hadden; alle andere
@@ -103,96 +193,6 @@ export class DagRapportenController extends HeliosController
       }
 
       return toegestaneDatums;
-   }
-
-   @HeliosCreateObject(CreateOperDagRapportDto, OperDagRapportDto)
-   async AddObject(
-      @CurrentUser() currentUser: RefLid,
-      @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
-   {
-      this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
-      this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
-
-      const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
-      // PHP class.DagRapporten.inc.php::AddObject() - INGEVOERD_ID wordt altijd server-side gezet op de
-      // ingelogde gebruiker, nooit overgenomen uit de aanvraag, en blijft na aanmaken onveranderlijk
-      insert.INGEVOERD_ID = currentUser.ID;
-      const obj = await this.DagRapportenService.AddObject(insert, currentUser.ID);
-      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-   }
-
-   @HeliosUpdateObject(UpdateOperDagRapportDto, OperDagRapportDto)
-   async UpdateObject(
-      @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
-   {
-      bodyHeeftData(data);
-      id = id ?? data.ID;
-      this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
-
-      const update = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedUpdateInput;
-      const obj = await this.DagRapportenService.UpdateObject(id, update, currentUser.ID);
-      return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
-   }
-
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
-   // normaliseert het datumveld
-   private async normaliserenData(
-      data: CreateOperDagRapportDto | UpdateOperDagRapportDto): Promise<Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
-      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd. INGEVOERD_ID is @DtoReadOnly in het Prisma schema en zit daarom
-      // al helemaal niet in Create/UpdateOperDagRapportDto - het wordt enkel bij het aanmaken server-side
-      // gezet (zie AddObject) en blijft daarna onveranderlijk.
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // zorg dat de datum omgezet wordt in ISO 8601 formaat
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-
-      return data as Prisma.OperDagRapportUncheckedCreateInput | Prisma.OperDagRapportUncheckedUpdateInput;
-   }
-
-   @HeliosDeleteObject()
-   async DeleteObject(
-      @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number): Promise<void>
-   {
-      this.logger.verbose(`DagRapportenController.DeleteObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagRapporten.DeleteObject');
-
-      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
-         VERWIJDERD: true
-      }
-      await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);
-   }
-
-   @HeliosRemoveObject()
-   async RemoveObject(
-      @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number): Promise<void>
-   {
-      this.logger.verbose(`DagRapportenController.RemoveObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RemoveObject');
-      await this.DagRapportenService.RemoveObject(id, currentUser.ID);
-   }
-
-   @HeliosRestoreObject()
-   async RestoreObject(
-      @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number): Promise<void>
-   {
-      this.logger.verbose(`DagRapportenController.RestoreObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagRapporten.RestoreObject');
-
-      const data: Prisma.OperDagRapportUncheckedUpdateInput = {
-         VERWIJDERD: false
-      }
-      await this.DagRapportenService.UpdateObject(id, data, currentUser.ID);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

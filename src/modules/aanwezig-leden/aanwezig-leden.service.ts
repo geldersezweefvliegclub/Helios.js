@@ -90,15 +90,11 @@ export class AanwezigLedenService extends IHeliosService
                     },
 
                     {
-                       OR: [
-                          {
-                             DATUM:
-                                 {
-                                    gte: dtSpanne.start,
-                                    lte: dtSpanne.eind
-                                 }
-                          }
-                       ]
+                       DATUM:
+                           {
+                              gte: dtSpanne.start,
+                              lte: dtSpanne.eind
+                           }
                     }
                  ]
           }
@@ -124,93 +120,9 @@ export class AanwezigLedenService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`AanwezigLedenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
-   {
-      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      if (objs.length === 0)
-      {
-         const result = [];
-         this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
-         return result;
-      }
-
-      const dbVliegtuigTypes = await this.typesService.GetObjects(MaakGetObjectsRequest(GetObjectsRefTypesRequest, {
-         GROEP: TypesGroep.VliegtuigTypes,
-      }));
-      const vliegtuigTypes = dbVliegtuigTypes.dataset;
-
-      const result = await Promise.all(objs.map(async obj =>
-      {
-         const {RefLid: lid, RefVliegtuig: vliegtuig, Veld: veld, ...aanwezigLid} = obj;
-
-         const gewensteTypes = vliegtuigTypes.filter(type => aanwezigLid.VOORKEUR_VLIEGTUIG_TYPE?.includes(String(type.ID)));
-
-         // VLIEGT / VLIEGTIJD / STARTS: rechtstreekse, lichtgewicht queries op Startlijst
-         const [vliegtNu, vliegtijdMinuten, starts] = await Promise.all([
-            this.startlijstService.LidVliegt(obj.LID_ID, obj.DATUM),
-            this.startlijstService.LidVliegtijd(obj.LID_ID, obj.DATUM),
-            this.startlijstService.LidStarts(obj.LID_ID, obj.DATUM),
-         ]);
-
-         return {
-            ...aanwezigLid,
-            DATUM: toDateOnly(aanwezigLid.DATUM) as unknown as Date,
-            AANKOMST: toTimeOnly(aanwezigLid.AANKOMST) as unknown as Date,
-            VERTREK: toTimeOnly(aanwezigLid.VERTREK) as unknown as Date,
-            REG_CALL: vliegtuig ? RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN) : null,
-            NAAM: lid.NAAM,
-            VOORNAAM: lid.VOORNAAM,
-            TUSSENVOEGSEL: lid.TUSSENVOEGSEL,
-            ACHTERNAAM: lid.ACHTERNAAM,
-            ADRES: lid.ADRES,
-            POSTCODE: lid.POSTCODE,
-            WOONPLAATS: lid.WOONPLAATS,
-            LIDNR: lid.LIDNR,
-            LIDTYPE_ID: lid.LIDTYPE_ID,
-            MOBIEL: lid.MOBIEL,
-            EMAIL: lid.EMAIL,
-            NOODNUMMER: lid.NOODNUMMER,
-            TELEFOON: lid.TELEFOON,
-            INSTRUCTEUR: lid.INSTRUCTEUR,
-            STARTLEIDER: lid.STARTLEIDER,
-            LIERIST: lid.LIERIST,
-            CIMT: lid.CIMT,
-            DDWV_CREW: lid.DDWV_CREW,
-            DDWV_BEHEERDER: lid.DDWV_BEHEERDER,
-            BEHEERDER: lid.BEHEERDER,
-            STARTTOREN: lid.STARTTOREN,
-            ROOSTER: lid.ROOSTER,
-            CLUBBLAD_POST: lid.CLUBBLAD_POST,
-            MEDICAL: lid.MEDICAL,
-            GEBOORTE_DATUM: lid.GEBOORTE_DATUM,
-            ZUSTERCLUB_ID: lid.ZUSTERCLUB_ID,
-            INLOGNAAM: lid.INLOGNAAM,
-            SECRET: lid.SECRET,
-            AVATAR: lid.AVATAR,
-            STARTVERBOD: lid.STARTVERBOD,
-            PRIVACY: lid.PRIVACY,
-            STATUSTYPE_ID: lid.STATUSTYPE_ID,
-            VELD: veld?.OMSCHRIJVING ?? null,
-            ZELFSTART_ABONNEMENT: lid.ZELFSTART_ABONNEMENT,
-            LIDTYPE: lid.LidType?.OMSCHRIJVING,
-            STATUS: lid.VliegStatus?.CODE ?? null,
-            STATUS_SORTEER_VOLGORDE: lid.VliegStatus?.SORTEER_VOLGORDE ?? null,
-            VLIEGTUIGTYPE_CODE: gewensteTypes.length ? gewensteTypes.map(type => type.CODE).join(',') : null,
-            VLIEGTUIGTYPE_OMS: gewensteTypes.length ? gewensteTypes.map(type => type.OMSCHRIJVING).join(',') : null,
-            VLIEGTIJD: vliegtijdMinuten > 0 ? MinutenNaarTijd(vliegtijdMinuten) : null,
-            STARTS: starts,
-            VLIEGT: vliegtNu ? 1 : 0,
-         } as GetObjectsOperAanwezigLedenResponse;
-      }));
-      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -273,17 +185,6 @@ export class AanwezigLedenService extends IHeliosService
       const rec = await this.dbService.operAanwezigLid.findFirst({ where: { LID_ID: currentUser.ID, DATUM: new Date(), VERWIJDERD: false } });
       const result = !!rec;
       this.logger.verbose(`AanwezigLedenService.IsAangemeld() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // zoekt de actieve aanmelding van dit lid op deze datum, of null
-   private async BestaandeAanmelding(lidId: number, datum: Date): Promise<OperAanwezigLid | null>
-   {
-      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding(${safeStringify({lidId, datum})})`);
-      const result = await this.dbService.operAanwezigLid.findFirst({
-         where: {LID_ID: lidId, DATUM: datum, VERWIJDERD: false}
-      });
-      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -458,6 +359,100 @@ export class AanwezigLedenService extends IHeliosService
          overland,
       };
       this.logger.verbose(`AanwezigLedenService.Samenvatting() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: AanwezigLidMetRelaties[]): Promise<GetObjectsOperAanwezigLedenResponse[]>
+   {
+      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      if (objs.length === 0)
+      {
+         const result = [];
+         this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+         return result;
+      }
+
+      const dbVliegtuigTypes = await this.typesService.GetObjects(MaakGetObjectsRequest(GetObjectsRefTypesRequest, {
+         GROEP: TypesGroep.VliegtuigTypes,
+      }));
+      const vliegtuigTypes = dbVliegtuigTypes.dataset;
+
+      const result = await Promise.all(objs.map(async obj =>
+      {
+         const {RefLid: lid, RefVliegtuig: vliegtuig, Veld: veld, ...aanwezigLid} = obj;
+
+         const gewensteTypes = vliegtuigTypes.filter(type => aanwezigLid.VOORKEUR_VLIEGTUIG_TYPE?.includes(String(type.ID)));
+
+         // VLIEGT / VLIEGTIJD / STARTS: rechtstreekse, lichtgewicht queries op Startlijst
+         const [vliegtNu, vliegtijdMinuten, starts] = await Promise.all([
+            this.startlijstService.LidVliegt(obj.LID_ID, obj.DATUM),
+            this.startlijstService.LidVliegtijd(obj.LID_ID, obj.DATUM),
+            this.startlijstService.LidStarts(obj.LID_ID, obj.DATUM),
+         ]);
+
+         return {
+            ...aanwezigLid,
+            DATUM: toDateOnly(aanwezigLid.DATUM) as unknown as Date,
+            AANKOMST: toTimeOnly(aanwezigLid.AANKOMST) as unknown as Date,
+            VERTREK: toTimeOnly(aanwezigLid.VERTREK) as unknown as Date,
+            REG_CALL: vliegtuig ? RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN) : null,
+            NAAM: lid.NAAM,
+            VOORNAAM: lid.VOORNAAM,
+            TUSSENVOEGSEL: lid.TUSSENVOEGSEL,
+            ACHTERNAAM: lid.ACHTERNAAM,
+            ADRES: lid.ADRES,
+            POSTCODE: lid.POSTCODE,
+            WOONPLAATS: lid.WOONPLAATS,
+            LIDNR: lid.LIDNR,
+            LIDTYPE_ID: lid.LIDTYPE_ID,
+            MOBIEL: lid.MOBIEL,
+            EMAIL: lid.EMAIL,
+            NOODNUMMER: lid.NOODNUMMER,
+            TELEFOON: lid.TELEFOON,
+            INSTRUCTEUR: lid.INSTRUCTEUR,
+            STARTLEIDER: lid.STARTLEIDER,
+            LIERIST: lid.LIERIST,
+            CIMT: lid.CIMT,
+            DDWV_CREW: lid.DDWV_CREW,
+            DDWV_BEHEERDER: lid.DDWV_BEHEERDER,
+            BEHEERDER: lid.BEHEERDER,
+            STARTTOREN: lid.STARTTOREN,
+            ROOSTER: lid.ROOSTER,
+            CLUBBLAD_POST: lid.CLUBBLAD_POST,
+            MEDICAL: lid.MEDICAL,
+            GEBOORTE_DATUM: lid.GEBOORTE_DATUM,
+            ZUSTERCLUB_ID: lid.ZUSTERCLUB_ID,
+            INLOGNAAM: lid.INLOGNAAM,
+            SECRET: lid.SECRET,
+            AVATAR: lid.AVATAR,
+            STARTVERBOD: lid.STARTVERBOD,
+            PRIVACY: lid.PRIVACY,
+            STATUSTYPE_ID: lid.STATUSTYPE_ID,
+            VELD: veld?.OMSCHRIJVING ?? null,
+            ZELFSTART_ABONNEMENT: lid.ZELFSTART_ABONNEMENT,
+            LIDTYPE: lid.LidType?.OMSCHRIJVING,
+            STATUS: lid.VliegStatus?.CODE ?? null,
+            STATUS_SORTEER_VOLGORDE: lid.VliegStatus?.SORTEER_VOLGORDE ?? null,
+            VLIEGTUIGTYPE_CODE: gewensteTypes.length ? gewensteTypes.map(type => type.CODE).join(',') : null,
+            VLIEGTUIGTYPE_OMS: gewensteTypes.length ? gewensteTypes.map(type => type.OMSCHRIJVING).join(',') : null,
+            VLIEGTIJD: vliegtijdMinuten > 0 ? MinutenNaarTijd(vliegtijdMinuten) : null,
+            STARTS: starts,
+            VLIEGT: vliegtNu ? 1 : 0,
+         } as GetObjectsOperAanwezigLedenResponse;
+      }));
+      this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // zoekt de actieve aanmelding van dit lid op deze datum, of null
+   private async BestaandeAanmelding(lidId: number, datum: Date): Promise<OperAanwezigLid | null>
+   {
+      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding(${safeStringify({lidId, datum})})`);
+      const result = await this.dbService.operAanwezigLid.findFirst({
+         where: {LID_ID: lidId, DATUM: datum, VERWIJDERD: false}
+      });
+      this.logger.verbose(`AanwezigLedenService.BestaandeAanmelding() => ${safeStringify(result)}`);
       return result;
    }
 }

@@ -75,39 +75,6 @@ export class AanwezigLedenController  extends HeliosController
       return objs;
    }
 
-   // een DDWV-lid mag andere DDWV-leden (LIDTYPE_ID = LidType.DDWV) wel herkennen, maar geen persoonsgegevens
-   // van de overige (niet-DDWV) leden zien - vergelijkbaar met privacyMask() in de PHP implementatie
-   private PrivacyMask(currentUser: RefLid, dataset: GetObjectsOperAanwezigLedenResponse[]): GetObjectsOperAanwezigLedenResponse[]
-   {
-      if (currentUser.LIDTYPE_ID !== LidType.DDWV)
-         return dataset;
-
-      const MASK = "***";
-      return dataset.map(aanmelding =>
-      {
-         if (aanmelding.LIDTYPE_ID === LidType.DDWV)
-            return aanmelding;
-
-         return {
-            ...aanmelding,
-            NAAM: MASK,
-            VOORNAAM: MASK,
-            TUSSENVOEGSEL: MASK,
-            ACHTERNAAM: MASK,
-            ADRES: MASK,
-            POSTCODE: MASK,
-            WOONPLAATS: MASK,
-            LIDNR: MASK,
-            MOBIEL: MASK,
-            EMAIL: MASK,
-            NOODNUMMER: MASK,
-            TELEFOON: MASK,
-            INLOGNAAM: MASK,
-            AVATAR: MASK,
-         };
-      });
-   }
-
    @HeliosCreateObject(CreateOperAanwezigLidDto, OperAanwezigLidDto)
    async AddObject(
       @CurrentUser() currentUser: RefLid,
@@ -151,25 +118,6 @@ export class AanwezigLedenController  extends HeliosController
          AANKOMST: toTimeOnly(obj.AANKOMST) as unknown as Date,
          VERTREK: toTimeOnly(obj.VERTREK) as unknown as Date,
       };
-   }
-
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de datum- en tijdvelden
-   private async normaliserenData(
-      data: CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto): Promise<CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
-      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
-
-      return data;
    }
 
    @HeliosDeleteObject()
@@ -281,5 +229,57 @@ export class AanwezigLedenController  extends HeliosController
 
       const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : parseDateOnly(new Date().toISOString().slice(0, 10)) as Date;
       return await this.AanwezigLedenService.Samenvatting(gevraagdeDatum);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto): Promise<CreateOperAanwezigLidDto | UpdateOperAanwezigLidDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANKOMST = parseTimeOnly(data.AANKOMST as Date | string | null);
+      data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
+
+      return data;
+   }
+
+   // een DDWV-lid mag andere DDWV-leden (LIDTYPE_ID = LidType.DDWV) wel herkennen, maar geen persoonsgegevens
+   // van de overige (niet-DDWV) leden zien - vergelijkbaar met privacyMask() in de PHP implementatie
+   private PrivacyMask(currentUser: RefLid, dataset: GetObjectsOperAanwezigLedenResponse[]): GetObjectsOperAanwezigLedenResponse[]
+   {
+      if (currentUser.LIDTYPE_ID !== LidType.DDWV)
+         return dataset;
+
+      const MASK = "***";
+      return dataset.map(aanmelding =>
+      {
+         if (aanmelding.LIDTYPE_ID === LidType.DDWV)
+            return aanmelding;
+
+         return {
+            ...aanmelding,
+            NAAM: MASK,
+            VOORNAAM: MASK,
+            TUSSENVOEGSEL: MASK,
+            ACHTERNAAM: MASK,
+            ADRES: MASK,
+            POSTCODE: MASK,
+            WOONPLAATS: MASK,
+            LIDNR: MASK,
+            MOBIEL: MASK,
+            EMAIL: MASK,
+            NOODNUMMER: MASK,
+            TELEFOON: MASK,
+            INLOGNAAM: MASK,
+            AVATAR: MASK,
+         };
+      });
    }
 }

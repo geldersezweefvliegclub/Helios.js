@@ -82,21 +82,6 @@ export class TypesController extends HeliosController
       return await this.typesService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
-   // (GROEP is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
-   private async normaliserenData(
-      data: CreateRefTypeDto | UpdateRefTypeDto): Promise<Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -133,6 +118,21 @@ export class TypesController extends HeliosController
          VERWIJDERD: false
       }
       await this.typesService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   // (GROEP is al een kale scalaire FK-kolom op het model, dus die kan ongewijzigd mee)
+   private async normaliserenData(
+      data: CreateRefTypeDto | UpdateRefTypeDto): Promise<Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.RefTypeUncheckedCreateInput | Prisma.RefTypeUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

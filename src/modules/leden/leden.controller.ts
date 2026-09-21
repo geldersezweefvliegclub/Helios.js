@@ -112,49 +112,6 @@ export class LedenController extends HeliosController
       return this.privacyMask(obj, currentUser);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, bouwt de
-   // NAAM op, hasht het wachtwoord en normaliseert de datumvelden.
-   // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
-   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
-   // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
-   private async normaliserenData(
-      data: CreateRefLidDto | UpdateRefLidDto,
-      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
-   {
-      // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
-      // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
-      // meegegeven waarde wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
-      delete data.NAAM;
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      const result = data as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
-      const voornaam = result.VOORNAAM as string | null | undefined;
-      const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
-      const achternaam = result.ACHTERNAAM as string | null | undefined;
-
-      // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
-      // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
-      if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
-      {
-         result.NAAM = [voornaam, tussenvoegsel, achternaam]
-            .map(deel => (deel ?? "").trim())
-            .filter(deel => deel.length > 0)
-            .join(" ");
-      }
-
-      // encrypt het wachtwoord voordat het opgeslagen wordt in de database
-      if (result.WACHTWOORD)
-         result.WACHTWOORD = await hash(result.WACHTWOORD as string, 10);
-
-      // zorg dat de datums omgezet worden in ISO 8601 formaat
-      result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
-      result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
-
-      return result;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -294,5 +251,48 @@ export class LedenController extends HeliosController
       this.logger.verbose(`LedenController.GetVerjaardagen(${safeStringify({currentUser, aantal})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetVerjaardagen');
       return await this.ledenService.GetVerjaardagen(aantal);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, bouwt de
+   // NAAM op, hasht het wachtwoord en normaliseert de datumvelden.
+   // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
+   // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
+   // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateRefLidDto | UpdateRefLidDto,
+      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
+   {
+      // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
+      // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
+      // meegegeven waarde wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
+      delete data.NAAM;
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      const result = data as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
+      const voornaam = result.VOORNAAM as string | null | undefined;
+      const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
+      const achternaam = result.ACHTERNAAM as string | null | undefined;
+
+      // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
+      // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+      if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+      {
+         result.NAAM = [voornaam, tussenvoegsel, achternaam]
+            .map(deel => (deel ?? "").trim())
+            .filter(deel => deel.length > 0)
+            .join(" ");
+      }
+
+      // encrypt het wachtwoord voordat het opgeslagen wordt in de database
+      if (result.WACHTWOORD)
+         result.WACHTWOORD = await hash(result.WACHTWOORD as string, 10);
+
+      // zorg dat de datums omgezet worden in ISO 8601 formaat
+      result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
+      result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
+
+      return result;
    }
 }

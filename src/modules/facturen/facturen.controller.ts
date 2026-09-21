@@ -79,20 +79,6 @@ export class FacturenController  extends HeliosController
       return await this.FacturenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
-   private async normaliserenData(
-      data: CreateOperFactuurDto | UpdateOperFactuurDto): Promise<Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -129,6 +115,20 @@ export class FacturenController  extends HeliosController
          VERWIJDERD: false
       }
       await this.FacturenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden
+   private async normaliserenData(
+      data: CreateOperFactuurDto | UpdateOperFactuurDto): Promise<Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.OperFactuurUncheckedCreateInput | Prisma.OperFactuurUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

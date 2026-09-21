@@ -83,25 +83,6 @@ export class RoosterController  extends HeliosController
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
-   private async normaliserenData(
-      data: CreateOperRoosterDto | UpdateOperRoosterDto): Promise<CreateOperRoosterDto | UpdateOperRoosterDto>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
-      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
-      // toewijzing toe te staan
-      (data as Pick<CreateOperRoosterDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-
-      return data;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -138,6 +119,25 @@ export class RoosterController  extends HeliosController
          VERWIJDERD: false
       }
       await this.RoosterService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de DATUM (enkel een kalenderdatum, geen tijd) naar een geldig Date object
+   private async normaliserenData(
+      data: CreateOperRoosterDto | UpdateOperRoosterDto): Promise<CreateOperRoosterDto | UpdateOperRoosterDto>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert
+      // de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // DATUM is optioneel op de update-DTO maar verplicht op de create-DTO: cast om deze union-brede
+      // toewijzing toe te staan
+      (data as Pick<CreateOperRoosterDto, "DATUM">).DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+
+      return data;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

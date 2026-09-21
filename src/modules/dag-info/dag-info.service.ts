@@ -74,15 +74,11 @@ export class DagInfoService extends IHeliosService
                   { ID: { in: params.IDs }},
 
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.start,
-                                  lte: dtSpanne.eind
-                               }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          }
@@ -106,41 +102,9 @@ export class DagInfoService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`DagInfoService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
-   {
-      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {
-            Veld: veld, Baan: baan, StartMethode: startMethode,
-            Veld2: veld2, Baan2: baan2, StartMethode2: startMethode2, ...dagInfo
-         } = obj;
-
-         return {
-            ...dagInfo,
-            DATUM: toDateOnly(dagInfo.DATUM) as unknown as Date,
-            VELD_CODE: veld?.CODE ?? null,
-            VELD_OMS: veld?.OMSCHRIJVING ?? null,
-            BAAN_CODE: baan?.CODE ?? null,
-            BAAN_OMS: baan?.OMSCHRIJVING ?? null,
-            STARTMETHODE_CODE: startMethode?.CODE ?? null,
-            STARTMETHODE_OMS: startMethode?.OMSCHRIJVING ?? null,
-            VELD_CODE2: veld2?.CODE ?? null,
-            VELD_OMS2: veld2?.OMSCHRIJVING ?? null,
-            BAAN_CODE2: baan2?.CODE ?? null,
-            BAAN_OMS2: baan2?.OMSCHRIJVING ?? null,
-            STARTMETHODE_CODE2: startMethode2?.CODE ?? null,
-            STARTMETHODE_OMS2: startMethode2?.OMSCHRIJVING ?? null,
-         } as GetObjectsOperDagInfoResponse;
-      });
-      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -194,6 +158,37 @@ export class DagInfoService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: DagInfoMetRelaties[]): Promise<GetObjectsOperDagInfoResponse[]>
+   {
+      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {
+            Veld: veld, Baan: baan, StartMethode: startMethode,
+            Veld2: veld2, Baan2: baan2, StartMethode2: startMethode2, ...dagInfo
+         } = obj;
+
+         return {
+            ...dagInfo,
+            DATUM: toDateOnly(dagInfo.DATUM) as unknown as Date,
+            VELD_CODE: veld?.CODE ?? null,
+            VELD_OMS: veld?.OMSCHRIJVING ?? null,
+            BAAN_CODE: baan?.CODE ?? null,
+            BAAN_OMS: baan?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE: startMethode?.CODE ?? null,
+            STARTMETHODE_OMS: startMethode?.OMSCHRIJVING ?? null,
+            VELD_CODE2: veld2?.CODE ?? null,
+            VELD_OMS2: veld2?.OMSCHRIJVING ?? null,
+            BAAN_CODE2: baan2?.CODE ?? null,
+            BAAN_OMS2: baan2?.OMSCHRIJVING ?? null,
+            STARTMETHODE_CODE2: startMethode2?.CODE ?? null,
+            STARTMETHODE_OMS2: startMethode2?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperDagInfoResponse;
+      });
+      this.logger.verbose(`DagInfoService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 
    // Een DATUM mag maar bij één actief (niet-verwijderd) record voorkomen

@@ -56,15 +56,11 @@ export class RoosterService extends IHeliosService
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
                   {
-                     OR: [
+                     DATUM:
                         {
-                           DATUM:
-                               {
-                                  gte: dtSpanne.start,
-                                  lte: dtSpanne.eind
-                               }
+                           gte: dtSpanne.start,
+                           lte: dtSpanne.eind
                         }
-                     ]
                   }
                ]
          }
@@ -79,18 +75,9 @@ export class RoosterService extends IHeliosService
          take: params.MAX,
          skip: params.START});
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`RoosterService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // normaliseert de datumvelden van de ruwe database-records naar de response-vorm
-   private async MaakGetObjectsResponseDataset(objs: OperRooster[]): Promise<GetObjectsOperRoosterResponse[]>
-   {
-      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
-      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -134,5 +121,14 @@ export class RoosterService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // normaliseert de datumvelden van de ruwe database-records naar de response-vorm
+   private async MaakGetObjectsResponseDataset(objs: OperRooster[]): Promise<GetObjectsOperRoosterResponse[]>
+   {
+      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map(obj => ({...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date}));
+      this.logger.verbose(`RoosterService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

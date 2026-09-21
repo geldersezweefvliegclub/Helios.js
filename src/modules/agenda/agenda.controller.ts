@@ -95,24 +95,6 @@ async UpdateObject(
       };
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
-   // de datum- en tijdvelden
-   private async normaliserenData(
-      data: CreateOperAgendaDto | UpdateOperAgendaDto): Promise<Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
-
-      return data as Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput;
-   }
-
 @HeliosDeleteObject()
 async DeleteObject(
    @CurrentUser() currentUser: RefLid,
@@ -149,6 +131,24 @@ async RestoreObject(
          VERWIJDERD: false
       }
       await this.agendaService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert
+   // de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperAgendaDto | UpdateOperAgendaDto): Promise<Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.TIJD = parseTimeOnly(data.TIJD as Date | string | null);
+
+      return data as Prisma.OperAgendaUncheckedCreateInput | Prisma.OperAgendaUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

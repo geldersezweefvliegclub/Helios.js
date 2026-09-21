@@ -77,27 +77,9 @@ export class GastenService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`GastenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
-   {
-      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {Veld: veld, ...gast} = obj;
-
-         return {
-            ...gast,
-            DATUM: toDateOnly(gast.DATUM) as unknown as Date,
-            VELD: veld?.OMSCHRIJVING ?? null,
-         } as GetObjectsOperGastenResponse;
-      });
-      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -141,5 +123,22 @@ export class GastenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: GastMetRelaties[]): Promise<GetObjectsOperGastenResponse[]>
+   {
+      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {Veld: veld, ...gast} = obj;
+
+         return {
+            ...gast,
+            DATUM: toDateOnly(gast.DATUM) as unknown as Date,
+            VELD: veld?.OMSCHRIJVING ?? null,
+         } as GetObjectsOperGastenResponse;
+      });
+      this.logger.verbose(`GastenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

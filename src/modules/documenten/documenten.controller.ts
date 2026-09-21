@@ -81,23 +81,6 @@ export class DocumentenController extends HeliosController
       return await this.documentenService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
-   // LID_ID en GROEP_ID hoeven niet omgezet te worden naar relatie-connects: met het Unchecked Prisma
-   // inputtype zijn dit al platte kolommen, dus een meegegeven null zet de relatie direct los
-   // (zowel bij create als update) zonder aparte afhandeling
-   private async normaliserenData(
-      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      return data as Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -134,6 +117,23 @@ export class DocumentenController extends HeliosController
          VERWIJDERD: false
       }
       await this.documentenService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // LID_ID en GROEP_ID hoeven niet omgezet te worden naar relatie-connects: met het Unchecked Prisma
+   // inputtype zijn dit al platte kolommen, dus een meegegeven null zet de relatie direct los
+   // (zowel bij create als update) zonder aparte afhandeling
+   private async normaliserenData(
+      data: CreateHeliosDocumentDto | UpdateHeliosDocumentDto): Promise<Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      return data as Prisma.HeliosDocumentUncheckedCreateInput | Prisma.HeliosDocumentUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

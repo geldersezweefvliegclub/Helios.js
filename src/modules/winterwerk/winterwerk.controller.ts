@@ -99,25 +99,6 @@ export class WinterwerkController extends HeliosController
       };
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
-   // normaliseert de datum- en tijdvelden
-   private async normaliserenData(
-      data: CreateOperWinterwerkDto | UpdateOperWinterwerkDto): Promise<Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput>
-   {
-      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-
-      // zorg dat de datum en tijden omgezet worden in ISO 8601 formaat
-      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
-      data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
-      data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
-
-      return data as Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -154,6 +135,25 @@ export class WinterwerkController extends HeliosController
          VERWIJDERD: false
       }
       await this.WinterwerkService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en
+   // normaliseert de datum- en tijdvelden
+   private async normaliserenData(
+      data: CreateOperWinterwerkDto | UpdateOperWinterwerkDto): Promise<Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput>
+   {
+      // VERWIJDERD en LAATSTE_AANPASSING zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+
+      // zorg dat de datum en tijden omgezet worden in ISO 8601 formaat
+      data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
+      data.AANVANG = parseTimeOnly(data.AANVANG as Date | string) as Date;
+      data.EINDE = parseTimeOnly(data.EINDE as Date | string) as Date;
+
+      return data as Prisma.OperWinterwerkUncheckedCreateInput | Prisma.OperWinterwerkUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

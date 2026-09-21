@@ -73,15 +73,11 @@ export class AuditService extends IHeliosService
                ]
             },
             {
-               OR: [
+               DATUM:
                   {
-                     DATUM:
-                        {
-                           gte: dtSpanne.start,
-                           lte: dtSpanne.eind
-                        }
+                     gte: dtSpanne.start,
+                     lte: dtSpanne.eind
                   }
-               ]
             }
          ]
       }
@@ -101,27 +97,9 @@ export class AuditService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`AuditService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
-   private async MaakGetObjectsResponseDataset(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
-   {
-      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      const result = objs.map((obj) => {
-         const {RefLid: lid, ...audit} = obj;
-
-         return {
-            ...audit,
-            DATUM: toDateOnly(audit.DATUM) as unknown as Date,
-            NAAM: lid?.NAAM ?? null,
-         } as GetObjectsAuditResponse
-      });
-      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -159,5 +137,22 @@ export class AuditService extends IHeliosService
             ID: id
          }
       });
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
+   private async MaakGetObjectsResponseDataset(objs: AuditMetRelaties[]): Promise<GetObjectsAuditResponse[]>
+   {
+      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      const result = objs.map((obj) => {
+         const {RefLid: lid, ...audit} = obj;
+
+         return {
+            ...audit,
+            DATUM: toDateOnly(audit.DATUM) as unknown as Date,
+            NAAM: lid?.NAAM ?? null,
+         } as GetObjectsAuditResponse
+      });
+      this.logger.verbose(`AuditService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

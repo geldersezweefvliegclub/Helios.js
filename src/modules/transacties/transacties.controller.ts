@@ -83,38 +83,6 @@ export class TransactiesController  extends HeliosController
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
-   private async normaliserenData(
-      currentUser: RefLid,
-      data: CreateOperTransactieDto | UpdateOperTransactieDto,
-      isNieuw: boolean): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // Alleen bij nieuwe invoer
-      if (isNieuw) {
-         data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
-      }
-
-      // BETAALD en BETAAL_URL mogen alleen gezet worden door een Systeem account (bijv. Mollie/e-boekhouden
-      // koppeling); voor alle andere gebruikers wordt een meegegeven waarde, net als bij VERWIJDERD, genegeerd
-      if (!this.permissieService.isSysteemAccount(currentUser))
-      {
-         delete data.BETAALD;
-         delete data.BETAAL_URL;
-      }
-
-      // zorg dat VLIEGDAG omgezet wordt in ISO 8601 formaat
-      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
-
-      return data as Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput;
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -151,6 +119,38 @@ export class TransactiesController  extends HeliosController
          VERWIJDERD: false
       }
       await this.TransactiesService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden en normaliseert VLIEGDAG
+   private async normaliserenData(
+      currentUser: RefLid,
+      data: CreateOperTransactieDto | UpdateOperTransactieDto,
+      isNieuw: boolean): Promise<Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // Alleen bij nieuwe invoer
+      if (isNieuw) {
+         data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
+      }
+
+      // BETAALD en BETAAL_URL mogen alleen gezet worden door een Systeem account (bijv. Mollie/e-boekhouden
+      // koppeling); voor alle andere gebruikers wordt een meegegeven waarde, net als bij VERWIJDERD, genegeerd
+      if (!this.permissieService.isSysteemAccount(currentUser))
+      {
+         delete data.BETAALD;
+         delete data.BETAAL_URL;
+      }
+
+      // zorg dat VLIEGDAG omgezet wordt in ISO 8601 formaat
+      data.VLIEGDAG = parseDateOnly(data.VLIEGDAG as Date | string | null);
+
+      return data as Prisma.OperTransactieUncheckedCreateInput | Prisma.OperTransactieUncheckedUpdateInput;
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

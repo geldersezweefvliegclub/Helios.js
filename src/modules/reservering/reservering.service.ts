@@ -109,44 +109,9 @@ export class ReserveringService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`ReserveringService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen. INGEVOERD_ID heeft geen Prisma relatie (enkel een
-   // los ID veld), daarom wordt de naam van de invoerder via een aparte gebatchte RefLid lookup opgehaald.
-   private async MaakGetObjectsResponseDataset(objs: ReserveringMetRelaties[]): Promise<GetObjectsOperReserveringResponse[]>
-   {
-      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      if (objs.length === 0)
-      {
-         const result: GetObjectsOperReserveringResponse[] = [];
-         this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
-         return result;
-      }
-
-      const ingevoerdIds = [...new Set(objs.map(obj => obj.INGEVOERD_ID))];
-      const invoerders = await this.dbService.refLid.findMany({where: {ID: {in: ingevoerdIds}}});
-      const invoerderPerId = new Map<number, RefLid>(invoerders.map(lid => [lid.ID, lid]));
-
-      const result = objs.map(obj =>
-      {
-         const {RefLid: lid, RefVliegtuig: vliegtuig, ...reservering} = obj;
-         return {
-            ...reservering,
-            DATUM: toDateOnly(reservering.DATUM) as unknown as Date,
-            NAAM: lid.NAAM,
-            PRIVACY: lid.PRIVACY,
-            INGEVOERD_DOOR: invoerderPerId.get(obj.INGEVOERD_ID)?.NAAM,
-            REGISTRATIE: vliegtuig.REGISTRATIE,
-            CALLSIGN: vliegtuig.CALLSIGN,
-            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
-         } as GetObjectsOperReserveringResponse;
-      });
-      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -227,6 +192,40 @@ export class ReserveringService extends IHeliosService
       });
       const result = aantal === 0;
       this.logger.verbose(`ReserveringService.MagNogReserveren() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen. INGEVOERD_ID heeft geen Prisma relatie (enkel een
+   // los ID veld), daarom wordt de naam van de invoerder via een aparte gebatchte RefLid lookup opgehaald.
+   private async MaakGetObjectsResponseDataset(objs: ReserveringMetRelaties[]): Promise<GetObjectsOperReserveringResponse[]>
+   {
+      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      if (objs.length === 0)
+      {
+         const result: GetObjectsOperReserveringResponse[] = [];
+         this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+         return result;
+      }
+
+      const ingevoerdIds = [...new Set(objs.map(obj => obj.INGEVOERD_ID))];
+      const invoerders = await this.dbService.refLid.findMany({where: {ID: {in: ingevoerdIds}}});
+      const invoerderPerId = new Map<number, RefLid>(invoerders.map(lid => [lid.ID, lid]));
+
+      const result = objs.map(obj =>
+      {
+         const {RefLid: lid, RefVliegtuig: vliegtuig, ...reservering} = obj;
+         return {
+            ...reservering,
+            DATUM: toDateOnly(reservering.DATUM) as unknown as Date,
+            NAAM: lid.NAAM,
+            PRIVACY: lid.PRIVACY,
+            INGEVOERD_DOOR: invoerderPerId.get(obj.INGEVOERD_ID)?.NAAM,
+            REGISTRATIE: vliegtuig.REGISTRATIE,
+            CALLSIGN: vliegtuig.CALLSIGN,
+            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
+         } as GetObjectsOperReserveringResponse;
+      });
+      this.logger.verbose(`ReserveringService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 }

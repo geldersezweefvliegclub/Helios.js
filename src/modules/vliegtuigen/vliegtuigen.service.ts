@@ -102,46 +102,9 @@ export class VliegtuigenService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`VliegtuigenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: VliegtuigType/BevoegdheidLokaal/
-   // BevoegdheidOverland via reeds ge-include-de relaties, en JOURNAAL_AANTAL via een aparte gebatchte
-   // groupBy op OperJournaal (was per record een subquery)
-   private async MaakGetObjectsResponseDataset(objs: VliegtuigMetRelaties[]): Promise<GetRefVliegtuigenResponse[]>
-   {
-      this.logger.verbose(`VliegtuigenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-
-      // aantal openstaande journaals per vliegtuig, gebatched voor alle opgehaalde vliegtuigen (was per record een subquery)
-      const openJournaalsPerVliegtuig = await this.dbService.operJournaal.groupBy({
-         by: ['VLIEGTUIG_ID'],
-         where: {
-            STATUS_ID: {lte: JOURNAAL_STATUS_LAATSTE_OPENSTAAND},
-            CATEGORIE_ID: JournaalCategorie.Defect,
-            VLIEGTUIG_ID: {in: objs.map(obj => obj.ID)}
-         },
-         _count: {_all: true}
-      });
-      const journaalAantalPerVliegtuig = new Map(openJournaalsPerVliegtuig.map(row => [row.VLIEGTUIG_ID, row._count._all]));
-
-      const result = objs.map((obj) => {
-         const resp = new GetRefVliegtuigenResponse(obj);
-         resp.REG_CALL = RegCall(obj.REGISTRATIE, obj.CALLSIGN);
-         resp.BEVOEGDHEID_LOKAAL = obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null;
-         resp.BEVOEGDHEID_OVERLAND = obj.BevoegdheidOverland?.OMSCHRIJVING ?? null;
-         resp.JOURNAAL_AANTAL = journaalAantalPerVliegtuig.get(obj.ID) ?? 0;
-
-         // vliegtuig met een openstaand journaal is niet inzetbaar
-         if (resp.JOURNAAL_AANTAL > 0)
-            resp.INZETBAAR = false;
-
-         return resp;
-      });
-      this.logger.verbose(`VliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -214,5 +177,41 @@ export class VliegtuigenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: VliegtuigType/BevoegdheidLokaal/
+   // BevoegdheidOverland via reeds ge-include-de relaties, en JOURNAAL_AANTAL via een aparte gebatchte
+   // groupBy op OperJournaal (was per record een subquery)
+   private async MaakGetObjectsResponseDataset(objs: VliegtuigMetRelaties[]): Promise<GetRefVliegtuigenResponse[]>
+   {
+      this.logger.verbose(`VliegtuigenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+
+      // aantal openstaande journaals per vliegtuig, gebatched voor alle opgehaalde vliegtuigen (was per record een subquery)
+      const openJournaalsPerVliegtuig = await this.dbService.operJournaal.groupBy({
+         by: ['VLIEGTUIG_ID'],
+         where: {
+            STATUS_ID: {lte: JOURNAAL_STATUS_LAATSTE_OPENSTAAND},
+            CATEGORIE_ID: JournaalCategorie.Defect,
+            VLIEGTUIG_ID: {in: objs.map(obj => obj.ID)}
+         },
+         _count: {_all: true}
+      });
+      const journaalAantalPerVliegtuig = new Map(openJournaalsPerVliegtuig.map(row => [row.VLIEGTUIG_ID, row._count._all]));
+
+      const result = objs.map((obj) => {
+         const resp = new GetRefVliegtuigenResponse(obj);
+         resp.REG_CALL = RegCall(obj.REGISTRATIE, obj.CALLSIGN);
+         resp.BEVOEGDHEID_LOKAAL = obj.BevoegdheidLokaal?.OMSCHRIJVING ?? null;
+         resp.BEVOEGDHEID_OVERLAND = obj.BevoegdheidOverland?.OMSCHRIJVING ?? null;
+         resp.JOURNAAL_AANTAL = journaalAantalPerVliegtuig.get(obj.ID) ?? 0;
+
+         // vliegtuig met een openstaand journaal is niet inzetbaar
+         if (resp.JOURNAAL_AANTAL > 0)
+            resp.INZETBAAR = false;
+
+         return resp;
+      });
+      this.logger.verbose(`VliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
    }
 }

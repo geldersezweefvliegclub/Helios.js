@@ -74,7 +74,6 @@ export class FacturenService extends IHeliosService
          orderBy: this.SortStringToSortObj<Prisma.OperFactuurOrderByWithRelationInput>(params.SORT ?? "ID"),
          take: params.MAX,
          skip: params.START});
-
       const result = this.buildGetObjectsResponse(objs, count, params.HASH);
       this.logger.verbose(`FacturenService.GetObjects() => ${safeStringify(result)}`);
       return result;

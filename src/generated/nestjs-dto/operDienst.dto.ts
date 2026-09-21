@@ -8,7 +8,8 @@ export class OperDienstDto {
   })
   ID: number;
   @ApiProperty({
-    description: "Datum van de daginfo",
+    description:
+      "Datum van de daginfo. Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "string",
     format: "date-time",
   })
@@ -28,7 +29,7 @@ export class OperDienstDto {
   LID_ID: number;
   @ApiProperty({
     description:
-      "Referentie naar hettype dienst (startleider, DDI, lietrist, etc)",
+      "Referentie naar het type dienst (startleider, DDI, lierist, etc). Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "integer",
     format: "int32",
     nullable: true,
@@ -36,7 +37,7 @@ export class OperDienstDto {
   TYPE_DIENST_ID: number | null;
   @ApiProperty({
     description:
-      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
+      "Verwijzing naar het lid ID van degene die de dienst heeft ingevoerd, link naar de leden tabel. Wordt bij het aanmaken altijd server-side gezet op de ingelogde gebruiker en kan niet door de client opgegeven of gewijzigd worden (alleen-lezen veld, niet aanwezig in de create/update request body).",
     type: "integer",
     format: "int32",
     nullable: true,

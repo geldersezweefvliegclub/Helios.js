@@ -13,7 +13,8 @@ export class UpdateOperDienstDto {
   @IsInt()
   ID?: number;
   @ApiProperty({
-    description: "Datum van de daginfo",
+    description:
+      "Datum van de daginfo. Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "string",
     format: "date-time",
     required: false,
@@ -42,7 +43,7 @@ export class UpdateOperDienstDto {
   LID_ID?: number;
   @ApiProperty({
     description:
-      "Referentie naar hettype dienst (startleider, DDI, lietrist, etc)",
+      "Referentie naar het type dienst (startleider, DDI, lierist, etc). Verplicht bij het aanmaken van een nieuwe dienst, optioneel bij het bijwerken van een bestaand record.",
     type: "integer",
     format: "int32",
     required: false,
@@ -51,17 +52,6 @@ export class UpdateOperDienstDto {
   @IsOptional()
   @IsInt()
   TYPE_DIENST_ID?: number | null;
-  @ApiProperty({
-    description:
-      "Verwijzing naar het lid ID van de instructeur die rapport geschreven heeft, link naar de leden tabel",
-    type: "integer",
-    format: "int32",
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsInt()
-  INGEVOERD_DOOR_ID?: number | null;
   @ApiProperty({
     description: "True als het lid aanwezig was tijdens deze dienst",
     type: "boolean",

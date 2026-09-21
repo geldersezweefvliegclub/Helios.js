@@ -80,37 +80,6 @@ export class TracksController extends HeliosController
       return await this.tracksService.UpdateObject(id, update, currentUser.ID);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
-   // LID_ID, INSTRUCTEUR_ID en START_ID hoeven niet omgezet te worden naar relatie-connects: met het
-   // Unchecked Prisma inputtype zijn dit al platte kolommen
-   private async normaliserenData(
-      data: CreateOperTrackDto | UpdateOperTrackDto): Promise<Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput>
-   {
-      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
-      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
-      // waarde wordt hier altijd genegeerd
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
-
-      // INGEVOERD wordt enkel intern beheerd, een eventueel meegegeven waarde wordt hier, net als
-      // VERWIJDERD en LAATSTE_AANPASSING, altijd genegeerd
-      delete data.INGEVOERD;
-
-      return data as Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput;
-   }
-
-   // update en verwijderen mag alleen door een beheerder, CIMT, of de instructeur die de track zelf heeft ingevoerd
-   private async magAanpassen(currentUser: RefLid, id: number): Promise<void>
-   {
-      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isCIMT(currentUser))
-         return;
-
-      const track = await this.tracksService.GetObject(id);
-      if (track.INSTRUCTEUR_ID !== currentUser.ID)
-         throw new HttpException(`Niet toegestaan om deze track aan te passen of te verwijderen`, HttpStatus.UNAUTHORIZED);
-   }
-
    @HeliosDeleteObject()
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
@@ -148,6 +117,37 @@ export class TracksController extends HeliosController
          VERWIJDERD: false
       }
       await this.tracksService.UpdateObject(id, data, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden.
+   // LID_ID, INSTRUCTEUR_ID en START_ID hoeven niet omgezet te worden naar relatie-connects: met het
+   // Unchecked Prisma inputtype zijn dit al platte kolommen
+   private async normaliserenData(
+      data: CreateOperTrackDto | UpdateOperTrackDto): Promise<Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput>
+   {
+      // VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al accepteert de
+      // DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een meegegeven
+      // waarde wordt hier altijd genegeerd
+      delete data.VERWIJDERD;
+      delete data.LAATSTE_AANPASSING;
+      delete data.ID;
+
+      // INGEVOERD wordt enkel intern beheerd, een eventueel meegegeven waarde wordt hier, net als
+      // VERWIJDERD en LAATSTE_AANPASSING, altijd genegeerd
+      delete data.INGEVOERD;
+
+      return data as Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput;
+   }
+
+   // update en verwijderen mag alleen door een beheerder, CIMT, of de instructeur die de track zelf heeft ingevoerd
+   private async magAanpassen(currentUser: RefLid, id: number): Promise<void>
+   {
+      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isCIMT(currentUser))
+         return;
+
+      const track = await this.tracksService.GetObject(id);
+      if (track.INSTRUCTEUR_ID !== currentUser.ID)
+         throw new HttpException(`Niet toegestaan om deze track aan te passen of te verwijderen`, HttpStatus.UNAUTHORIZED);
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//

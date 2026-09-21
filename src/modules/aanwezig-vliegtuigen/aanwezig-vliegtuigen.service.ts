@@ -89,56 +89,9 @@ export class AanwezigVliegtuigenService extends IHeliosService
          }
       });
 
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`AanwezigVliegtuigenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig- en type-gegevens via joins,
-   // en of het vliegtuig momenteel aan het vliegen is via StartlijstService.VliegtuigVliegt()
-   private async MaakGetObjectsResponseDataset(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
-   {
-      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-      if (objs.length === 0)
-      {
-         const result = [];
-         this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
-         return result;
-      }
-
-      const result = await Promise.all(objs.map(async obj =>
-      {
-         const {Vliegtuig: vliegtuig, Veld: veld, ...aanwezigVliegtuig} = obj;
-
-         const vliegtNu = await this.startlijstService.VliegtuigVliegt(obj.VLIEGTUIG_ID, obj.DATUM);
-
-         return {
-            ...aanwezigVliegtuig,
-            DATUM: toDateOnly(aanwezigVliegtuig.DATUM) as unknown as Date,
-            AANKOMST: toTimeOnly(aanwezigVliegtuig.AANKOMST) as unknown as Date,
-            VERTREK: toTimeOnly(aanwezigVliegtuig.VERTREK) as unknown as Date,
-            REGISTRATIE: vliegtuig.REGISTRATIE,
-            CALLSIGN: vliegtuig.CALLSIGN,
-            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
-            ZITPLAATSEN: vliegtuig.ZITPLAATSEN,
-            CLUBKIST: vliegtuig.CLUBKIST,
-            FLARMCODE: vliegtuig.FLARMCODE,
-            TYPE_ID: vliegtuig.TYPE_ID,
-            VLIEGTUIGTYPE_OMS: vliegtuig.VliegtuigType?.OMSCHRIJVING ?? null,
-            TMG: vliegtuig.TMG,
-            ZELFSTART: vliegtuig.ZELFSTART,
-            SLEEPKIST: vliegtuig.SLEEPKIST,
-            VOLGORDE: vliegtuig.VOLGORDE,
-            INZETBAAR: vliegtuig.INZETBAAR,
-            TRAINER: vliegtuig.TRAINER,
-            OPMERKINGEN: vliegtuig.OPMERKINGEN,
-            VELD: veld?.OMSCHRIJVING ?? null,
-            VLIEGT: vliegtNu ? 1 : 0,
-         } as GetObjectsOperAanwezigVliegtuigenResponse;
-      }));
-      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -182,17 +135,6 @@ export class AanwezigVliegtuigenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
-   }
-
-   // zoekt de actieve aanmelding van dit vliegtuig op deze datum, of null
-   private async BestaandeAanmelding(vliegtuigId: number, datum: Date): Promise<OperAanwezigVliegtuig | null>
-   {
-      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding(${safeStringify({vliegtuigId, datum})})`);
-      const result = await this.dbService.operAanwezigVliegtuig.findFirst({
-         where: {VLIEGTUIG_ID: vliegtuigId, DATUM: datum, VERWIJDERD: false}
-      });
-      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding() => ${safeStringify(result)}`);
-      return result;
    }
 
    // Aanmelden van een vliegtuig als aanwezig. Maakt een nieuw record aan, of past de bestaande aanmelding
@@ -288,6 +230,63 @@ export class AanwezigVliegtuigenService extends IHeliosService
       await this.UpdateObject(bestaand.ID, update, actorId);
       const result = await this.GetObject(bestaand.ID);
       this.logger.verbose(`AanwezigVliegtuigenService.Afmelden() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig- en type-gegevens via joins,
+   // en of het vliegtuig momenteel aan het vliegen is via StartlijstService.VliegtuigVliegt()
+   private async MaakGetObjectsResponseDataset(objs: AanwezigVliegtuigMetRelaties[]): Promise<GetObjectsOperAanwezigVliegtuigenResponse[]>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+      if (objs.length === 0)
+      {
+         const result = [];
+         this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+         return result;
+      }
+
+      const result = await Promise.all(objs.map(async obj =>
+      {
+         const {Vliegtuig: vliegtuig, Veld: veld, ...aanwezigVliegtuig} = obj;
+
+         const vliegtNu = await this.startlijstService.VliegtuigVliegt(obj.VLIEGTUIG_ID, obj.DATUM);
+
+         return {
+            ...aanwezigVliegtuig,
+            DATUM: toDateOnly(aanwezigVliegtuig.DATUM) as unknown as Date,
+            AANKOMST: toTimeOnly(aanwezigVliegtuig.AANKOMST) as unknown as Date,
+            VERTREK: toTimeOnly(aanwezigVliegtuig.VERTREK) as unknown as Date,
+            REGISTRATIE: vliegtuig.REGISTRATIE,
+            CALLSIGN: vliegtuig.CALLSIGN,
+            REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
+            ZITPLAATSEN: vliegtuig.ZITPLAATSEN,
+            CLUBKIST: vliegtuig.CLUBKIST,
+            FLARMCODE: vliegtuig.FLARMCODE,
+            TYPE_ID: vliegtuig.TYPE_ID,
+            VLIEGTUIGTYPE_OMS: vliegtuig.VliegtuigType?.OMSCHRIJVING ?? null,
+            TMG: vliegtuig.TMG,
+            ZELFSTART: vliegtuig.ZELFSTART,
+            SLEEPKIST: vliegtuig.SLEEPKIST,
+            VOLGORDE: vliegtuig.VOLGORDE,
+            INZETBAAR: vliegtuig.INZETBAAR,
+            TRAINER: vliegtuig.TRAINER,
+            OPMERKINGEN: vliegtuig.OPMERKINGEN,
+            VELD: veld?.OMSCHRIJVING ?? null,
+            VLIEGT: vliegtNu ? 1 : 0,
+         } as GetObjectsOperAanwezigVliegtuigenResponse;
+      }));
+      this.logger.verbose(`AanwezigVliegtuigenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // zoekt de actieve aanmelding van dit vliegtuig op deze datum, of null
+   private async BestaandeAanmelding(vliegtuigId: number, datum: Date): Promise<OperAanwezigVliegtuig | null>
+   {
+      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding(${safeStringify({vliegtuigId, datum})})`);
+      const result = await this.dbService.operAanwezigVliegtuig.findFirst({
+         where: {VLIEGTUIG_ID: vliegtuigId, DATUM: datum, VERWIJDERD: false}
+      });
+      this.logger.verbose(`AanwezigVliegtuigenService.BestaandeAanmelding() => ${safeStringify(result)}`);
       return result;
    }
 }

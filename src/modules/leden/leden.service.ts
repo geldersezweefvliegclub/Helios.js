@@ -131,46 +131,9 @@ export class LedenService extends IHeliosService
             Buddy2: true
          }
       });
-      const response = await this.MaakGetObjectsResponseDataset(objs);
-      const result = this.buildGetObjectsResponse(response, count, params.HASH);
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`LedenService.GetObjects() => ${safeStringify(result)}`);
-      return result;
-   }
-
-   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
-   // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
-   private async MaakGetObjectsResponseDataset(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
-   {
-      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
-
-      // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
-      const paxProgressies = await this.dbService.operProgressie.findMany({
-         where: {
-            COMPETENTIE_ID: PAX_COMPETENTIE_ID,
-            LID_ID: {in: objs.map(obj => obj.ID)}
-         },
-         select: {LID_ID: true}
-      });
-      const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
-
-      const result = objs.map((obj) => {
-         const {
-            LidType: lidType, VliegStatus: vliegStatus, Zusterclub: zusterclub,
-            Buddy: buddy, Buddy2: buddy2, ...lid
-         } = obj;
-
-         return {
-            ...lid,
-            LIDTYPE: lidType?.OMSCHRIJVING ?? null,
-            LIDTYPE_REF: lidType?.EXT_REF ?? null,
-            STATUS: vliegStatus?.OMSCHRIJVING ?? null,
-            ZUSTERCLUB: zusterclub?.NAAM ?? null,
-            BUDDY: buddy?.NAAM ?? null,
-            BUDDY2: buddy2?.NAAM ?? null,
-            PAX: ledenMetPax.has(obj.ID),
-         } as GetObjectsRefLedenResponse
-      });
-      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -249,6 +212,43 @@ export class LedenService extends IHeliosService
       l.forEach(item => { delete item.SORT });
       const result = l as VerjaardagenResponse[];
       this.logger.verbose(`LedenService.GetVerjaardagen() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
+   // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
+   private async MaakGetObjectsResponseDataset(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
+   {
+      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset(${safeStringify({objs})})`);
+
+      // progressiekaart voor pax bevoegdheid: heeft het lid een progressie record voor de pax competentie?
+      const paxProgressies = await this.dbService.operProgressie.findMany({
+         where: {
+            COMPETENTIE_ID: PAX_COMPETENTIE_ID,
+            LID_ID: {in: objs.map(obj => obj.ID)}
+         },
+         select: {LID_ID: true}
+      });
+      const ledenMetPax = new Set(paxProgressies.map(p => p.LID_ID));
+
+      const result = objs.map((obj) => {
+         const {
+            LidType: lidType, VliegStatus: vliegStatus, Zusterclub: zusterclub,
+            Buddy: buddy, Buddy2: buddy2, ...lid
+         } = obj;
+
+         return {
+            ...lid,
+            LIDTYPE: lidType?.OMSCHRIJVING ?? null,
+            LIDTYPE_REF: lidType?.EXT_REF ?? null,
+            STATUS: vliegStatus?.OMSCHRIJVING ?? null,
+            ZUSTERCLUB: zusterclub?.NAAM ?? null,
+            BUDDY: buddy?.NAAM ?? null,
+            BUDDY2: buddy2?.NAAM ?? null,
+            PAX: ledenMetPax.has(obj.ID),
+         } as GetObjectsRefLedenResponse
+      });
+      this.logger.verbose(`LedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
    }
 }
