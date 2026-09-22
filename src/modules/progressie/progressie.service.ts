@@ -188,6 +188,26 @@ export class ProgressieService extends IHeliosService
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 
+   // bepaalt voor een lijst van lid IDs welke daarvan een (niet-verwijderd) progressie record hebben voor
+   // de opgegeven competentie - bijv. gebruikt door LedenService om PAX bevoegdheid te tonen zonder dat de
+   // Leden module rechtstreeks de progressie tabel hoeft te bevragen. Geen LID_ID meegegeven controleert alle leden
+   async HeeftCompetentie(competentieId: number, lidIds?: number[]): Promise<number[]>
+   {
+      this.logger.verbose(`ProgressieService.HeeftCompetentie(${safeStringify({competentieId, lidIds})})`);
+      const progressies = await this.dbService.operProgressie.findMany({
+         where: {
+            COMPETENTIE_ID: competentieId,
+            LID_ID: lidIds ? {in: lidIds} : undefined,
+            VERWIJDERD: false
+         },
+         select: {LID_ID: true}
+      });
+
+      const result = [...new Set(progressies.map((progressie) => progressie.LID_ID))];
+      this.logger.verbose(`ProgressieService.HeeftCompetentie() => ${safeStringify(result)}`);
+      return result;
+   }
+
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: ProgressieMetRelaties[]): Promise<GetObjectsOperProgressieResponse[]>
    {

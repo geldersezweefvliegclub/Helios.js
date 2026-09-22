@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -144,11 +145,10 @@ export class CreateRefLidDto {
     description: "Verwijzing naar de lidtype (bv. lid, donateur, etc.)",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  LIDTYPE_ID?: number;
+  LIDTYPE_ID: number;
   @ApiProperty({
     description: "Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)",
     type: "integer",

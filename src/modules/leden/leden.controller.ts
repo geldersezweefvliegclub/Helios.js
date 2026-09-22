@@ -1,11 +1,12 @@
 import {
    Body,
-   Controller, Get,
+   Controller, Get, Post, Req,
    HttpException,
    HttpStatus,
    Logger,
    Query, UseGuards
 } from '@nestjs/common';
+import {Request} from "express";
 import {Prisma, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 import {
@@ -25,6 +26,9 @@ import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AuthGuard} from "@nestjs/passport";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
+import {NieuwLidNummerRequest} from "./NieuwLidNummerRequest";
+import {NieuwLidNummerResponse} from "./NieuwLidNummerResponse";
+import {UploadAvatarRequest} from "./UploadAvatarRequest";
 import {LidType} from "../../core/enums/LidType";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
@@ -50,6 +54,8 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.GetObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier heeftDataToegang() of zelf (401 anders, zie GetObject() in class.Leden.inc.php)
+      // - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk ander lid opvragen
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObject');
       const obj =  await this.ledenService.GetObject(id);
       return this.privacyMask(obj, currentUser);
@@ -63,7 +69,13 @@ export class LedenController extends HeliosController
       this.logger.verbose(`LedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObjects');
 
-      if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isStarttoren(currentUser)) {
+      // zie GetObjects() in class.Leden.inc.php: een DDWV-only lid krijgt een smallere beperking (enkel
+      // DDWV leden/crew) dan een gewoon lid (alle "clubleden" types) - dit zijn twee losse takken, geen
+      // opeenstapeling van filters
+      if (this.permissieService.isDDWVer(currentUser)) {
+         queryParams.DDWV_BEPERKING = true;
+      }
+      else if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isStarttoren(currentUser)) {
          queryParams.TYPES = queryParams.TYPES ?? [];          // als TYPES niet is opgegeven, zet het op een lege array
          queryParams.TYPES.push(                               // voeg filter toe voor normale leden
             LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
@@ -80,20 +92,36 @@ export class LedenController extends HeliosController
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)
+   // NAAM (of ACHTERNAAM) en LIDTYPE_ID zijn verplicht (BAD_REQUEST), LIDNR/INLOGNAAM moeten uniek zijn
+   // (CONFLICT) - zie AddObject() in class.Leden.inc.php. Beide statussen staan al generiek in HeliosCreateObject
    async AddObject(
       @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.AddObject(${safeStringify({currentUser, data})})`);
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
       bodyHeeftData(data);
 
-      const insert = await this.normaliserenData(data, true) as Prisma.RefLidUncheckedCreateInput;
+      if (!data.NAAM && !data.ACHTERNAAM)
+         throw new HttpException(`NAAM is verplicht`, HttpStatus.BAD_REQUEST);
+      if (!data.LIDTYPE_ID)
+         throw new HttpException(`Lidtype is verplicht`, HttpStatus.BAD_REQUEST);
+
+      // op AddObject bestaat het lid nog niet - de zelf-of-beheerder velden (naam, adres, ...) worden hier
+      // altijd toegestaan, zodat een nieuw lid zijn eigen gegevens kan invullen. Bevoegdheids-gevoelige
+      // velden (BEHEERDER, CIMT, TEGOED, ...) blijven wel per-veld rolgebonden, zie normaliserenData()
+      // WACHTWOORD wordt in normaliserenData() gehasht - het originele platte-tekst wachtwoord grijpen we
+      // hier alvast, voordat het weg is, voor SyncLeden() (zie AddObject() in class.Leden.inc.php)
+      const wachtwoordPlain = data.WACHTWOORD;
+      const insert = await this.normaliserenData(data, true, currentUser, true) as Prisma.RefLidUncheckedCreateInput;
       const obj = await this.ledenService.AddObject(insert, currentUser.ID);
+      await this.ledenService.SyncLeden(obj.ID, wachtwoordPlain);
       return this.privacyMask(obj, currentUser);
    }
 
    @HeliosUpdateObject(UpdateRefLidDto, RefLidDto)
+   // LIDNR/INLOGNAAM moeten uniek zijn (CONFLICT) - staat al generiek in HeliosUpdateObject
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>
@@ -103,12 +131,25 @@ export class LedenController extends HeliosController
       bodyHeeftData(data);
 
       id = id ?? data.ID;
-      if ((currentUser.ID !== id) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isBeheerderDDWV(currentUser)) {
+      const ikBenHetZelf = currentUser.ID === id;
+      // zie UpdateObject() in class.Leden.inc.php: zelf, beheerder, beheerder DDWV, CIMT of roostermaker
+      if (!ikBenHetZelf
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isCIMT(currentUser)
+         && !this.permissieService.isRooster(currentUser)) {
          throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
       }
 
-      const update = await this.normaliserenData(data, false) as Prisma.RefLidUncheckedUpdateInput;
+      // huidige databasewaarden nodig om te bepalen of dit lid een bijzondere rol heeft (zie
+      // normaliserenData()/isSpecialeRol()) - een niet-bestaand ID wordt hier genegeerd, net als in PHP's
+      // RequestToRecord(); ledenService.UpdateObject() hieronder geeft dan alsnog de reguliere 404
+      const dbLid = await this.ledenService.GetObject(id).catch(() => undefined);
+      const wachtwoordPlain = data.WACHTWOORD;
+
+      const update = await this.normaliserenData(data, false, currentUser, ikBenHetZelf, dbLid) as Prisma.RefLidUncheckedUpdateInput;
       const obj = await this.ledenService.UpdateObject(id, update, currentUser.ID);
+      await this.ledenService.SyncLeden(id, wachtwoordPlain);
       return this.privacyMask(obj, currentUser);
    }
 
@@ -118,6 +159,9 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`LedenController.DeleteObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders, zie VerwijderObject()
+      // in class.Leden.inc.php) - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk
+      // ander lid (soft) verwijderen
       this.permissieService.heeftToegang(currentUser, 'Leden.DeleteObject');
 
       const data: Prisma.RefLidUpdateInput = {
@@ -145,6 +189,9 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`LedenController.RestoreObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders, zie HerstelObject()
+      // in class.Leden.inc.php) - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk
+      // ander lid herstellen
       this.permissieService.heeftToegang(currentUser, 'Leden.RestoreObject');
 
       const data: Prisma.RefLidUpdateInput = {
@@ -154,7 +201,7 @@ export class LedenController extends HeliosController
    }
 
 
-   // verwijder de privacygevoelige data uit de response
+   // verwijder de privacygevoelige data uit de response - zie privacyMask() in class.Leden.inc.php
    privacyMask(obj: RefLid, currentUser: RefLid): RefLid
    {
       const ikBenHetZelf = this.permissieService.ikBenHetZelf(obj, currentUser);
@@ -163,6 +210,7 @@ export class LedenController extends HeliosController
       const isInstructeur = this.permissieService.isInstructeur(currentUser);
       const isCIMT = this.permissieService.isCIMT(currentUser);
       const isStarttoren = this.permissieService.isStarttoren(currentUser);
+      const isRooster = this.permissieService.isRooster(currentUser);
 
       this.logger.verbose(`LedenController.privacyMask(${safeStringify({obj, currentUser})})`);
       if (!ikBenHetZelf && !isBeheerder && !isBeheerderDDWV) {
@@ -174,8 +222,9 @@ export class LedenController extends HeliosController
       obj.SECRET = null;
       obj.WACHTWOORD = null;
 
-      // startverbod mag alleen door beheerder, instructeur of CIMT worden gezien. Of door het lid zelf natuurlijk
-      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !ikBenHetZelf) {
+      // startverbod mag alleen door beheerder, beheerder DDWV, instructeur, CIMT of starttoren worden
+      // gezien. Of door het lid zelf natuurlijk - zie privacyMask() in class.Leden.inc.php
+      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !isStarttoren && !ikBenHetZelf) {
          obj.STARTVERBOD = false;
       }
 
@@ -197,22 +246,38 @@ export class LedenController extends HeliosController
           obj.BUDDY_ID2 = null;
       }
 
-      // medical is alleen zichtbaar voor beheerders, instructeurs, CIMT, starttoren, of het lid zelf
-      if (!isBeheerder && !isInstructeur && !isCIMT && !ikBenHetZelf && !isStarttoren) {
+      // medical en noodnummer zijn onvoorwaardelijk verborgen voor niet-geprivilegieerde bekijkers - dit
+      // staat los van de PRIVACY instelling van het lid zelf, zie privacyMask() in class.Leden.inc.php
+      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !isStarttoren && !ikBenHetZelf) {
           obj.MEDICAL = null
+          obj.NOODNUMMER = null
       }
 
-      // als gebruiker privacy settings heeft, dan worden de gegevens gemaskeerd
-      if (this.permissieService.hasPrivacy(currentUser) && !ikBenHetZelf)
+      // DIENSTEN enkel zichtbaar voor beheerder, roostermaker, of het lid zelf
+      if (!isBeheerder && !isRooster && !ikBenHetZelf) {
+         obj.DIENSTEN = null;
+      }
+
+      // OPMERKINGEN enkel zichtbaar voor beheerder, instructeur, CIMT, of het lid zelf - roostermaker en
+      // beheerder DDWV zien dit NIET (netto-effect van de twee overlappende maskeringsblokken in
+      // privacyMask() in class.Leden.inc.php: elk blok mist een andere rol in zijn eigen exemptielijst)
+      if (!isBeheerder && !isInstructeur && !isCIMT && !ikBenHetZelf) {
+         obj.OPMERKINGEN = null;
+      }
+
+      // de PRIVACY instelling van het BEKEKEN lid OF van de kijker zelf bepaalt of onderstaande velden
+      // gemaskeerd worden - zie privacyMask($lid, $privacy) in class.Leden.inc.php: GetObject()/GetObjects()
+      // geven daar altijd de PRIVACY vlag van de INGELOGDE gebruiker aan mee, dus een privacy-bewuste kijker
+      // krijgt deze velden ook van ANDERE leden verborgen, niet alleen van zichzelf. Geprivilegieerde
+      // bekijkers (beheerder, beheerder DDWV, instructeur, CIMT, starttoren) zien deze velden altijd
+      if (!isBeheerder && !isBeheerderDDWV && !isInstructeur && !isCIMT && !isStarttoren && !ikBenHetZelf
+         && (obj.PRIVACY === true || currentUser.PRIVACY === true))
       {
-         // controleer of de gebruiker privacy-instellingen heeft ingeschakeld
-         // als de gebruiker een beheerder, beheerder DDWV, instructeur of CIMT is, worden de privacy-instellingen genegeerd
          obj.ADRES = "****";
          obj.POSTCODE = "****";
          obj.WOONPLAATS = "****";
          obj.TELEFOON = null
          obj.MOBIEL = null
-         obj.NOODNUMMER = null
          obj.GEBOORTE_DATUM = null
          obj.AVATAR = null;
          obj.LIDNR = null;
@@ -253,46 +318,219 @@ export class LedenController extends HeliosController
       return await this.ledenService.GetVerjaardagen(aantal);
    }
 
-   // gedeelde verwerking van AddObject en UpdateObject: verwijdert de niet-instelbare velden, bouwt de
-   // NAAM op, hasht het wachtwoord en normaliseert de datumvelden.
+   @Get("nieuwLidNummer")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiOperation({summary: 'Genereer een nieuw, uniek lidnummer (jaar + 2-cijferig volgnummer).'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.CONFLICT, description: 'Geen volgnummer meer beschikbaar voor dit jaar.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Lidnummer gegenereerd.', type: NieuwLidNummerResponse})
+   async NieuwLidNummer(
+      @CurrentUser() currentUser: RefLid,
+      @Query() queryParams: NieuwLidNummerRequest): Promise<NieuwLidNummerResponse>
+   {
+      this.logger.verbose(`LedenController.NieuwLidNummer(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Leden.NieuwLidNummer');
+      const LIDNR = await this.ledenService.NieuwLidNummer(queryParams.JAAR);
+      return {LIDNR};
+   }
+
+   @Post("UploadAvatar")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiOperation({summary: 'Upload een avatar-afbeelding voor een lid.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.NOT_FOUND, description: 'Lid niet gevonden.'})
+   @ApiResponse({status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Onjuiste bestandsextensie.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Avatar geupload, geeft de URL terug.', type: String})
+   async UploadAvatar(
+      @CurrentUser() currentUser: RefLid,
+      @Req() request: Request,
+      @Body() data: UploadAvatarRequest): Promise<string>
+   {
+      this.logger.verbose(`LedenController.UploadAvatar(${safeStringify({currentUser, id: data?.ID})})`);
+      bodyHeeftData(data);
+
+      // zie UploadAvatar() in class.Leden.inc.php: zelf, of heeftDataToegang()||isBeheerderDDWV()
+      // TODO: isBeheerder is hier een benadering van heeftDataToegang(), die nog een no-op stub is
+      if (currentUser.ID !== data.ID
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)) {
+         throw new HttpException(`Niet toegestaan om avatar van ander lid te uploaden`, HttpStatus.UNAUTHORIZED);
+      }
+
+      const baseUrl = `${request.protocol}://${request.get('host')}`;
+      return await this.ledenService.UploadAvatar(data.ID, data.FILE, baseUrl, currentUser.ID);
+   }
+
+   // gedeelde verwerking van AddObject en UpdateObject - zie RequestToRecord() in class.Leden.inc.php.
+   // Bewust een ALLOWLIST (in plaats van de vorige denylist-aanpak die enkel NAAM/VERWIJDERD/LAATSTE_AANPASSING/ID
+   // uitsloot): elk veld staat achter dezelfde rolcontrole als in PHP, zodat een lid nooit velden als
+   // BEHEERDER, CIMT, TEGOED of LIDTYPE_ID op zichzelf kan zetten via een gewone AddObject/UpdateObject aanroep.
    // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
    // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
    // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
    private async normaliserenData(
       data: CreateRefLidDto | UpdateRefLidDto,
-      naamAltijdOpbouwen: boolean): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
+      naamAltijdOpbouwen: boolean,
+      currentUser: RefLid,
+      ikBenHetZelf: boolean,
+      dbLid?: RefLid): Promise<Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput>
    {
-      // NAAM, VERWIJDERD, LAATSTE_AANPASSING en ID zijn nooit direct instelbaar door de client - ook al
-      // accepteert de DTO ze (zodat een eerder opgehaald record ongewijzigd teruggestuurd kan worden), een
-      // meegegeven waarde wordt hier altijd genegeerd. VERWIJDERD wijzigt enkel via DeleteObject/RestoreObject
-      delete data.NAAM;
-      delete data.VERWIJDERD;
-      delete data.LAATSTE_AANPASSING;
-      delete data.ID;
+      const isBeheerder = this.permissieService.isBeheerder(currentUser);
+      const isBeheerderDDWV = this.permissieService.isBeheerderDDWV(currentUser);
+      const isCIMT = this.permissieService.isCIMT(currentUser);
+      const isRooster = this.permissieService.isRooster(currentUser);
 
-      const result = data as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
-      const voornaam = result.VOORNAAM as string | null | undefined;
-      const tussenvoegsel = result.TUSSENVOEGSEL as string | null | undefined;
-      const achternaam = result.ACHTERNAAM as string | null | undefined;
-
-      // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
-      // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
-      if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+      const result: Record<string, unknown> = {};
+      const ruweData = data as Record<string, unknown>;
+      const zet = (veld: string) =>
       {
-         result.NAAM = [voornaam, tussenvoegsel, achternaam]
-            .map(deel => (deel ?? "").trim())
-            .filter(deel => deel.length > 0)
-            .join(" ");
+         if (Object.prototype.hasOwnProperty.call(ruweData, veld))
+            result[veld] = ruweData[veld];
+      };
+
+      // beheerder of beheerder DDWV
+      if (isBeheerder || isBeheerderDDWV)
+      {
+         zet('DDWV_CREW');
+         zet('ZUSTERCLUB_ID');
+         zet('LIDTYPE_ID');
+         zet('INLOGNAAM');
       }
 
-      // encrypt het wachtwoord voordat het opgeslagen wordt in de database
-      if (result.WACHTWOORD)
-         result.WACHTWOORD = await hash(result.WACHTWOORD as string, 10);
+      // beheerder of roostermaker
+      if (isBeheerder || isRooster)
+      {
+         zet('LIERIST');
+         zet('LIERIST_IO');
+         zet('STARTLEIDER');
+         zet('SLEEPVLIEGER');
+         zet('GASTENVLIEGER');
+         zet('DIENSTEN');
+      }
 
-      // zorg dat de datums omgezet worden in ISO 8601 formaat
-      result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
-      result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
+      // beheerder, roostermaker of CIMT
+      if (isBeheerder || isRooster || isCIMT)
+      {
+         zet('OPMERKINGEN');
+      }
 
-      return result;
+      // beheerder of CIMT
+      if (isBeheerder || isCIMT)
+      {
+         zet('INSTRUCTEUR');
+         zet('STATUSTYPE_ID');
+         zet('BUDDY_ID');
+         zet('BUDDY_ID2');
+      }
+
+      // enkel beheerder
+      if (isBeheerder)
+      {
+         zet('LIDNR');
+         zet('GMAIL');
+         zet('CIMT');
+         zet('ROOSTER');
+         zet('STARTTOREN');
+         zet('DDWV_BEHEERDER');
+         zet('TECHNICUS');
+         zet('BEHEERDER');
+         zet('RAPPORTEUR');
+         zet('STARTVERBOD');
+         zet('OPGEZEGD');
+         zet('AVATAR');
+      }
+
+      // zelf, beheerder of beheerder DDWV
+      if (ikBenHetZelf || isBeheerder || isBeheerderDDWV)
+      {
+         zet('TEGOED');
+         zet('VOORNAAM');
+         zet('TUSSENVOEGSEL');
+         zet('ACHTERNAAM');
+         zet('ADRES');
+         zet('POSTCODE');
+         zet('WOONPLAATS');
+         zet('TELEFOON');
+         zet('MOBIEL');
+         zet('NOODNUMMER');
+         zet('EMAIL');
+         zet('CLUBBLAD_POST');
+         zet('ZELFSTART_ABONNEMENT');
+         zet('GEBOORTE_DATUM');
+         zet('MEDICAL');
+         zet('SLEUTEL1');
+         zet('SLEUTEL2');
+         zet('BEROEP');
+         zet('KNVVL_LIDNUMMER');
+         zet('BREVET_NUMMER');
+         zet('PRIVACY');
+         zet('WACHTWOORD');
+
+         // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
+         // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+         const voornaam = data.VOORNAAM as string | null | undefined;
+         const achternaam = data.ACHTERNAAM as string | null | undefined;
+         if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+         {
+            result.NAAM = [voornaam, data.TUSSENVOEGSEL, achternaam]
+               .map(deel => (deel ?? "").toString().trim())
+               .filter(deel => deel.length > 0)
+               .join(" ");
+         }
+
+         // wachtwoord moet minimaal 5 tekens zijn, anders geweigerd; een leeg wachtwoord betekent
+         // "niet wijzigen" - zie RequestToRecord() in class.Leden.inc.php
+         if (result.WACHTWOORD)
+         {
+            const wachtwoord = result.WACHTWOORD as string;
+            if (wachtwoord.length <= 4)
+               throw new HttpException(`Wachtwoord voldoet niet`, HttpStatus.BAD_REQUEST);
+            result.WACHTWOORD = await hash(wachtwoord, 10);
+         }
+         else
+         {
+            delete result.WACHTWOORD;
+         }
+
+         // zorg dat de datums omgezet worden in ISO 8601 formaat
+         result.MEDICAL = parseDateOnly(result.MEDICAL as Date | string | null);
+         result.GEBOORTE_DATUM = parseDateOnly(result.GEBOORTE_DATUM as Date | string | null);
+
+         // AUTH (2FA) kan niet uitgezet worden voor bijzondere rollen - zie specialeRol()/RequestToRecord()
+         // in class.Leden.inc.php. Onbekend (noch in deze aanvraag, noch in de database) betekent hier
+         // "aannemen dat het speciaal is" (PHP: "we nemen geen risico")
+         const isSpeciaal = ['CIMT', 'INSTRUCTEUR', 'BEHEERDER', 'DDWV_BEHEERDER', 'DDWV_CREW', 'STARTTOREN', 'ROOSTER', 'RAPPORTEUR']
+            .some(veld => this.isSpecialeRol(result, dbLid, veld));
+         if (isSpeciaal)
+            result.AUTH = true;
+         else
+            zet('AUTH');
+
+         // daginfo e-mail enkel voor CIMT, instructeur of beheerder
+         const magEmailDaginfo = ['CIMT', 'INSTRUCTEUR', 'BEHEERDER']
+            .some(veld => this.isSpecialeRol(result, dbLid, veld));
+         if (!magEmailDaginfo)
+            result.EMAIL_DAGINFO = false;
+         else
+            zet('EMAIL_DAGINFO');
+      }
+
+      return result as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
+   }
+
+   // bepaalt of een rol-veld "aan" staat: kijkt eerst naar de nieuwe waarde in deze aanvraag, anders naar
+   // de bestaande databasewaarde, en neemt bij volledige onbekendheid aan van wel - zie specialeRol() in
+   // class.Leden.inc.php
+   private isSpecialeRol(result: Record<string, unknown>, dbLid: RefLid | undefined, veld: string): boolean
+   {
+      if (Object.prototype.hasOwnProperty.call(result, veld))
+         return result[veld] === true;
+      if (dbLid && Object.prototype.hasOwnProperty.call(dbLid, veld))
+         return (dbLid as unknown as Record<string, unknown>)[veld] === true;
+      return true;
    }
 }

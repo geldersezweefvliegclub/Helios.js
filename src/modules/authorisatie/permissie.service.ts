@@ -81,6 +81,23 @@ export class PermissieService {
       return user.LIDTYPE_ID === LidType.DDWV;
    }
 
+   // zie isClubVlieger() in class.Leden.inc.php - anders dan isLid() hierboven telt Student hier ook mee
+   isClubVlieger(user: RefLid): boolean
+   {
+      const result =
+             user.LIDTYPE_ID === LidType.Student ||
+             user.LIDTYPE_ID === LidType.Erelid ||
+             user.LIDTYPE_ID === LidType.Lid ||
+             user.LIDTYPE_ID === LidType.Jeugdlid ||
+             user.LIDTYPE_ID === LidType.PrivateOwner ||
+             user.LIDTYPE_ID === LidType.Veteraan ||
+             user.LIDTYPE_ID === LidType.Donateur ||
+             user.LIDTYPE_ID === LidType.Rittenkaart ||
+             user.LIDTYPE_ID === LidType.Cursist;
+      this.logger.verbose(`PermissieService.isClubVlieger(${safeStringify({NAAM: user.NAAM, TYPE: user.LIDTYPE_ID, clubVlieger: result})})`);
+      return result;
+   }
+
    isSysteemAccount(user: RefLid): boolean
    {
       this.logger.verbose(`PermissieService.isSysteemAccount(${safeStringify({NAAM: user.NAAM, systeemAccount: user.LIDTYPE_ID === LidType.SysteemAccount})})`);

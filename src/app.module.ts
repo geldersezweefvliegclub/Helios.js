@@ -39,15 +39,22 @@ import config from './config/configuration';
          isGlobal: true,
          load: [config]
       }),
-      // serveert geuploade documenten (zie DocumentenService) statisch onder /documenten/*,
-      // analoog aan de directe bestandslink die de PHP implementatie teruggeeft
+      // serveert geuploade documenten/avatars (zie DocumentenService/LedenService) statisch onder
+      // /documenten/* resp. /avatars/*, analoog aan de directe bestandslink die de PHP implementatie
+      // teruggeeft. app_settings.DocDir/AvatarDir komen uit het (per omgeving optionele, niet in git
+      // opgenomen) helios-config.json bestand - als die dit niet definieert wordt teruggevallen op
+      // dezelfde defaults als in configuration.ts
       ServeStaticModule.forRootAsync({
-         // app_settings.DocDir komt uit het (per omgeving optionele, niet in git opgenomen) helios-config.json
-         // bestand - als die dit niet definieert wordt teruggevallen op dezelfde default als in configuration.ts
-         useFactory: (configService: ConfigService) => [{
-            rootPath: configService.get<string>('app_settings.DocDir') ?? '/var/www/html/documenten',
-            serveRoot: '/documenten',
-         }],
+         useFactory: (configService: ConfigService) => [
+            {
+               rootPath: configService.get<string>('app_settings.DocDir') ?? '/var/www/html/documenten',
+               serveRoot: '/documenten',
+            },
+            {
+               rootPath: configService.get<string>('app_settings.AvatarDir') ?? '/var/www/html/avatars',
+               serveRoot: '/avatars',
+            },
+         ],
          inject: [ConfigService],
       }),
       EventEmitterModule.forRoot(),

@@ -1,4 +1,4 @@
-import {Body, Controller, Get, HttpException, HttpStatus, Logger, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, forwardRef, Get, HttpException, HttpStatus, Inject, Logger, Query, UseGuards} from '@nestjs/common';
 import {ProgressieService} from "./progressie.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -23,6 +23,8 @@ import {CompetentiesService} from "../competenties/competenties.service";
 import {LedenService} from "../leden/leden.service";
 import {Boom} from "../../core/helpers/Boom";
 import {ProgressieKaartResponse} from "./ProgressieKaartResponse";
+import {HeeftCompetentieRequest} from "./HeeftCompetentieRequest";
+import {HeeftCompetentieResponse} from "./HeeftCompetentieResponse";
 import {TypesGroep} from "../../core/enums/TypesGroep";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
@@ -50,7 +52,7 @@ export class ProgressieController extends HeliosController
    constructor(private readonly progressieService: ProgressieService,
                private readonly competentiesService: CompetentiesService,
                private readonly typesService: TypesService,
-               private readonly ledenService: LedenService,
+               @Inject(forwardRef(() => LedenService)) private readonly ledenService: LedenService,
                private readonly permissieService: PermissieService)
    {
       super()
@@ -212,6 +214,23 @@ export class ProgressieController extends HeliosController
       }
 
       return retValue;
+   }
+
+   @Get("HeeftCompetentie")
+   @ApiBasicAuth()
+   @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   @ApiOperation({summary: 'Bepaal welke leden een progressie record hebben voor de opgegeven competentie.'})
+   @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
+   @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
+   @ApiResponse({status: HttpStatus.OK, description: 'Lid IDs opgehaald.', type: HeeftCompetentieResponse})
+   async HeeftCompetentie(
+      @CurrentUser() currentUser: RefLid,
+      @Query() queryParams: HeeftCompetentieRequest): Promise<HeeftCompetentieResponse>
+   {
+      this.logger.verbose(`ProgressieController.HeeftCompetentie(${safeStringify({currentUser, queryParams})})`);
+      this.permissieService.heeftToegang(currentUser, 'Progressie.HeeftCompetentie');
+      const LID_IDS = await this.progressieService.HeeftCompetentie(queryParams.COMPETENTIE_ID, queryParams.LID_ID);
+      return {LID_IDS};
    }
 
    @Get("StartAantekeningen")

@@ -43,7 +43,6 @@ model RefLid {
   LIDNR                String?   @db.VarChar(10)
   /// @description Verwijzing naar de lidtype (bv. lid, donateur, etc.)
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   LIDTYPE_ID           Int       @db.UnsignedMediumInt
   /// @description Vliegstatus van het lid (bv. DBO, Solist, Brevethouder etc.)
