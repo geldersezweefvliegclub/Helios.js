@@ -19,7 +19,6 @@ import {DocumentenModule} from './modules/documenten/documenten.module';
 import {WinterwerkModule} from './modules/winterwerk/winterwerk.module';
 import {DagInfoModule} from './modules/dag-info/dag-info.module';
 import {DagRapportenModule} from './modules/dag-rapporten/dag-rapporten.module';
-import {GastenModule} from './modules/gasten/gasten.module';
 import {TransactiesModule} from './modules/transacties/transacties.module';
 import {AanwezigLedenModule} from './modules/aanwezig-leden/aanwezig-leden.module';
 import {AanwezigVliegtuigenModule} from './modules/aanwezig-vliegtuigen/aanwezig-vliegtuigen.module';
@@ -69,7 +68,6 @@ import config from './config/configuration';
       WinterwerkModule,
       DagInfoModule,
       DagRapportenModule,
-      GastenModule,
       TransactiesModule,
       AanwezigLedenModule,
       AanwezigVliegtuigenModule,

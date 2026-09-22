@@ -106,9 +106,6 @@ model RefType {
   AanwezigVliegtuigen OperAanwezigVliegtuig[] @relation("Veld")
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
-  Gasten              OperGast[]              @relation("Veld")
-  /// @DtoRelationCanConnectOnCreate
-  /// @DtoReadOnly
   LedenVliegstatus    RefLid[]                @relation("VliegStatus")
 
   @@index([GROEP], map: "GROEP")
