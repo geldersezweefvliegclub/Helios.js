@@ -17,22 +17,23 @@ model OperJournaal {
   /// @DtoUpdateOptional
   /// @description Referentie naar het rollend materieel (als type)
   ROLLEND_ID         Int?          @db.UnsignedMediumInt
-  /// @IsNotEmpty()
+  /// @DtoCreateRequired
+  /// @DtoUpdateOptional
   /// @description Titel van het journaal
   TITEL              String?       @db.VarChar(250)
-  /// @DtoCreateOptional
+  /// @DtoCreateRequired
   /// @DtoUpdateOptional
   /// @description Beschrijving van het journaal
   OMSCHRIJVING       String?       @db.Text
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
+  /// @DtoCreateRequired
   /// @DtoUpdateOptional
   /// @description Referentie naar de categorie defect, observatie, klacht
   CATEGORIE_ID       Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  /// @description Referentie naar de status (type tabel),
+  /// @description Referentie naar de status (type tabel), standaard JournaalStatus.Gemeld als niet meegegeven
   STATUS_ID          Int?          @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional

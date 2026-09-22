@@ -11,6 +11,7 @@ import {GetObjectsOperJournaalResponse} from "./GetObjectsOperJournaalResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {RegCall} from "../../core/helpers/RegCall";
+import {JournaalStatus} from "../../core/enums/JournaalStatus";
 
 // journaal record inclusief de relaties die de PHP journaal_view samenvoegt
 type JournaalMetRelaties = Prisma.OperJournaalGetPayload<{
@@ -82,7 +83,6 @@ export class JournaalService extends IHeliosService
                   { ROLLEND_ID: params.ROLLEND === undefined ? undefined : (params.ROLLEND ? {not: null} : null)},
                   { VLIEGTUIG_ID: params.VLIEGEND === undefined ? undefined : (params.VLIEGEND ? {not: null} : null)},
                   { VLIEGTUIG_ID: { in: params.VLIEGTUIG_ID }},
-
                   {
                      DATUM:
                         {
@@ -123,6 +123,16 @@ export class JournaalService extends IHeliosService
    async AddObject(data: Prisma.OperJournaalUncheckedCreateInput, actorId: number): Promise<OperJournaal>
    {
       this.logger.verbose(`JournaalService.AddObject(${safeStringify({data})})`);
+      // minstens een van beide moet gezet zijn - zie AddObject() in class.Journaal.inc.php
+      if (!data.VLIEGTUIG_ID && !data.ROLLEND_ID)
+         throw new HttpException(`VLIEGTUIG_ID of ROLLEND_ID is verplicht`, HttpStatus.BAD_REQUEST);
+
+      // MELDER_ID wordt standaard de ingelogde gebruiker als niet meegegeven
+      data.MELDER_ID ??= actorId;
+
+      // STATUS_ID wordt standaard "Gemeld" als niet meegegeven - anders dan PHP, die dit verplicht stelt
+      data.STATUS_ID ??= JournaalStatus.Gemeld;
+
       const obj = await this.dbService.operJournaal.create({
          data: data
       });

@@ -77,7 +77,8 @@ export class UpdateOperJournaalDto {
   @IsInt()
   CATEGORIE_ID?: number | null;
   @ApiProperty({
-    description: "Referentie naar de status (type tabel),",
+    description:
+      "Referentie naar de status (type tabel), standaard JournaalStatus.Gemeld als niet meegegeven",
     type: "integer",
     format: "int32",
     required: false,

@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -51,33 +52,28 @@ export class CreateOperJournaalDto {
   @ApiProperty({
     description: "Titel van het journaal",
     type: "string",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  TITEL?: string | null;
+  TITEL: string;
   @ApiProperty({
     description: "Beschrijving van het journaal",
     type: "string",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  OMSCHRIJVING?: string | null;
+  OMSCHRIJVING: string;
   @ApiProperty({
     description: "Referentie naar de categorie defect, observatie, klacht",
     type: "integer",
     format: "int32",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  CATEGORIE_ID?: number | null;
+  CATEGORIE_ID: number;
   @ApiProperty({
-    description: "Referentie naar de status (type tabel),",
+    description:
+      "Referentie naar de status (type tabel), standaard JournaalStatus.Gemeld als niet meegegeven",
     type: "integer",
     format: "int32",
     required: false,

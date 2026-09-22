@@ -76,6 +76,7 @@ export class JournaalController extends HeliosController
       bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() || isTechnicus() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
 
       const update = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedUpdateInput;
@@ -88,6 +89,7 @@ export class JournaalController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`JournaalController.DeleteObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.DeleteObject');
 
       const data: Prisma.OperJournaalUncheckedUpdateInput = {
@@ -112,6 +114,7 @@ export class JournaalController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`JournaalController.RestoreObject(${safeStringify({currentUser, id})})`);
+      // TODO: PHP vereist hier isBeheerder() (401 anders, let op: beperkter dan Delete - geen isCIMT()) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.RestoreObject');
 
       const data: Prisma.OperJournaalUncheckedUpdateInput = {
