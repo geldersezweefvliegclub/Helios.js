@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsDecimal,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -25,22 +26,19 @@ export class CreateOperFactuurDto {
     minimum: 2025,
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  JAAR?: number;
+  JAAR: number;
   @ApiProperty({
     description:
       "Verwijzing naar het lid ID die de factuur ontvangt, link naar de leden tabel",
     type: "integer",
     format: "int32",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  LID_ID?: number | null;
+  LID_ID: number;
   @ApiProperty({
     description:
       "Het lidnummer zoals dat in de financiele administratie wordt gebruikt",
@@ -75,22 +73,18 @@ export class CreateOperFactuurDto {
   @ApiProperty({
     description: "Omschrijving van de factuurregel",
     type: "string",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  OMSCHRIJVING?: string | null;
+  OMSCHRIJVING: string;
   @ApiProperty({
     description: "Bedrag wat gefactureerd is",
     type: "string",
     format: "Decimal.js",
-    required: false,
-    nullable: true,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsDecimal()
-  GEFACTUREERD?: Prisma.Decimal | null;
+  GEFACTUREERD: Prisma.Decimal;
   @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",

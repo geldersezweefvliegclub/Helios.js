@@ -25,7 +25,7 @@ export class OperFactuurDto {
   LID_ID: number | null;
   @ApiProperty({
     description:
-      "De naam van het lid op het moment dat de factuur aangemaakt is.",
+      "De naam van het lid op het moment dat de factuur aangemaakt is, wordt afgeleid van LID_ID",
     type: "string",
     nullable: true,
   })

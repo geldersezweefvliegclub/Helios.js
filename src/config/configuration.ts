@@ -39,24 +39,12 @@ interface HeliosConfig {
         bypassToken: string,
         PaxBevoegdheid: number,
     },
-    eBoekhouden_settings: {
-        SoapBaseUrl: string,
-        Username: string,
-        SecurityCode1: string,
-        SecurityCode2: string,
-        Betalingstermijn: number,
-        Factuursjabloon: string,
-        PerEmailVerzenden: boolean,
-        EmailOnderwerp: string,
-        EmailBericht: string,
-        EmailVanNaam: string,
-        EmailVanAdres: string
-        AutomatischeIncasso: boolean,
-        BoekhoudmutatieOmschrijving: string,
-        IncassoMachtigingFirst: boolean,
-        InBoekhoudingPlaatsen: boolean,
-        TegenrekeningCode: number,
-        KostenplaatsID: number
+    mqtt_settings: {
+        host: string,
+        port: number,
+        clientId: string,
+        username: string,
+        password: string,
     },
     iDeal: {
         mollieKey: string,
@@ -109,24 +97,12 @@ export default () => {
             bypassToken: new Date().getDay().toString() + 'BDd2ft2xxYPmqPTm@C_vGPy-mot7GCCmpU9nvfDx',
             PaxBevoegdheid: 271
         },
-        eBoekhouden_settings: {
-            SoapBaseUrl: 'https://soap.e-boekhouden.nl/soap.asmx?WSDL',
-            Username: 'penningmeester@gezc.org',
-            SecurityCode1: 'f14ecb4cd6f86cebcc4602eba5f4559a',
-            SecurityCode2: 'FC40D35A-D9C7-4B4E-B164-6B834B36F61A',
-            Betalingstermijn: 14,
-            Factuursjabloon: 'Factuur Lidmaatschap',
-            PerEmailVerzenden: false,
-            EmailOnderwerp: 'factuur testje',
-            EmailBericht: 'Nou dat is weer een factuur van de GeZC',
-            EmailVanNaam: 'penningmeester',
-            EmailVanAdres: 'ict@gezc.org',
-            AutomatischeIncasso: false,
-            BoekhoudmutatieOmschrijving: 'lidmaatschap ',
-            IncassoMachtigingFirst: false,
-            InBoekhoudingPlaatsen: false,
-            TegenrekeningCode: 1800,
-            KostenplaatsID: 0
+        mqtt_settings: {
+            host: 'mqtt',
+            port: 1883,
+            clientId: 'gezc',
+            username: 'gezc',
+            password: 'FgT@qML-mCVBUb7WNZbn'
         },
         iDeal: {
             mollieKey: 'test_Nb3HMmyT2mdPhMQk7qRj8ASArRvKjp',

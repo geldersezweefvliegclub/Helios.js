@@ -4,17 +4,16 @@ model OperFactuur {
   /// @description Het unieke ID van een factuur
   ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Jaar van het lidmaatschap
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @minimum 2025
   JAAR               Int      @db.SmallInt
   /// @description Verwijzing naar het lid ID die de factuur ontvangt, link naar de leden tabel
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
+  /// @DtoCreateRequired
   /// @DtoUpdateOptional
   LID_ID             Int?     @db.UnsignedMediumInt
   /// @DtoReadOnly
-  /// @description De naam van het lid op het moment dat de factuur aangemaakt is.
+  /// @description De naam van het lid op het moment dat de factuur aangemaakt is, wordt afgeleid van LID_ID
   NAAM               String?  @db.VarChar(255)
   /// @description Het lidnummer zoals dat in de financiele administratie wordt gebruikt
   /// @maxLength 10
@@ -26,10 +25,12 @@ model OperFactuur {
   /// @maxLength 10
   CODE               String?  @db.VarChar(10)
   /// @description Omschrijving van de factuurregel
-  /// @DtoCreateOptional
+  /// @DtoCreateRequired
   /// @DtoUpdateOptional
   OMSCHRIJVING       String?  @db.VarChar(50)
   /// @description Bedrag wat gefactureerd is
+  /// @DtoCreateRequired
+  /// @DtoUpdateOptional
   GEFACTUREERD       Decimal? @db.Decimal(50, 0)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
