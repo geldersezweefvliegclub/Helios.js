@@ -131,8 +131,7 @@ export class LedenService extends IHeliosService
                   LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
                   LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur
                ]} : undefined},
-               // DDWV-only lid: enkel andere DDWV leden en DDWV crew zichtbaar - zie GetObjects() in
-               // class.Leden.inc.php. DDWV_BEPERKING is server-intern, zie GetObjectsRefLedenRequest
+               // DDWV lid: mg enkel andere DDWV leden en DDWV crew zien
                { OR: params.DDWV_BEPERKING ? [
                   { LIDTYPE_ID: LidType.DDWV },
                   { DDWV_CREW: true }
@@ -219,8 +218,11 @@ export class LedenService extends IHeliosService
    async GetVerjaardagen(aantal:number): Promise<VerjaardagenResponse[]>
    {
       this.logger.verbose(`LedenService.GetVerjaardagen(${safeStringify({aantal})})`);
-      const leden = await this.GetObjects()
-      let l = leden.dataset.filter((f) => f.GEBOORTE_DATUM).map((lid) =>
+
+      const params = MaakGetObjectsRequest(GetObjectsRefLedenRequest, {VERWIJDERD: false});
+      const leden = await this.GetObjects(params)
+      const l = leden.dataset.filter((f) => f.GEBOORTE_DATUM && this.permissieService.isLid(f));
+      let jarigen = l.map((lid) =>
       {
          const {NAAM, GEBOORTE_DATUM,} = lid;
 
@@ -244,9 +246,9 @@ export class LedenService extends IHeliosService
             SORT: dagenTeGaan
          }
       })
-      l = l.sort((a, b) => a.SORT - b.SORT).slice(0, aantal);
-      l.forEach(item => { delete item.SORT });
-      const result = l as VerjaardagenResponse[];
+      jarigen = jarigen.filter((item) => item.SORT < 60).sort((a, b) => a.SORT - b.SORT).slice(0, aantal);
+      jarigen.forEach(item => { delete item.SORT });
+      const result = jarigen as VerjaardagenResponse[];
       this.logger.verbose(`LedenService.GetVerjaardagen() => ${safeStringify(result)}`);
       return result;
    }

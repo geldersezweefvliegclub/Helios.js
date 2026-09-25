@@ -76,11 +76,13 @@ export class LedenController extends HeliosController
          queryParams.DDWV_BEPERKING = true;
       }
       else if (!this.permissieService.isBeheerderDDWV(currentUser) && !this.permissieService.isBeheerder(currentUser) && !this.permissieService.isStarttoren(currentUser)) {
-         queryParams.TYPES = queryParams.TYPES ?? [];          // als TYPES niet is opgegeven, zet het op een lege array
-         queryParams.TYPES.push(                               // voeg filter toe voor normale leden
+         const toegestaneTypes = [
             LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
             LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur, LidType.DDWV,
-         );
+         ];
+         queryParams.TYPES = queryParams.TYPES
+            ? queryParams.TYPES.filter(t => toegestaneTypes.includes(t))
+            : toegestaneTypes;
       }
 
       // haal de objects op uit de database op basis van de query parameters
@@ -168,6 +170,7 @@ export class LedenController extends HeliosController
          VERWIJDERD: true
       }
       await this.ledenService.UpdateObject(id, data, currentUser.ID);
+      await this.ledenService.SyncLeden(id);
    }
 
    @HeliosRemoveObject()
@@ -198,6 +201,7 @@ export class LedenController extends HeliosController
          VERWIJDERD: false
       }
       await this.ledenService.UpdateObject(id, data, currentUser.ID);
+      await this.ledenService.SyncLeden(id);
    }
 
 
@@ -258,10 +262,9 @@ export class LedenController extends HeliosController
          obj.DIENSTEN = null;
       }
 
-      // OPMERKINGEN enkel zichtbaar voor beheerder, instructeur, CIMT, of het lid zelf - roostermaker en
-      // beheerder DDWV zien dit NIET (netto-effect van de twee overlappende maskeringsblokken in
-      // privacyMask() in class.Leden.inc.php: elk blok mist een andere rol in zijn eigen exemptielijst)
-      if (!isBeheerder && !isInstructeur && !isCIMT && !ikBenHetZelf) {
+      // OPMERKINGEN enkel zichtbaar voor beheerder, instructeur, CIMT, roostermaker, of het lid zelf
+      // (netto-effect van de twee overlappende maskeringsblokken in privacyMask() in class.Leden.inc.php)
+      if (!isBeheerder && !isInstructeur && !isCIMT && !isRooster && !ikBenHetZelf) {
          obj.OPMERKINGEN = null;
       }
 
@@ -315,6 +318,11 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.GetVerjaardagen(${safeStringify({currentUser, aantal})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetVerjaardagen');
+
+      // DDWV-only leden krijgen geen verjaardagen te zien - zie GetVerjaardagen() in class.Leden.inc.php
+      if (this.permissieService.isDDWVer(currentUser))
+         return [];
+
       return await this.ledenService.GetVerjaardagen(aantal);
    }
 
@@ -470,11 +478,17 @@ export class LedenController extends HeliosController
          zet('PRIVACY');
          zet('WACHTWOORD');
 
-         // bouw de naam op uit voornaam, tussenvoegsel en achternaam. Bij een update enkel als er
-         // daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+         // een expliciet meegegeven NAAM wint altijd; anders bouw 'm op uit voornaam, tussenvoegsel en
+         // achternaam - zie RequestToRecord() in class.Leden.inc.php. Bij een update wordt enkel opgebouwd
+         // als er daadwerkelijk nieuwe naamgegevens zijn meegegeven, anders blijft de bestaande NAAM ongewijzigd
+         const expliciteNaam = data.NAAM as string | null | undefined;
          const voornaam = data.VOORNAAM as string | null | undefined;
          const achternaam = data.ACHTERNAAM as string | null | undefined;
-         if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
+         if (typeof expliciteNaam === "string" && expliciteNaam.trim().length > 0)
+         {
+            result.NAAM = expliciteNaam;
+         }
+         else if (naamAltijdOpbouwen || (typeof voornaam === "string" && typeof achternaam === "string"))
          {
             result.NAAM = [voornaam, data.TUSSENVOEGSEL, achternaam]
                .map(deel => (deel ?? "").toString().trim())
