@@ -18,6 +18,10 @@ compareModule({
     ],
     crud: {
         createPayload: {LID_ID: 10118, COMPETENTIE_ID: 35, INSTRUCTEUR_ID: 100},
+        // NestJS staat sinds kort maar 1 actief progressie record per lid+competentie toe. PHP kent die
+        // beperking niet, en de test maakt bewust een los NestJS- en PHP-record aan om te vergelijken - een
+        // andere COMPETENTIE_ID voor PHP voorkomt dat die twee gelijktijdige records botsen op die regel
+        phpCreatePayload: {LID_ID: 10118, COMPETENTIE_ID: 36, INSTRUCTEUR_ID: 100},
         updatePayload: {OPMERKINGEN: "E2E test (updated)"},
     },
 });

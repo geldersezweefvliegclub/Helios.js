@@ -10,16 +10,7 @@ import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
-
-export interface UpdateProgressieData {
-   LID_ID?: number;
-   COMPETENTIE_ID?: number;
-   INSTRUCTEUR_ID?: number;
-   OPMERKINGEN?: string | null;
-   SCORE?: number | null;
-   GELDIG_TOT?: Date | null;
-}
+import {toDateOnly} from "../../core/helpers/TimeDate";
 
 // progressie record inclusief de relaties die de PHP progressie_view samenvoegt
 type ProgressieMetRelaties = Prisma.OperProgressieGetPayload<{
@@ -45,7 +36,6 @@ export class ProgressieService extends IHeliosService
    async GetObject(id: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.GetObject(${safeStringify({id})})`);
-      // Net als in de PHP implementatie wordt hier de ruwe tabel gebruikt, niet de progressie_view.
       const db = await this.dbService.operProgressie.findUnique({
          where: {
             ID: id
@@ -103,6 +93,8 @@ export class ProgressieService extends IHeliosService
    async AddObject(data: Prisma.OperProgressieUncheckedCreateInput, actorId: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.AddObject(${safeStringify({data})})`);
+      await this.uniekeProgressie(data.LID_ID as number, data.COMPETENTIE_ID as number);
+
       const obj = await this.dbService.operProgressie.create({
          data: data
       });
@@ -112,65 +104,25 @@ export class ProgressieService extends IHeliosService
       return obj;
    }
 
-   /**
-    * Een progressie wordt bij een update NOOIT in-place aangepast: het bestaande record wordt gemarkeerd als
-    * verwijderd, en er wordt een NIEUW record aangemaakt met LINK_ID naar het oorspronkelijke record. Zo blijft
-    * de volledige historie van afgetekende competenties bewaard (audit trail), zie UpdateObject() in
-    * class.Progressie.inc.php. De oorspronkelijke INGEVOERD datum blijft behouden op het nieuwe record.
-    */
-   async UpdateObject(id: number, data: UpdateProgressieData, actorId: number): Promise<OperProgressie>
+
+   async UpdateObject(id: number, data: Prisma.OperProgressieUncheckedUpdateInput, actorId: number): Promise<OperProgressie>
    {
       this.logger.verbose(`ProgressieService.UpdateObject(${safeStringify({id, data})})`);
-      const oud = await this.GetObject(id);
-
-      const lidId = data.LID_ID ?? oud.LID_ID;
-      const competentieId = data.COMPETENTIE_ID ?? oud.COMPETENTIE_ID;
-      const instructeurId = data.INSTRUCTEUR_ID ?? oud.INSTRUCTEUR_ID;
-      const opmerkingen = data.OPMERKINGEN !== undefined ? data.OPMERKINGEN : oud.OPMERKINGEN;
-      const score = data.SCORE !== undefined ? data.SCORE : oud.SCORE;
-      const geldigTot = data.GELDIG_TOT !== undefined ? parseDateOnly(data.GELDIG_TOT as Date | string | null) : oud.GELDIG_TOT;
-
-      const nieuw = await this.dbService.$transaction(async (tx) =>
-      {
-         await tx.operProgressie.update({where: {ID: id}, data: {VERWIJDERD: true}});
-
-         return tx.operProgressie.create({
-            data: {
-               RefLid: {connect: {ID: lidId}},
-               RefCompetentie: {connect: {ID: competentieId}},
-               Instructeur: {connect: {ID: instructeurId}},
-               OPMERKINGEN: opmerkingen,
-               SCORE: score,
-               GELDIG_TOT: geldigTot,
-               INGEVOERD: oud.INGEVOERD,
-               ParentProgressie: {connect: {ID: id}},
-            }
-         });
-      });
-
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, oud, data, nieuw, actorId);
-      this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(nieuw)}`);
-      return nieuw;
-   }
-
-   // eenvoudige VERWIJDERD toggle, gebruikt door DeleteObject/RestoreObject. Dit is BEWUST geen UpdateObject()
-   // aanroep: die zou een overbodige gekoppelde audit trail record aanmaken voor een simpele soft-delete/restore.
-   async SetVerwijderd(id: number, verwijderd: boolean, actorId: number): Promise<OperProgressie>
-   {
-      this.logger.verbose(`ProgressieService.SetVerwijderd(${safeStringify({id, verwijderd})})`);
       const db = await this.GetObject(id);
+
+      const nieuweLidId = data.LID_ID !== undefined ? data.LID_ID as number : db.LID_ID;
+      const nieuweCompetentieId = data.COMPETENTIE_ID !== undefined ? data.COMPETENTIE_ID as number : db.COMPETENTIE_ID;
+      await this.uniekeProgressie(nieuweLidId, nieuweCompetentieId, id);
+
       const obj = await this.dbService.operProgressie.update({
          where: {
             ID: id
          },
-         data: {
-            VERWIJDERD: verwijderd
-         }
+         data: data
       });
-      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, {VERWIJDERD: verwijderd}, obj, actorId);
-      const result = obj;
-      this.logger.verbose(`ProgressieService.SetVerwijderd() => ${safeStringify(result)}`);
-      return result;
+      this.eventEmitter.emit(DatabaseEvents.Updated, this.constructor.name, id, db, data, obj, actorId);
+      this.logger.verbose(`ProgressieService.UpdateObject() => ${safeStringify(obj)}`);
+      return obj;
    }
 
    async RemoveObject(id: number, actorId: number): Promise<void>
@@ -206,6 +158,23 @@ export class ProgressieService extends IHeliosService
       const result = [...new Set(progressies.map((progressie) => progressie.LID_ID))];
       this.logger.verbose(`ProgressieService.HeeftCompetentie() => ${safeStringify(result)}`);
       return result;
+   }
+
+   // een lid mag maar 1 actief (niet-verwijderd) progressie record hebben per competentie
+   private async uniekeProgressie(lidId: number, competentieId: number, uitgezonderdId?: number): Promise<void>
+   {
+      const bestaand = await this.dbService.operProgressie.findFirst({
+         where: {
+            LID_ID: lidId,
+            COMPETENTIE_ID: competentieId,
+            VERWIJDERD: false,
+            ID: uitgezonderdId ? { not: uitgezonderdId } : undefined
+         }
+      });
+
+      if (bestaand) {
+         throw new HttpException(`Lid ${lidId} heeft al een progressie record voor competentie ${competentieId}`, HttpStatus.CONFLICT);
+      }
    }
 
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
