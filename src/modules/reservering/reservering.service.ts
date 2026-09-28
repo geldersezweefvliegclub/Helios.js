@@ -53,14 +53,15 @@ export class ReserveringService extends IHeliosService
    }
 
    // Er mag maar een reservering per DATUM+VLIEGTUIG_ID bestaan, zie GetObjectByDetails() in class.Reservering.inc.php
-   async GetObjectByDetails(datum: Date, vliegtuigId: number): Promise<OperReservering | null>
+   async GetObjectByDetails(datum: Date, vliegtuigId: number, uitgezonderdId?: number): Promise<OperReservering | null>
    {
-      this.logger.verbose(`ReserveringService.GetObjectByDetails(${safeStringify({datum, vliegtuigId})})`);
+      this.logger.verbose(`ReserveringService.GetObjectByDetails(${safeStringify({datum, vliegtuigId, uitgezonderdId})})`);
       const result = await this.dbService.operReservering.findFirst({
          where: {
             DATUM: datum,
             VLIEGTUIG_ID: vliegtuigId,
             VERWIJDERD: false,
+            ID: uitgezonderdId ? { not: uitgezonderdId } : undefined
          }
       });
       this.logger.verbose(`ReserveringService.GetObjectByDetails() => ${safeStringify(result)}`);
@@ -148,6 +149,20 @@ export class ReserveringService extends IHeliosService
       const update = data as Prisma.OperReserveringUncheckedUpdateInput;
 
       const db = await this.GetObject(id);
+
+      // zelfde uniciteitsregel als bij AddObject: per DATUM+VLIEGTUIG_ID mag maar 1 actieve reservering
+      // bestaan - anders zou een UpdateObject of RestoreObject (die via UpdateObject loopt) een dubbele boeking
+      // kunnen maken. Een record dat na de update verwijderd is (DeleteObject) telt niet mee.
+      const nieuwVerwijderd = update.VERWIJDERD !== undefined ? update.VERWIJDERD as boolean : db.VERWIJDERD;
+      if (!nieuwVerwijderd)
+      {
+         const nieuweDatum = update.DATUM !== undefined ? update.DATUM as Date : db.DATUM;
+         const nieuwVliegtuigId = update.VLIEGTUIG_ID !== undefined ? update.VLIEGTUIG_ID as number : db.VLIEGTUIG_ID;
+         const bestaand = await this.GetObjectByDetails(nieuweDatum, nieuwVliegtuigId, id);
+         if (bestaand)
+            throw new HttpException("Er bestaat al een reservering voor dit vliegtuig op deze datum", HttpStatus.CONFLICT);
+      }
+
       const obj = await this.dbService.operReservering.update({
          where: {
             ID: id
@@ -188,6 +203,7 @@ export class ReserveringService extends IHeliosService
             LID_ID: lidId,
             INGEVOERD_ID: lidId,
             DATUM: {gt: beginVandaag, lte: eindJaar},
+            VERWIJDERD: false,
          }
       });
       const result = aantal === 0;

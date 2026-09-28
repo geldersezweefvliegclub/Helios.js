@@ -41,6 +41,9 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.GetObject');
+      if (!this.heeftDataToegangGetObjects(currentUser)) {
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
+      }
       const obj = await this.reserveringService.GetObject(id);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -52,6 +55,11 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.GetObjects');
+
+      if (!this.heeftDataToegangGetObjects(currentUser)) {
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
+      }
+
       return await this.reserveringService.GetObjects(queryParams);
    }
 
@@ -113,6 +121,15 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.DeleteObject');
+
+      // verwijderen mag door de vlieger zelf, of door (DDWV) beheerder - zie VerwijderObject() in
+      // class.Reservering.inc.php
+      if (!this.heeftDataToegangDeleteObject(currentUser)) {
+         const bestaand = await this.reserveringService.GetObject(id);
+         const ikBenHetZelf = this.permissieService.ikBenHetZelf({ID: bestaand.LID_ID} as RefLid, currentUser);
+         if (!ikBenHetZelf)
+            throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      }
 
       const data: Prisma.OperReserveringUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -176,5 +193,21 @@ export class ReserveringController extends HeliosController
          data.DATUM = parseDateOnly(data.DATUM as Date | string) as Date;
 
       return data;
+   }
+
+   private heeftDataToegangGetObjects(currentUser: RefLid): boolean
+   {
+      return this.permissieService.isClubVlieger(currentUser)
+         || this.permissieService.isStarttoren(currentUser)
+         || this.permissieService.isBeheerder(currentUser)
+         || this.permissieService.isInstructeur(currentUser)
+         || this.permissieService.isCIMT(currentUser);
+   }
+
+   // zie heeftDataToegang(null, false) || isBeheerderDDWV() in VerwijderObject() van class.Reservering.inc.php
+   private heeftDataToegangDeleteObject(currentUser: RefLid): boolean
+   {
+      return this.permissieService.isBeheerder(currentUser)
+         || this.permissieService.isBeheerderDDWV(currentUser);
    }
 }
