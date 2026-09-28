@@ -11,7 +11,8 @@ import {GetObjectsOperRoosterResponse} from "./GetObjectsOperRoosterResponse";
 import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
-import {toDateOnly} from "../../core/helpers/TimeDate";
+import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
+import {DdwvService} from "../ddwv/ddwv.service";
 
 @Injectable()
 export class RoosterService extends IHeliosService
@@ -19,7 +20,8 @@ export class RoosterService extends IHeliosService
    private readonly logger = new Logger(RoosterService.name);
 
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               private readonly ddwvService: DdwvService)
    {
       super();
    }
@@ -38,6 +40,21 @@ export class RoosterService extends IHeliosService
          throw new HttpException(`Rooster record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
       const result = db;
       this.logger.verbose(`RoosterService.GetObject() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // Er mag maar een actief rooster per DATUM bestaan, zie GetObject(null, $DATUM, false) in class.Rooster.inc.php
+   async GetObjectByDatum(datum: Date, uitgezonderdId?: number): Promise<OperRooster | null>
+   {
+      this.logger.verbose(`RoosterService.GetObjectByDatum(${safeStringify({datum, uitgezonderdId})})`);
+      const result = await this.dbService.operRooster.findFirst({
+         where: {
+            DATUM: parseDateOnly(datum),
+            VERWIJDERD: false,
+            ID: uitgezonderdId ? { not: uitgezonderdId } : undefined
+         }
+      });
+      this.logger.verbose(`RoosterService.GetObjectByDatum() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -84,11 +101,27 @@ export class RoosterService extends IHeliosService
    async AddObject(data: Prisma.OperRoosterUncheckedCreateInput, actorId: number): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterService.AddObject(${safeStringify({data})})`);
+      // DATUM altijd als UTC middernacht, ook bij interne aanroepen (bv. vindOfMaakRooster), zodat tijdzone of
+      // tijdsdeel geen tweede record voor dezelfde datum kan opleveren
+      const datum = parseDateOnly(data.DATUM as Date | string) as Date;
+      const bestaand = await this.GetObjectByDatum(datum);
+      if (bestaand)
+         throw new HttpException("Datum bestaat al", HttpStatus.CONFLICT);
+
+      // velden die niet zijn meegegeven worden afgeleid van de datum, zie AddObject() in class.Rooster.inc.php
+      const insertData: Prisma.OperRoosterUncheckedCreateInput = {
+         ...data,
+         DATUM: datum,
+         CLUB_BEDRIJF: data.CLUB_BEDRIJF ?? this.isClubBedrijf(datum),
+         DDWV: data.DDWV ?? this.ddwvService.DagIsDDWV(datum),
+         WINTER_WERK: data.WINTER_WERK ?? this.isWinterWerk(datum),
+      };
+
       const obj = await this.dbService.operRooster.create({
-         data: data
+         data: insertData
       });
 
-      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, data, obj, actorId);
+      this.eventEmitter.emit(DatabaseEvents.Created, this.constructor.name, obj.ID, insertData, obj, actorId);
       this.logger.verbose(`RoosterService.AddObject() => ${safeStringify(obj)}`);
       return obj;
    }
@@ -97,6 +130,21 @@ export class RoosterService extends IHeliosService
    {
       this.logger.verbose(`RoosterService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+      if (data.DATUM !== undefined)
+         data = {...data, DATUM: parseDateOnly(data.DATUM as Date | string) as Date};
+
+      // zelfde uniciteitsregel als bij AddObject: per DATUM mag maar 1 actief rooster bestaan - anders zou een
+      // UpdateObject of RestoreObject (die via UpdateObject loopt) een dubbele datum kunnen maken. Een record dat
+      // na de update verwijderd is (DeleteObject) telt niet mee.
+      const nieuwVerwijderd = data.VERWIJDERD !== undefined ? data.VERWIJDERD as boolean : db.VERWIJDERD;
+      if (!nieuwVerwijderd)
+      {
+         const nieuweDatum = data.DATUM !== undefined ? data.DATUM as Date : db.DATUM;
+         const bestaand = await this.GetObjectByDatum(nieuweDatum, id);
+         if (bestaand)
+            throw new HttpException("Datum bestaat al", HttpStatus.CONFLICT);
+      }
+
       const obj = await this.dbService.operRooster.update({
          where: {
             ID: id
@@ -121,6 +169,27 @@ export class RoosterService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
+   }
+
+   // clubbedrijf is er alleen op zaterdag en zondag tussen 1 maart en 1 november, zie AddObject() in class.Rooster.inc.php
+   private isClubBedrijf(datum: Date): boolean
+   {
+      const weekdag = datum.getUTCDay();          // 0 = zondag, 6 = zaterdag
+      return this.inClubSeizoen(datum) && (weekdag === 0 || weekdag === 6);
+   }
+
+   // winterwerk is er op zaterdag buiten het clubseizoen. De PHP conditie in AddObject() is nooit waar (datum < 301
+   // EN >= 1101, en een string/int vergelijking op de weekdag), hier is de bedoelde logica geïmplementeerd
+   private isWinterWerk(datum: Date): boolean
+   {
+      return !this.inClubSeizoen(datum) && datum.getUTCDay() === 6;
+   }
+
+   // valt de datum tussen 1 maart en 1 november. DATUM is een kalenderdatum (UTC middernacht), dus de UTC-velden gebruiken
+   private inClubSeizoen(datum: Date): boolean
+   {
+      const dateValue = (datum.getUTCMonth() + 1) * 100 + datum.getUTCDate();
+      return dateValue >= 301 && dateValue < 1101;
    }
 
    // normaliseert de datumvelden van de ruwe database-records naar de response-vorm

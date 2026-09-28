@@ -4,6 +4,7 @@ import { DdwvService } from './ddwv.service';
 
 @Module({
   controllers: [DdwvController],
-  providers: [DdwvService]
+  providers: [DdwvService],
+  exports: [DdwvService]
 })
 export class DdwvModule {}

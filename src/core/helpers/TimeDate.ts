@@ -25,13 +25,23 @@ export function toTimeOnly(value: Date | null | undefined): string | null | unde
 
 // zet een binnenkomende waarde voor een @db.Date kolom om naar een echt Date object. Nodig omdat een client een
 // eerder opgehaald record (met "yyyy-MM-dd" string, zie toDateOnly) vaak ongewijzigd terugstuurt bij een update -
-// Prisma accepteert voor een DateTime kolom geen kale datum-string, enkel een volledige ISO-8601 tijdstip of Date object
+// Prisma accepteert voor een DateTime kolom geen kale datum-string, enkel een volledige ISO-8601 tijdstip of Date object.
+// Het resultaat is altijd UTC middernacht, zodat tijdzone en tijdsdeel geen invloed hebben: van een string wordt de
+// kalenderdatum genomen zoals de client die schrijft ("2026-09-28T00:00:00+02:00" => 2026-09-28), van een Date object
+// de UTC kalenderdatum
 export function parseDateOnly(value: Date | string | null | undefined): Date | null | undefined
 {
    if (value === undefined) return undefined;
    if (value === null) return null;
-   if (value instanceof Date) return value;
-   return new Date(value);
+   if (typeof value === "string")
+   {
+      const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim());
+      if (match)
+         return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+      value = new Date(value);
+   }
+   if (isNaN(value.getTime())) return value;
+   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
 }
 
 // zet een binnenkomende waarde voor een @db.Time kolom om naar een echt Date object (met de dummy datum 1970-01-01).
