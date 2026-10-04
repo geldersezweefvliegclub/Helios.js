@@ -39,6 +39,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.tracksService.GetObject(id);
    }
 
@@ -49,6 +50,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.tracksService.GetObjects(queryParams);
    }
 
@@ -59,6 +61,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.AddObject(${safeStringify({currentUser, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
       bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperTrackUncheckedCreateInput;
@@ -72,6 +75,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
       bodyHeeftData(data);
       id = id ?? data.ID;
       await this.magAanpassen(currentUser, id);
@@ -87,6 +91,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
       await this.magAanpassen(currentUser, id);
 
       const data: Prisma.OperTrackUncheckedUpdateInput = {
@@ -102,6 +107,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.tracksService.RemoveObject(id, currentUser.ID);
    }
 
@@ -112,6 +118,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperTrackUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -152,4 +159,45 @@ export class TracksController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

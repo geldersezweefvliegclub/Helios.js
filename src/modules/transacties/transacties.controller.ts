@@ -40,6 +40,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.TransactiesService.GetObject(id);
       return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
    }
@@ -51,6 +52,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.TransactiesService.GetObjects(queryParams);
    }
 
@@ -61,6 +63,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
       bodyHeeftData(data);
 
       const insert = await this.normaliserenData(currentUser, data, true) as Prisma.OperTransactieUncheckedCreateInput;
@@ -75,6 +78,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
       bodyHeeftData(data);
       id = id ?? data.ID;
 
@@ -90,6 +94,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -104,6 +109,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.TransactiesService.RemoveObject(id, currentUser.ID);
    }
 
@@ -114,6 +120,7 @@ export class TransactiesController  extends HeliosController
    {
       this.logger.verbose(`TransactiesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperTransactieUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -155,5 +162,45 @@ export class TransactiesController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

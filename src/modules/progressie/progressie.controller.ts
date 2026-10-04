@@ -64,9 +64,8 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.GetObject');
+      await this.heeftDataToegangGetObject(currentUser, id);
       const obj = await this.progressieService.GetObject(id);
-      // ophalen mag alleen door het lid zelf, of iemand met data-toegang
-      this.heeftDataToegang(currentUser, obj.LID_ID);
       return {
          ...obj,
          GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date
@@ -80,12 +79,12 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser, queryParams.LID_ID);
 
       // als er geen LID_ID is opgegeven, dan default naar het ID van de ingelogde gebruiker
       const lidID = queryParams.LID_ID === undefined ? currentUser.ID : queryParams.LID_ID;
       queryParams.LID_ID = lidID;
 
-      this.heeftDataToegang(currentUser, lidID)
       return await this.progressieService.GetObjects(queryParams);
    }
 
@@ -98,7 +97,7 @@ export class ProgressieController extends HeliosController
       this.logger.verbose(`ProgressieController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Progressie.AddObject');
-      this.heeftDataToegang(currentUser);
+      this.heeftDataToegangAddObject(currentUser);
 
       // LID_ID en COMPETENTIE_ID zijn verplicht
       if (data.LID_ID === undefined || data.LID_ID === null)
@@ -131,10 +130,7 @@ export class ProgressieController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`ProgressieController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.UpdateObject');
-
-      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder.
-      if (!this.heeftDataToegang(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangUpdateObject(currentUser);
 
       // een lid mag geen eigen progressie aanpassen, of een progressie op zichzelf zetten
       const bestaand = await this.progressieService.GetObject(id);
@@ -173,10 +169,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.DeleteObject');
-
-      // schrijven mag alleen door iemand met data-toegang
-      if (!this.heeftDataToegang(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangDeleteObject(currentUser);
 
       // een lid mag eigen progressie niet verwijderen
       const bestaand = await this.progressieService.GetObject(id);
@@ -194,9 +187,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.RemoveObject');
-
-      if (!this.heeftDataToegang(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangRemoveObject(currentUser);
 
       const bestaand = await this.progressieService.GetObject(id);
       if (bestaand.LID_ID === currentUser.ID)
@@ -213,10 +204,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.RestoreObject');
-
-      // schrijven mag alleen door iemand met data-toegang
-      if (!this.heeftDataToegang(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangRestoreObject(currentUser);
 
       // een lid mag eigen progressie niet terugzetten
       const bestaand = await this.progressieService.GetObject(id);
@@ -241,8 +229,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.ProgressieKaart(${safeStringify({currentUser, lidId})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.ProgressieKaart');
-      // zie ProgressieKaart() in class.Progressie.inc.php: een ander LID_ID opvragen mag alleen met data-toegang
-      this.heeftDataToegang(currentUser, lidId ?? currentUser.ID);
+      this.heeftDataToegangProgressieKaart(currentUser, lidId);
       return await this.BouwProgressieKaart(lidId ?? currentUser.ID);
    }
 
@@ -259,9 +246,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.ProgressieBoom(${safeStringify({currentUser, lidId})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.ProgressieBoom');
-      // zie ProgressieBoom() in class.Progressie.inc.php: zelfde toegangsregel als ProgressieKaart()
-      this.heeftDataToegang(currentUser, lidId ?? currentUser.ID);
-
+      this.heeftDataToegangProgressieBoom(currentUser, lidId);
       const kaart = await this.BouwProgressieKaart(lidId ?? currentUser.ID);
       const retValue: ProgressieKaartResponse[] = [];
 
@@ -300,6 +285,7 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.HeeftCompetentie(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.HeeftCompetentie');
+      this.heeftDataToegangHeeftCompetentie(currentUser);
       const LID_IDS = await this.progressieService.HeeftCompetentie(queryParams.COMPETENTIE_ID, queryParams.LID_ID);
       return {LID_IDS};
    }
@@ -320,14 +306,13 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.StartAantekeningen(${safeStringify({currentUser, lidId})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.StartAantekeningen');
+      this.heeftDataToegangStartAantekeningen(currentUser, lidId);
 
       // lidId is een kale @Query param zonder class-validator, dus een weggelaten LID_ID komt hier als
       // undefined binnen ondanks de "number"-typering
       if (lidId === undefined || lidId === null)
          throw new HttpException("LID_ID is verplicht", HttpStatus.BAD_REQUEST);
 
-      // een ander LID_ID opvragen mag alleen met data-toegang
-      this.heeftDataToegang(currentUser, lidId);
       await this.ledenService.GetObject(lidId); // gooit 404 als lid niet bestaat
 
       const behaald = await this.progressieService.GetObjects({
@@ -372,22 +357,102 @@ export class ProgressieController extends HeliosController
       return kaart;
    }
 
-   // zie heeftDataToegang() in include/helios.php - beheerder, instructeur of CIMT mogen andermans progressie
-   // zien. Met lidId erbij wordt meteen gecontroleerd of currentUser zelf is of data-toegang heeft (401
-   // anders); zonder lidId geeft de functie enkel terug of currentUser in het algemeen data-toegang heeft
-   private heeftDataToegang(currentUser: RefLid, lidId?: number): boolean
+   // zie heeftDataToegang() in include/helios.php - beheerder, instructeur of CIMT hebben data-toegang tot
+   // andermans progressie
+   private isBeheerderInstructeurOfCIMT(currentUser: RefLid): boolean
    {
-      const isSpecialUser = this.permissieService.isBeheerder(currentUser)
+      return this.permissieService.isBeheerder(currentUser)
          || this.permissieService.isInstructeur(currentUser)
          || this.permissieService.isCIMT(currentUser);
+   }
 
-      if (lidId === undefined)
-         return isSpecialUser;
-
+   // de progressie van een lid mag alleen door het lid zelf, of door iemand met data-toegang bekeken worden
+   private controleerLidToegang(currentUser: RefLid, lidId: number): void
+   {
       const ikBenHetZelf = this.permissieService.ikBenHetZelf({ID: lidId} as RefLid, currentUser);
-      if (!ikBenHetZelf && !isSpecialUser)
+      if (!ikBenHetZelf && !this.isBeheerderInstructeurOfCIMT(currentUser))
          throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
+   }
 
-      return true;
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/GetObject
+   private async heeftDataToegangGetObject(currentUser: RefLid, id: number): Promise<void>
+   {
+      // ophalen mag alleen door het lid zelf, of iemand met data-toegang, zie GetObject() in class.Progressie.inc.php
+      const obj = await this.progressieService.GetObject(id);
+      this.controleerLidToegang(currentUser, obj.LID_ID);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/GetObjects
+   private heeftDataToegangGetObjects(currentUser: RefLid, lidId?: number): void
+   {
+      // zonder LID_ID wordt de eigen progressie opgehaald, een ander lid alleen met data-toegang
+      this.controleerLidToegang(currentUser, lidId ?? currentUser.ID);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/AddObject
+   private heeftDataToegangAddObject(currentUser: RefLid): void
+   {
+      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder
+      if (!this.isBeheerderInstructeurOfCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/UpdateObject
+   private heeftDataToegangUpdateObject(currentUser: RefLid): void
+   {
+      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder
+      if (!this.isBeheerderInstructeurOfCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/DeleteObject
+   private heeftDataToegangDeleteObject(currentUser: RefLid): void
+   {
+      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder
+      if (!this.isBeheerderInstructeurOfCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/RemoveObject
+   private heeftDataToegangRemoveObject(currentUser: RefLid): void
+   {
+      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder
+      if (!this.isBeheerderInstructeurOfCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/RestoreObject
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
+   {
+      // schrijven mag alleen door iemand met data-toegang, zoals instructeur, CIMT of beheerder
+      if (!this.isBeheerderInstructeurOfCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/ProgressieKaart
+   private heeftDataToegangProgressieKaart(currentUser: RefLid, lidId?: number): void
+   {
+      // zie ProgressieKaart() in class.Progressie.inc.php: een ander LID_ID opvragen mag alleen met data-toegang
+      this.controleerLidToegang(currentUser, lidId ?? currentUser.ID);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/ProgressieBoom
+   private heeftDataToegangProgressieBoom(currentUser: RefLid, lidId?: number): void
+   {
+      // zie ProgressieBoom() in class.Progressie.inc.php: een ander LID_ID opvragen mag alleen met data-toegang
+      this.controleerLidToegang(currentUser, lidId ?? currentUser.ID);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/HeeftCompetentie
+   private heeftDataToegangHeeftCompetentie(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Progressie/StartAantekeningen
+   private heeftDataToegangStartAantekeningen(currentUser: RefLid, lidId?: number): void
+   {
+      // zie StartAantekeningen() in class.Progressie.inc.php: een ander LID_ID opvragen mag alleen met data-toegang
+      this.controleerLidToegang(currentUser, lidId ?? currentUser.ID);
    }
 }

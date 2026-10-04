@@ -50,6 +50,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.GetObject(${safeStringify({currentUser, params})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.DagInfoService.GetObject(params.ID, params.DATUM);
       const masked = await this.maskeerDienstenVoorGebruiker(obj, currentUser);
       return {...masked, DATUM: toDateOnly(masked.DATUM) as unknown as Date};
@@ -62,6 +63,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       const result = await this.DagInfoService.GetObjects(queryParams);
       result.dataset = await Promise.all(
          result.dataset.map(record => this.maskeerDienstenVoorGebruiker(record, currentUser))
@@ -77,6 +79,7 @@ export class DagInfoController  extends HeliosController
       this.logger.verbose(`DagInfoController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedCreateInput;
       const obj = await this.DagInfoService.AddObject(insert, currentUser.ID);
@@ -92,6 +95,7 @@ export class DagInfoController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`DagInfoController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedUpdateInput;
       const obj = await this.DagInfoService.UpdateObject(id, update, currentUser.ID);
@@ -105,6 +109,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperDagInfoUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -119,6 +124,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.DagInfoService.RemoveObject(id, currentUser.ID);
    }
 
@@ -129,6 +135,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagInfo.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperDagInfoUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -205,5 +212,45 @@ export class DagInfoController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagInfo/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

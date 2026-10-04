@@ -42,6 +42,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.typesService.GetObject(id);
    }
 
@@ -52,6 +53,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.typesService.GetObjects(queryParams);
    }
 
@@ -62,6 +64,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.AddObject(${safeStringify({currentUser, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
       bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.RefTypeUncheckedCreateInput;
@@ -75,6 +78,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
       bodyHeeftData(data);
       id = id ?? data.ID;
 
@@ -89,6 +93,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.RefTypeUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -103,6 +108,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.typesService.RemoveObject(id, currentUser.ID);
    }
 
@@ -113,6 +119,7 @@ export class TypesController extends HeliosController
    {
       this.logger.verbose(`TypesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Types.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.RefTypeUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -137,5 +144,45 @@ export class TypesController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Types/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Types/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Types/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Types/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Types/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Types/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Types/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

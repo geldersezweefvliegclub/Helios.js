@@ -52,6 +52,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.startlijstService.GetObject(id);
       return {
          ...obj,
@@ -68,6 +69,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.startlijstService.GetObjects(queryParams);
    }
 
@@ -79,6 +81,7 @@ export class StartlijstController extends HeliosController
       this.logger.verbose(`StartlijstController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as CreateOperStartlijstDto;
       const obj = await this.startlijstService.AddObject(insert as Prisma.OperStartlijstUncheckedCreateInput, currentUser.ID);
@@ -99,6 +102,7 @@ export class StartlijstController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`StartlijstController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as UpdateOperStartlijstDto;
       const obj = await this.startlijstService.UpdateObject(id, update as Prisma.OperStartlijstUncheckedUpdateInput, currentUser.ID);
@@ -117,6 +121,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: true
@@ -131,6 +136,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.startlijstService.RemoveObject(id, currentUser.ID);
    }
 
@@ -141,6 +147,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperStartlijstUpdateInput = {
          VERWIJDERD: false
@@ -167,6 +174,7 @@ export class StartlijstController extends HeliosController
       if (vliegerId === undefined)
          throw new HttpException("VLIEGER_ID moet ingevuld zijn", HttpStatus.NOT_ACCEPTABLE);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetRecency');
+      this.heeftDataToegangGetRecency(currentUser);
 
       const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : undefined;
       return await this.startlijstService.GetRecency(Number(vliegerId), gevraagdeDatum);
@@ -194,6 +202,7 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.GetLogboek(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetLogboek');
+      this.heeftDataToegangGetLogboek(currentUser);
 
       const lidId = queryParams.LID_ID ?? currentUser.ID;
       return await this.startlijstService.GetLogboek(queryParams, lidId);
@@ -224,6 +233,7 @@ export class StartlijstController extends HeliosController
       if (queryParams.ID === undefined)
          throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboek');
+      this.heeftDataToegangGetVliegtuigLogboek(currentUser);
 
       const vliegtuig = await this.VliegtuigLogboekToegang(currentUser, queryParams.ID);
       const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
@@ -246,6 +256,7 @@ export class StartlijstController extends HeliosController
       if (queryParams.ID === undefined)
          throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboekTotalen');
+      this.heeftDataToegangGetVliegtuigLogboekTotalen(currentUser);
 
       const vliegtuig = await this.VliegtuigLogboekToegang(currentUser, queryParams.ID);
       const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
@@ -292,5 +303,71 @@ export class StartlijstController extends HeliosController
          throw new HttpException("Niet gemachtigd om logboek te bekijken", HttpStatus.NOT_ACCEPTABLE);
 
       return vliegtuig;
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetRecency
+   private heeftDataToegangGetRecency(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetLogboek
+   private heeftDataToegangGetLogboek(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboek
+   private heeftDataToegangGetVliegtuigLogboek(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboekTotalen
+   private heeftDataToegangGetVliegtuigLogboekTotalen(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

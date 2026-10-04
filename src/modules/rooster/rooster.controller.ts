@@ -40,6 +40,7 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.RoosterService.GetObject(id);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -51,6 +52,7 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.RoosterService.GetObjects(queryParams);
    }
 
@@ -62,10 +64,11 @@ export class RoosterController  extends HeliosController
       this.logger.verbose(`RoosterController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Rooster.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       // een gewone gebruiker mag alleen een default rooster aanmaken: OPMERKINGEN leeg, DDWV, CLUB_BEDRIJF en
       // WINTER_WERK worden door de service afgeleid van de datum, zie AddObject() in class.Rooster.inc.php
-      if (!this.heeftDataToegangAddObject(currentUser))
+      if (!this.magVeldenInvullen(currentUser))
       {
          data.OPMERKINGEN = null;
          delete data.DDWV;
@@ -87,9 +90,7 @@ export class RoosterController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`RoosterController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.UpdateObject');
-
-      if (!this.heeftDataToegangUpdateObject(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as UpdateOperRoosterDto;
       const obj = await this.RoosterService.UpdateObject(id, update as Prisma.OperRoosterUncheckedUpdateInput, currentUser.ID);
@@ -103,9 +104,7 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.DeleteObject');
-
-      if (!this.heeftDataToegangDeleteObject(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperRoosterUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -120,6 +119,7 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.RoosterService.RemoveObject(id, currentUser.ID);
    }
 
@@ -130,10 +130,7 @@ export class RoosterController  extends HeliosController
    {
       this.logger.verbose(`RoosterController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.RestoreObject');
-
-      // zelfde rechten als DeleteObject, zie HerstelObject() in class.Rooster.inc.php
-      if (!this.heeftDataToegangDeleteObject(currentUser))
-         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperRoosterUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -162,29 +159,64 @@ export class RoosterController  extends HeliosController
       return data;
    }
 
-   // zie heeftDataToegang(null, false) || isBeheerderDDWV() || isRooster() in AddObject() van class.Rooster.inc.php
-   private heeftDataToegangAddObject(currentUser: RefLid): boolean
+   // beheerders en roostermaker mogen OPMERKINGEN, DDWV, CLUB_BEDRIJF en WINTER_WERK zelf invullen, zie
+   // heeftDataToegang(null, false) || isBeheerderDDWV() || isRooster() in AddObject() van class.Rooster.inc.php
+   private magVeldenInvullen(currentUser: RefLid): boolean
    {
       return this.permissieService.isBeheerder(currentUser)
          || this.permissieService.isBeheerderDDWV(currentUser)
          || this.permissieService.isRooster(currentUser);
    }
 
-   // zie heeftDataToegang(null, false) || isBeheerderDDWV() || isRooster() || isCIMT() in UpdateObject() van class.Rooster.inc.php
-   private heeftDataToegangUpdateObject(currentUser: RefLid): boolean
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
    {
-      return this.permissieService.isBeheerder(currentUser)
-         || this.permissieService.isBeheerderDDWV(currentUser)
-         || this.permissieService.isRooster(currentUser)
-         || this.permissieService.isCIMT(currentUser);
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 
-   // zie heeftDataToegang(null, false) || isBeheerderDDWV() || isRooster() in VerwijderObject() en HerstelObject()
-   // van class.Rooster.inc.php
-   private heeftDataToegangDeleteObject(currentUser: RefLid): boolean
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
    {
-      return this.permissieService.isBeheerder(currentUser)
-         || this.permissieService.isBeheerderDDWV(currentUser)
-         || this.permissieService.isRooster(currentUser);
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/UpdateObject
+   private heeftDataToegangUpdateObject(currentUser: RefLid): void
+   {
+      if (!this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isRooster(currentUser)
+         && !this.permissieService.isCIMT(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/DeleteObject
+   private heeftDataToegangDeleteObject(currentUser: RefLid): void
+   {
+      if (!this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isRooster(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Rooster/RestoreObject
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
+   {
+      if (!this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isRooster(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 }

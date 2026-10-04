@@ -41,6 +41,7 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.WinterwerkService.GetObject(id);
       return {
          ...obj,
@@ -57,6 +58,7 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.WinterwerkService.GetObjects(queryParams);
    }
 
@@ -68,6 +70,7 @@ export class WinterwerkController extends HeliosController
       this.logger.verbose(`WinterwerkController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedCreateInput;
       const obj = await this.WinterwerkService.AddObject(insert, currentUser.ID);
@@ -88,6 +91,7 @@ export class WinterwerkController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedUpdateInput;
       const obj = await this.WinterwerkService.UpdateObject(id, update, currentUser.ID);
@@ -106,6 +110,7 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperWinterwerkUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -120,6 +125,7 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.WinterwerkService.RemoveObject(id, currentUser.ID);
    }
 
@@ -130,6 +136,7 @@ export class WinterwerkController extends HeliosController
    {
       this.logger.verbose(`WinterwerkController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperWinterwerkUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -158,5 +165,45 @@ export class WinterwerkController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Winterwerk/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

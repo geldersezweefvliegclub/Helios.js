@@ -47,6 +47,7 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.DagRapportenService.GetObject(id);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -58,6 +59,7 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
 
       const toegestaneDatums = await this.bepaalToegestaneDatums(currentUser, queryParams);
       return await this.DagRapportenService.GetObjects(queryParams, toegestaneDatums);
@@ -71,6 +73,7 @@ export class DagRapportenController extends HeliosController
       this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
       // PHP class.DagRapporten.inc.php::AddObject() - INGEVOERD_ID wordt altijd server-side gezet op de
@@ -89,6 +92,7 @@ export class DagRapportenController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedUpdateInput;
       const obj = await this.DagRapportenService.UpdateObject(id, update, currentUser.ID);
@@ -102,6 +106,7 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperDagRapportUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -116,6 +121,7 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.DagRapportenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -126,6 +132,7 @@ export class DagRapportenController extends HeliosController
    {
       this.logger.verbose(`DagRapportenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperDagRapportUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -197,5 +204,45 @@ export class DagRapportenController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van DagRapporten/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

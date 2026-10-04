@@ -46,6 +46,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.GetObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.FacturenService.GetObject(id);
    }
 
@@ -57,6 +58,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.FacturenService.GetObjects(queryParams);
    }
 
@@ -71,6 +73,7 @@ export class FacturenController  extends HeliosController
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedCreateInput;
       return await this.FacturenService.AddObject(insert, currentUser.ID);
@@ -88,6 +91,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedUpdateInput;
       return await this.FacturenService.UpdateObject(id, update, currentUser.ID);
@@ -103,6 +107,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.DeleteObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperFactuurUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -117,6 +122,7 @@ export class FacturenController  extends HeliosController
    {
       this.logger.verbose(`FacturenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.FacturenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -127,6 +133,7 @@ export class FacturenController  extends HeliosController
    {
       this.logger.verbose(`FacturenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Facturen.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperFactuurUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -159,6 +166,7 @@ export class FacturenController  extends HeliosController
       this.logger.verbose(`FacturenController.NogTeFactureren(${safeStringify({currentUser, queryParams})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.NogTeFactureren');
+      this.heeftDataToegangNogTeFactureren(currentUser);
       return await this.FacturenService.NogTeFactureren(queryParams.JAAR, queryParams.HASH);
    }
 
@@ -182,6 +190,7 @@ export class FacturenController  extends HeliosController
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.AanmakenFacturen');
+      this.heeftDataToegangAanmakenFacturen(currentUser);
       return await this.FacturenService.AanmakenFacturen(data.JAAR, data.LID_ID, currentUser.ID);
    }
 
@@ -202,6 +211,7 @@ export class FacturenController  extends HeliosController
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UploadFactuur');
+      this.heeftDataToegangUploadFactuur(currentUser);
       await this.FacturenService.UploadFactuur(data.ID);
    }
 
@@ -222,6 +232,7 @@ export class FacturenController  extends HeliosController
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() || isBeheerderDDWV() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UploadTransactieFactuur');
+      this.heeftDataToegangUploadTransactieFactuur(currentUser);
       await this.FacturenService.UploadTransactieFactuur(data.LID_ID, data.DATUM);
    }
 
@@ -241,5 +252,69 @@ export class FacturenController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/NogTeFactureren
+   private heeftDataToegangNogTeFactureren(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/AanmakenFacturen
+   private heeftDataToegangAanmakenFacturen(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/UploadFactuur
+   private heeftDataToegangUploadFactuur(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Facturen/UploadTransactieFactuur
+   private heeftDataToegangUploadTransactieFactuur(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

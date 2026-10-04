@@ -40,6 +40,7 @@ async GetObject(
    {
       this.logger.verbose(`AgendaController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.agendaService.GetObject(id);
       return {
          ...obj,
@@ -55,6 +56,7 @@ async GetObject(
    {
       this.logger.verbose(`AgendaController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.agendaService.GetObjects(queryParams);
    }
 
@@ -66,6 +68,7 @@ async AddObject(
       this.logger.verbose(`AgendaController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Agenda.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperAgendaUncheckedCreateInput;
       const obj = await this.agendaService.AddObject(insert, currentUser.ID);
@@ -85,6 +88,7 @@ async UpdateObject(
       id = id ?? data.ID;
       this.logger.verbose(`AgendaController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperAgendaUncheckedUpdateInput;
       const obj = await this.agendaService.UpdateObject(id, update, currentUser.ID);
@@ -102,6 +106,7 @@ async DeleteObject(
    {
       this.logger.verbose(`AgendaController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperAgendaUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -116,6 +121,7 @@ async RemoveObject(
    {
       this.logger.verbose(`AgendaController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.agendaService.RemoveObject(id, currentUser.ID);
    }
 
@@ -126,6 +132,7 @@ async RestoreObject(
    {
       this.logger.verbose(`AgendaController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Agenda.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperAgendaUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -153,5 +160,45 @@ async RestoreObject(
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Agenda/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

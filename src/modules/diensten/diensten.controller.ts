@@ -49,6 +49,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const dienst = await this.DienstenService.GetObject(id);
       return this.maskeerUitbetaaldVoorGebruiker(dienst, currentUser);
    }
@@ -60,6 +61,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
 
       const toegestaneDatums = await this.bepaalToegestaneDatums(currentUser, queryParams);
       const result = await this.DienstenService.GetObjects(queryParams, toegestaneDatums);
@@ -75,6 +77,7 @@ export class DienstenController  extends HeliosController
       this.logger.verbose(`DienstenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       // PHP class.Diensten.inc.php::AddObject() - DDWV-leden (LIDTYPE_ID = DDWV) mogen zelf nooit een
       // dienst aanmaken
@@ -111,6 +114,7 @@ export class DienstenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const bestaandeDienst = await this.DienstenService.GetObject(id);
       this.controleerSchrijfrechten(bestaandeDienst, currentUser);
@@ -130,6 +134,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const bestaandeDienst = await this.DienstenService.GetObject(id);
       this.controleerSchrijfrechten(bestaandeDienst, currentUser);
@@ -147,6 +152,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.DienstenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -157,6 +163,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperDienstUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -183,6 +190,7 @@ export class DienstenController  extends HeliosController
    {
       this.logger.verbose(`DienstenController.TotaalDiensten(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.TotaalDiensten');
+      this.heeftDataToegangTotaalDiensten(currentUser);
       return await this.DienstenService.TotaalDiensten(queryParams.JAAR, queryParams.LID_ID);
    }
 
@@ -268,5 +276,53 @@ export class DienstenController  extends HeliosController
             throw new HttpException("Geen schrijfrechten (bewerktermijn van 4 uur verstreken)", HttpStatus.UNAUTHORIZED);
          }
       }
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Diensten/TotaalDiensten
+   private heeftDataToegangTotaalDiensten(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

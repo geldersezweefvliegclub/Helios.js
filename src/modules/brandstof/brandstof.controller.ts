@@ -46,6 +46,7 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.brandstofService.GetObject(id);
       return {...obj, TIJDSTIP: toDateOnly(obj.TIJDSTIP) as unknown as Date};
    }
@@ -57,6 +58,7 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.brandstofService.GetObjects(queryParams);
    }
 
@@ -68,6 +70,7 @@ export class BrandstofController  extends HeliosController
       this.logger.verbose(`BrandstofController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       if (data.LID_ID === undefined)
          throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
@@ -86,6 +89,7 @@ export class BrandstofController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`BrandstofController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data, false) as UpdateOperBrandstofDto;
       const obj = await this.brandstofService.UpdateObject(id, update, currentUser.ID);
@@ -99,6 +103,7 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: true
@@ -113,6 +118,7 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.brandstofService.RemoveObject(id, currentUser.ID);
    }
 
@@ -123,6 +129,7 @@ export class BrandstofController  extends HeliosController
    {
       this.logger.verbose(`BrandstofController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperBrandstofUpdateInput = {
          VERWIJDERD: false
@@ -154,5 +161,45 @@ export class BrandstofController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Brandstof/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

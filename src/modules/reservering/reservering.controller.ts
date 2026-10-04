@@ -41,9 +41,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.GetObject');
-      if (!this.heeftDataToegangGetObjects(currentUser)) {
-         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
-      }
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.reserveringService.GetObject(id);
       return {...obj, DATUM: toDateOnly(obj.DATUM) as unknown as Date};
    }
@@ -55,11 +53,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.GetObjects');
-
-      if (!this.heeftDataToegangGetObjects(currentUser)) {
-         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
-      }
-
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.reserveringService.GetObjects(queryParams);
    }
 
@@ -72,6 +66,7 @@ export class ReserveringController extends HeliosController
       this.logger.verbose(`ReserveringController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Reservering.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       // INGEVOERD_ID wordt enkel intern gezet, zie RequestToRecord() in class.Reservering.inc.php
       if ('INGEVOERD_ID' in data)
@@ -102,6 +97,7 @@ export class ReserveringController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`ReserveringController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       if ('INGEVOERD_ID' in data)
          throw new HttpException("INGEVOERD_ID kan niet extern gezet worden", HttpStatus.BAD_REQUEST);
@@ -121,15 +117,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.DeleteObject');
-
-      // verwijderen mag door de vlieger zelf, of door (DDWV) beheerder - zie VerwijderObject() in
-      // class.Reservering.inc.php
-      if (!this.heeftDataToegangDeleteObject(currentUser)) {
-         const bestaand = await this.reserveringService.GetObject(id);
-         const ikBenHetZelf = this.permissieService.ikBenHetZelf({ID: bestaand.LID_ID} as RefLid, currentUser);
-         if (!ikBenHetZelf)
-            throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
-      }
+      await this.heeftDataToegangDeleteObject(currentUser, id);
 
       const data: Prisma.OperReserveringUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -144,6 +132,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.reserveringService.RemoveObject(id, currentUser.ID);
    }
 
@@ -154,6 +143,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperReserveringUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -174,6 +164,7 @@ export class ReserveringController extends HeliosController
    {
       this.logger.verbose(`ReserveringController.MagNogReserveren(${safeStringify({currentUser})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.MagNogReserveren');
+      this.heeftDataToegangMagNogReserveren(currentUser);
       return await this.reserveringService.MagNogReserveren(currentUser.ID);
    }
 
@@ -195,19 +186,72 @@ export class ReserveringController extends HeliosController
       return data;
    }
 
-   private heeftDataToegangGetObjects(currentUser: RefLid): boolean
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/GetObject
+   private heeftDataToegangGetObject(currentUser: RefLid): void
    {
-      return this.permissieService.isClubVlieger(currentUser)
-         || this.permissieService.isStarttoren(currentUser)
-         || this.permissieService.isBeheerder(currentUser)
-         || this.permissieService.isInstructeur(currentUser)
-         || this.permissieService.isCIMT(currentUser);
+      // alleen clubvliegers, starttoren of beheerder mogen reserveringen zien, zie GetObjects() in
+      // class.Reservering.inc.php
+      if (!this.permissieService.isClubVlieger(currentUser)
+         && !this.permissieService.isStarttoren(currentUser)
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isInstructeur(currentUser)
+         && !this.permissieService.isCIMT(currentUser))
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
    }
 
-   // zie heeftDataToegang(null, false) || isBeheerderDDWV() in VerwijderObject() van class.Reservering.inc.php
-   private heeftDataToegangDeleteObject(currentUser: RefLid): boolean
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/GetObjects
+   private heeftDataToegangGetObjects(currentUser: RefLid): void
    {
-      return this.permissieService.isBeheerder(currentUser)
-         || this.permissieService.isBeheerderDDWV(currentUser);
+      // alleen clubvliegers, starttoren of beheerder mogen reserveringen zien, zie GetObjects() in
+      // class.Reservering.inc.php
+      if (!this.permissieService.isClubVlieger(currentUser)
+         && !this.permissieService.isStarttoren(currentUser)
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isInstructeur(currentUser)
+         && !this.permissieService.isCIMT(currentUser))
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/DeleteObject
+   private async heeftDataToegangDeleteObject(currentUser: RefLid, id: number): Promise<void>
+   {
+      // verwijderen mag door de vlieger zelf, of door (DDWV) beheerder - zie VerwijderObject() in
+      // class.Reservering.inc.php
+      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isBeheerderDDWV(currentUser))
+         return;
+
+      const bestaand = await this.reserveringService.GetObject(id);
+      if (!this.permissieService.ikBenHetZelf({ID: bestaand.LID_ID} as RefLid, currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Reservering/MagNogReserveren
+   private heeftDataToegangMagNogReserveren(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

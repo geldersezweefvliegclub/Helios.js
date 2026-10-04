@@ -54,9 +54,8 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.GetObject(${safeStringify({currentUser, id})})`);
-      // TODO: PHP vereist hier heeftDataToegang() of zelf (401 anders, zie GetObject() in class.Leden.inc.php)
-      // - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk ander lid opvragen
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj =  await this.ledenService.GetObject(id);
       return this.privacyMask(obj, currentUser);
    }
@@ -68,6 +67,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
 
       // zie GetObjects() in class.Leden.inc.php: een DDWV-only lid krijgt een smallere beperking (enkel
       // DDWV leden/crew) dan een gewoon lid (alle "clubleden" types) - dit zijn twee losse takken, geen
@@ -101,8 +101,8 @@ export class LedenController extends HeliosController
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
    {
       this.logger.verbose(`LedenController.AddObject(${safeStringify({currentUser, data})})`);
-      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Leden.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
       bodyHeeftData(data);
 
       if (!data.NAAM && !data.ACHTERNAAM)
@@ -130,18 +130,11 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser, id ?? data.ID);
       bodyHeeftData(data);
 
       id = id ?? data.ID;
       const ikBenHetZelf = currentUser.ID === id;
-      // zie UpdateObject() in class.Leden.inc.php: zelf, beheerder, beheerder DDWV, CIMT of roostermaker
-      if (!ikBenHetZelf
-         && !this.permissieService.isBeheerder(currentUser)
-         && !this.permissieService.isBeheerderDDWV(currentUser)
-         && !this.permissieService.isCIMT(currentUser)
-         && !this.permissieService.isRooster(currentUser)) {
-         throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
-      }
 
       // huidige databasewaarden nodig om te bepalen of dit lid een bijzondere rol heeft (zie
       // normaliserenData()/isSpecialeRol()) - een niet-bestaand ID wordt hier genegeerd, net als in PHP's
@@ -161,10 +154,8 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`LedenController.DeleteObject(${safeStringify({currentUser, id})})`);
-      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders, zie VerwijderObject()
-      // in class.Leden.inc.php) - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk
-      // ander lid (soft) verwijderen
       this.permissieService.heeftToegang(currentUser, 'Leden.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: true
@@ -180,6 +171,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       if (currentUser.ID === id) {
          throw new HttpException(`Je kunt jezelf niet verwijderen`, HttpStatus.UNAUTHORIZED);
       }
@@ -192,10 +184,8 @@ export class LedenController extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`LedenController.RestoreObject(${safeStringify({currentUser, id})})`);
-      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV() (401 anders, zie HerstelObject()
-      // in class.Leden.inc.php) - heeftToegang() is nog een no-op stub, dus elk lid kan momenteel elk
-      // ander lid herstellen
       this.permissieService.heeftToegang(currentUser, 'Leden.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.RefLidUpdateInput = {
          VERWIJDERD: false
@@ -318,6 +308,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.GetVerjaardagen(${safeStringify({currentUser, aantal})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetVerjaardagen');
+      this.heeftDataToegangGetVerjaardagen(currentUser);
 
       // DDWV-only leden krijgen geen verjaardagen te zien - zie GetVerjaardagen() in class.Leden.inc.php
       if (this.permissieService.isDDWVer(currentUser))
@@ -340,6 +331,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.NieuwLidNummer(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.NieuwLidNummer');
+      this.heeftDataToegangNieuwLidNummer(currentUser);
       const LIDNR = await this.ledenService.NieuwLidNummer(queryParams.JAAR);
       return {LIDNR};
    }
@@ -360,14 +352,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.UploadAvatar(${safeStringify({currentUser, id: data?.ID})})`);
       bodyHeeftData(data);
-
-      // zie UploadAvatar() in class.Leden.inc.php: zelf, of heeftDataToegang()||isBeheerderDDWV()
-      // TODO: isBeheerder is hier een benadering van heeftDataToegang(), die nog een no-op stub is
-      if (currentUser.ID !== data.ID
-         && !this.permissieService.isBeheerder(currentUser)
-         && !this.permissieService.isBeheerderDDWV(currentUser)) {
-         throw new HttpException(`Niet toegestaan om avatar van ander lid te uploaden`, HttpStatus.UNAUTHORIZED);
-      }
+      this.heeftDataToegangUploadAvatar(currentUser, data.ID);
 
       const baseUrl = `${request.protocol}://${request.get('host')}`;
       return await this.ledenService.UploadAvatar(data.ID, data.FILE, baseUrl, currentUser.ID);
@@ -546,5 +531,80 @@ export class LedenController extends HeliosController
       if (dbLid && Object.prototype.hasOwnProperty.call(dbLid, veld))
          return (dbLid as unknown as Record<string, unknown>)[veld] === true;
       return true;
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // TODO: PHP vereist hier heeftDataToegang() of zelf, zie GetObject() in class.Leden.inc.php
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV(), zie AddObject() in class.Leden.inc.php
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/UpdateObject
+   private heeftDataToegangUpdateObject(currentUser: RefLid, id: number): void
+   {
+      // zie UpdateObject() in class.Leden.inc.php: zelf, beheerder, beheerder DDWV, CIMT of roostermaker
+      if (currentUser.ID !== id
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isCIMT(currentUser)
+         && !this.permissieService.isRooster(currentUser))
+         throw new HttpException(`Niet toegestaan om ander lid te wijzigen`, HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV(), zie VerwijderObject() in class.Leden.inc.php
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // TODO: PHP vereist hier heeftDataToegang() || isBeheerderDDWV(), zie HerstelObject() in class.Leden.inc.php
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/GetVerjaardagen
+   private heeftDataToegangGetVerjaardagen(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/NieuwLidNummer
+   private heeftDataToegangNieuwLidNummer(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Leden/UploadAvatar
+   private heeftDataToegangUploadAvatar(currentUser: RefLid, id: number): void
+   {
+      // zie UploadAvatar() in class.Leden.inc.php: zelf, of heeftDataToegang()||isBeheerderDDWV()
+      // TODO: isBeheerder is hier een benadering van heeftDataToegang()
+      if (currentUser.ID !== id
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser))
+         throw new HttpException(`Niet toegestaan om avatar van ander lid te uploaden`, HttpStatus.UNAUTHORIZED);
    }
 }

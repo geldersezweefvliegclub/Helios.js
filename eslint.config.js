@@ -11,7 +11,9 @@ module.exports = tseslint.config(
             ...tseslint.configs.stylistic
         ],
         rules: {
-            '@typescript-eslint/no-empty-object-type': 'warn'
+            '@typescript-eslint/no-empty-object-type': 'warn',
+            // een parameter met een "_" prefix mag ongebruikt zijn, zoals currentUser in nog lege heeftDataToegang<Endpoint>() functies
+            '@typescript-eslint/no-unused-vars': ['error', {argsIgnorePattern: '^_'}]
         }
     }
 );

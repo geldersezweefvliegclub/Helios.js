@@ -47,6 +47,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.AanwezigLedenService.GetObject(id);
       return {
          ...obj,
@@ -63,6 +64,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       const objs = await this.AanwezigLedenService.GetObjects(queryParams);
 
       if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isInstructeur(currentUser) || this.permissieService.isCIMT(currentUser))
@@ -83,6 +85,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       // DATUM en LID_ID zijn verplicht
       if (data.DATUM === undefined)
@@ -109,6 +112,7 @@ export class AanwezigLedenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as UpdateOperAanwezigLidDto;
       const obj = await this.AanwezigLedenService.UpdateObject(id, update, currentUser.ID);
@@ -127,6 +131,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -141,6 +146,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.AanwezigLedenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -151,6 +157,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -176,6 +183,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.Aanmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Aanmelden');
+      this.heeftDataToegangAanmelden(currentUser);
 
       const obj = await this.AanwezigLedenService.Aanmelden(data, currentUser.ID);
       return {
@@ -203,6 +211,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.Afmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Afmelden');
+      this.heeftDataToegangAfmelden(currentUser);
 
       const obj = await this.AanwezigLedenService.Afmelden(data, currentUser.ID);
       return {
@@ -226,6 +235,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.Samenvatting(${safeStringify({currentUser, datum})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Samenvatting');
+      this.heeftDataToegangSamenvatting(currentUser);
 
       const gevraagdeDatum = datum ? parseDateOnly(datum) as Date : parseDateOnly(new Date().toISOString().slice(0, 10)) as Date;
       return await this.AanwezigLedenService.Samenvatting(gevraagdeDatum);
@@ -281,5 +291,65 @@ export class AanwezigLedenController  extends HeliosController
             AVATAR: MASK,
          };
       });
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Aanmelden
+   private heeftDataToegangAanmelden(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Afmelden
+   private heeftDataToegangAfmelden(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Samenvatting
+   private heeftDataToegangSamenvatting(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

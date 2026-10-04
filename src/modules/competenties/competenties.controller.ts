@@ -46,6 +46,7 @@ export class CompetentiesController extends HeliosController
    {
       this.logger.verbose(`CompetentiesController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.competentiesService.GetObject(id);
    }
 
@@ -57,6 +58,7 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       // controleer of de gebruiker de juiste rechten heeft
       this.permissieService.heeftToegang(currentUser, 'Competenties.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
 
       // haal de objects op uit de database op basis van de query parameters
       return await this.competentiesService.GetObjects (queryParams);
@@ -70,6 +72,7 @@ export class CompetentiesController extends HeliosController
       this.logger.verbose(`CompetentiesController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedCreateInput;
       return await this.competentiesService.AddObject(insert, currentUser.ID);
@@ -84,6 +87,7 @@ export class CompetentiesController extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedUpdateInput;
       return await this.competentiesService.UpdateObject(id, update, currentUser.ID);
@@ -96,6 +100,7 @@ export class CompetentiesController extends HeliosController
    {
       this.logger.verbose(`CompetentiesController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.RefCompetentieUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -110,6 +115,7 @@ export class CompetentiesController extends HeliosController
    {
       this.logger.verbose(`CompetentiesController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.competentiesService.RemoveObject(id, currentUser.ID);
    }
 
@@ -120,6 +126,7 @@ export class CompetentiesController extends HeliosController
    {
       this.logger.verbose(`CompetentiesController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.RefCompetentieUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -148,6 +155,7 @@ export class CompetentiesController extends HeliosController
    {
       this.logger.verbose(`CompetentiesController.CompetentiesBoom(${safeStringify({currentUser})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.CompetentiesBoom');
+      this.heeftDataToegangCompetentiesBoom(currentUser);
 
       const retValue: CompetentiesBoomResponse[] = [];
 
@@ -198,5 +206,53 @@ export class CompetentiesController extends HeliosController
       delete data.ID;
 
       return data as Prisma.RefCompetentieUncheckedCreateInput | Prisma.RefCompetentieUncheckedUpdateInput;
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Competenties/CompetentiesBoom
+   private heeftDataToegangCompetentiesBoom(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

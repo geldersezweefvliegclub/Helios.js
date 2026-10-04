@@ -43,6 +43,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.AanwezigVliegtuigenService.GetObject(id);
       return {
          ...obj,
@@ -59,6 +60,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.AanwezigVliegtuigenService.GetObjects(queryParams);
    }
 
@@ -70,6 +72,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedCreateInput;
       const obj = await this.AanwezigVliegtuigenService.AddObject(insert, currentUser.ID);
@@ -90,6 +93,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigVliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
       const obj = await this.AanwezigVliegtuigenService.UpdateObject(id, update, currentUser.ID);
@@ -108,6 +112,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperAanwezigVliegtuigUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -122,6 +127,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.AanwezigVliegtuigenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -132,6 +138,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigVliegtuigenController.RestoreObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperAanwezigVliegtuigUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -157,6 +164,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.Aanmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Aanmelden');
+      this.heeftDataToegangAanmelden(currentUser);
 
       const obj = await this.AanwezigVliegtuigenService.Aanmelden(data, currentUser.ID);
       return {
@@ -184,6 +192,7 @@ export class AanwezigVliegtuigenController  extends HeliosController
       this.logger.verbose(`AanwezigVliegtuigenController.Afmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Afmelden');
+      this.heeftDataToegangAfmelden(currentUser);
 
       const obj = await this.AanwezigVliegtuigenService.Afmelden(data, currentUser.ID);
       return {
@@ -211,5 +220,59 @@ export class AanwezigVliegtuigenController  extends HeliosController
       data.VERTREK = parseTimeOnly(data.VERTREK as Date | string | null);
 
       return data as Prisma.OperAanwezigVliegtuigUncheckedCreateInput | Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/Aanmelden
+   private heeftDataToegangAanmelden(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van AanwezigVliegtuigen/Afmelden
+   private heeftDataToegangAfmelden(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 }

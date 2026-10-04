@@ -42,6 +42,7 @@ export class JournaalController extends HeliosController
    {
       this.logger.verbose(`JournaalController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.journaalService.GetObject(id);
    }
 
@@ -52,6 +53,7 @@ export class JournaalController extends HeliosController
    {
       this.logger.verbose(`JournaalController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
       return await this.journaalService.GetObjects (queryParams);
    }
 
@@ -63,6 +65,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedCreateInput;
       return await this.journaalService.AddObject(insert, currentUser.ID);
@@ -78,6 +81,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() || isTechnicus() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedUpdateInput;
       return await this.journaalService.UpdateObject(id, update, currentUser.ID);
@@ -91,6 +95,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.DeleteObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -105,6 +110,7 @@ export class JournaalController extends HeliosController
    {
       this.logger.verbose(`JournaalController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Journaal.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.journaalService.RemoveObject(id, currentUser.ID);
    }
 
@@ -116,6 +122,7 @@ export class JournaalController extends HeliosController
       this.logger.verbose(`JournaalController.RestoreObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders, let op: beperkter dan Delete - geen isCIMT()) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperJournaalUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -141,5 +148,46 @@ export class JournaalController extends HeliosController
    }
 
    //------------- Specifieke endpoints staan hieronder --------------------//
-   
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Journaal/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }

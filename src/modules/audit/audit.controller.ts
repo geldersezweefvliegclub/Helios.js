@@ -50,6 +50,7 @@ export class AuditController extends HeliosController {
         @Query() queryParams: GetObjectRequest): Promise<AuditDto> {
         this.logger.verbose(`AuditController.GetObject(${safeStringify({currentUser, queryParams})})`);
         this.permissieService.heeftToegang(currentUser, 'Audit.GetObject');
+        this.heeftDataToegangGetObject(currentUser);
 
         const obj = await this.auditService.GetObject(queryParams.ID);
 
@@ -67,6 +68,7 @@ export class AuditController extends HeliosController {
         @Query() queryParams: GetObjectsAuditRequest): Promise<IHeliosGetObjectsResponse<GetObjectsAuditResponse>> {
         this.logger.verbose(`AuditController.GetObjects(${safeStringify({currentUser, queryParams})})`);
         this.permissieService.heeftToegang(currentUser, 'Audit.GetObjects');
+        this.heeftDataToegangGetObjects(currentUser);
         // als de gebruiker geen beheerder is, dan mag hij alleen zijn eigen records zien
         if (!this.permissieService.isBeheerder(currentUser)) {
             queryParams.LID_ID = currentUser.ID;
@@ -144,5 +146,13 @@ export class AuditController extends HeliosController {
 
     //------------- Specifieke endpoints staan hieronder --------------------//
 
+    // controleer of de gebruiker toegang heeft tot de data van Audit/GetObject
+    private heeftDataToegangGetObject(_currentUser: RefLid): void {
+        // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+    }
 
+    // controleer of de gebruiker toegang heeft tot de data van Audit/GetObjects
+    private heeftDataToegangGetObjects(_currentUser: RefLid): void {
+        // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+    }
 }

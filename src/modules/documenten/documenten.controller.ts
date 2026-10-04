@@ -40,6 +40,7 @@ export class DocumentenController extends HeliosController
    {
       this.logger.verbose(`DocumentenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.GetObject');
+      this.heeftDataToegangGetObject(currentUser);
       return await this.documentenService.GetObject(id);
    }
 
@@ -51,6 +52,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       // controleer of de gebruiker de juiste rechten heeft
       this.permissieService.heeftToegang(currentUser, 'Documenten.GetObjects');
+      this.heeftDataToegangGetObjects(currentUser);
 
       // haal de objects op uit de database op basis van de query parameters
       return await this.documentenService.GetObjects (queryParams);
@@ -65,6 +67,7 @@ export class DocumentenController extends HeliosController
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
+      this.heeftDataToegangAddObject(currentUser);
 
       const upload = this.bepaalUpload(request, data);
       const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedCreateInput;
@@ -82,6 +85,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
+      this.heeftDataToegangUpdateObject(currentUser);
 
       const upload = this.bepaalUpload(request, data);
       const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedUpdateInput;
@@ -96,6 +100,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.DeleteObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.DeleteObject');
+      this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -110,6 +115,7 @@ export class DocumentenController extends HeliosController
    {
       this.logger.verbose(`DocumentenController.RemoveObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Documenten.RemoveObject');
+      this.heeftDataToegangRemoveObject(currentUser);
       await this.documentenService.RemoveObject(id, currentUser.ID);
    }
 
@@ -121,6 +127,7 @@ export class DocumentenController extends HeliosController
       this.logger.verbose(`DocumentenController.RestoreObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.RestoreObject');
+      this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.HeliosDocumentUncheckedUpdateInput = {
          VERWIJDERD: false
@@ -167,4 +174,38 @@ export class DocumentenController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/GetObject
+   private heeftDataToegangGetObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/GetObjects
+   private heeftDataToegangGetObjects(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/AddObject
+   private heeftDataToegangAddObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/UpdateObject
+   private heeftDataToegangUpdateObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/DeleteObject
+   private heeftDataToegangDeleteObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/RemoveObject
+   private heeftDataToegangRemoveObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Documenten/RestoreObject
+   private heeftDataToegangRestoreObject(_currentUser: RefLid): void {
+      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
 }
