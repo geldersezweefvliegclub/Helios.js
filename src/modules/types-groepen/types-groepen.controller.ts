@@ -1,6 +1,8 @@
 import {
    Body,
    Controller,
+   HttpException,
+   HttpStatus,
    Logger,
    Query
 } from '@nestjs/common';
@@ -14,9 +16,9 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {RefTypesGroepDto} from "../../generated/nestjs-dto/refTypesGroep.dto";
 import {GetObjectsRefTypesGroepenRequest} from "./GetObjectsRefTypesGroepenRequest";
-import {Prisma, RefLid, RefTypesGroep} from "@prisma/client";
+import {Prisma, RefLid} from "@prisma/client";
 import {CurrentUser} from "../login/current-user.decorator";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiResponse, ApiTags} from "@nestjs/swagger";
 import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResponse";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CreateRefTypesGroepDto} from "../../generated/nestjs-dto/create-refTypesGroep.dto";
@@ -73,9 +75,10 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefTypesGroepDto, RefTypesGroepDto)
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Groep is read-only.'})
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroep>
+      @Query('ID') id: number, @Body() data: UpdateRefTypesGroepDto): Promise<RefTypesGroepDto>
    {
       this.logger.verbose(`TypesGroepenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'TypesGroepen.UpdateObject');
@@ -88,6 +91,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosDeleteObject()
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Groep is read-only.'})
    async DeleteObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
@@ -103,6 +107,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosRemoveObject()
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Groep is read-only.'})
    async RemoveObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
@@ -114,6 +119,7 @@ export class TypesGroepenController extends HeliosController
    }
 
    @HeliosRestoreObject()
+   @ApiResponse({status: HttpStatus.FORBIDDEN, description: 'Groep is read-only.'})
    async RestoreObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number): Promise<void>
@@ -157,32 +163,42 @@ export class TypesGroepenController extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van TypesGroepen/AddObject
-   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   private heeftDataToegangAddObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in AddObject() van class.TypesGroepen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van TypesGroepen/UpdateObject
-   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   private heeftDataToegangUpdateObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in UpdateObject() van class.TypesGroepen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van TypesGroepen/DeleteObject
-   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   private heeftDataToegangDeleteObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in VerwijderObject() van class.TypesGroepen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van TypesGroepen/RemoveObject
-   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   private heeftDataToegangRemoveObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, bestaat niet in PHP; zelfde rechten als DeleteObject
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van TypesGroepen/RestoreObject
-   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in HerstelObject() van class.TypesGroepen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 }

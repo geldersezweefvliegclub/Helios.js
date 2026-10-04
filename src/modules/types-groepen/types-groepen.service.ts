@@ -11,13 +11,6 @@ import {GetObjectsRefTypesGroepenResponse} from "./GetObjectsRefTypesGroepenResp
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
-export type OptionalKeysOf<Obj> = keyof {
-   [Key
-      in keyof Obj
-      as Omit<Obj, Key> extends Obj ? Key : never
-   ]: Obj[Key];
-};
-
 
 @Injectable()
 export class TypesGroepenService extends IHeliosService
@@ -95,6 +88,7 @@ export class TypesGroepenService extends IHeliosService
    {
       this.logger.verbose(`TypesGroepenService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+      this.ControleerNietReadOnly(db);
       const obj = await this.dbService.refTypesGroep.update({
          where: {
             ID: id
@@ -111,6 +105,7 @@ export class TypesGroepenService extends IHeliosService
    {
       this.logger.verbose(`TypesGroepenService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      this.ControleerNietReadOnly(db);
       if (!db.VERWIJDERD) {
          throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
       }
@@ -120,5 +115,13 @@ export class TypesGroepenService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
+   }
+
+   // een READ_ONLY groep kan niet aangepast, verwijderd of hersteld worden, omdat er in de source code een harde
+   // verwijzing naar bestaat (zie READ_ONLY in het Prisma schema). PHP dwingt dit niet af.
+   private ControleerNietReadOnly(groep: RefTypesGroep): void
+   {
+      if (groep.READ_ONLY)
+         throw new HttpException(`Groep ${groep.ID} is read-only en kan niet aangepast worden`, HttpStatus.FORBIDDEN);
    }
 }
