@@ -54,10 +54,16 @@ model OperStartlijst {
   OPMERKINGEN        String?       @db.Text
   /// @description Externe referentie ID voor koppelingen met externe systemen
   EXTERNAL_ID        String?       @db.Text
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Was de vlucht een passagiersvlucht
   PAX                Boolean       @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Was de vlucht een check-start (eerste vlucht van het seizoen voor de vlieger)
   CHECKSTART         Boolean       @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
   /// @description Was de vlucht een instructievlucht
   INSTRUCTIEVLUCHT   Boolean       @default(false)
   /// @DtoCreateOptional

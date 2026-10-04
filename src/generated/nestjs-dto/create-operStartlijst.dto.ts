@@ -164,6 +164,34 @@ export class CreateOperStartlijstDto {
   @IsString()
   EXTERNAL_ID?: string | null;
   @ApiProperty({
+    description: "Was de vlucht een passagiersvlucht",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  PAX?: boolean;
+  @ApiProperty({
+    description:
+      "Was de vlucht een check-start (eerste vlucht van het seizoen voor de vlieger)",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  CHECKSTART?: boolean;
+  @ApiProperty({
+    description: "Was de vlucht een instructievlucht",
+    type: "boolean",
+    default: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  INSTRUCTIEVLUCHT?: boolean;
+  @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
     default: false,

@@ -1,16 +1,16 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {forwardRef, HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
 import {DatabaseEvents} from "../../core/helpers/Events";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
 
-import {Prisma, OperStartlijst} from "@prisma/client";
+import {Prisma, OperStartlijst, RefLid} from "@prisma/client";
 import {GetObjectsOperStartlijstRequest} from "./GetObjectsOperStartlijstRequest";
 import {GetObjectsOperStartlijstResponse} from "./GetObjectsOperStartlijstResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
-import {DatumZonderTijd, MinutenNaarTijd, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {DatumZonderTijd, MinutenNaarTijd, toDateOnly, toTimeHHmm} from "../../core/helpers/TimeDate";
 import {RegCall} from "../../core/helpers/RegCall";
 import {getSunset} from "sunrise-sunset-js";
 import {StartMethode} from "../../core/enums/StartMethode";
@@ -25,6 +25,22 @@ import {
    GetVliegtuigLogboekTotalenMaandResponse,
    GetVliegtuigLogboekTotalenResponse
 } from "./GetVliegtuigLogboekTotalenResponse";
+import {GetLogboekTotalenRequest} from "./GetLogboekTotalenRequest";
+import {
+   GetLogboekTotalenResponse,
+   GetLogboekTotalenStartsResponse,
+   GetLogboekTotalenVliegtuigResponse
+} from "./GetLogboekTotalenResponse";
+import {GetVliegDagenRequest} from "./GetVliegDagenRequest";
+import {GetVliegDagenResponse} from "./GetVliegDagenResponse";
+import {crc32} from "js-crc";
+import {AanwezigLedenService} from "../aanwezig-leden/aanwezig-leden.service";
+import {AanwezigVliegtuigenService} from "../aanwezig-vliegtuigen/aanwezig-vliegtuigen.service";
+import {LedenService} from "../leden/leden.service";
+import {RoosterService} from "../rooster/rooster.service";
+import {VliegtuigenService} from "../vliegtuigen/vliegtuigen.service";
+import {LidType} from "../../core/enums/LidType";
+import {Vliegveld} from "../../core/enums/Vliegveld";
 
 // coördinaten van Vliegveld Terlet (Vliegveld.Terlet, zie enums/Vliegveld.ts) - zelfde waarden als de
 // "airport"-configuratie in Pegasus (pegasus.config.json), voor consistente zonsondergangberekeningen
@@ -44,13 +60,37 @@ type StartlijstMetRelaties = Prisma.OperStartlijstGetPayload<{
    }
 }>;
 
+// beperking van de dataset van GetObjects() en GetVliegDagen() voor gebruikers zonder volledige toegang, bepaald in
+// de controller (zie GetObjects()/GetVliegDagen() in class.Startlijst.inc.php)
+export interface StartlijstBeperking
+{
+   LID_ID?: number;     // alleen vluchten met dit lid als vlieger of inzittende ...
+   DATUMS?: Date[];     // ... of op een van deze datums (DDWV dagen voor beheerder DDWV / DDWV crew)
+   DATUM?: Date;        // alleen vluchten op deze datum (starttoren: vandaag)
+}
+
+// een vliegdag tijdens het groeperen en sorteren in GetVliegDagen(): DATUM als timestamp, vliegtijd in minuten
+interface VliegDag
+{
+   DATUM: number;
+   STARTS: number;
+   MINUTEN: number | null;
+}
+
 @Injectable()
 export class StartlijstService extends IHeliosService
 {
    private readonly logger = new Logger(StartlijstService.name);
 
+   // AanwezigLedenService en AanwezigVliegtuigenService injecteren op hun beurt StartlijstService - forwardRef() is
+   // hier dus aan beide kanten nodig om deze cirkelverwijzingen op te lossen
    constructor(private readonly dbService: DbService,
-               private readonly eventEmitter: EventEmitter2)
+               private readonly eventEmitter: EventEmitter2,
+               @Inject(forwardRef(() => AanwezigLedenService)) private readonly aanwezigLedenService: AanwezigLedenService,
+               @Inject(forwardRef(() => AanwezigVliegtuigenService)) private readonly aanwezigVliegtuigenService: AanwezigVliegtuigenService,
+               private readonly ledenService: LedenService,
+               private readonly roosterService: RoosterService,
+               private readonly vliegtuigenService: VliegtuigenService)
    {
       super();
    }
@@ -74,9 +114,9 @@ export class StartlijstService extends IHeliosService
    }
 
    // haal objects op uit de database op basis van de query parameters
-   async GetObjects(params?: GetObjectsOperStartlijstRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperStartlijstResponse>>
+   async GetObjects(params?: GetObjectsOperStartlijstRequest, beperking?: StartlijstBeperking): Promise<IHeliosGetObjectsResponse<GetObjectsOperStartlijstResponse>>
    {
-      this.logger.verbose(`StartlijstService.GetObjects(${safeStringify({params})})`);
+      this.logger.verbose(`StartlijstService.GetObjects(${safeStringify({params, beperking})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperStartlijstRequest, {VERWIJDERD: false});
       const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
@@ -85,6 +125,18 @@ export class StartlijstService extends IHeliosService
       let ddwvDatums: Date[] | undefined;
       if (params.DDWV)
          ddwvDatums = await this.DDWVDatums();
+
+      // SELECTIE zoekt net als PHP ook in REG_CALL ("REGISTRATIE (CALLSIGN)"), dat geen kolom is - daarom eerst de
+      // vliegtuigen bepalen waarvan de REG_CALL de zoektekst bevat (hoofdletterongevoelig, zoals MySQL LIKE)
+      let selectieVliegtuigIds: number[] = [];
+      if (params.SELECTIE)
+      {
+         const zoek = params.SELECTIE.trim().toLowerCase();
+         const vliegtuigen = await this.dbService.refVliegtuig.findMany({select: {ID: true, REGISTRATIE: true, CALLSIGN: true}});
+         selectieVliegtuigIds = vliegtuigen
+            .filter(vliegtuig => RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN).toLowerCase().includes(zoek))
+            .map(vliegtuig => vliegtuig.ID);
+      }
 
       const where: Prisma.OperStartlijstWhereInput =
          {
@@ -100,14 +152,14 @@ export class StartlijstService extends IHeliosService
                   params.DDWV ? { DATUM: { in: ddwvDatums } } : {},
                   params.SELECTIE ? {
                      OR: [
-                        { Vlieger: { NAAM: { contains: params.SELECTIE } } },
-                        { Inzittende: { NAAM: { contains: params.SELECTIE } } },
-                        { VLIEGERNAAM: { contains: params.SELECTIE } },
-                        { INZITTENDENAAM: { contains: params.SELECTIE } },
-                        { Vliegtuig: { REGISTRATIE: { contains: params.SELECTIE } } },
-                        { Vliegtuig: { CALLSIGN: { contains: params.SELECTIE } } },
+                        { Vlieger: { NAAM: { contains: params.SELECTIE.trim() } } },
+                        { Inzittende: { NAAM: { contains: params.SELECTIE.trim() } } },
+                        { VLIEGERNAAM: { contains: params.SELECTIE.trim() } },
+                        { INZITTENDENAAM: { contains: params.SELECTIE.trim() } },
+                        { VLIEGTUIG_ID: { in: selectieVliegtuigIds } },
                      ]
                   } : {},
+                  this.BeperkingWhere(beperking),
                   {
                      DATUM:
                         {
@@ -144,10 +196,24 @@ export class StartlijstService extends IHeliosService
       return result;
    }
 
-   // logboek van een lid (of vliegtuig): alle starts van dat lid (of vliegtuig) in een bepaalde periode, inclusief de naam van de vlieger en inzittende (lid-naam of vrije-tekst naam)
-   async GetLogboek(params: GetLogboekRequest, lidId: number): Promise<IHeliosGetObjectsResponse<GetLogboekResponse>>
+   // datums waarop een DDWV bedrijf gepland staat, via oper_daginfo of oper_rooster (zie startlijst_view)
+   async DDWVDatums(): Promise<Date[]>
    {
-      this.logger.verbose(`StartlijstService.GetLogboek(${safeStringify({params, lidId})})`);
+      this.logger.verbose(`StartlijstService.DDWVDatums()`);
+      const [daginfo, rooster] = await Promise.all([
+         this.dbService.operDagInfo.findMany({where: {DDWV: true}, select: {DATUM: true}}),
+         this.dbService.operRooster.findMany({where: {DDWV: true}, select: {DATUM: true}}),
+      ]);
+      const result = [...daginfo, ...rooster].map(record => record.DATUM);
+      this.logger.verbose(`StartlijstService.DDWVDatums() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // logboek van een lid (of vliegtuig): alle starts van dat lid (of vliegtuig) in een bepaalde periode, inclusief de naam van de vlieger en inzittende (lid-naam of vrije-tekst naam)
+   // Met alleenDDWV worden enkel de vluchten op DDWV dagen opgehaald (beheerder DDWV die het logboek van een ander lid opvraagt)
+   async GetLogboek(params: GetLogboekRequest, lidId: number, alleenDDWV = false): Promise<IHeliosGetObjectsResponse<GetLogboekResponse>>
+   {
+      this.logger.verbose(`StartlijstService.GetLogboek(${safeStringify({params, lidId, alleenDDWV})})`);
 
       // JAAR vertaalt naar BEGIN_DATUM/EIND_DATUM van dat jaar, tenzij die al expliciet zijn opgegeven
       let beginDatum = params.BEGIN_DATUM ?? (params.JAAR !== undefined ? new Date(Date.UTC(params.JAAR, 0, 1)) : undefined);
@@ -168,6 +234,7 @@ export class StartlijstService extends IHeliosService
          EIND_DATUM: eindDatum,
          LID_ID: lidId,
          VLIEGTUIG_ID: params.VLIEGTUIG_ID,
+         DDWV: alleenDDWV || undefined,
          SORT: params.SORT ?? "DATUM DESC, STARTTIJD DESC",
          MAX: params.MAX,
          START: params.START,
@@ -334,6 +401,154 @@ export class StartlijstService extends IHeliosService
       return result;
    }
 
+   // logboek-totalen van een lid voor een heel jaar (standaard het huidige jaar): aantal starts per startmethode,
+   // starts en vliegtijd per vliegtuig en de jaartotalen, zie GetLogboekTotalen() in class.Startlijst.inc.php.
+   // Voor een instructeur tellen ook de instructievluchten mee waarop hij/zij inzittende was.
+   // Met alleenDDWV tellen enkel de vluchten op DDWV dagen mee (beheerder DDWV die de totalen van een ander lid opvraagt).
+   async GetLogboekTotalen(params: GetLogboekTotalenRequest, lidId: number, alleenDDWV = false): Promise<GetLogboekTotalenResponse>
+   {
+      this.logger.verbose(`StartlijstService.GetLogboekTotalen(${safeStringify({params, lidId, alleenDDWV})})`);
+
+      const lid = await this.dbService.refLid.findUnique({where: {ID: lidId}, select: {INSTRUCTEUR: true}});
+      if (!lid)
+         throw new HttpException(`Lid met ID ${lidId} niet gevonden`, HttpStatus.NOT_FOUND);
+
+      const jaar = params.JAAR ?? new Date().getFullYear();
+      const or: Prisma.OperStartlijstWhereInput[] = [{VLIEGER_ID: lidId}];
+      if (lid.INSTRUCTEUR)
+         or.push({INZITTENDE_ID: lidId, INSTRUCTIEVLUCHT: true});
+
+      const vluchten = await this.dbService.operStartlijst.findMany({
+         where: {
+            VERWIJDERD: false,
+            STARTTIJD: {not: null},
+            LANDINGSTIJD: {not: null},
+            AND: [
+               {DATUM: {gte: new Date(Date.UTC(jaar, 0, 1)), lte: new Date(Date.UTC(jaar, 11, 31))}},
+               alleenDDWV ? {DATUM: {in: await this.DDWVDatums()}} : {},
+            ],
+            OR: or,
+         },
+         select: {
+            DATUM: true, STARTTIJD: true, LANDINGSTIJD: true, INZITTENDE_ID: true,
+            Vliegtuig: {select: {REGISTRATIE: true, CALLSIGN: true, CLUBKIST: true, VOLGORDE: true}},
+            Startmethode: {select: {OMSCHRIJVING: true}},
+         },
+      });
+
+      // zelfde volgorde als PHP: clubkisten eerst, dan op VOLGORDE (NULL eerst, zoals MySQL) en REG_CALL. De
+      // volgorde van de vliegtuigen en startmethodes in het resultaat volgt uit de eerste vlucht waarin ze voorkomen
+      const regCall = (vlucht: typeof vluchten[number]) => RegCall(vlucht.Vliegtuig.REGISTRATIE, vlucht.Vliegtuig.CALLSIGN);
+      vluchten.sort((a, b) =>
+         Number(b.Vliegtuig.CLUBKIST) - Number(a.Vliegtuig.CLUBKIST)
+         || (a.Vliegtuig.VOLGORDE ?? -1) - (b.Vliegtuig.VOLGORDE ?? -1)
+         || regCall(a).localeCompare(regCall(b)));
+
+      const perVliegtuig = new Map<string, {starts: number, minuten: number}>();
+      const perMethode = new Map<string | null, number>();
+      let instructieStarts = 0, instructieMinuten = 0, totaalMinuten = 0;
+      for (const vlucht of vluchten)
+      {
+         const minuten = this.BerekenDuurMinutes(vlucht.DATUM, vlucht.STARTTIJD, vlucht.LANDINGSTIJD) ?? 0;
+         totaalMinuten += minuten;
+
+         const vliegtuig = perVliegtuig.get(regCall(vlucht)) ?? {starts: 0, minuten: 0};
+         vliegtuig.starts++;
+         vliegtuig.minuten += minuten;
+         perVliegtuig.set(regCall(vlucht), vliegtuig);
+
+         const methode = vlucht.Startmethode?.OMSCHRIJVING ?? null;
+         perMethode.set(methode, (perMethode.get(methode) ?? 0) + 1);
+
+         if (lid.INSTRUCTEUR && vlucht.INZITTENDE_ID === lidId)
+         {
+            instructieStarts++;
+            instructieMinuten += minuten;
+         }
+      }
+
+      const starts: GetLogboekTotalenStartsResponse[] = [...perMethode.entries()]
+         .map(([METHODE, AANTAL]) => ({METHODE, AANTAL}));
+      const vliegtuigen: GetLogboekTotalenVliegtuigResponse[] = [...perVliegtuig.entries()]
+         .map(([REG_CALL, stats]) => ({REG_CALL, STARTS: stats.starts, VLIEGTIJD: this.FormatteerUren(stats.minuten)}));
+      const totalen = {
+         starts,
+         vliegtuigen,
+         jaar: {
+            STARTS: vluchten.length,
+            INSTRUCTIE_STARTS: instructieStarts,
+            INSTRUCTIE_UREN: this.FormatteerUren(instructieMinuten),
+            VLIEGTIJD: this.FormatteerUren(totaalMinuten),
+         },
+      };
+
+      const hash = crc32(JSON.stringify(totalen));
+      if (params.HASH !== undefined && params.HASH === hash)
+         throw new HttpException("Data is ongewijzigd", HttpStatus.NOT_MODIFIED);
+
+      const result: GetLogboekTotalenResponse = {totaal: vluchten.length, hash, ...totalen};
+      this.logger.verbose(`StartlijstService.GetLogboekTotalen() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // vliegdagen met per dag het aantal starts en de totale vliegtijd, zie GetVliegDagen() in class.Startlijst.inc.php.
+   // Zonder BEGIN_DATUM en EIND_DATUM wordt het huidige jaar opgehaald; met maar een van beide is de andere kant open.
+   async GetVliegDagen(params: GetVliegDagenRequest, beperking?: StartlijstBeperking): Promise<IHeliosGetObjectsResponse<GetVliegDagenResponse>>
+   {
+      this.logger.verbose(`StartlijstService.GetVliegDagen(${safeStringify({params, beperking})})`);
+
+      let beginDatum = params.BEGIN_DATUM ? DatumZonderTijd(params.BEGIN_DATUM) : undefined;
+      let eindDatum = params.EIND_DATUM ? DatumZonderTijd(params.EIND_DATUM) : undefined;
+      if (beginDatum === undefined && eindDatum === undefined)
+      {
+         const jaar = new Date().getFullYear();
+         beginDatum = new Date(Date.UTC(jaar, 0, 1));
+         eindDatum = new Date(Date.UTC(jaar, 11, 31));
+      }
+
+      const vluchten = await this.dbService.operStartlijst.findMany({
+         where: {
+            VERWIJDERD: false,
+            DATUM: {gte: beginDatum, lte: eindDatum},
+            AND: [
+               params.LID_ID !== undefined ? {OR: [{VLIEGER_ID: params.LID_ID}, {INZITTENDE_ID: params.LID_ID}]} : {},
+               this.BeperkingWhere(beperking),
+            ],
+         },
+         select: {DATUM: true, STARTTIJD: true, LANDINGSTIJD: true},
+      });
+
+      // COUNT(*) telt elke start op die dag, ook zonder STARTTIJD; de vliegtijd is de som van de DUUR van de starts
+      // waarvoor die te berekenen is (SUM() negeert NULL), of null als dat voor geen enkele start zo is
+      const perDag = new Map<number, {starts: number, minuten: number | null}>();
+      for (const vlucht of vluchten)
+      {
+         const dag = perDag.get(vlucht.DATUM.getTime()) ?? {starts: 0, minuten: null};
+         dag.starts++;
+         const minuten = this.BerekenDuurMinutes(vlucht.DATUM, vlucht.STARTTIJD, vlucht.LANDINGSTIJD);
+         if (minuten !== null)
+            dag.minuten = (dag.minuten ?? 0) + minuten;
+         perDag.set(vlucht.DATUM.getTime(), dag);
+      }
+
+      let dagen = [...perDag.entries()].map(([dag, stats]) => ({DATUM: dag, STARTS: stats.starts, MINUTEN: stats.minuten}));
+      dagen.sort(this.VliegDagenSortering(params.SORT ?? "DATUM"));
+
+      // totaal = aantal vliegdagen, vóór MAX (PHP kent hier geen START)
+      const totaal = dagen.length;
+      if (params.MAX !== undefined && params.MAX > 0)
+         dagen = dagen.slice(0, params.MAX);
+
+      const dataset: GetVliegDagenResponse[] = dagen.map(dag => ({
+         DATUM: toDateOnly(new Date(dag.DATUM)) as unknown as Date,
+         STARTS: dag.STARTS,
+         VLIEGTIJD: dag.MINUTEN === null ? null : MinutenNaarTijd(dag.MINUTEN),
+      }));
+      const result = this.buildGetObjectsResponse(dataset, totaal, params.HASH);
+      this.logger.verbose(`StartlijstService.GetVliegDagen() => ${safeStringify(result)}`);
+      return result;
+   }
+
    // heeft dit lid in de afgelopen 6 maanden als vlieger op dit vliegtuig gevlogen? Rechtstreekse query op
    // oper_startlijst, gebruikt in de privacy-check van GetVliegtuigLogboek() in class.Startlijst.inc.php
    async HeeftRecentGevlogen(lidId: number, vliegtuigId: number): Promise<boolean>
@@ -414,7 +629,7 @@ export class StartlijstService extends IHeliosService
       });
 
       const totaalMinuten = vluchten.reduce((totaal, vlucht) =>
-         totaal + (this.BerekenDuurMinutes(datum, vlucht.STARTTIJD, vlucht.LANDINGSTIJD) ?? 0), 0);
+         totaal + (this.BerekenDuurMinutes(datum, vlucht.STARTTIJD, vlucht.LANDINGSTIJD, true) ?? 0), 0);
 
       const result = totaalMinuten;
       this.logger.verbose(`StartlijstService.LidVliegtijd() => ${safeStringify(result)}`);
@@ -708,6 +923,31 @@ export class StartlijstService extends IHeliosService
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 
+   // na het opslaan van een start het vliegtuig aanmelden voor die vliegdag, en zodra de start een STARTTIJD heeft
+   // ook de vlieger en inzittende, zie AddObject()/UpdateObject() in class.Startlijst.inc.php. Net als in PHP mag
+   // een mislukte aanmelding het opslaan van de start niet laten mislukken: de fout wordt alleen gelogd.
+   // volleToegang (bepaald in de controller): mag de gebruiker op deze datum ook andere leden aanmelden
+   async AanmeldenNaOpslaan(start: OperStartlijst, actorId: number, volleToegang: boolean): Promise<void>
+   {
+      this.logger.verbose(`StartlijstService.AanmeldenNaOpslaan(${safeStringify({start, actorId, volleToegang})})`);
+      try
+      {
+         // zie AanmeldenVliegtuig() in class.Startlijst.inc.php
+         await this.aanwezigVliegtuigenService.Aanmelden({
+            DATUM: start.DATUM,
+            VLIEGTUIG_ID: start.VLIEGTUIG_ID,
+            VELD_ID: start.VELD_ID,
+         }, actorId);
+
+         if (start.STARTTIJD !== null)
+            await this.AanmeldenVliegerEnInzittende(start, actorId, volleToegang);
+      }
+      catch (e)
+      {
+         this.logger.warn(`StartlijstService.AanmeldenNaOpslaan(ID=${start.ID}) mislukt: ${e instanceof Error ? e.message : e}`);
+      }
+   }
+
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: vliegtuig-, lid-, en type-gegevens via joins,
    // de berekende vliegduur, en de DDWV vlag via een gebatchte datum-lookup op oper_daginfo/oper_rooster
    private async MaakGetObjectsResponseDataset(objs: StartlijstMetRelaties[]): Promise<GetObjectsOperStartlijstResponse[]>
@@ -730,8 +970,8 @@ export class StartlijstService extends IHeliosService
          return {
             ...startlijst,
             DATUM: toDateOnly(startlijst.DATUM) as unknown as Date,
-            STARTTIJD: toTimeOnly(startlijst.STARTTIJD) as unknown as Date,
-            LANDINGSTIJD: toTimeOnly(startlijst.LANDINGSTIJD) as unknown as Date,
+            STARTTIJD: toTimeHHmm(startlijst.STARTTIJD) as unknown as Date,
+            LANDINGSTIJD: toTimeHHmm(startlijst.LANDINGSTIJD) as unknown as Date,
             REGISTRATIE: vliegtuig.REGISTRATIE,
             CALLSIGN: vliegtuig.CALLSIGN,
             REG_CALL: RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN),
@@ -752,6 +992,123 @@ export class StartlijstService extends IHeliosService
       });
       this.logger.verbose(`StartlijstService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);
       return result;
+   }
+
+   // vergelijkingsfunctie voor de SORT parameter van GetVliegDagen(), bijvoorbeeld "STARTS DESC, DATUM". Enkel
+   // de kolommen van de GetVliegDagen() dataset zijn toegestaan
+   private VliegDagenSortering(sort: string): (a: VliegDag, b: VliegDag) => number
+   {
+      const velden = sort.split(',').map(deel =>
+      {
+         const [veld, richting] = deel.trim().split(/\s+/);
+         const kolom = veld?.toUpperCase();
+         if (kolom !== 'DATUM' && kolom !== 'STARTS' && kolom !== 'VLIEGTIJD')
+            throw new HttpException("SORT is onjuist", HttpStatus.BAD_REQUEST);
+         if (richting !== undefined && !['ASC', 'DESC'].includes(richting.toUpperCase()))
+            throw new HttpException("SORT is onjuist", HttpStatus.BAD_REQUEST);
+         return {kolom, factor: richting?.toUpperCase() === 'DESC' ? -1 : 1};
+      });
+
+      return (a, b) =>
+      {
+         for (const {kolom, factor} of velden)
+         {
+            let verschil: number;
+            if (kolom === 'DATUM')
+               verschil = a.DATUM - b.DATUM;
+            else if (kolom === 'STARTS')
+               verschil = a.STARTS - b.STARTS;
+            else   // VLIEGTIJD, op minuten (niet op de "HH:mm" string), NULL eerst zoals MySQL
+               verschil = (a.MINUTEN ?? -1) - (b.MINUTEN ?? -1);
+            if (verschil !== 0)
+               return verschil * factor;
+         }
+         return 0;
+      };
+   }
+
+   // aanmelden van vlieger en inzittende voor de vliegdag, zie Aanmeldingen() in class.Startlijst.inc.php. Een
+   // ander lid dan jezelf wordt alleen aangemeld met volledige toegang op die datum
+   private async AanmeldenVliegerEnInzittende(start: OperStartlijst, actorId: number, volleToegang: boolean): Promise<void>
+   {
+      if (start.VELD_ID === Vliegveld.Elders)
+         return;
+
+      if (start.VLIEGER_ID !== null && (volleToegang || start.VLIEGER_ID === actorId))
+      {
+         const vlieger = await this.ledenService.GetObject(start.VLIEGER_ID);
+         if (this.moetAangemeldWorden(vlieger))
+         {
+            // clubkist: het type als voorkeur opgeven, privékist: het vliegtuig zelf als overland vliegtuig
+            const vliegtuig = await this.vliegtuigenService.GetObject(start.VLIEGTUIG_ID);
+            await this.aanwezigLedenService.Aanmelden({
+               DATUM: start.DATUM,
+               LID_ID: start.VLIEGER_ID,
+               VELD_ID: start.VELD_ID,
+               ...(vliegtuig.CLUBKIST
+                  ? {VOORKEUR_VLIEGTUIG_TYPE: vliegtuig.TYPE_ID?.toString()}
+                  : {OVERLAND_VLIEGTUIG_ID: vliegtuig.ID}),
+            }, actorId);
+         }
+      }
+
+      // op een DDWV-only dag wordt de inzittende niet aangemeld (anders worden er strippen afgeschreven). PHP gooit
+      // hier een fout als er geen rooster voor de datum bestaat, waardoor de inzittende dan niet aangemeld wordt -
+      // hier geldt een dag zonder rooster als een gewone clubdag
+      const rooster = await this.roosterService.GetObjectByDatum(start.DATUM);
+      if (rooster?.DDWV && !rooster.CLUB_BEDRIJF)
+         return;
+
+      if (start.INZITTENDE_ID !== null && (volleToegang || start.INZITTENDE_ID === actorId))
+      {
+         const inzittende = await this.ledenService.GetObject(start.INZITTENDE_ID);
+         if (this.moetAangemeldWorden(inzittende))
+         {
+            await this.aanwezigLedenService.Aanmelden({
+               DATUM: start.DATUM,
+               LID_ID: start.INZITTENDE_ID,
+               VELD_ID: start.VELD_ID,
+            }, actorId);
+         }
+      }
+   }
+
+   // alleen deze lidtypes worden automatisch aangemeld vanuit de startlijst. PHP (Aanmeldingen() in
+   // class.Startlijst.inc.php) sluit Student, Zusterclub, NieuwLid, Oprotkabel en Penningmeester uit - dit is de
+   // omgekeerde lijst, zodat een nieuw lidtype niet ongemerkt automatisch aangemeld wordt
+   private moetAangemeldWorden(lid: RefLid): boolean
+   {
+      const aanmelden: number[] = [
+         LidType.Erelid,
+         LidType.Lid,
+         LidType.Jeugdlid,
+         LidType.PrivateOwner,
+         LidType.Veteraan,
+         LidType.Donateur,
+         LidType.Rittenkaart,
+         LidType.Cursist,
+         LidType.DDWV,
+      ];
+      return aanmelden.includes(lid.LIDTYPE_ID);
+   }
+
+   // vertaalt de beperking (zie StartlijstBeperking) naar een Prisma where conditie
+   private BeperkingWhere(beperking?: StartlijstBeperking): Prisma.OperStartlijstWhereInput
+   {
+      if (!beperking)
+         return {};
+
+      const condities: Prisma.OperStartlijstWhereInput[] = [];
+      if (beperking.LID_ID !== undefined)
+      {
+         const of: Prisma.OperStartlijstWhereInput[] = [{VLIEGER_ID: beperking.LID_ID}, {INZITTENDE_ID: beperking.LID_ID}];
+         if (beperking.DATUMS?.length)
+            of.push({DATUM: {in: beperking.DATUMS}});
+         condities.push({OR: of});
+      }
+      if (beperking.DATUM !== undefined)
+         condities.push({DATUM: beperking.DATUM});
+      return {AND: condities};
    }
 
    // combineert de lid-naam met de vrije-tekst naam (voor een vlieger/inzittende die niet als lid ingevoerd
@@ -779,24 +1136,13 @@ export class StartlijstService extends IHeliosService
       return `${String(datum.getUTCDate()).padStart(2, '0')}-${String(datum.getUTCMonth() + 1).padStart(2, '0')}-${datum.getUTCFullYear()}`;
    }
 
-   // datums waarop een DDWV bedrijf gepland staat, via oper_daginfo of oper_rooster (zie startlijst_view)
-   private async DDWVDatums(): Promise<Date[]>
-   {
-      this.logger.verbose(`StartlijstService.DDWVDatums()`);
-      const [daginfo, rooster] = await Promise.all([
-         this.dbService.operDagInfo.findMany({where: {DDWV: true}, select: {DATUM: true}}),
-         this.dbService.operRooster.findMany({where: {DDWV: true}, select: {DATUM: true}}),
-      ]);
-      const result = [...daginfo, ...rooster].map(record => record.DATUM);
-      this.logger.verbose(`StartlijstService.DDWVDatums() => ${safeStringify(result)}`);
-      return result;
-   }
-
    // zie DUUR berekening in de startlijst_view: verstreken tijd tot nu (als het vandaag is en nog niet geland),
-   // of het verschil tussen start- en landingstijd, of null als er nog geen landingstijd is op een andere dag
-   private BerekenDuurMinutes(datum: Date, starttijd: Date | null, landingstijd: Date | null): number | null
+   // of het verschil tussen start- en landingstijd, of null als er nog geen landingstijd is op een andere dag.
+   // Met zonsondergangSchatting wordt voor die laatste situatie geschat tot de zonsondergang op Terlet (alleen
+   // voor LidVliegtijd(), dat is geen onderdeel van de PHP view).
+   private BerekenDuurMinutes(datum: Date, starttijd: Date | null, landingstijd: Date | null, zonsondergangSchatting = false): number | null
    {
-      this.logger.verbose(`StartlijstService.BerekenDuurMinutes(${safeStringify({datum, starttijd, landingstijd})})`);
+      this.logger.verbose(`StartlijstService.BerekenDuurMinutes(${safeStringify({datum, starttijd, landingstijd, zonsondergangSchatting})})`);
       if (!starttijd)
       {
          const result = null;
@@ -807,26 +1153,41 @@ export class StartlijstService extends IHeliosService
       const vandaag = new Date();
       const isVandaag = datum.toDateString() === vandaag.toDateString();
 
-      let eindTijd: Date | null = landingstijd;
-      if (!eindTijd)
+      // STARTTIJD/LANDINGSTIJD zijn @db.Time kolommen: de UTC-velden bevatten de kloktijd. "Nu" en de zonsondergang
+      // zijn echte tijdstippen, daarvan is de lokale tijd van de server de kloktijd (zoals curtime() in de view)
+      let eindMinuten: number;
+      if (landingstijd)
+         eindMinuten = this.MinutenSindsMiddernacht(landingstijd);
+      else if (isVandaag)
+         eindMinuten = vandaag.getHours() * 60 + vandaag.getMinutes();
+      else if (zonsondergangSchatting)
       {
-         // geen landingstijd: voor vandaag de huidige tijd gebruiken, voor een historische datum de
-         // zonsondergang op Vliegveld Terlet die dag (bij benadering - er is dan immers geen geland gemeld)
-         eindTijd = isVandaag ? vandaag : getSunset(TERLET_LATITUDE, TERLET_LONGITUDE, datum);
+         const zonsondergang = getSunset(TERLET_LATITUDE, TERLET_LONGITUDE, datum);
+         eindMinuten = zonsondergang.getHours() * 60 + zonsondergang.getMinutes();
+      }
+      else
+      {
+         const result = null;    // geen landingstijd op een andere dag: DUUR is leeg in de view
+         this.logger.verbose(`StartlijstService.BerekenDuurMinutes() => ${safeStringify(result)}`);
+         return result;
       }
 
-      const result = Math.max(0, Math.round((this.MinutenSindsMiddernacht(eindTijd) - this.MinutenSindsMiddernacht(starttijd) + 1440) % 1440));
+      const result = Math.max(0, Math.round((eindMinuten - this.MinutenSindsMiddernacht(starttijd) + 1440) % 1440));
       this.logger.verbose(`StartlijstService.BerekenDuurMinutes() => ${safeStringify(result)}`);
       return result;
    }
 
-   // formatteert de vliegduur (zie BerekenDuurMinutes) als "HH:mm" string voor de startlijst_view, leeg als de
-   // duur (nog) niet te berekenen is
-   private BerekenDuurString(datum: Date, starttijd: Date | null, landingstijd: Date | null): string
+   // formatteert de vliegduur (zie BerekenDuurMinutes) als "HH:mm" string voor de startlijst_view. Net als de view:
+   // null voor een start van vandaag zonder STARTTIJD (timediff met NULL), leeg als de duur op een andere dag niet
+   // te berekenen is
+   private BerekenDuurString(datum: Date, starttijd: Date | null, landingstijd: Date | null): string | null
    {
       this.logger.verbose(`StartlijstService.BerekenDuurString(${safeStringify({datum, starttijd, landingstijd})})`);
+      const isVandaag = datum.toDateString() === new Date().toDateString();
       const minuten = this.BerekenDuurMinutes(datum, starttijd, landingstijd);
-      const result = minuten === null ? '' : `${String(Math.floor(minuten / 60)).padStart(2, '0')}:${String(minuten % 60).padStart(2, '0')}`;
+      const result = minuten !== null
+         ? `${String(Math.floor(minuten / 60)).padStart(2, '0')}:${String(minuten % 60).padStart(2, '0')}`
+         : (isVandaag ? null : '');
       this.logger.verbose(`StartlijstService.BerekenDuurString() => ${safeStringify(result)}`);
       return result;
    }

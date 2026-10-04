@@ -247,6 +247,33 @@ export class DienstenService extends IHeliosService
       return resultaat;
    }
 
+   // Heeft dit lid op deze datum een (niet verwijderde) dienst? Gebruikt voor de toegang van DDWV crew, zie
+   // heeftToegangDDWVCrew() in include/helios.php
+   async LidHeeftDienst(lidId: number, datum: Date): Promise<boolean>
+   {
+      this.logger.verbose(`DienstenService.LidHeeftDienst(${safeStringify({lidId, datum})})`);
+      const aantal = await this.dbService.operDienst.count({
+         where: {LID_ID: lidId, DATUM: datum, VERWIJDERD: false}
+      });
+      const result = aantal > 0;
+      this.logger.verbose(`DienstenService.LidHeeftDienst() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // datums waarop dit lid een (niet verwijderde) dienst heeft. Gebruikt voor de vliegdagen die DDWV crew mag zien,
+   // zie GetVliegDagen() in class.Startlijst.inc.php
+   async LidDienstDatums(lidId: number): Promise<Date[]>
+   {
+      this.logger.verbose(`DienstenService.LidDienstDatums(${safeStringify({lidId})})`);
+      const diensten = await this.dbService.operDienst.findMany({
+         where: {LID_ID: lidId, VERWIJDERD: false},
+         select: {DATUM: true},
+      });
+      const result = diensten.map(dienst => dienst.DATUM);
+      this.logger.verbose(`DienstenService.LidDienstDatums() => ${safeStringify(result)}`);
+      return result;
+   }
+
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: DienstMetRelaties[]): Promise<GetOperDienstenResponse[]>
    {

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 import { AanwezigLedenController } from './aanwezig-leden.controller';
 import { AanwezigLedenService } from './aanwezig-leden.service';
 import {AuthorisatieModule} from "../authorisatie/authorisatie.module";
@@ -10,7 +10,9 @@ import {VliegtuigenModule} from "../vliegtuigen/vliegtuigen.module";
 
 @Module({
   controllers: [AanwezigLedenController],
-  imports: [AuthorisatieModule, HeliosCoreModule, LedenModule, StartlijstModule, TypesModule, VliegtuigenModule],
+  // StartlijstModule importeert op zijn beurt AanwezigLedenModule (aanmelden van vlieger en inzittende na het
+  // opslaan van een start) - forwardRef() is hier dus aan beide kanten nodig om deze cirkelverwijzing op te lossen
+  imports: [AuthorisatieModule, HeliosCoreModule, LedenModule, forwardRef(() => StartlijstModule), TypesModule, VliegtuigenModule],
   providers: [AanwezigLedenService],
   exports: [AanwezigLedenService]
 })

@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
+import {forwardRef, HttpException, HttpStatus, Inject, Injectable, Logger} from '@nestjs/common';
 import {DbService} from "../../database/db-service/db.service";
 import {IHeliosService} from "../../core/services/IHeliosService";
 import {EventEmitter2} from "@nestjs/event-emitter";
@@ -41,7 +41,7 @@ export class AanwezigLedenService extends IHeliosService
 
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2,
-               private readonly startlijstService: StartlijstService,
+               @Inject(forwardRef(() => StartlijstService)) private readonly startlijstService: StartlijstService,
                private readonly typesService: TypesService,
                private readonly vliegtuigenService: VliegtuigenService)
    {

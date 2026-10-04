@@ -23,6 +23,15 @@ export function toTimeOnly(value: Date | null | undefined): string | null | unde
    return value.toISOString().slice(11, 19);
 }
 
+// formatteert een @db.Time kolom als "HH:mm" string, zonder seconden - zoals de PHP startlijst dat teruggeeft
+// (time_format('%H:%i') in de startlijst_view en substr(.., 0, 5) in RecordToOutput())
+export function toTimeHHmm(value: Date | null | undefined): string | null | undefined
+{
+   if (value === undefined) return undefined;
+   if (value === null) return null;
+   return value.toISOString().slice(11, 16);
+}
+
 // zet een binnenkomende waarde voor een @db.Date kolom om naar een echt Date object. Nodig omdat een client een
 // eerder opgehaald record (met "yyyy-MM-dd" string, zie toDateOnly) vaak ongewijzigd terugstuurt bij een update -
 // Prisma accepteert voor een DateTime kolom geen kale datum-string, enkel een volledige ISO-8601 tijdstip of Date object.
