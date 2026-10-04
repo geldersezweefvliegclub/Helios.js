@@ -8,6 +8,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, OperTransactie} from "@prisma/client";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
+import {TransactieResponse} from "./TransactieResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
@@ -50,13 +51,26 @@ export class TransactiesService extends IHeliosService
       return result;
    }
 
-   // haal objects op uit de database op basis van de query parameters
-   async GetObjects(params?: GetObjectsOperTransactiesRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperTransactiesResponse>>
+   // haal objects op uit de database op basis van de query parameters. Met alleenLidId (bepaald in de controller)
+   // worden enkel de transacties van dat lid opgehaald, ongeacht de LID_ID parameter
+   async GetObjects(params?: GetObjectsOperTransactiesRequest, alleenLidId?: number): Promise<IHeliosGetObjectsResponse<GetObjectsOperTransactiesResponse>>
    {
-      this.logger.verbose(`TransactiesService.GetObjects(${safeStringify({params})})`);
+      this.logger.verbose(`TransactiesService.GetObjects(${safeStringify({params, alleenLidId})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperTransactiesRequest, {VERWIJDERD: false});
-      const dtSpanne = params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM);
+
+      // anders dan VanTot() kent PHP hier geen standaard periode: zonder DATUM/BEGIN_DATUM/EIND_DATUM worden alle
+      // transacties opgehaald, en met alleen BEGIN_DATUM of EIND_DATUM is de andere kant open
+      const beginVanDag = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+      const eindVanDag = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+      const datumFilters: Prisma.OperTransactieWhereInput[] = [];
+      if (params.DATUM)
+         datumFilters.push({DATUM: {gte: beginVanDag(params.DATUM), lte: eindVanDag(params.DATUM)}});
+      if (params.BEGIN_DATUM)
+         datumFilters.push({DATUM: {gte: beginVanDag(params.BEGIN_DATUM)}});
+      if (params.EIND_DATUM)
+         datumFilters.push({DATUM: {lte: eindVanDag(params.EIND_DATUM)}});
+
       const where: Prisma.OperTransactieWhereInput =
          {
             AND:
@@ -67,25 +81,17 @@ export class TransactiesService extends IHeliosService
                   { ID: { in: params.IDs }},
                   { EXT_REF: params.EXT_REF},
                   { VLIEGDAG: params.VLIEGDAG},
-
-                  {
-                     DATUM:
-                        {
-                           gte: dtSpanne.start,
-                           lte: dtSpanne.eind
-                        }
-                  }
+                  { LID_ID: alleenLidId },
+                  ...datumFilters,
                ]
          }
-      let count: number | undefined;
-      if (params.MAX !== undefined || params.START !== undefined)
-      {
-         count = await this.dbService.operTransactie.count({where: where});
-      }
+
+      // net als PHP standaard gesorteerd op ID en maximaal 5000 records; totaal is altijd het volledige aantal
+      const count = await this.dbService.operTransactie.count({where: where});
       const objs = await this.dbService.operTransactie.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.OperTransactieOrderByWithRelationInput>(params.SORT ?? "DATUM"),
-         take: params.MAX,
+         orderBy: this.SortStringToSortObj<Prisma.OperTransactieOrderByWithRelationInput>(params.SORT ?? "ID"),
+         take: params.MAX ?? 5000,
          skip: params.START,
          include: {
             RefLid: true,
@@ -142,6 +148,19 @@ export class TransactiesService extends IHeliosService
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name, id, db, actorId);
    }
 
+   // zet een transactie om naar de API response: VLIEGDAG als kalenderdatum en BEDRAG, SALDO_VOOR en SALDO_NA als
+   // getal in plaats van Prisma Decimal, zie RecordToOutput() in class.Transacties.inc.php
+   MaakTransactieResponse(obj: OperTransactie): TransactieResponse
+   {
+      return {
+         ...obj,
+         VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date,
+         BEDRAG: obj.BEDRAG === null ? null : obj.BEDRAG.toNumber(),
+         SALDO_VOOR: obj.SALDO_VOOR === null ? null : obj.SALDO_VOOR.toNumber(),
+         SALDO_NA: obj.SALDO_NA === null ? null : obj.SALDO_NA.toNumber(),
+      };
+   }
+
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
    private async MaakGetObjectsResponseDataset(objs: TransactieMetRelaties[]): Promise<GetObjectsOperTransactiesResponse[]>
    {
@@ -150,8 +169,7 @@ export class TransactiesService extends IHeliosService
          const {RefLid: lid, RefIngevoerd: ingevoerd, TypeTransactie: typeTransactie, ...transactie} = obj;
 
          return {
-            ...transactie,
-            VLIEGDAG: toDateOnly(transactie.VLIEGDAG) as unknown as Date,
+            ...this.MaakTransactieResponse(transactie),
             NAAM: lid?.NAAM ?? null,
             INGEVOERD: ingevoerd?.NAAM ?? null,
             TYPE: typeTransactie?.OMSCHRIJVING ?? null,

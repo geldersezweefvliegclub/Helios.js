@@ -10,7 +10,7 @@ import {
 } from "../../core/controllers/helios/helios.controller";
 import {OperProgressieDto} from "../../generated/nestjs-dto/operProgressie.dto";
 import {CurrentUser} from "../login/current-user.decorator";
-import {Prisma, RefLid} from "@prisma/client";
+import {OperProgressie, Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperProgressieResponse} from "./GetObjectsOperProgressieResponse";
 import {GetObjectsOperProgressieRequest} from "./GetObjectsOperProgressieRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -64,8 +64,8 @@ export class ProgressieController extends HeliosController
    {
       this.logger.verbose(`ProgressieController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.GetObject');
-      await this.heeftDataToegangGetObject(currentUser, id);
       const obj = await this.progressieService.GetObject(id);
+      this.heeftDataToegangGetObject(currentUser, obj);
       return {
          ...obj,
          GELDIG_TOT: toDateOnly(obj.GELDIG_TOT) as unknown as Date
@@ -375,11 +375,11 @@ export class ProgressieController extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Progressie/GetObject
-   private async heeftDataToegangGetObject(currentUser: RefLid, id: number): Promise<void>
+   // wordt aangeroepen nadat het record is opgehaald, zodat het niet twee keer uit de database gehaald wordt
+   private heeftDataToegangGetObject(currentUser: RefLid, progressie: OperProgressie): void
    {
       // ophalen mag alleen door het lid zelf, of iemand met data-toegang, zie GetObject() in class.Progressie.inc.php
-      const obj = await this.progressieService.GetObject(id);
-      this.controleerLidToegang(currentUser, obj.LID_ID);
+      this.controleerLidToegang(currentUser, progressie.LID_ID);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Progressie/GetObjects

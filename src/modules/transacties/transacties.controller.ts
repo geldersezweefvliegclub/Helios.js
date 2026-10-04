@@ -1,4 +1,4 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Logger, Query} from '@nestjs/common';
 import {TransactiesService} from "./transacties.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -8,9 +8,8 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperTransactieDto} from "../../generated/nestjs-dto/operTransactie.dto";
 import {CurrentUser} from "../login/current-user.decorator";
-import {Prisma, RefLid} from "@prisma/client";
+import {OperTransactie, Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperTransactiesResponse} from "./GetObjectsOperTransactiesResponse";
 import {GetObjectsOperTransactiesRequest} from "./GetObjectsOperTransactiesRequest";
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -19,7 +18,8 @@ import {CreateOperTransactieDto} from "../../generated/nestjs-dto/create-operTra
 import {UpdateOperTransactieDto} from "../../generated/nestjs-dto/update-operTransactie.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
+import {parseDateOnly} from "../../core/helpers/TimeDate";
+import {TransactieResponse} from "./TransactieResponse";
 
 @Controller('Transacties')
 @ApiTags('Transacties')
@@ -33,16 +33,16 @@ export class TransactiesController  extends HeliosController
       super()
    }
 
-   @HeliosGetObject(OperTransactieDto)
+   @HeliosGetObject(TransactieResponse)
    async GetObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number): Promise<OperTransactieDto>
+      @Query('ID') id: number): Promise<TransactieResponse>
    {
       this.logger.verbose(`TransactiesController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.GetObject');
-      this.heeftDataToegangGetObject(currentUser);
       const obj = await this.TransactiesService.GetObject(id);
-      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
+      this.heeftDataToegangGetObject(currentUser, obj);
+      return this.TransactiesService.MaakTransactieResponse(obj);
    }
 
    @HeliosGetObjects(GetObjectsOperTransactiesResponse)
@@ -53,13 +53,16 @@ export class TransactiesController  extends HeliosController
       this.logger.verbose(`TransactiesController.GetObjects(${safeStringify({currentUser, queryParams})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.GetObjects');
       this.heeftDataToegangGetObjects(currentUser);
-      return await this.TransactiesService.GetObjects(queryParams);
+
+      // zonder beheerder of beheerder DDWV rechten alleen de eigen transacties, zie GetObjects() in class.Transacties.inc.php
+      const alleenLidId = this.heeftVolleToegang(currentUser) ? undefined : currentUser.ID;
+      return await this.TransactiesService.GetObjects(queryParams, alleenLidId);
    }
 
-   @HeliosCreateObject(CreateOperTransactieDto, OperTransactieDto)
+   @HeliosCreateObject(CreateOperTransactieDto, TransactieResponse)
    async AddObject(
       @CurrentUser() currentUser: RefLid,
-      @Body() data: CreateOperTransactieDto): Promise<OperTransactieDto>
+      @Body() data: CreateOperTransactieDto): Promise<TransactieResponse>
    {
       this.logger.verbose(`TransactiesController.AddObject(${safeStringify({currentUser, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.AddObject');
@@ -68,13 +71,13 @@ export class TransactiesController  extends HeliosController
 
       const insert = await this.normaliserenData(currentUser, data, true) as Prisma.OperTransactieUncheckedCreateInput;
       const obj = await this.TransactiesService.AddObject(insert, currentUser.ID);
-      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
+      return this.TransactiesService.MaakTransactieResponse(obj);
    }
 
-   @HeliosUpdateObject(UpdateOperTransactieDto, OperTransactieDto)
+   @HeliosUpdateObject(UpdateOperTransactieDto, TransactieResponse)
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<OperTransactieDto>
+      @Query('ID') id: number, @Body() data: UpdateOperTransactieDto): Promise<TransactieResponse>
    {
       this.logger.verbose(`TransactiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Transacties.UpdateObject');
@@ -84,7 +87,7 @@ export class TransactiesController  extends HeliosController
 
       const update = await this.normaliserenData(currentUser, data, false) as Prisma.OperTransactieUncheckedUpdateInput;
       const obj = await this.TransactiesService.UpdateObject(id, update, currentUser.ID);
-      return {...obj, VLIEGDAG: toDateOnly(obj.VLIEGDAG) as unknown as Date};
+      return this.TransactiesService.MaakTransactieResponse(obj);
    }
 
    @HeliosDeleteObject()
@@ -141,10 +144,14 @@ export class TransactiesController  extends HeliosController
       delete data.LAATSTE_AANPASSING;
       delete data.ID;
 
-      // Alleen bij nieuwe invoer
-      if (isNieuw) {
-         data.INGEVOERD_ID = data.INGEVOERD_ID ?? currentUser.ID;
-      }
+      // INGEVOERD_ID is altijd de ingelogde gebruiker bij nieuwe invoer, en kan daarna niet meer aangepast worden.
+      // DATUM (tijdstip van aanmaken) en REFERENTIE (response van een extern systeem) worden niet door de client
+      // gezet. Zie AddObject() en RequestToRecord() in class.Transacties.inc.php
+      delete data.INGEVOERD_ID;
+      if (isNieuw)
+         data.INGEVOERD_ID = currentUser.ID;
+      delete data.DATUM;
+      delete data.REFERENTIE;
 
       // BETAALD en BETAAL_URL mogen alleen gezet worden door een Systeem account (bijv. Mollie/e-boekhouden
       // koppeling); voor alle andere gebruikers wordt een meegegeven waarde, net als bij VERWIJDERD, genegeerd
@@ -162,45 +169,67 @@ export class TransactiesController  extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
-   // controleer of de gebruiker toegang heeft tot de data van Transacties/GetObject
-   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   // beheerder en beheerder DDWV hebben toegang tot alle transacties, zie class.Transacties.inc.php
+   private heeftVolleToegang(currentUser: RefLid): boolean
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      return this.permissieService.isBeheerder(currentUser) || this.permissieService.isBeheerderDDWV(currentUser);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Transacties/GetObject
+   // wordt aangeroepen nadat het record is opgehaald, zodat het niet twee keer uit de database gehaald wordt
+   private heeftDataToegangGetObject(currentUser: RefLid, transactie: OperTransactie): void
+   {
+      // PHP controleert hier niets; net als bij GetObjects() mag een lid zonder beheerder rechten alleen de eigen
+      // transacties zien
+      if (!this.heeftVolleToegang(currentUser) && transactie.LID_ID !== currentUser.ID)
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/GetObjects
    private heeftDataToegangGetObjects(_currentUser: RefLid): void
    {
+      // PHP geeft hier geen 401, de dataset wordt beperkt tot de eigen transacties (zie GetObjects() hierboven)
       // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/AddObject
-   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   private heeftDataToegangAddObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen beheerder en beheerder DDWV - strenger dan PHP (AddObject() in class.Transacties.inc.php), waar een lid
+      // ook een transactie voor zichzelf mocht aanmaken
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/UpdateObject
-   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   private heeftDataToegangUpdateObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // zie UpdateObject() in class.Transacties.inc.php
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/DeleteObject
-   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   private heeftDataToegangDeleteObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // zie VerwijderObject() in class.Transacties.inc.php
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/RemoveObject
-   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   private heeftDataToegangRemoveObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // bestaat niet in PHP; fysiek verwijderen van een financiële transactie alleen door de beheerder
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Transacties/RestoreObject
-   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // bestaat niet in PHP; zelfde rechten als DeleteObject
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen rechten", HttpStatus.UNAUTHORIZED);
    }
 }

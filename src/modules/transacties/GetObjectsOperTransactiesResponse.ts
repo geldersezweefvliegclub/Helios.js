@@ -1,9 +1,9 @@
 
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
-import {OperTransactieDto} from "../../generated/nestjs-dto/operTransactie.dto";
+import {TransactieResponse} from "./TransactieResponse";
 
 @ApiTags('Transacties')
-export class GetObjectsOperTransactiesResponse extends OperTransactieDto
+export class GetObjectsOperTransactiesResponse extends TransactieResponse
 {
    // hier komen de specifieke velden voor GetObjects
 

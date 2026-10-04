@@ -11,7 +11,6 @@ model OperTransactie {
   VLIEGDAG           DateTime? @db.Date
   /// @description Verwijzing naar het lid ID van de vlieger, link naar de leden tabel
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   LID_ID             Int       @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid ID van de persoon die de transactie heeft aangemaakt, link naar de leden tabel
@@ -20,7 +19,6 @@ model OperTransactie {
   /// @DtoUpdateOptional
   INGEVOERD_ID       Int       @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @description Referentie naar het type van de transactie, link naar type tabel
   TYPE_ID            Int       @db.UnsignedMediumInt
@@ -43,7 +41,6 @@ model OperTransactie {
   /// @DtoUpdateOptional
   EXT_REF            String?   @db.VarChar(50)
   /// @description Omschrijving van de transactie, komt zo ook op de factuur
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   OMSCHRIJVING       String    @db.VarChar(150)
   /// @DtoCreateOptional

@@ -30,6 +30,7 @@ import {GetVliegtuigLogboekTotalenRequest} from "./GetVliegtuigLogboekTotalenReq
 import {GetVliegtuigLogboekTotalenResponse} from "./GetVliegtuigLogboekTotalenResponse";
 import {VliegtuigenService} from "../vliegtuigen/vliegtuigen.service";
 import {RegCall} from "../../core/helpers/RegCall";
+import {RefVliegtuigDto} from "../../generated/nestjs-dto/refVliegtuig.dto";
 import {RoosterService} from "../rooster/rooster.service";
 import {DienstenService} from "../diensten/diensten.service";
 import {DatumZonderTijd} from "../../core/helpers/TimeDate";
@@ -60,8 +61,8 @@ export class StartlijstController extends HeliosController
    {
       this.logger.verbose(`StartlijstController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetObject');
-      await this.heeftDataToegangGetObject(currentUser, id);
       const obj = await this.startlijstService.GetObject(id);
+      await this.heeftDataToegangGetObject(currentUser, obj);
       return {
          ...obj,
          DATUM: toDateOnly(obj.DATUM) as unknown as Date,
@@ -270,9 +271,9 @@ export class StartlijstController extends HeliosController
       if (queryParams.ID === undefined)
          throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboek');
-      await this.heeftDataToegangGetVliegtuigLogboek(currentUser, queryParams.ID);
-
       const vliegtuig = await this.vliegtuigenService.GetObject(queryParams.ID);
+      await this.heeftDataToegangGetVliegtuigLogboek(currentUser, vliegtuig);
+
       const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
       return await this.startlijstService.GetVliegtuigLogboek(queryParams, regCall);
    }
@@ -293,9 +294,9 @@ export class StartlijstController extends HeliosController
       if (queryParams.ID === undefined)
          throw new HttpException("ID ontbreekt in aanroep", HttpStatus.NOT_ACCEPTABLE);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.GetVliegtuigLogboekTotalen');
-      await this.heeftDataToegangGetVliegtuigLogboekTotalen(currentUser, queryParams.ID);
-
       const vliegtuig = await this.vliegtuigenService.GetObject(queryParams.ID);
+      await this.heeftDataToegangGetVliegtuigLogboekTotalen(currentUser, vliegtuig);
+
       const regCall = RegCall(vliegtuig.REGISTRATIE, vliegtuig.CALLSIGN);
       return await this.startlijstService.GetVliegtuigLogboekTotalen(queryParams, regCall);
    }
@@ -383,9 +384,8 @@ export class StartlijstController extends HeliosController
    // privacy-check gedeeld door GetVliegtuigLogboek en GetVliegtuigLogboekTotalen, zie beide functies in
    // class.Startlijst.inc.php: beheerder-achtige rollen en clubkisten mag iedereen bekijken, voor een
    // privékist moet de gebruiker er zelf recent (afgelopen 6 maanden) op gevlogen zijn
-   private async controleerVliegtuigLogboekToegang(currentUser: RefLid, vliegtuigId: number): Promise<void>
+   private async controleerVliegtuigLogboekToegang(currentUser: RefLid, vliegtuig: RefVliegtuigDto): Promise<void>
    {
-      const vliegtuig = await this.vliegtuigenService.GetObject(vliegtuigId);
       const heeftVrijeToegang =
          this.permissieService.isBeheerder(currentUser) ||
          this.permissieService.isBeheerderDDWV(currentUser) ||
@@ -394,7 +394,7 @@ export class StartlijstController extends HeliosController
          this.permissieService.isInstructeur(currentUser) ||
          vliegtuig.CLUBKIST;
 
-      if (!heeftVrijeToegang && !(await this.startlijstService.HeeftRecentGevlogen(currentUser.ID, vliegtuigId)))
+      if (!heeftVrijeToegang && !(await this.startlijstService.HeeftRecentGevlogen(currentUser.ID, vliegtuig.ID)))
          throw new HttpException("Niet gemachtigd om logboek te bekijken", HttpStatus.NOT_ACCEPTABLE);
    }
 
@@ -515,11 +515,11 @@ export class StartlijstController extends HeliosController
       return beperking;
    }
 
-   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetObject
-   private async heeftDataToegangGetObject(currentUser: RefLid, id: number): Promise<void>
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetObject. Wordt aangeroepen nadat het record
+   // is opgehaald, zodat het niet twee keer uit de database gehaald wordt
+   private async heeftDataToegangGetObject(currentUser: RefLid, start: OperStartlijst): Promise<void>
    {
       // zie GetObject() in class.Startlijst.inc.php
-      const start = await this.startlijstService.GetObject(id);
       await this.controleerEigenStart(currentUser, start, "Geen leesrechten voor dit record");
    }
 
@@ -609,16 +609,18 @@ export class StartlijstController extends HeliosController
       this.controleerLogboekToegang(currentUser, lidId);
    }
 
-   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboek
-   private async heeftDataToegangGetVliegtuigLogboek(currentUser: RefLid, vliegtuigId: number): Promise<void>
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboek. Wordt aangeroepen nadat
+   // het vliegtuig is opgehaald, zodat het niet twee keer uit de database gehaald wordt
+   private async heeftDataToegangGetVliegtuigLogboek(currentUser: RefLid, vliegtuig: RefVliegtuigDto): Promise<void>
    {
-      await this.controleerVliegtuigLogboekToegang(currentUser, vliegtuigId);
+      await this.controleerVliegtuigLogboekToegang(currentUser, vliegtuig);
    }
 
-   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboekTotalen
-   private async heeftDataToegangGetVliegtuigLogboekTotalen(currentUser: RefLid, vliegtuigId: number): Promise<void>
+   // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetVliegtuigLogboekTotalen. Wordt aangeroepen
+   // nadat het vliegtuig is opgehaald, zodat het niet twee keer uit de database gehaald wordt
+   private async heeftDataToegangGetVliegtuigLogboekTotalen(currentUser: RefLid, vliegtuig: RefVliegtuigDto): Promise<void>
    {
-      await this.controleerVliegtuigLogboekToegang(currentUser, vliegtuigId);
+      await this.controleerVliegtuigLogboekToegang(currentUser, vliegtuig);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Startlijst/GetRecencyClubZonderInstructie

@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsDecimal,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -46,11 +47,10 @@ export class CreateOperTransactieDto {
       "Verwijzing naar het lid ID van de vlieger, link naar de leden tabel",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  LID_ID?: number;
+  LID_ID: number;
   @ApiProperty({
     description:
       "Verwijzing naar het lid ID van de persoon die de transactie heeft aangemaakt, link naar de leden tabel",
@@ -66,11 +66,10 @@ export class CreateOperTransactieDto {
       "Referentie naar het type van de transactie, link naar type tabel",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  TYPE_ID?: number;
+  TYPE_ID: number;
   @ApiProperty({
     description: "Gaat het hier om een DDWV transactie?",
     type: "boolean",
@@ -143,11 +142,10 @@ export class CreateOperTransactieDto {
   @ApiProperty({
     description: "Omschrijving van de transactie, komt zo ook op de factuur",
     type: "string",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  OMSCHRIJVING?: string;
+  OMSCHRIJVING: string;
   @ApiProperty({
     description:
       "Is de transactie betaald bijv Mollie. Mag alleen gezet worden door een Systeem account (LIDTYPE_ID 613)",
