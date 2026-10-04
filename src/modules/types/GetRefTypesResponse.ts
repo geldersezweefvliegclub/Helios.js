@@ -1,8 +1,17 @@
+import {ApiProperty, OmitType} from "@nestjs/swagger";
 import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {RefType} from "@prisma/client";
 
-export class GetRefTypesResponse extends RefTypeDto
+// een type zoals de API die teruggeeft: gelijk aan RefTypeDto, maar BEDRAG en EENHEDEN zijn getallen in plaats van
+// Prisma Decimal strings, zoals in de PHP implementatie (RecordToOutput() in class.Types.inc.php)
+export class GetRefTypesResponse extends OmitType(RefTypeDto, ['BEDRAG', 'EENHEDEN'] as const)
 {
+    @ApiProperty({type: Number, nullable: true, description: 'Het bedrag om te kunnen factureren'})
+    BEDRAG: number | null;
+
+    @ApiProperty({type: Number, nullable: true, description: 'De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen'})
+    EENHEDEN: number | null;
+
     /**
      * Maakt een instantie op basis van een model object van Prisma.
      * Als je een error krijgt bij het instantiëren van deze class na een Prisma query, zorg er dan voor dat je alle benodigde relaties in je Prisma query hebt opgenomen!
@@ -16,8 +25,8 @@ export class GetRefTypesResponse extends RefTypeDto
         this.OMSCHRIJVING = obj?.OMSCHRIJVING;
         this.SORTEER_VOLGORDE = obj?.SORTEER_VOLGORDE;
         this.READ_ONLY = obj?.READ_ONLY;
-        this.BEDRAG = obj?.BEDRAG;
-        this.EENHEDEN = obj?.EENHEDEN;
+        this.BEDRAG = obj?.BEDRAG != null ? obj.BEDRAG.toNumber() : null;
+        this.EENHEDEN = obj?.EENHEDEN != null ? obj.EENHEDEN.toNumber() : null;
         this.VERWIJDERD = obj?.VERWIJDERD;
         this.LAATSTE_AANPASSING = obj?.LAATSTE_AANPASSING;
     }

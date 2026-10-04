@@ -1,5 +1,5 @@
 import {GetObjectsRequest} from "../../core/DTO/IHeliosFilter";
-import {IsOptional} from "class-validator";
+import {IsInt, IsOptional} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 import {OptionalNumberTransform} from "../../core/helpers/Transformers";
 
@@ -8,6 +8,7 @@ export class GetObjectsRefTypesRequest extends GetObjectsRequest
    // specifieke velden voor GetObjects
    @IsOptional()
    @OptionalNumberTransform()
+   @IsInt()
    @ApiProperty(
       {
          name: 'GROEP',

@@ -8,7 +8,6 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {Prisma, RefType} from '@prisma/client';
 import {GetObjectsRefTypesRequest} from "./GetObjectsRefTypesRequest";
 import {GetRefTypesResponse} from "./GetRefTypesResponse";
-import {GetObjectsOperBrandstofRequest} from "../brandstof/GetObjectsOperBrandstofRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
@@ -45,7 +44,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
-         params = MaakGetObjectsRequest(GetObjectsOperBrandstofRequest, {VERWIJDERD: false});
+         params = MaakGetObjectsRequest(GetObjectsRefTypesRequest, {VERWIJDERD: false});
       const where: Prisma.RefTypeWhereInput =
       {
          AND:
@@ -66,14 +65,30 @@ export class TypesService extends IHeliosService
          orderBy: this.SortStringToSortObj<Prisma.RefTypeOrderByWithRelationInput>(params.SORT ?? "GROEP, SORTEER_VOLGORDE, ID"),
          take: params.MAX,
          skip: params.START,
-         include: {
-            TypesGroep: true
-         }
       });
 
       const dataset = await this.MaakGetObjectsResponseDataset(objs);
       const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`TypesService.GetObjects() => ${safeStringify(result)}`);
+      return result;
+   }
+
+   // de types van de (niet verwijderde) clubkisten, gesorteerd op SORTEER_VOLGORDE, zie GetClubVliegtuigenTypes() in
+   // class.Types.inc.php
+   async GetClubVliegtuigenTypes(): Promise<IHeliosGetObjectsResponse<GetRefTypesResponse>>
+   {
+      this.logger.verbose(`TypesService.GetClubVliegtuigenTypes()`);
+      const objs = await this.dbService.refType.findMany({
+         where: {
+            VERWIJDERD: false,
+            Vliegtuigen: {some: {VERWIJDERD: false, CLUBKIST: true}},
+         },
+         orderBy: {SORTEER_VOLGORDE: 'asc'},
+      });
+
+      const dataset = await this.MaakGetObjectsResponseDataset(objs);
+      const result = this.buildGetObjectsResponse(dataset);
+      this.logger.verbose(`TypesService.GetClubVliegtuigenTypes() => ${safeStringify(result)}`);
       return result;
    }
 
@@ -94,6 +109,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
+      this.ControleerNietReadOnly(db);
       const obj = await this.dbService.refType.update({
          where: {
             ID: id
@@ -111,6 +127,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
+      this.ControleerNietReadOnly(db);
       if (!db.VERWIJDERD) {
          throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
       }
@@ -120,6 +137,14 @@ export class TypesService extends IHeliosService
          }
       });
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
+   }
+
+   // een READ_ONLY type kan niet aangepast, verwijderd of hersteld worden, omdat er in de source code een harde
+   // verwijzing naar bestaat (zie READ_ONLY in het Prisma schema). PHP dwingt dit niet af.
+   private ControleerNietReadOnly(type: GetRefTypesResponse): void
+   {
+      if (type.READ_ONLY)
+         throw new HttpException(`Type ${type.ID} is read-only en kan niet aangepast worden`, HttpStatus.FORBIDDEN);
    }
 
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen
