@@ -65,6 +65,9 @@ export class TracksController extends HeliosController
       bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperTrackUncheckedCreateInput;
+      // zonder INSTRUCTEUR_ID is de ingelogde gebruiker de instructeur (PHP zet dit niet automatisch, maar zonder
+      // INSTRUCTEUR_ID kan de track later alleen nog door een beheerder of CIMT aangepast worden)
+      insert.INSTRUCTEUR_ID ??= currentUser.ID;
       return await this.tracksService.AddObject(insert, currentUser.ID);
    }
 
@@ -75,10 +78,9 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.UpdateObject');
-      this.heeftDataToegangUpdateObject(currentUser);
+      await this.heeftDataToegangUpdateObject(currentUser, id ?? data.ID);
       bodyHeeftData(data);
       id = id ?? data.ID;
-      await this.magAanpassen(currentUser, id);
 
       const update = await this.normaliserenData(data) as Prisma.OperTrackUncheckedUpdateInput;
       return await this.tracksService.UpdateObject(id, update, currentUser.ID);
@@ -91,8 +93,7 @@ export class TracksController extends HeliosController
    {
       this.logger.verbose(`TracksController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Tracks.DeleteObject');
-      this.heeftDataToegangDeleteObject(currentUser);
-      await this.magAanpassen(currentUser, id);
+      await this.heeftDataToegangDeleteObject(currentUser, id);
 
       const data: Prisma.OperTrackUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -146,47 +147,70 @@ export class TracksController extends HeliosController
       return data as Prisma.OperTrackUncheckedCreateInput | Prisma.OperTrackUncheckedUpdateInput;
    }
 
-   // update en verwijderen mag alleen door een beheerder, CIMT, of de instructeur die de track zelf heeft ingevoerd
-   private async magAanpassen(currentUser: RefLid, id: number): Promise<void>
+   //------------- Specifieke endpoints staan hieronder --------------------//
+
+   // data-toegang tot tracks, zie heeftDataToegang() in include/helios.php: beheerder, instructeur of CIMT
+   private heeftVolleToegang(currentUser: RefLid): boolean
    {
+      return this.permissieService.isBeheerder(currentUser)
+         || this.permissieService.isInstructeur(currentUser)
+         || this.permissieService.isCIMT(currentUser);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObject
+   private heeftDataToegangGetObject(currentUser: RefLid): void
+   {
+      // zie GetObject() in class.Tracks.inc.php
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObjects
+   private heeftDataToegangGetObjects(currentUser: RefLid): void
+   {
+      // zie GetObjects() in class.Tracks.inc.php
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/AddObject
+   private heeftDataToegangAddObject(currentUser: RefLid): void
+   {
+      // zie AddObject() in class.Tracks.inc.php
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // controleer of de gebruiker toegang heeft tot de data van Tracks/UpdateObject
+   private async heeftDataToegangUpdateObject(currentUser: RefLid, id: number): Promise<void>
+   {
+      // zie UpdateObject() in class.Tracks.inc.php: data-toegang (via GetObject()), en dan alleen de beheerder, CIMT
+      // of de instructeur die de track ingevoerd heeft
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+
       if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isCIMT(currentUser))
          return;
 
       const track = await this.tracksService.GetObject(id);
       if (track.INSTRUCTEUR_ID !== currentUser.ID)
-         throw new HttpException(`Niet toegestaan om deze track aan te passen of te verwijderen`, HttpStatus.UNAUTHORIZED);
-   }
-
-   //------------- Specifieke endpoints staan hieronder --------------------//
-
-   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObject
-   private heeftDataToegangGetObject(_currentUser: RefLid): void
-   {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
-   }
-
-   // controleer of de gebruiker toegang heeft tot de data van Tracks/GetObjects
-   private heeftDataToegangGetObjects(_currentUser: RefLid): void
-   {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
-   }
-
-   // controleer of de gebruiker toegang heeft tot de data van Tracks/AddObject
-   private heeftDataToegangAddObject(_currentUser: RefLid): void
-   {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
-   }
-
-   // controleer of de gebruiker toegang heeft tot de data van Tracks/UpdateObject
-   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
-   {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Tracks/DeleteObject
-   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   private async heeftDataToegangDeleteObject(currentUser: RefLid, id: number): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // zie VerwijderObject() in class.Tracks.inc.php: data-toegang (via GetObject()), en dan alleen de beheerder
+      // (heeftDataToegang(null, false)) of de instructeur die de track ingevoerd heeft - CIMT dus niet
+      if (!this.heeftVolleToegang(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+
+      if (this.permissieService.isBeheerder(currentUser))
+         return;
+
+      const track = await this.tracksService.GetObject(id);
+      if (track.INSTRUCTEUR_ID !== currentUser.ID)
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Tracks/RemoveObject
@@ -196,8 +220,10 @@ export class TracksController extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Tracks/RestoreObject
-   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // zie HerstelObject() in class.Tracks.inc.php: heeftDataToegang(null, false), dus alleen de beheerder
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 }

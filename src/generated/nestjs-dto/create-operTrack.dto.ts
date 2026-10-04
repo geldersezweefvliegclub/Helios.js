@@ -24,11 +24,10 @@ export class CreateOperTrackDto {
       "Verwijzing naar het lid waarover de track gaat, link naar de leden tabel",
     type: "integer",
     format: "int32",
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
-  LID_ID?: number;
+  LID_ID: number;
   @ApiProperty({
     description:
       "Verwijzing naar de instructeur die de track heeft ingevoerd, link naar de leden tabel",

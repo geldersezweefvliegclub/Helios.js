@@ -5,7 +5,6 @@ model OperTrack {
   ID                 Int       @id @default(autoincrement()) @db.UnsignedMediumInt
   /// @description Verwijzing naar het lid waarover de track gaat, link naar de leden tabel
   /// @DtoRelationIncludeId
-  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   LID_ID             Int       @db.UnsignedMediumInt
   /// @description Verwijzing naar de instructeur die de track heeft ingevoerd, link naar de leden tabel
