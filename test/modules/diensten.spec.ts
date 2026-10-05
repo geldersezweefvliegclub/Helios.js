@@ -32,7 +32,7 @@ compareModule({
         {name: "AFWEZIG", params: {AFWEZIG: true}},
     ],
     knownPhpFailures: ["GetObjects (SORT asc)", "GetObjects (SORT desc)"],
-    transform: (nestjsCompare, phpCompare, endpoint) => {
+    transform: (nestjsCompare, _phpCompare, endpoint) => {
         // NestJS verrijkt de AddObject/UpdateObject-response met de TYPE_DIENST-omschrijving (via een include),
         // PHP's SaveObject-response bevat enkel TYPE_DIENST_ID zonder die afgeleide tekst (bij GetObjects doen
         // beide dit wel, daar blijft het veld dus gewoon vergeleken). Geaccepteerde uitzondering.

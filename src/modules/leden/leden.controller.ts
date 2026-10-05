@@ -21,7 +21,6 @@ import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
 import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
-import {ConfigService} from "@nestjs/config";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AuthGuard} from "@nestjs/passport";
@@ -41,8 +40,7 @@ export class LedenController extends HeliosController
 {
    private readonly logger = new Logger(LedenController.name);
 
-   constructor(private readonly configService: ConfigService,
-               private readonly ledenService: LedenService,
+   constructor(private readonly ledenService: LedenService,
                private readonly permissieService:PermissieService)
    {
       super()

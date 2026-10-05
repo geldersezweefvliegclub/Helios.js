@@ -5,7 +5,6 @@ import {
    HeliosGetObject,
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject, HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {ConfigService} from "@nestjs/config";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefCompetentie, RefLid} from "@prisma/client";
@@ -32,7 +31,6 @@ export class CompetentiesController extends HeliosController
    private readonly logger = new Logger(CompetentiesController.name);
 
    constructor(private readonly typesService: TypesService,
-               private readonly configService: ConfigService,
                private readonly competentiesService: CompetentiesService,
                private readonly permissieService:PermissieService)
    {

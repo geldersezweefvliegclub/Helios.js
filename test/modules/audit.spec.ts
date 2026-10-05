@@ -35,7 +35,7 @@ compareModule({
         {name: "EIND_ID", params: {EIND_ID: 100}},
     ],
     knownPhpFailures: ["GetObjects (VERWIJDERD)", "GetObjects (SELECTIE)", "GetObject"],
-    transform: (nestjsCompare, phpCompare) => {
+    transform: (_nestjsCompare, phpCompare) => {
         const fieldsToDrop = ["BEHEERDER", "DDWV", "LIDTYPE", "LIDTYPE_ID", "STARTTOREN"];
         const dataset = phpCompare.dataset;
         if (Array.isArray(dataset)) {

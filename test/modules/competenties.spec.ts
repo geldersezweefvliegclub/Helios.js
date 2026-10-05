@@ -27,7 +27,7 @@ compareModule({
     extraGetObjectsOptions: [
         {name: "LEERFASE_ID", params: {LEERFASE_ID: 1000}},
     ],
-    transform: (nestjsCompare, phpCompare) => {
+    transform: (_nestjsCompare, phpCompare) => {
         const dataset = phpCompare.dataset;
         if (Array.isArray(dataset)) {
             dataset.forEach(record => hernoemBlokIdEnOnderwerp(record as Record<string, unknown>));

@@ -14,7 +14,7 @@ export class BasicStrategy extends PassportStrategy(Strategy, 'basic-auth') {
       });
    }
 
-   public validate = async (req, inlognaam, wachtwoord)=> {
+   public validate = async (_req, inlognaam, wachtwoord)=> {
       const lid = await this.loginService.verifyUser(inlognaam, wachtwoord);  // verify user credentials
       await this.loginController.login(lid);
       return lid;

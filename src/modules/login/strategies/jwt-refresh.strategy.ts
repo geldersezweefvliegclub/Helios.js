@@ -10,7 +10,7 @@ import {LoginService} from "../login.service";
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh')
 {
-  constructor(private readonly configService : ConfigService,
+  constructor(configService : ConfigService,
               private readonly loginService: LoginService)
   {
     super({
