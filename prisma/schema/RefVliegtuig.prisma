@@ -11,6 +11,7 @@ model RefVliegtuig {
   /// @maxLength 6
   CALLSIGN                String?                 @db.VarChar(6)
   /// @description Aantal zitplaatsen in het vliegtuig
+  /// @DtoCreateOptional
   /// @DtoUpdateOptional
   /// @minimum 1
   /// @maximum 2

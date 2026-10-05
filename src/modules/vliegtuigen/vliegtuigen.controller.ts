@@ -1,4 +1,4 @@
-import {Body, Controller, Logger, Query} from '@nestjs/common';
+import {Body, Controller, HttpException, HttpStatus, Logger, Query} from '@nestjs/common';
 import {ApiTags} from "@nestjs/swagger";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {
@@ -78,9 +78,9 @@ export class VliegtuigenController extends HeliosController
    {
       this.logger.verbose(`VliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.UpdateObject');
-      this.heeftDataToegangUpdateObject(currentUser);
       bodyHeeftData(data);
       id = id ?? data.ID;
+      await this.heeftDataToegangUpdateObject(currentUser, id, data);
 
       const update = await this.normaliserenData(data) as Prisma.RefVliegtuigUncheckedUpdateInput;
       return await this.vliegtuigenService.UpdateObject(id, update, currentUser.ID);
@@ -145,6 +145,11 @@ export class VliegtuigenController extends HeliosController
       // Bij UpdateObject is REGISTRATIE optioneel (een partiële update kan het veld weglaten), dus enkel trimmen als het is meegegeven.
       if (data.REGISTRATIE !== undefined) {
          data.REGISTRATIE = data.REGISTRATIE.trim();
+
+         // formaat zoals PH-123 of D-KABC, zie RequestToRecord() in class.Vliegtuigen.inc.php (daar [A-z], wat per
+         // ongeluk ook een aantal leestekens toestaat)
+         if (!/^[A-Za-z]+-[A-Za-z0-9]+$/.test(data.REGISTRATIE))
+            throw new HttpException("REGISTRATIE is onjuist", HttpStatus.BAD_REQUEST);
       }
 
       return data as Prisma.RefVliegtuigUncheckedCreateInput | Prisma.RefVliegtuigUncheckedUpdateInput;
@@ -171,26 +176,39 @@ export class VliegtuigenController extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Vliegtuigen/UpdateObject
-   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   private async heeftDataToegangUpdateObject(currentUser: RefLid, id: number, data: UpdateRefVliegtuigDto): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // een clubkist mag alleen door de beheerder aangepast worden, zie UpdateObject() in class.Vliegtuigen.inc.php.
+      // Anders dan PHP geldt dat ook voor het omzetten van een privékist naar een clubkist
+      if (this.permissieService.isBeheerder(currentUser))
+         return;
+
+      const vliegtuig = await this.vliegtuigenService.GetObject(id);
+      if (vliegtuig.CLUBKIST || data.CLUBKIST === true)
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Vliegtuigen/DeleteObject
-   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   private heeftDataToegangDeleteObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in VerwijderObject() van class.Vliegtuigen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Vliegtuigen/RemoveObject
-   private heeftDataToegangRemoveObject(_currentUser: RefLid): void
+   private heeftDataToegangRemoveObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, bestaat niet in PHP; zelfde rechten als DeleteObject
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Vliegtuigen/RestoreObject
-   private heeftDataToegangRestoreObject(_currentUser: RefLid): void
+   private heeftDataToegangRestoreObject(currentUser: RefLid): void
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // alleen de beheerder, zie heeftDataToegang(null, false) in HerstelObject() van class.Vliegtuigen.inc.php
+      if (!this.permissieService.isBeheerder(currentUser))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
 }

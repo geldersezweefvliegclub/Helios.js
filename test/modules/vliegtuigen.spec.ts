@@ -12,7 +12,6 @@ import {compareModule} from "../testing-utils/ModuleComparison";
 compareModule({
     className: "Vliegtuigen",
     extraGetObjectsOptions: [
-        {name: "IN", params: (id) => ({IN: String(id)})},
         {name: "SELECTIE", params: {SELECTIE: "PH"}},
         {name: "TYPES", params: {TYPES: "4022"}},
         {name: "ZITPLAATSEN", params: {ZITPLAATSEN: 1}},

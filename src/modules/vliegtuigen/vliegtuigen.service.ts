@@ -69,11 +69,10 @@ export class VliegtuigenService extends IHeliosService
                   { ID: params.ID },
                   { VERWIJDERD: params.VERWIJDERD ?? false },
                   { ID: { in: params.IDs }},
-                  { ID: { in: params.IN }},   // IN is enkel voor PHP compatibiliteit, functioneel gelijk aan IDs. TODO: verwijderen
                   { OR: [
                         { REGISTRATIE: { contains: params.SELECTIE }},
                         { CALLSIGN:    { contains: params.SELECTIE }},
-                     { FLARMCODE:   { contains: params.SELECTIE }}
+                        { FLARMCODE:   { contains: params.SELECTIE }}
                      ]
                   },
                   { ZITPLAATSEN: params.ZITPLAATSEN},
@@ -92,7 +91,7 @@ export class VliegtuigenService extends IHeliosService
 
       const objs = await this.dbService.refVliegtuig.findMany({
          where: where,
-         orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "CLUBKIST DESC, VOLGORDE, ID"),
+         orderBy: this.SortStringToSortObj<Prisma.RefVliegtuigOrderByWithRelationInput>(params.SORT ?? "CLUBKIST DESC, VOLGORDE, REGISTRATIE"),
          take: params.MAX,
          skip: params.START,
          include: {
@@ -110,6 +109,10 @@ export class VliegtuigenService extends IHeliosService
 
    async AddObject(data: Prisma.RefVliegtuigUncheckedCreateInput, actorId: number): Promise<GetRefVliegtuigenResponse>
    {
+      // een eenzitter is geen DBO vliegtuig (ZITPLAATSEN is standaard 1)
+      if ((data.ZITPLAATSEN ?? 1) === 1)
+         data.TRAINER = false;
+
       this.logger.verbose(`VliegtuigenService.AddObject(${safeStringify({data})})`);
       const dbVliegtuigen = await this.dbService.refVliegtuig.findFirst({
          where: {
@@ -150,7 +153,16 @@ export class VliegtuigenService extends IHeliosService
       })
 
       if (dbVliegtuigen)
-         throw new HttpException("Vliegtuig met registratie " + data.REGISTRATIE + " bestaat al", HttpStatus.CONFLICT);
+         throw new HttpException("Vliegtuig met registratie " + dbVliegtuigen.REGISTRATIE + " bestaat al", HttpStatus.CONFLICT);
+
+      // een eenzitter is geen DBO vliegtuig, zie RequestToRecord() in class.Vliegtuigen.inc.php. Alleen als ZITPLAATSEN
+      // of TRAINER aangepast wordt, zodat bv. een DeleteObject geen andere velden wijzigt
+      if (data.ZITPLAATSEN !== undefined || data.TRAINER !== undefined)
+      {
+         const zitplaatsen = data.ZITPLAATSEN !== undefined ? data.ZITPLAATSEN as number : db.ZITPLAATSEN;
+         if (zitplaatsen === 1)
+            data.TRAINER = false;
+      }
 
       const obj = await this.dbService.refVliegtuig.update({
          where: {

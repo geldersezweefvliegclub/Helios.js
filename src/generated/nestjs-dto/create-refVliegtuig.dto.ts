@@ -40,6 +40,18 @@ export class CreateRefVliegtuigDto {
   @IsString()
   CALLSIGN?: string | null;
   @ApiProperty({
+    description: "Aantal zitplaatsen in het vliegtuig",
+    minimum: 1,
+    maximum: 2,
+    type: "integer",
+    format: "int32",
+    default: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  ZITPLAATSEN?: number;
+  @ApiProperty({
     description: "Is het vliegtuig eigendom van de club",
     type: "boolean",
     default: false,

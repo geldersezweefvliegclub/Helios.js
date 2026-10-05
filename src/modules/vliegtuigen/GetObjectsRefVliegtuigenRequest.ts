@@ -1,24 +1,11 @@
 import {GetObjectsRequest} from "../../core/DTO/IHeliosFilter";
 import {CSVTransform, OptionalBooleanTransform, OptionalNumberTransform} from "../../core/helpers/Transformers";
 import {ApiProperty} from "@nestjs/swagger";
-import {IsOptional} from "class-validator";
+import {IsInt, IsOptional, Max, Min} from "class-validator";
 
 export class GetObjectsRefVliegtuigenRequest extends GetObjectsRequest
 {
    // specifieke velden voor GetObjects
-   // IN is functioneel identiek aan het generieke IDs veld (beide filteren op ID), enkel aanwezig voor PHP compatibiliteit.
-   // TODO: verwijderen zodra PHP niet meer als referentie gebruikt wordt.
-   @IsOptional()
-   @CSVTransform()
-   @ApiProperty(
-      {
-         required: false,
-         deprecated: true,
-         description: 'Verouderd, gebruik IDs. CSV lijst van IDs die opgehaald moeten worden',
-         type: String
-      })
-   public IN?: number[];
-
    @IsOptional()
    @ApiProperty(
       {
@@ -40,6 +27,9 @@ export class GetObjectsRefVliegtuigenRequest extends GetObjectsRequest
 
    @IsOptional()
    @OptionalNumberTransform()
+   @IsInt()
+   @Min(1)
+   @Max(2)
    @ApiProperty(
       {
          required: false,
