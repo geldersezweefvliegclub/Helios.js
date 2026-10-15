@@ -11,7 +11,7 @@ import {GetObjectsOperTracksResponse} from "./GetObjectsOperTracksResponse";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 
-// track record inclusief de relaties die de PHP tracks_view samenvoegt
+// track record inclusief de relaties met Lid en Instructeur, zodat we de naam van het lid en de instructeur kunnen ophalen
 type TrackMetRelaties = Prisma.OperTrackGetPayload<{
    include: {
       Lid: true,

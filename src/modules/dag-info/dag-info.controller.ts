@@ -161,9 +161,9 @@ export class DagInfoController  extends HeliosController
       return data as Prisma.OperDagInfoUncheckedCreateInput | Prisma.OperDagInfoUncheckedUpdateInput;
    }
 
-   // PHP class.Daginfo.inc.php::RecordToOutput() - DIENSTEN mag enkel gezien worden door Beheerder/Instructeur/CIMT
-   // (altijd), Starttoren (enkel voor vandaag), en DDWV-Beheerder/DDWV-Crew (enkel op DDWV-dagen, Crew bovendien
-   // enkel als ze zelf op die dag zijn ingedeeld). Alle andere gebruikers zien DIENSTEN nooit.
+   // DIENSTEN mogen enkel gezien worden door Beheerder/Instructeur/CIMT (altijd), Starttoren (enkel voor vandaag),
+   // en DDWV-Beheerder/DDWV-Crew (enkel op DDWV-dagen, Crew bovendien enkel als ze zelf op die dag zijn ingedeeld).
+   // Alle andere gebruikers zien DIENSTEN nooit.
    private async maskeerDienstenVoorGebruiker<T extends { DATUM: Date | string; DIENSTEN: string | null }>(
       record: T, currentUser: RefLid): Promise<T>
    {

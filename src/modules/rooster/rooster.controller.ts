@@ -67,7 +67,7 @@ export class RoosterController  extends HeliosController
       this.heeftDataToegangAddObject(currentUser);
 
       // een gewone gebruiker mag alleen een default rooster aanmaken: OPMERKINGEN leeg, DDWV, CLUB_BEDRIJF en
-      // WINTER_WERK worden door de service afgeleid van de datum, zie AddObject() in class.Rooster.inc.php
+      // WINTER_WERK worden door de service afgeleid van de datum, zie AddObject()
       if (!this.magVeldenInvullen(currentUser))
       {
          data.OPMERKINGEN = null;
@@ -159,8 +159,7 @@ export class RoosterController  extends HeliosController
       return data;
    }
 
-   // beheerders en roostermaker mogen OPMERKINGEN, DDWV, CLUB_BEDRIJF en WINTER_WERK zelf invullen, zie
-   // heeftDataToegang(null, false) || isBeheerderDDWV() || isRooster() in AddObject() van class.Rooster.inc.php
+   // beheerders en roostermaker mogen OPMERKINGEN, DDWV, CLUB_BEDRIJF en WINTER_WERK zelf invullen,
    private magVeldenInvullen(currentUser: RefLid): boolean
    {
       return this.permissieService.isBeheerder(currentUser)

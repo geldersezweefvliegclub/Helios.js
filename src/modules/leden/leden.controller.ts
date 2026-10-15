@@ -67,9 +67,7 @@ export class LedenController extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObjects');
       this.heeftDataToegangGetObjects(currentUser);
 
-      // zie GetObjects() in class.Leden.inc.php: een DDWV-only lid krijgt een smallere beperking (enkel
-      // DDWV leden/crew) dan een gewoon lid (alle "clubleden" types) - dit zijn twee losse takken, geen
-      // opeenstapeling van filters
+      // een DDWV-only lid krijgt een smallere beperking (enkel DDWV leden/crew) dan een gewoon lid (alle "clubleden" types)
       if (this.permissieService.isDDWVer(currentUser)) {
          queryParams.DDWV_BEPERKING = true;
       }
@@ -92,8 +90,7 @@ export class LedenController extends HeliosController
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)
-   // NAAM (of ACHTERNAAM) en LIDTYPE_ID zijn verplicht (BAD_REQUEST), LIDNR/INLOGNAAM moeten uniek zijn
-   // (CONFLICT) - zie AddObject() in class.Leden.inc.php. Beide statussen staan al generiek in HeliosCreateObject
+   // NAAM (of ACHTERNAAM) en LIDTYPE_ID zijn verplicht (BAD_REQUEST), LIDNR/INLOGNAAM moeten uniek zijn (CONFLICT)
    async AddObject(
       @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
@@ -108,11 +105,6 @@ export class LedenController extends HeliosController
       if (!data.LIDTYPE_ID)
          throw new HttpException(`Lidtype is verplicht`, HttpStatus.BAD_REQUEST);
 
-      // op AddObject bestaat het lid nog niet - de zelf-of-beheerder velden (naam, adres, ...) worden hier
-      // altijd toegestaan, zodat een nieuw lid zijn eigen gegevens kan invullen. Bevoegdheids-gevoelige
-      // velden (BEHEERDER, CIMT, TEGOED, ...) blijven wel per-veld rolgebonden, zie normaliserenData()
-      // WACHTWOORD wordt in normaliserenData() gehasht - het originele platte-tekst wachtwoord grijpen we
-      // hier alvast, voordat het weg is, voor SyncLeden() (zie AddObject() in class.Leden.inc.php)
       const wachtwoordPlain = data.WACHTWOORD;
       const insert = await this.normaliserenData(data, true, currentUser, true) as Prisma.RefLidUncheckedCreateInput;
       const obj = await this.ledenService.AddObject(insert, currentUser.ID);
@@ -133,10 +125,6 @@ export class LedenController extends HeliosController
 
       id = id ?? data.ID;
       const ikBenHetZelf = currentUser.ID === id;
-
-      // huidige databasewaarden nodig om te bepalen of dit lid een bijzondere rol heeft (zie
-      // normaliserenData()/isSpecialeRol()) - een niet-bestaand ID wordt hier genegeerd, net als in PHP's
-      // RequestToRecord(); ledenService.UpdateObject() hieronder geeft dan alsnog de reguliere 404
       const dbLid = await this.ledenService.GetObject(id).catch(() => undefined);
       const wachtwoordPlain = data.WACHTWOORD;
 
@@ -193,7 +181,7 @@ export class LedenController extends HeliosController
    }
 
 
-   // verwijder de privacygevoelige data uit de response - zie privacyMask() in class.Leden.inc.php
+   // verwijder de privacygevoelige data uit de response
    privacyMask(obj: RefLid, currentUser: RefLid): RefLid
    {
       const ikBenHetZelf = this.permissieService.ikBenHetZelf(obj, currentUser);

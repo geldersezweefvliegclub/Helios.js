@@ -1,7 +1,7 @@
 import {ApiProperty, ApiTags} from "@nestjs/swagger";
 import {OperTrackDto} from "../../generated/nestjs-dto/operTrack.dto";
 
-// deze velden komen uit de tracks_view in de PHP implementatie (join met ref_leden voor lid en instructeur)
+// deze velden komen uit de query in GetObjectsOperTracksResponseQuery.ts
 @ApiTags('Tracks')
 export class GetObjectsOperTracksResponse extends OperTrackDto
 {

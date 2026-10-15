@@ -73,8 +73,7 @@ export class TypesService extends IHeliosService
       return result;
    }
 
-   // de types van de (niet verwijderde) clubkisten, gesorteerd op SORTEER_VOLGORDE, zie GetClubVliegtuigenTypes() in
-   // class.Types.inc.php
+   // de types van de (niet verwijderde) clubkisten, gesorteerd op SORTEER_VOLGORDE
    async GetClubVliegtuigenTypes(): Promise<IHeliosGetObjectsResponse<GetRefTypesResponse>>
    {
       this.logger.verbose(`TypesService.GetClubVliegtuigenTypes()`);
@@ -109,7 +108,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.UpdateObject(${safeStringify({id, data})})`);
       const db = await this.GetObject(id);
-      this.ControleerNietReadOnly(db);
+      this.isReadOnly(db);
       const obj = await this.dbService.refType.update({
          where: {
             ID: id
@@ -127,7 +126,7 @@ export class TypesService extends IHeliosService
    {
       this.logger.verbose(`TypesService.RemoveObject(${safeStringify({id, actorId})})`);
       const db = await this.GetObject(id);
-      this.ControleerNietReadOnly(db);
+      this.isReadOnly(db);
       if (!db.VERWIJDERD) {
          throw new HttpException(`Record moet eerst gemarkeerd worden als verwijderd (VERWIJDERD) voordat het permanent verwijderd kan worden`, HttpStatus.METHOD_NOT_ALLOWED);
       }
@@ -140,8 +139,8 @@ export class TypesService extends IHeliosService
    }
 
    // een READ_ONLY type kan niet aangepast, verwijderd of hersteld worden, omdat er in de source code een harde
-   // verwijzing naar bestaat (zie READ_ONLY in het Prisma schema). PHP dwingt dit niet af.
-   private ControleerNietReadOnly(type: GetRefTypesResponse): void
+   // verwijzing naar bestaat (zie READ_ONLY in het Prisma schema).
+   private isReadOnly(type: GetRefTypesResponse): void
    {
       if (type.READ_ONLY)
          throw new HttpException(`Type ${type.ID} is read-only en kan niet aangepast worden`, HttpStatus.FORBIDDEN);

@@ -15,7 +15,8 @@ import {toDateOnly} from "../../core/helpers/TimeDate";
 import {RoosterService} from "../rooster/rooster.service";
 import {GetObjectsOperRoosterRequest} from "../rooster/GetObjectsOperRoosterRequest";
 
-// dienst record inclusief de relaties die de PHP diensten_view samenvoegt
+// dienst record inclusief de relaties die nodig zijn voor de GetObjects response,
+// zodat we de naam van het lid en de omschrijving van het type dienst kunnen ophalen
 type DienstMetRelaties = Prisma.OperDienstGetPayload<{
    include: {
       TypeDienst: true,
@@ -239,8 +240,7 @@ export class DienstenService extends IHeliosService
          totaal += record.AANTAL;
       }
 
-      // laatste (of enige) lid moet ook zijn jaartotaal-rij krijgen - PHP doet dit onvoorwaardelijk, ook
-      // wanneer er helemaal geen diensten gevonden zijn (levert dan een rij met LID_ID/NAAM: null op)
+      // laatste (of enige) lid moet ook zijn jaartotaal-rij krijgen
       resultaat.push({ LID_ID: huidigLidId, NAAM: huidigNaam, JAAR: jaar, MAAND: null, AANTAL: totaal });
 
       this.logger.verbose(`DienstenService.TotaalDiensten() => ${safeStringify(resultaat)}`);

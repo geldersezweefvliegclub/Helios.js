@@ -2,8 +2,6 @@
 import {ApiTags, ApiProperty} from "@nestjs/swagger";
 import {OperAanwezigLidDto} from "../../generated/nestjs-dto/operAanwezigLid.dto";
 
-// deze velden komen uit de aanwezig_leden_view in de PHP implementatie (join met ref_leden, ref_types, ref_vliegtuigen
-// en berekende velden op basis van oper_startlijst), zie class.AanwezigLeden.inc.php CreateViews()
 @ApiTags('AanwezigLeden')
 export class GetObjectsOperAanwezigLedenResponse extends OperAanwezigLidDto
 {

@@ -10,7 +10,7 @@ export class DdwvService {
     }
 
     // is de datum een DDWV dag: DDWV staat aan, de datum valt binnen het DDWV seizoen (START t/m EIND, formaat "MM-DD")
-    // en het is een doordeweekse dag, zie dagIsDDWV() in class.DDWV.inc.php
+    // en het is een doordeweekse dag
     DagIsDDWV(datum: Date): boolean {
         this.logger.verbose(`DdwvService.DagIsDDWV(${safeStringify({datum})})`);
         const ddwv = this.configService.get<{DDWV: boolean, START: string, EIND: string}>('ddwv');

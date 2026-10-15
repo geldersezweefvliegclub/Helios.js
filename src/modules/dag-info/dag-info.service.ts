@@ -12,7 +12,7 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
-// daginfo record inclusief de relaties die de PHP daginfo_view samenvoegt
+// daginfo record inclusief de relaties met Veld, Baan en StartMethode, zodat we de omschrijving van deze relaties kunnen ophalen
 type DagInfoMetRelaties = Prisma.OperDagInfoGetPayload<{
    include: {
       Veld: true,
@@ -36,7 +36,7 @@ export class DagInfoService extends IHeliosService
    }
 
    // haal een enkel object op uit de database op basis van het ID, of op basis van DATUM
-   // PHP class.Daginfo.inc.php::GetObject() - bij opzoeken op DATUM wordt een verwijderd record genegeerd;
+   // bij opzoeken op DATUM wordt een verwijderd record genegeerd;
    // bij opzoeken op ID geldt deze beperking niet
    async GetObject(id: number, date?: Date): Promise<OperDagInfo>
    {

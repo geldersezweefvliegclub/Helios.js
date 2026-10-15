@@ -3,10 +3,10 @@ import {RefTypeDto} from "../../generated/nestjs-dto/refType.dto";
 import {RefType} from "@prisma/client";
 
 // een type zoals de API die teruggeeft: gelijk aan RefTypeDto, maar BEDRAG en EENHEDEN zijn getallen in plaats van
-// Prisma Decimal strings, zoals in de PHP implementatie (RecordToOutput() in class.Types.inc.php)
+// Prisma Decimal strings
 export class GetRefTypesResponse extends OmitType(RefTypeDto, ['BEDRAG', 'EENHEDEN'] as const)
 {
-    @ApiProperty({type: Number, nullable: true, description: 'Het bedrag om te kunnen factureren'})
+    @ApiProperty({type: Number, nullable: true, description: 'Het bedrag om te kunnen facturer en'})
     BEDRAG: number | null;
 
     @ApiProperty({type: Number, nullable: true, description: 'De eenheden om te kunnen boeken, bijvoorbeeld DDWV strippen'})

@@ -15,7 +15,7 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
-// brandstof record inclusief de relatie die de PHP brandstof_view samenvoegt
+// brandstof record inclusief de relatie met BrandstofType, zodat we de omschrijving van het brandstoftype kunnen ophalen
 type BrandstofMetRelaties = Prisma.OperBrandstofGetPayload<{
    include: {
       BrandstofType: true,

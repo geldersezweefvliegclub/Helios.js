@@ -43,7 +43,7 @@ export class RoosterService extends IHeliosService
       return result;
    }
 
-   // Er mag maar een actief rooster per DATUM bestaan, zie GetObject(null, $DATUM, false) in class.Rooster.inc.php
+   // Er mag maar een actief rooster per DATUM bestaan
    async GetObjectByDatum(datum: Date, uitgezonderdId?: number): Promise<OperRooster | null>
    {
       this.logger.verbose(`RoosterService.GetObjectByDatum(${safeStringify({datum, uitgezonderdId})})`);
@@ -108,7 +108,7 @@ export class RoosterService extends IHeliosService
       if (bestaand)
          throw new HttpException("Datum bestaat al", HttpStatus.CONFLICT);
 
-      // velden die niet zijn meegegeven worden afgeleid van de datum, zie AddObject() in class.Rooster.inc.php
+      // velden die niet zijn meegegeven worden afgeleid van de datum
       const insertData: Prisma.OperRoosterUncheckedCreateInput = {
          ...data,
          DATUM: datum,

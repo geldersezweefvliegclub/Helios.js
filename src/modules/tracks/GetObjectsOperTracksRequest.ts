@@ -4,7 +4,7 @@ import {ApiProperty} from "@nestjs/swagger";
 import {OptionalNumberTransform} from "../../core/helpers/Transformers";
 
 export class GetObjectsOperTracksRequest extends GetObjectsRequest {
-    // specifieke velden voor GetObjects, zie route.Tracks.php / class.Tracks.inc.php
+    // specifieke velden voor GetObjects
     @IsOptional()
     @OptionalNumberTransform()
     @IsInt()

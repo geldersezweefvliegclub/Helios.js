@@ -79,19 +79,17 @@ export class DienstenController  extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
       this.heeftDataToegangAddObject(currentUser);
 
-      // PHP class.Diensten.inc.php::AddObject() - DDWV-leden (LIDTYPE_ID = DDWV) mogen zelf nooit een
-      // dienst aanmaken
+      // DDWV-leden (LIDTYPE_ID = DDWV) mogen zelf nooit een dienst aanmaken
       if (this.permissieService.isDDWVer(currentUser)) {
          throw new HttpException("Geen schrijfrechten DDWV", HttpStatus.UNAUTHORIZED);
       }
 
       const insert = await this.normaliserenData(data) as Prisma.OperDienstUncheckedCreateInput;
-      // PHP class.Diensten.inc.php::AddObject() - als LID_ID niet is meegegeven, wordt de ingelogde
-      // gebruiker zelf ingeroosterd
+      // als LID_ID niet is meegegeven, wordt de ingelogde gebruiker zelf ingeroosterd
       insert.LID_ID ??= currentUser.ID;
 
-      // PHP class.Diensten.inc.php::AddObject() - een dienst toewijzen aan een ANDER lid dan jezelf mag
-      // enkel door BeheerderDDWV of Rooster; voor iedereen anders geldt de generieke schrijf-toegangscheck
+      // Een dienst toewijzen aan een ANDER lid dan jezelf mag enkel door BeheerderDDWV of Rooster
+      // voor iedereen anders geldt de generieke schrijf-toegangscheck
       if (insert.LID_ID !== currentUser.ID &&
           !this.permissieService.isBeheerderDDWV(currentUser) &&
           !this.permissieService.isRooster(currentUser))
@@ -120,9 +118,8 @@ export class DienstenController  extends HeliosController
       this.controleerSchrijfrechten(bestaandeDienst, currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperDienstUncheckedUpdateInput;
-      // PHP class.Diensten.inc.php::UpdateObject() - INGEVOERD_DOOR_ID wordt bij elke wijziging opnieuw
-      // op de ingelogde gebruiker gezet (registreert wie de dienst het laatst heeft aangepast, niet enkel
-      // wie hem heeft aangemaakt)
+      // INGEVOERD_DOOR_ID wordt bij elke wijziging opnieuw op de ingelogde gebruiker gezet
+      // registreert wie de dienst het laatst heeft aangepast, niet enkel wie hem heeft aangemaakt
       update.INGEVOERD_DOOR_ID = currentUser.ID;
       return await this.DienstenService.UpdateObject(id, update, currentUser.ID);
    }
@@ -212,8 +209,8 @@ export class DienstenController  extends HeliosController
       return data as Prisma.OperDienstUncheckedCreateInput | Prisma.OperDienstUncheckedUpdateInput;
    }
 
-   // PHP class.Diensten.inc.php::GetObjects() - DDWV'ers (LIDTYPE_ID = DDWV) mogen enkel diensten zien op
-   // DDWV-dagen (oper_rooster.DDWV = 1) binnen het opgevraagde datumbereik; andere gebruikers zien alles
+   // DDWV'ers (LIDTYPE_ID = DDWV) mogen enkel diensten zien op DDWV-dagen (oper_rooster.DDWV = 1)
+   // binnen het opgevraagde datumbereik; andere gebruikers zien alles
    private async bepaalToegestaneDatums(
       currentUser: RefLid, queryParams: GetObjectsOperDienstenRequest): Promise<Date[] | undefined>
    {

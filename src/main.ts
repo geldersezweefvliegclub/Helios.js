@@ -170,7 +170,8 @@ async function bootstrap()
         origin: "http://localhost:4200"
     });
 
-   setupSwagger(app, 'docs');
+   const swaggerUrl = 'docs';
+   setupSwagger(app, swaggerUrl);
 
    // Schakelt validatie en conversie van binnenkomende data in voordat deze de controller bereikt
    app.useGlobalPipes(new ValidationPipe(
@@ -195,6 +196,12 @@ async function bootstrap()
 
    app.use(cookieParser()); // Zorgt dat de applicatie cookies kan lezen en toevoegen aan het request object
    await app.listen(3000);
+
+   // getUrl() geeft het IPv6/IPv4 loopback adres terug (bv. http://[::1]:3000), localhost leest prettiger
+   const baseUrl = (await app.getUrl()).replace(/\/\/(\[::1?\]|127\.0\.0\.1|0\.0\.0\.0)/, '//localhost');
+   logger.log(`Helios API draait op ${baseUrl}`, 'Bootstrap');
+   logger.log(`Swagger (OpenAPI) pagina: ${baseUrl}/${swaggerUrl}`, 'Bootstrap');
+   logger.log(`Swagger YAML: ${baseUrl}/swagger.yaml`, 'Bootstrap');
 }
 
 bootstrap();

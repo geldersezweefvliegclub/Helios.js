@@ -188,7 +188,6 @@ export class TypesController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Types/AddObject
    private heeftDataToegangAddObject(currentUser: RefLid): void
    {
-      // alleen de beheerder, zie heeftDataToegang(null, false) in AddObject() van class.Types.inc.php
       if (!this.permissieService.isBeheerder(currentUser))
          throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
@@ -196,7 +195,6 @@ export class TypesController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Types/UpdateObject
    private heeftDataToegangUpdateObject(currentUser: RefLid): void
    {
-      // alleen de beheerder, zie heeftDataToegang(null, false) in UpdateObject() van class.Types.inc.php
       if (!this.permissieService.isBeheerder(currentUser))
          throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
@@ -204,7 +202,6 @@ export class TypesController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Types/DeleteObject
    private heeftDataToegangDeleteObject(currentUser: RefLid): void
    {
-      // alleen de beheerder, zie heeftDataToegang(null, false) in VerwijderObject() van class.Types.inc.php
       if (!this.permissieService.isBeheerder(currentUser))
          throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
@@ -212,7 +209,6 @@ export class TypesController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Types/RemoveObject
    private heeftDataToegangRemoveObject(currentUser: RefLid): void
    {
-      // bestaat niet in PHP; zelfde rechten als DeleteObject
       if (!this.permissieService.isBeheerder(currentUser))
          throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }
@@ -220,7 +216,6 @@ export class TypesController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Types/RestoreObject
    private heeftDataToegangRestoreObject(currentUser: RefLid): void
    {
-      // alleen de beheerder, zie heeftDataToegang(null, false) in HerstelObject() van class.Types.inc.php
       if (!this.permissieService.isBeheerder(currentUser))
          throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
    }

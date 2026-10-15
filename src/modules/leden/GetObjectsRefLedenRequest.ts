@@ -106,8 +106,7 @@ export class GetObjectsRefLedenRequest extends GetObjectsRequest
    public BRANDSTOF_PAS? : boolean;
 
    // niet client-instelbaar (geen decorators, dus whitelist verwerpt een client-waarde) - wordt uitsluitend
-   // server-side gezet door LedenController.GetObjects() voor een DDWV-only lid, zie GetObjects() in
-   // class.Leden.inc.php: zo iemand mag enkel andere DDWV leden en DDWV crew zien, niets anders
+   // server-side gezet door LedenController.GetObjects() voor een DDWV-only lid, zie GetObjects()
    public DDWV_BEPERKING?: boolean;
 }
 

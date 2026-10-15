@@ -9,7 +9,7 @@ import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {toDateOnly} from "../../core/helpers/TimeDate";
 
-// audit record inclusief de relatie die de PHP audit_view samenvoegt
+// audit record inclusief de relatie de RefLid (het lid dat de actie heeft uitgevoerd) - wordt gebruikt bij GetObjects
 type AuditMetRelaties = Prisma.AuditGetPayload<{
    include: {
       RefLid: true,

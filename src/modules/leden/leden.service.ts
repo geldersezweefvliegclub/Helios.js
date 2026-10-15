@@ -19,9 +19,9 @@ import {PermissieService} from "../authorisatie/permissie.service";
 import {promises as fs} from "fs";
 import {join} from "path";
 
-const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid" in PHP, configureerbaar maar in de praktijk altijd deze waarde
+const PAX_COMPETENTIE_ID = 271; // "PaxBevoegdheid", configureerbaar maar in de praktijk altijd deze waarde
 
-// herkende data-URI voorvoegsels voor UploadAvatar() - zie class.Leden.inc.php
+// herkende data-URI voorvoegsels voor UploadAvatar()
 const AVATAR_PREFIXEN: {prefix: string, extensie: string}[] = [
    {prefix: 'data:image/jpeg;base64,', extensie: '.jpg'},
    {prefix: 'data:image/jpg;base64,', extensie: '.jpg'},
@@ -29,7 +29,8 @@ const AVATAR_PREFIXEN: {prefix: string, extensie: string}[] = [
    {prefix: 'data:image/gif;base64,', extensie: '.gif'},
 ];
 
-// lid record inclusief de relaties die de PHP leden_view samenvoegt
+// lid record inclusief de relaties met LidType/VliegStatus/Zusterclub/Buddy/Buddy2,
+// zodat we de omschrijving van het type/status en de naam van de zusterclub/buddy kunnen ophalen
 type LidMetRelaties = Prisma.RefLidGetPayload<{
    include: {
       LidType: true,
@@ -125,8 +126,6 @@ export class LedenService extends IHeliosService
                { LIERIST_IO: params.LIO},
                { BRANDSTOF_PAS: params.BRANDSTOF_PAS ? {not: null} : undefined},
                { LIDTYPE_ID: { in: params.TYPES}},
-               // zie GetObjects() in class.Leden.inc.php: CLUBLEDEN is LIDTYPE_ID > 600 AND <= 606,
-               // dus Student (600) en Rittenkaart (608) vallen hier NIET onder
                { LIDTYPE_ID: params.CLUBLEDEN ? {in: [
                   LidType.Erelid, LidType.Lid, LidType.Jeugdlid,
                   LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur
@@ -184,7 +183,7 @@ export class LedenService extends IHeliosService
       await this.checkUniek('LIDNR', data.LIDNR as string | null | undefined, id);
       await this.checkUniek('INLOGNAAM', data.INLOGNAAM as string | null | undefined, id);
 
-      // DDWV leden zonder LIDNR krijgen er automatisch een - zie RequestToRecord() in class.Leden.inc.php
+      // DDWV leden zonder LIDNR krijgen er automatisch een 90xxxx lidnummer bij, zodat er een factuur verstuurd kan worden
       const lidtypeId = data.LIDTYPE_ID !== undefined ? data.LIDTYPE_ID as number : db.LIDTYPE_ID;
       if (!data.LIDNR && !db.LIDNR && lidtypeId === LidType.DDWV)
          data.LIDNR = `90${id}`;
@@ -279,9 +278,9 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   // publiceert een lid op de MQTT bus voor externe (Synapse) synchronisatie - zie SyncLeden() in
-   // class.Leden.inc.php. Enkel DDWV'ers en "club vliegers" worden gesynchroniseerd; wachtwoord wordt
-   // enkel meegestuurd als het als platte tekst is meegegeven (bijv. net na een AddObject/UpdateObject
+   // publiceert een lid op de MQTT bus voor externe synchronisatie
+   // Enkel DDWV'ers en "club vliegers" worden gesynchroniseerd; wachtwoord wordt
+   // alleen meegestuurd als het als platte tekst is meegegeven (bijv. net na een AddObject/UpdateObject
    // met een nieuw wachtwoord) - het gehashte WACHTWOORD veld zelf wordt nooit gepubliceerd
    async SyncLeden(id: number, wachtwoord?: string | null): Promise<void>
    {
