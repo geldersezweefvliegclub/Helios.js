@@ -6,7 +6,7 @@ import {LedenService} from './leden.service';
 import {DbService} from '../../database/db-service/db.service';
 import {ProgressieService} from '../progressie/progressie.service';
 import {MqttService} from '../../core/services/mqtt.service';
-import {PermissieService} from '../authorisatie/permissie.service';
+import {maakPermissieService} from '../authorisatie/permissie.service.testhelper';
 import {TypesService} from '../types/types.service';
 import {Rol} from '../../core/enums/Rol';
 import {TypesGroep} from '../../core/enums/TypesGroep';
@@ -25,17 +25,18 @@ describe('LedenService controle ROLLEN_ID', () =>
    // enkel de vaste rollen bestaan als type in de groep Rollen
    const typesService = {
       GetObjects: jest.fn(async (params: {IDs: number[], GROEP: number}) => ({
-         dataset: params.IDs.filter(id => params.GROEP === TypesGroep.Rollen && id >= Rol.Beheerder && id <= Rol.Gastenvlieger).map(ID => ({ID})),
+         dataset: params.IDs.filter(id => params.GROEP === TypesGroep.Rollen && id >= Rol.Beheerder && id <= Rol.Iedereen).map(ID => ({ID})),
       })),
    };
-   const service = new LedenService(
+   let service: LedenService;
+   beforeAll(async () => service = new LedenService(
       dbService as unknown as DbService,
       {emit: jest.fn()} as unknown as EventEmitter2,
       {} as ProgressieService,
       {} as MqttService,
       {} as ConfigService,
-      new PermissieService(),
-      typesService as unknown as TypesService);
+      (await maakPermissieService()).service,
+      typesService as unknown as TypesService));
    const status = async (actie: Promise<unknown>) => actie.then(() => 200, (e: HttpException) => e.getStatus());
 
    beforeEach(() => jest.clearAllMocks());
@@ -52,6 +53,12 @@ describe('LedenService controle ROLLEN_ID', () =>
       expect(await status(service.AddObject({NAAM: 'Nieuw', LIDTYPE_ID: 602, ROLLEN_ID: '999'}, 1))).toBe(HttpStatus.BAD_REQUEST);
       expect(dbService.refLid.update).not.toHaveBeenCalled();
       expect(dbService.refLid.create).not.toHaveBeenCalled();
+   });
+
+   it('de impliciete rol Iedereen kan niet worden toegekend', async () =>
+   {
+      expect(await status(service.UpdateObject(10, {ROLLEN_ID: `${Rol.Instructeur},${Rol.Iedereen}`}, 1))).toBe(HttpStatus.BAD_REQUEST);
+      expect(dbService.refLid.update).not.toHaveBeenCalled();
    });
 
    it('geen of lege ROLLEN_ID vraagt geen types op', async () =>

@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Helios.js + Pegasus" type="CompoundRunConfigurationType">
+    <toRun name="start" type="js.build_tools.npm" />
+    <toRun name="start Pegasus" type="js.build_tools.npm" />
+    <toRun name="Pegasus browser" type="JavascriptDebugType" />
+    <method v="2" />
+  </configuration>
+</component>

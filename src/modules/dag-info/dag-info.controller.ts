@@ -49,7 +49,7 @@ export class DagInfoController  extends HeliosController
    ): Promise<OperDagInfoDto>
    {
       this.logger.verbose(`DagInfoController.GetObject(${safeStringify({currentUser, params})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.GetObject');
       this.heeftDataToegangGetObject(currentUser);
       const obj = await this.DagInfoService.GetObject(params.ID, params.DATUM);
       const masked = await this.maskeerDienstenVoorGebruiker(obj, currentUser);
@@ -62,7 +62,7 @@ export class DagInfoController  extends HeliosController
       @Query() queryParams: GetObjectsOperDagInfoRequest): Promise<IHeliosGetObjectsResponse<GetObjectsOperDagInfoResponse>>
    {
       this.logger.verbose(`DagInfoController.GetObjects(${safeStringify({currentUser, queryParams})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.GetObjects');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.GetObjects');
       this.heeftDataToegangGetObjects(currentUser);
       const result = await this.DagInfoService.GetObjects(queryParams);
       result.dataset = await Promise.all(
@@ -78,7 +78,7 @@ export class DagInfoController  extends HeliosController
    {
       this.logger.verbose(`DagInfoController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.AddObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.AddObject');
       this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedCreateInput;
@@ -94,7 +94,7 @@ export class DagInfoController  extends HeliosController
       bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`DagInfoController.UpdateObject(${safeStringify({currentUser, id, data})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.UpdateObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperDagInfoUncheckedUpdateInput;
@@ -108,7 +108,7 @@ export class DagInfoController  extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`DagInfoController.DeleteObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.DeleteObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.DeleteObject');
       this.heeftDataToegangDeleteObject(currentUser);
 
       const data: Prisma.OperDagInfoUncheckedUpdateInput = {
@@ -123,7 +123,7 @@ export class DagInfoController  extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`DagInfoController.RemoveObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.RemoveObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.RemoveObject');
       this.heeftDataToegangRemoveObject(currentUser);
       await this.DagInfoService.RemoveObject(id, currentUser.ID);
    }
@@ -134,7 +134,7 @@ export class DagInfoController  extends HeliosController
       @Query('ID') id: number): Promise<void>
    {
       this.logger.verbose(`DagInfoController.RestoreObject(${safeStringify({currentUser, id})})`);
-      this.permissieService.heeftToegang(currentUser, 'DagInfo.RestoreObject');
+      this.permissieService.heeftToegang(currentUser, 'Daginfo.RestoreObject');
       this.heeftDataToegangRestoreObject(currentUser);
 
       const data: Prisma.OperDagInfoUncheckedUpdateInput = {

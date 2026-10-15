@@ -210,7 +210,7 @@ model RefLid {
   /// @Matches(/^[\d,]*$/)
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
-  ROLLEN_ID           String?   @db.VarChar(250)
+  ROLLEN_ID            String?   @db.VarChar(250)
 
   Audit                Audit[]
   AanwezigLid          OperAanwezigLid[]

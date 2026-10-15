@@ -107,6 +107,10 @@ model RefType {
   /// @DtoRelationCanConnectOnCreate
   /// @DtoReadOnly
   LedenVliegstatus    RefLid[]                @relation("VliegStatus")
+  /// @description De permissies (endpoints) die aan deze rol zijn toegekend
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Permissies          RefPermissie[]
 
   @@index([GROEP], map: "GROEP")
   @@index([VERWIJDERD], map: "VERWIJDERD")

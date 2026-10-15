@@ -12,6 +12,7 @@ import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
 import {TypesGroep} from "../../core/enums/TypesGroep";
+import {Rol} from "../../core/enums/Rol";
 import {TypesService} from "../types/types.service";
 import {GetObjectsRefTypesRequest} from "../types/GetObjectsRefTypesRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
@@ -414,6 +415,10 @@ export class LedenService extends IHeliosService
       const onbekend = rollen.filter(rol => !gevonden.dataset.some(type => type.ID === rol));
       if (onbekend.length > 0)
          throw new HttpException(`Onbekende rol(len) in ROLLEN_ID: ${onbekend.join(',')}`, HttpStatus.BAD_REQUEST);
+
+      // Iedereen is een impliciete rol die elke gebruiker al heeft, die wordt niet toegekend
+      if (rollen.includes(Rol.Iedereen))
+         throw new HttpException(`De rol Iedereen (${Rol.Iedereen}) kan niet worden toegekend, elke gebruiker heeft deze rol al`, HttpStatus.BAD_REQUEST);
    }
 
    // zie PHP's date('YmdHis'), gebruikt in UploadAvatar() voor een unieke bestandsnaam

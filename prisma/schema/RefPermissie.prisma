@@ -1,0 +1,29 @@
+model RefPermissie {
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description De primary ID van de permissie
+  ID                 Int      @id @default(autoincrement()) @db.UnsignedMediumInt
+  /// @description De rol die toegang krijgt: een type uit de groep Rollen (27) of een lidtype uit de groep Lidmaatschap (6)
+  /// @DtoRelationIncludeId
+  ROL_ID             Int      @db.UnsignedMediumInt
+  /// @description Het endpoint waar de rol toegang toe krijgt, bijv Leden.UpdateObject. Met Leden.* krijgt de rol toegang tot alle endpoints van de module. Zie Permissie/GetEndpoints
+  /// @maxLength 100
+  /// @IsNotEmpty()
+  ENDPOINT           String   @db.VarChar(100)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Is het record gemarkeerd als verwijderd
+  VERWIJDERD         Boolean  @default(false)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Tijdstempel met de laatste wijziging van het record
+  LAATSTE_AANPASSING DateTime @updatedAt
+
+  /// @DtoRelationCanConnectOnCreate
+  /// @DtoReadOnly
+  Rol RefType @relation(fields: [ROL_ID], references: [ID], onUpdate: Restrict, onDelete: Restrict, map: "ref_permissie_ibfk_1")
+
+  @@unique([ROL_ID, ENDPOINT], map: "ROL_ENDPOINT")
+  @@index([VERWIJDERD], map: "VERWIJDERD")
+  @@map("ref_permissie")
+}

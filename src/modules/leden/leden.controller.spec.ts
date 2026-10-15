@@ -2,7 +2,7 @@ import {HttpException, HttpStatus} from '@nestjs/common';
 import {RefLid} from '@prisma/client';
 import {LedenController} from './leden.controller';
 import {LedenService} from './leden.service';
-import {PermissieService} from '../authorisatie/permissie.service';
+import {maakPermissieService} from '../authorisatie/permissie.service.testhelper';
 import {Rol} from '../../core/enums/Rol';
 import {UpdateRefLidDto} from '../../generated/nestjs-dto/update-refLid.dto';
 import {plainToInstance} from 'class-transformer';
@@ -33,11 +33,13 @@ describe('LedenController rollen (ROLLEN_ID)', () =>
       controller.UpdateObject(currentUser, dbLid.ID, {ID: dbLid.ID, ...data} as UpdateRefLidDto);
    const status = async (actie: Promise<unknown>) => actie.then(() => 200, (e: HttpException) => e.getStatus());
 
-   beforeEach(() =>
+   beforeEach(async () =>
    {
       dbLid = maakLid();
       opgeslagen = {};
-      controller = new LedenController(ledenService as unknown as LedenService, new PermissieService());
+      // de roostermaker mag Leden endpoints gebruiken, de beheerder heeft altijd toegang
+      const {service} = await maakPermissieService([{ROL_ID: Rol.Rooster, ENDPOINT: 'Leden.*'}]);
+      controller = new LedenController(ledenService as unknown as LedenService, service);
    });
 
    it('beheerder slaat ROLLEN_ID op en de booleans volgen', async () =>

@@ -17,11 +17,14 @@ export enum Rol
    Starttoren = 2711,
    Sleepvlieger = 2712,
    Gastenvlieger = 2713,
+   // impliciete rol: iedere ingelogde gebruiker heeft deze rol (zie PermissieService.heeftToegang), wordt niet
+   // toegekend via ROLLEN_ID. Een permissie voor Iedereen geeft dus elke gebruiker toegang tot het endpoint
+   Iedereen = 2750,
 }
 
-// Overgangssituatie: de boolean kolom in ref_leden die (nog) bij elke vaste rol hoort. Vervalt zodra de
-// booleans uitgefaseerd zijn en ROLLEN_ID de enige bron is
-export const RolKolom: Record<Rol, 'BEHEERDER' | 'CIMT' | 'INSTRUCTEUR' | 'RAPPORTEUR' | 'LIERIST' | 'LIERIST_IO' |
+// Overgangssituatie: de boolean kolom in ref_leden die (nog) bij elke vaste rol hoort (behalve de impliciete rol
+// Iedereen). Vervalt zodra de booleans uitgefaseerd zijn en ROLLEN_ID de enige bron is
+export const RolKolom: Record<Exclude<Rol, Rol.Iedereen>, 'BEHEERDER' | 'CIMT' | 'INSTRUCTEUR' | 'RAPPORTEUR' | 'LIERIST' | 'LIERIST_IO' |
    'DDWV_CREW' | 'DDWV_BEHEERDER' | 'STARTLEIDER' | 'TECHNICUS' | 'ROOSTER' | 'STARTTOREN' | 'SLEEPVLIEGER' | 'GASTENVLIEGER'> =
 {
    [Rol.Beheerder]: 'BEHEERDER',
