@@ -543,7 +543,7 @@ export class LedenController extends HeliosController
    // TODO: zodra de oude booleans verwijderd zijn, kan deze functie ook verwijderd worden en wordt ROLLEN_ID
    // direct in normaliserenData() gezet op basis van de nieuwe waarde in de aanvraag of de bestaande waarde
    private async RollenBooleanEnCSV(
-      ruweData: Record<string, unknown>,
+      dataArray: Record<string, unknown>,
       result: Record<string, unknown>,
       currentUser: RefLid,
       ikBenHetZelf: boolean,
@@ -556,10 +556,10 @@ export class LedenController extends HeliosController
       rolKolommen.filter(({kolom}) => dbLid?.[kolom]).forEach(({rol}) => huidigeRollen.add(rol));
       const nieuweRollen = new Set<number>(huidigeRollen);
 
-      if (Object.prototype.hasOwnProperty.call(ruweData, 'ROLLEN_ID'))
+      if (Object.prototype.hasOwnProperty.call(dataArray, 'ROLLEN_ID'))
       {
          // of de gevraagde rollen bestaan wordt bij het opslaan gecontroleerd in LedenService
-         const gevraagd = ((ruweData.ROLLEN_ID as string | null) ?? "").split(",").filter(Boolean).map(Number);
+         const gevraagd = ((dataArray.ROLLEN_ID as string | null) ?? "").split(",").filter(Boolean).map(Number);
          gevraagd.filter(rol => !dbRollen.includes(rol)).forEach(rol => nieuweRollen.add(rol));
          dbRollen.filter(rol => !gevraagd.includes(rol)).forEach(rol => nieuweRollen.delete(rol));
       }
