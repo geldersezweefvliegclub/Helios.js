@@ -390,9 +390,8 @@ export function compareModule(testConfig: ModuleComparisonConfig): void {
 
                 await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("DeleteObject", "DELETE", `/${className}/DeleteObject`, {ID: nestjsId}), GetNestjsAuth());
 
-                // 410 Gone is geen 2xx, dus axios verwerpt de promise net als bij elke andere foutstatus
-                await expect(requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("RemoveObject", "DELETE", `/${className}/RemoveObject`, {ID: nestjsId}), GetNestjsAuth()))
-                    .rejects.toMatchObject({response: {status: 410}});
+                const nestjsRemove = await requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("RemoveObject", "DELETE", `/${className}/RemoveObject`, {ID: nestjsId}), GetNestjsAuth());
+                expect(nestjsRemove.status).toBe(204);
 
                 await expect(requestBuilder.makeRequest(NESTJS_API_URL, new Endpoint("GetObject", "GET", `/${className}/GetObject`, {ID: nestjsId}), GetNestjsAuth()))
                     .rejects.toMatchObject({response: {status: 404}});

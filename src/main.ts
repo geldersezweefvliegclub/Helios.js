@@ -167,7 +167,9 @@ async function bootstrap()
    });
     app.enableCors({
         credentials: true,
-        origin: "http://localhost:4200"
+        origin: "http://localhost:4200",
+        // zonder deze regel kan de browser (Pegasus) de foutmelding in de X-Error-Message header niet lezen
+        exposedHeaders: ['X-Error-Message']
     });
 
    const swaggerUrl = 'docs';
