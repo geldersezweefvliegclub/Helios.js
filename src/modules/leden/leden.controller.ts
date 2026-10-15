@@ -29,6 +29,7 @@ import {NieuwLidNummerRequest} from "./NieuwLidNummerRequest";
 import {NieuwLidNummerResponse} from "./NieuwLidNummerResponse";
 import {UploadAvatarRequest} from "./UploadAvatarRequest";
 import {LidType} from "../../core/enums/LidType";
+import {Rol, RolKolom} from "../../core/enums/Rol";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
@@ -364,11 +365,11 @@ export class LedenController extends HeliosController
       const isRooster = this.permissieService.isRooster(currentUser);
 
       const result: Record<string, unknown> = {};
-      const ruweData = data as Record<string, unknown>;
+      const dataArray = data as Record<string, unknown>;
       const zet = (veld: string) =>
       {
-         if (Object.prototype.hasOwnProperty.call(ruweData, veld))
-            result[veld] = ruweData[veld];
+         if (Object.prototype.hasOwnProperty.call(dataArray, veld))
+            result[veld] = dataArray[veld];
       };
 
       // beheerder of beheerder DDWV
@@ -422,6 +423,12 @@ export class LedenController extends HeliosController
          zet('OPGEZEGD');
          zet('AVATAR');
       }
+
+      // rollen (ROLLEN_ID) en de bijbehorende booleans, zie RollenBooleanEnCSV(). Of de rollen bestaan wordt bij het
+      // opslaan gecontroleerd in LedenService
+      // TODO aanpassen aks booleans verwijderd zijn
+
+      await this.RollenBooleanEnCSV(dataArray, result, currentUser, ikBenHetZelf, dbLid);
 
       // zelf, beheerder of beheerder DDWV
       if (ikBenHetZelf || isBeheerder || isBeheerderDDWV)
@@ -488,16 +495,16 @@ export class LedenController extends HeliosController
          // AUTH (2FA) kan niet uitgezet worden voor bijzondere rollen - zie specialeRol()/RequestToRecord()
          // in class.Leden.inc.php. Onbekend (noch in deze aanvraag, noch in de database) betekent hier
          // "aannemen dat het speciaal is" (PHP: "we nemen geen risico")
-         const isSpeciaal = ['CIMT', 'INSTRUCTEUR', 'BEHEERDER', 'DDWV_BEHEERDER', 'DDWV_CREW', 'STARTTOREN', 'ROOSTER', 'RAPPORTEUR']
-            .some(veld => this.isSpecialeRol(result, dbLid, veld));
+         const isSpeciaal = [Rol.CIMT, Rol.Instructeur, Rol.Beheerder, Rol.DDWVBeheerder, Rol.DDWVCrew, Rol.Starttoren, Rol.Rooster, Rol.Rapporteur]
+            .some(rol => this.heeftRol(result, dbLid, rol));
          if (isSpeciaal)
             result.AUTH = true;
          else
             zet('AUTH');
 
          // daginfo e-mail enkel voor CIMT, instructeur of beheerder
-         const magEmailDaginfo = ['CIMT', 'INSTRUCTEUR', 'BEHEERDER']
-            .some(veld => this.isSpecialeRol(result, dbLid, veld));
+         const magEmailDaginfo = [Rol.CIMT, Rol.Instructeur, Rol.Beheerder]
+            .some(rol => this.heeftRol(result, dbLid, rol));
          if (!magEmailDaginfo)
             result.EMAIL_DAGINFO = false;
          else
@@ -507,16 +514,107 @@ export class LedenController extends HeliosController
       return result as Prisma.RefLidUncheckedCreateInput | Prisma.RefLidUncheckedUpdateInput;
    }
 
-   // bepaalt of een rol-veld "aan" staat: kijkt eerst naar de nieuwe waarde in deze aanvraag, anders naar
-   // de bestaande databasewaarde, en neemt bij volledige onbekendheid aan van wel - zie specialeRol() in
-   // class.Leden.inc.php
-   private isSpecialeRol(result: Record<string, unknown>, dbLid: RefLid | undefined, veld: string): boolean
+   // bepaalt of een rol "aan" staat: eerst via ROLLEN_ID (nieuwe waarde in deze aanvraag, anders de database),
+   // daarna via het oude rol-veld: de nieuwe waarde in deze aanvraag, anders de bestaande databasewaarde, en
+   // bij volledige onbekendheid wordt aangenomen van wel - zie specialeRol() in class.Leden.inc.php
+   private heeftRol(result: Record<string, unknown>, dbLid: RefLid | undefined, rol: Rol): boolean
    {
+      // nieuwe methode
+      const rollenId = Object.prototype.hasOwnProperty.call(result, 'ROLLEN_ID')
+         ? result.ROLLEN_ID as string | null
+         : dbLid?.ROLLEN_ID;
+      if ((rollenId ?? "").split(",").filter(Boolean).map(Number).includes(rol))
+         return true;
+
+      // via booleans (oude methode)
+      const veld = RolKolom[rol];
       if (Object.prototype.hasOwnProperty.call(result, veld))
          return result[veld] === true;
       if (dbLid && Object.prototype.hasOwnProperty.call(dbLid, veld))
          return (dbLid as unknown as Record<string, unknown>)[veld] === true;
       return true;
+   }
+
+   // Overgangssituatie: rollen staan zowel in ROLLEN_ID als in de oude booleans (zie RolKolom). Uitgangspunt is
+   // de huidige set (ROLLEN_ID plus de booleans die aan staan). Daarop worden de wijzigingen uit deze aanvraag
+   // toegepast: verschillen in ROLLEN_ID t.o.v. de database (nieuwe client) en gewijzigde booleans die door de
+   // allowlist in normaliserenData() zijn gekomen (oude client). Daarna worden ROLLEN_ID en de booleans gelijk
+   // getrokken, zodat een ingetrokken rol niet via de oude boolean actief blijft
+   // TODO: zodra de oude booleans verwijderd zijn, kan deze functie ook verwijderd worden en wordt ROLLEN_ID
+   // direct in normaliserenData() gezet op basis van de nieuwe waarde in de aanvraag of de bestaande waarde
+   private async RollenBooleanEnCSV(
+      ruweData: Record<string, unknown>,
+      result: Record<string, unknown>,
+      currentUser: RefLid,
+      ikBenHetZelf: boolean,
+      dbLid?: RefLid): Promise<void>
+   {
+      const rolKolommen = Object.entries(RolKolom).map(([rol, kolom]) => ({rol: Number(rol) as Rol, kolom}));
+
+      const dbRollen = (dbLid?.ROLLEN_ID ?? "").split(",").filter(Boolean).map(Number);
+      const huidigeRollen = new Set<number>(dbRollen);
+      rolKolommen.filter(({kolom}) => dbLid?.[kolom]).forEach(({rol}) => huidigeRollen.add(rol));
+      const nieuweRollen = new Set<number>(huidigeRollen);
+
+      if (Object.prototype.hasOwnProperty.call(ruweData, 'ROLLEN_ID'))
+      {
+         // of de gevraagde rollen bestaan wordt bij het opslaan gecontroleerd in LedenService
+         const gevraagd = ((ruweData.ROLLEN_ID as string | null) ?? "").split(",").filter(Boolean).map(Number);
+         gevraagd.filter(rol => !dbRollen.includes(rol)).forEach(rol => nieuweRollen.add(rol));
+         dbRollen.filter(rol => !gevraagd.includes(rol)).forEach(rol => nieuweRollen.delete(rol));
+      }
+
+      for (const {rol, kolom} of rolKolommen)
+      {
+         if (!Object.prototype.hasOwnProperty.call(result, kolom) || result[kolom] === (dbLid?.[kolom] ?? false))
+            continue;
+         if (result[kolom] === true)
+            nieuweRollen.add(rol);
+         else
+            nieuweRollen.delete(rol);
+      }
+
+      const gewijzigd = [
+         ...[...nieuweRollen].filter(rol => !huidigeRollen.has(rol)),
+         ...[...huidigeRollen].filter(rol => !nieuweRollen.has(rol)),
+      ];
+      if (gewijzigd.length === 0)
+      {
+         // niets gewijzigd: laat de booleans die eventueel via de allowlist zijn meegekomen ongemoeid
+         rolKolommen.forEach(({kolom}) => delete result[kolom]);
+         return;
+      }
+
+      const nietToegestaan = gewijzigd.filter(rol => !this.magRolWijzigen(currentUser, rol));
+      if (nietToegestaan.length > 0)
+         throw new HttpException(`Geen rechten om rol(len) ${nietToegestaan.join(',')} te wijzigen`, HttpStatus.UNAUTHORIZED);
+      if (ikBenHetZelf && huidigeRollen.has(Rol.Beheerder) && !nieuweRollen.has(Rol.Beheerder))
+         throw new HttpException(`Een beheerder kan de rol beheerder niet bij zichzelf intrekken`, HttpStatus.UNAUTHORIZED);
+
+      result.ROLLEN_ID = nieuweRollen.size > 0 ? [...nieuweRollen].sort((a, b) => a - b).join(',') : null;
+      rolKolommen.forEach(({rol, kolom}) => result[kolom] = nieuweRollen.has(rol));
+   }
+
+   // wie welke rol mag toekennen of intrekken, gelijk aan de allowlist voor de oude booleans in normaliserenData().
+   // Rollen die later via types worden toegevoegd (niet in de Rol enum) mogen alleen door een beheerder gewijzigd worden
+   private magRolWijzigen(currentUser: RefLid, rol: number): boolean
+   {
+      const isBeheerder = this.permissieService.isBeheerder(currentUser);
+      switch (rol)
+      {
+         case Rol.DDWVCrew:
+            return isBeheerder || this.permissieService.isBeheerderDDWV(currentUser);
+         case Rol.Lierist:
+         case Rol.LIO:
+         case Rol.Startleider:
+         case Rol.Sleepvlieger:
+         case Rol.Gastenvlieger:
+            return isBeheerder || this.permissieService.isRooster(currentUser);
+         case Rol.Instructeur:
+            return isBeheerder || this.permissieService.isCIMT(currentUser);
+         default:
+            return isBeheerder;
+      }
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Leden/GetObject

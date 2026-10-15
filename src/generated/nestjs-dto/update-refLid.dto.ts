@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
 } from "class-validator";
 
 export class UpdateRefLidDto {
@@ -559,4 +560,16 @@ export class UpdateRefLidDto {
   @IsOptional()
   @IsString()
   DIENSTEN?: string | null;
+  @ApiProperty({
+    description:
+      "Comma-separated lijst van ID's van de rollen van het lid (ref_types met GROEP = TypesGroep.Rollen)",
+    maxLength: 250,
+    type: "string",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[\d,]*$/)
+  ROLLEN_ID?: string | null;
 }

@@ -27,4 +27,5 @@ export enum TypesGroep
    MeldingenCategorie = 24,
    MeldingenStatus = 25,
    InhoudBrandstofpomp = 26,
+   Rollen = 27,
 }

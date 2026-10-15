@@ -37,6 +37,7 @@ import {crc32} from "js-crc";
 import {AanwezigLedenService} from "../aanwezig-leden/aanwezig-leden.service";
 import {AanwezigVliegtuigenService} from "../aanwezig-vliegtuigen/aanwezig-vliegtuigen.service";
 import {LedenService} from "../leden/leden.service";
+import {PermissieService} from "../authorisatie/permissie.service";
 import {RoosterService} from "../rooster/rooster.service";
 import {VliegtuigenService} from "../vliegtuigen/vliegtuigen.service";
 import {LidType} from "../../core/enums/LidType";
@@ -89,6 +90,7 @@ export class StartlijstService extends IHeliosService
                @Inject(forwardRef(() => AanwezigLedenService)) private readonly aanwezigLedenService: AanwezigLedenService,
                @Inject(forwardRef(() => AanwezigVliegtuigenService)) private readonly aanwezigVliegtuigenService: AanwezigVliegtuigenService,
                private readonly ledenService: LedenService,
+               private readonly permissieService: PermissieService,
                private readonly roosterService: RoosterService,
                private readonly vliegtuigenService: VliegtuigenService)
    {
@@ -409,13 +411,12 @@ export class StartlijstService extends IHeliosService
    {
       this.logger.verbose(`StartlijstService.GetLogboekTotalen(${safeStringify({params, lidId, alleenDDWV})})`);
 
-      const lid = await this.dbService.refLid.findUnique({where: {ID: lidId}, select: {INSTRUCTEUR: true}});
-      if (!lid)
-         throw new HttpException(`Lid met ID ${lidId} niet gevonden`, HttpStatus.NOT_FOUND);
+      const lid = await this.ledenService.GetObject(lidId); // NOT_FOUND als het lid niet bestaat
+      const isInstructeur = this.permissieService.isInstructeur(lid);
 
       const jaar = params.JAAR ?? new Date().getFullYear();
       const or: Prisma.OperStartlijstWhereInput[] = [{VLIEGER_ID: lidId}];
-      if (lid.INSTRUCTEUR)
+      if (isInstructeur)
          or.push({INZITTENDE_ID: lidId, INSTRUCTIEVLUCHT: true});
 
       const vluchten = await this.dbService.operStartlijst.findMany({
@@ -460,7 +461,7 @@ export class StartlijstService extends IHeliosService
          const methode = vlucht.Startmethode?.OMSCHRIJVING ?? null;
          perMethode.set(methode, (perMethode.get(methode) ?? 0) + 1);
 
-         if (lid.INSTRUCTEUR && vlucht.INZITTENDE_ID === lidId)
+         if (isInstructeur && vlucht.INZITTENDE_ID === lidId)
          {
             instructieStarts++;
             instructieMinuten += minuten;
@@ -719,9 +720,8 @@ export class StartlijstService extends IHeliosService
    {
       this.logger.verbose(`StartlijstService.GetRecency(${safeStringify({vliegerId, datum, inclusiefInstructie, alleenClubKisten})})`);
 
-      const lid = await this.dbService.refLid.findUnique({where: {ID: vliegerId}, select: {INSTRUCTEUR: true}});
-      if (!lid)
-         throw new HttpException(`Lid met ID ${vliegerId} niet gevonden`, HttpStatus.NOT_FOUND);
+      const lid = await this.ledenService.GetObject(vliegerId); // NOT_FOUND als het lid niet bestaat
+      const isInstructeur = this.permissieService.isInstructeur(lid);
 
       // peildatum zonder tijd-component (UTC-middernacht, net als DATUM op oper_startlijst)
       const peilDatumZonderTijd = DatumZonderTijd(datum ?? new Date());
@@ -730,7 +730,7 @@ export class StartlijstService extends IHeliosService
       const periodeStart = new Date(Date.UTC(peilDatumZonderTijd.getUTCFullYear() - 2, 0, 1));
 
       const or: Prisma.OperStartlijstWhereInput[] = [{VLIEGER_ID: vliegerId}];
-      if (lid.INSTRUCTEUR && inclusiefInstructie)
+      if (isInstructeur && inclusiefInstructie)
          or.push({INZITTENDE_ID: vliegerId, INSTRUCTIEVLUCHT: true});
 
       const vluchten = await this.dbService.operStartlijst.findMany({
@@ -807,7 +807,7 @@ export class StartlijstService extends IHeliosService
 
       let startsInstructie = -1;
       let urenInstructie = 0;
-      if (lid.INSTRUCTEUR)
+      if (isInstructeur)
       {
          startsInstructie = 0;
          const instructiePeriodeStart = new Date(peilDatumZonderTijd);
@@ -1247,8 +1247,8 @@ export class StartlijstService extends IHeliosService
 
       if (instructievlucht && inzittendeId != null)
       {
-         const inzittende = await this.dbService.refLid.findUnique({where: {ID: inzittendeId}});
-         if (!inzittende?.INSTRUCTEUR)
+         const inzittende = await this.ledenService.GetObject(inzittendeId).catch(() => undefined);
+         if (!inzittende || !this.permissieService.isInstructeur(inzittende))
             throw new HttpException("Instructie vlucht kan alleen door een instructeur worden gedaan", HttpStatus.CONFLICT);
       }
 

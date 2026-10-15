@@ -205,6 +205,12 @@ model RefLid {
   /// @description Specifieke zaken/wensen/vrijstellngen voor diensten tbv roostermaker
   /// @maxLength 250
   DIENSTEN             String?   @db.VarChar(250)
+  /// @description Comma-separated lijst van ID's van de rollen van het lid (ref_types met GROEP = TypesGroep.Rollen)
+  /// @maxLength 250
+  /// @Matches(/^[\d,]*$/)
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  ROLLEN_ID           String?   @db.VarChar(250)
 
   Audit                Audit[]
   AanwezigLid          OperAanwezigLid[]

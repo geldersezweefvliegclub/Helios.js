@@ -11,6 +11,9 @@ import {GetObjectsRefLedenRequest } from "./GetObjectsRefLedenRequest";
 import {GetObjectsRefLedenResponse } from "./GetObjectsRefLedenResponse";
 import {VerjaardagenResponse} from "./VerjaardagenResponse";
 import {LidType} from "../../core/enums/LidType";
+import {TypesGroep} from "../../core/enums/TypesGroep";
+import {TypesService} from "../types/types.service";
+import {GetObjectsRefTypesRequest} from "../types/GetObjectsRefTypesRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {ProgressieService} from "../progressie/progressie.service";
@@ -51,7 +54,8 @@ export class LedenService extends IHeliosService
                @Inject(forwardRef(() => ProgressieService)) private readonly progressieService: ProgressieService,
                private readonly mqttService: MqttService,
                private readonly configService: ConfigService,
-               private readonly permissieService: PermissieService)
+               private readonly permissieService: PermissieService,
+               private readonly typesService: TypesService)
    {
       super();
    }
@@ -166,6 +170,7 @@ export class LedenService extends IHeliosService
       this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
       await this.checkUniek('LIDNR', data.LIDNR as string | null | undefined);
       await this.checkUniek('INLOGNAAM', data.INLOGNAAM as string | null | undefined);
+      await this.controleerRollen(data.ROLLEN_ID);
 
       const obj = await this.dbService.refLid.create({
          data: data
@@ -182,6 +187,7 @@ export class LedenService extends IHeliosService
       const db = await this.GetObject(id);
       await this.checkUniek('LIDNR', data.LIDNR as string | null | undefined, id);
       await this.checkUniek('INLOGNAAM', data.INLOGNAAM as string | null | undefined, id);
+      await this.controleerRollen(data.ROLLEN_ID as string | null | undefined);
 
       // DDWV leden zonder LIDNR krijgen er automatisch een 90xxxx lidnummer bij, zodat er een factuur verstuurd kan worden
       const lidtypeId = data.LIDTYPE_ID !== undefined ? data.LIDTYPE_ID as number : db.LIDTYPE_ID;
@@ -388,6 +394,26 @@ export class LedenService extends IHeliosService
       });
       if (bestaand)
          throw new HttpException(`Record met ${veld}=${waarde} bestaat al`, HttpStatus.CONFLICT);
+   }
+
+   // controleer of alle rol-ID's in de comma-separated ROLLEN_ID bestaande, niet verwijderde types uit de groep Rollen
+   // zijn. Het formaat (enkel cijfers en komma's) wordt al door de DTO gecontroleerd
+   private async controleerRollen(rollenId: string | null | undefined): Promise<void>
+   {
+      this.logger.verbose(`LedenService.controleerRollen(${safeStringify({rollenId})})`);
+      const rollen = (rollenId ?? "").split(",").filter(Boolean).map(Number);
+      if (rollen.length === 0)
+         return;
+
+      // rollen staan in ref_types, die tabel is van de Types module - dus via TypesService
+      const gevonden = await this.typesService.GetObjects(MaakGetObjectsRequest(GetObjectsRefTypesRequest, {
+         GROEP: TypesGroep.Rollen,
+         IDs: rollen,
+         VERWIJDERD: false,
+      }));
+      const onbekend = rollen.filter(rol => !gevonden.dataset.some(type => type.ID === rol));
+      if (onbekend.length > 0)
+         throw new HttpException(`Onbekende rol(len) in ROLLEN_ID: ${onbekend.join(',')}`, HttpStatus.BAD_REQUEST);
    }
 
    // zie PHP's date('YmdHis'), gebruikt in UploadAvatar() voor een unieke bestandsnaam

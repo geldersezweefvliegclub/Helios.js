@@ -166,6 +166,7 @@ describe('API Response Comparison (e2e)', () => {
                                 for (let i = 0; i < nestjsCompare.dataset.length; i++)
                                 {
                                     delete nestjsCompare.dataset[i].BRANDSTOF_PAS
+                                    delete nestjsCompare.dataset[i].ROLLEN_ID
                                     delete nestjsCompare.dataset[i].GEBOORTE_DATUM
                                     delete nestjsCompare.dataset[i].MEDICAL
                                     delete nestjsCompare.dataset[i].WACHTWOORD
@@ -183,6 +184,7 @@ describe('API Response Comparison (e2e)', () => {
                             else
                             {
                                 delete nestjsCompare.BRANDSTOF_PAS;
+                                delete nestjsCompare.ROLLEN_ID;
                                 delete nestjsCompare.GEBOORTE_DATUM
                                 delete nestjsCompare.MEDICAL
                                 delete nestjsCompare.WACHTWOORD

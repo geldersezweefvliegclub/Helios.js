@@ -356,4 +356,12 @@ export class RefLidDto {
     nullable: true,
   })
   DIENSTEN: string | null;
+  @ApiProperty({
+    description:
+      "Comma-separated lijst van ID's van de rollen van het lid (ref_types met GROEP = TypesGroep.Rollen)",
+    maxLength: 250,
+    type: "string",
+    nullable: true,
+  })
+  ROLLEN_ID: string | null;
 }
