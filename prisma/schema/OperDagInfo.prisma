@@ -17,6 +17,10 @@ model OperDagInfo {
   /// @DtoUpdateOptional
   /// @description Referentie naar de baan in de type tabel
   BAAN_ID            Int?     @db.UnsignedMediumInt
+  /// @DtoRelationIncludeId
+  /// @DtoCreateOptional
+  /// @DtoUpdateOptional
+  /// @description Referentie naar de startmethode in de type tabel
   STARTMETHODE_ID    Int?     @db.UnsignedMediumInt
   /// @DtoRelationIncludeId
   /// @DtoCreateOptional

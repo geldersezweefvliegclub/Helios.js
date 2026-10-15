@@ -26,7 +26,8 @@ export class VerjaardagenResponse
    @ApiProperty({
       type: "integer",
       format: "int32",
-      description: 'De leeftijd van het lid',
+      required: false,
+      description: 'De leeftijd van het lid, ontbreekt als de gebruiker PRIVACY aan heeft',
    })
-   LEEFTIJD: number;
+   LEEFTIJD?: number;
 }

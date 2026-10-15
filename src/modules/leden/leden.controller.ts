@@ -274,7 +274,7 @@ export class LedenController extends HeliosController
 
    //------------- Specifieke endpoints staan hieronder --------------------//
 
-   @Get("Verjaardagen")
+   @Get("GetVerjaardagen")
    @ApiExtraModels(VerjaardagenResponse)
    @ApiBasicAuth()
    @UseGuards(AuthGuard(['jwt', 'basic-auth']))
@@ -301,7 +301,25 @@ export class LedenController extends HeliosController
       if (this.permissieService.isDDWVer(currentUser))
          return [];
 
-      return await this.ledenService.GetVerjaardagen(aantal);
+      const jarigen = await this.ledenService.GetVerjaardagen(aantal);
+
+      // een gebruiker met PRIVACY aan ziet ook de naam en leeftijd van de jarigen niet,
+      // behalve beheerder, CIMT en instructeur
+      const privacyMasker = currentUser.PRIVACY === true
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isCIMT(currentUser)
+         && !this.permissieService.isInstructeur(currentUser);
+
+      if (privacyMasker)
+      {
+         jarigen.forEach(jarige =>
+         {
+            jarige.NAAM = "****";
+            jarige.LEEFTIJD = undefined;
+         });
+      }
+
+      return jarigen;
    }
 
    @Get("nieuwLidNummer")

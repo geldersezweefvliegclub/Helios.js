@@ -90,6 +90,16 @@ export class UpdateRefCompetentieDto {
   @IsBoolean()
   GELDIGHEID?: boolean;
   @ApiProperty({
+    description: "Wordt score 1-5 gegeven voor deze competentie",
+    type: "integer",
+    format: "int32",
+    default: 0,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  SCORE?: number;
+  @ApiProperty({
     description: "Is het record gemarkeerd als verwijderd",
     type: "boolean",
     default: false,

@@ -221,13 +221,17 @@ export class LedenService extends IHeliosService
       this.eventEmitter.emit(DatabaseEvents.Removed, this.constructor.name,  id, db, actorId);
    }
 
-   async GetVerjaardagen(aantal:number): Promise<VerjaardagenResponse[]>
+   // de eerstvolgende verjaardagen binnen 60 dagen, standaard maximaal 7 (zelfde als LIMIT in PHP)
+   async GetVerjaardagen(aantal: number = 7): Promise<VerjaardagenResponse[]>
    {
       this.logger.verbose(`LedenService.GetVerjaardagen(${safeStringify({aantal})})`);
 
+      // alleen deze lidtypes
+      const lidTypes: number[] = [LidType.Student, LidType.Erelid, LidType.Lid, LidType.Jeugdlid, LidType.PrivateOwner, LidType.Veteraan, LidType.Donateur];
+
       const params = MaakGetObjectsRequest(GetObjectsRefLedenRequest, {VERWIJDERD: false});
       const leden = await this.GetObjects(params)
-      const l = leden.dataset.filter((f) => f.GEBOORTE_DATUM && this.permissieService.isLid(f));
+      const l = leden.dataset.filter((f) => f.GEBOORTE_DATUM && lidTypes.includes(f.LIDTYPE_ID));
       let jarigen = l.map((lid) =>
       {
          const {NAAM, GEBOORTE_DATUM,} = lid;

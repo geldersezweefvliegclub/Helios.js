@@ -4,7 +4,8 @@ import {ApiProperty} from "@nestjs/swagger";
 export class CompetentiesBoomResponse extends RefCompetentieDto {
     @ApiProperty({
         description: "Afgeleide competenties",
-        type: () => CompetentiesBoomResponse
+        type: () => CompetentiesBoomResponse,
+        isArray: true
     })
     children: CompetentiesBoomResponse[];
 }

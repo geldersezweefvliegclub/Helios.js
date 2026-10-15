@@ -36,7 +36,6 @@ model RefCompetentie {
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
   GELDIGHEID          Boolean          @default(false)
-  /// @DtoReadOnly
   /// @description Wordt score 1-5 gegeven voor deze competentie
   /// @DtoCreateOptional
   /// @DtoUpdateOptional

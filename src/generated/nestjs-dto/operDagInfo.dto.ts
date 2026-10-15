@@ -28,6 +28,13 @@ export class OperDagInfoDto {
   })
   BAAN_ID: number | null;
   @ApiProperty({
+    description: "Referentie naar de startmethode in de type tabel",
+    type: "integer",
+    format: "int32",
+    nullable: true,
+  })
+  STARTMETHODE_ID: number | null;
+  @ApiProperty({
     description:
       "Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp",
     type: "integer",

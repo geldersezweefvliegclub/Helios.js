@@ -48,6 +48,16 @@ export class UpdateOperDagInfoDto {
   @IsInt()
   BAAN_ID?: number | null;
   @ApiProperty({
+    description: "Referentie naar de startmethode in de type tabel",
+    type: "integer",
+    format: "int32",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt()
+  STARTMETHODE_ID?: number | null;
+  @ApiProperty({
     description:
       "Referentie naar het vliegveld in de type tabel, bijv voor (buitenland)kamp",
     type: "integer",

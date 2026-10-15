@@ -20,6 +20,9 @@ export class ProgressieKaartResponse
    @ApiProperty({type: Number, required: false, description: 'Sorteervolgorde van de competentie'})
    VOLGORDE?: number;
 
+   @ApiProperty({type: String, required: false, nullable: true, description: 'Bloknummer van de competentie, bijv 1.2'})
+   BLOK?: string | null;
+
    @ApiProperty({type: String, description: 'Omschrijving van de competentie'})
    OMSCHRIJVING: string;
 
@@ -46,7 +49,9 @@ export class ProgressieKaartResponse
 
    @ApiProperty({
       description: "Afgeleide competenties",
-      type: () => ProgressieKaartResponse
+      type: () => ProgressieKaartResponse,
+      isArray: true,
+      required: false,
    })
    children?: ProgressieKaartResponse[];
 }
