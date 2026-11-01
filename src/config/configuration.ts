@@ -53,7 +53,6 @@ interface HeliosConfig {
         reportUrl:  string,
     },
     ddwv: {
-        DDWV: boolean,
         VELD_ID: number,
         START: string,
         EIND: string
@@ -112,7 +111,6 @@ export default () => {
             reportUrl: `https://mijn.gezc.org/api/ideal/report`
         },
         ddwv: {
-            DDWV: true,
             VELD_ID: Vliegveld.Terlet,
             START: '04-01',
             EIND: '10-31',

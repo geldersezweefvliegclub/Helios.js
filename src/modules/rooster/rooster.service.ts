@@ -12,7 +12,7 @@ import {OperRoosterDto} from "../../generated/nestjs-dto/operRooster.dto";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {parseDateOnly, toDateOnly} from "../../core/helpers/TimeDate";
-import {DdwvService} from "../ddwv/ddwv.service";
+import {ConfigService} from "@nestjs/config";
 
 @Injectable()
 export class RoosterService extends IHeliosService
@@ -21,7 +21,7 @@ export class RoosterService extends IHeliosService
 
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2,
-               private readonly ddwvService: DdwvService)
+               private readonly configService: ConfigService)
    {
       super();
    }
@@ -113,7 +113,7 @@ export class RoosterService extends IHeliosService
          ...data,
          DATUM: datum,
          CLUB_BEDRIJF: data.CLUB_BEDRIJF ?? this.isClubBedrijf(datum),
-         DDWV: data.DDWV ?? this.ddwvService.DagIsDDWV(datum),
+         DDWV: data.DDWV ?? this.isDDWV(datum),
          WINTER_WERK: data.WINTER_WERK ?? this.isWinterWerk(datum),
       };
 
@@ -176,6 +176,19 @@ export class RoosterService extends IHeliosService
    {
       const weekdag = datum.getUTCDay();          // 0 = zondag, 6 = zaterdag
       return this.inClubSeizoen(datum) && (weekdag === 0 || weekdag === 6);
+   }
+
+   // DDWV is er op doordeweekse dagen binnen het DDWV seizoen (ddwv.START t/m ddwv.EIND uit de configuratie, formaat "MM-DD")
+   private isDDWV(datum: Date): boolean
+   {
+      const ddwv = this.configService.get<{START: string, EIND: string}>('ddwv')!;
+      const dateValue = (datum.getUTCMonth() + 1) * 100 + datum.getUTCDate();
+      const [startMaand, startDag] = ddwv.START.split('-').map(Number);
+      const [eindMaand, eindDag] = ddwv.EIND.split('-').map(Number);
+
+      const binnenSeizoen = dateValue >= startMaand * 100 + startDag && dateValue <= eindMaand * 100 + eindDag;
+      const weekdag = datum.getUTCDay();          // 0 = zondag, 6 = zaterdag
+      return binnenSeizoen && weekdag >= 1 && weekdag <= 5;
    }
 
    // winterwerk is er op zaterdag buiten het clubseizoen. De PHP conditie in AddObject() is nooit waar (datum < 301

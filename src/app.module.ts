@@ -26,7 +26,6 @@ import {AanwezigVliegtuigenModule} from './modules/aanwezig-vliegtuigen/aanwezig
 import {RoosterModule} from './modules/rooster/rooster.module';
 import {DienstenModule} from './modules/diensten/diensten.module';
 import {FacturenModule} from './modules/facturen/facturen.module';
-import { DdwvModule } from './modules/ddwv/ddwv.module';
 import {TracksModule} from './modules/tracks/tracks.module';
 import {ReserveringModule} from './modules/reservering/reservering.module';
 import {StartlijstModule} from './modules/startlijst/startlijst.module';
@@ -83,7 +82,6 @@ import config from './config/configuration';
       RoosterModule,
       DienstenModule,
       FacturenModule,
-      DdwvModule,
       TracksModule,
       ReserveringModule,
       StartlijstModule,
