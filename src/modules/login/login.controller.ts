@@ -3,7 +3,7 @@ import {LoginService} from "./login.service";
 import {LocalAuthGuard} from "./guards/local-auth.guard";
 import {CurrentUser} from "./current-user.decorator";
 import {RefLid} from "@prisma/client";
-import {ApiBasicAuth, ApiBody, ApiProperty, ApiTags} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiBody, ApiOkResponse, ApiProperty, ApiTags} from "@nestjs/swagger";
 import {JwtRefreshAuthGuard} from "./guards/jwt-refresh-auth.guard";
 import {LoginResponse, UserInfo} from "./loginDTO";
 import {JwtAuthGuard} from "./guards/jwt-auth.guard";
@@ -66,6 +66,7 @@ export class LoginController
 
    @Get("GetUserInfo")
    @UseGuards(JwtAuthGuard)
+   @ApiOkResponse({type: UserInfo, description: "Gegevens en rollen van het ingelogde lid"})
    async getUserInfo(@CurrentUser() currentUser: RefLid): Promise<UserInfo>
    {
       this.logger.verbose(`LoginController.getUserInfo(${safeStringify({currentUser})})`);

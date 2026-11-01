@@ -1,6 +1,6 @@
 import {Controller, Get, Logger, UseGuards} from '@nestjs/common';
 import {HeliosController} from "../../core/controllers/helios/helios.controller";
-import {ApiBearerAuth, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {DDWVConfiguratie} from "./ddwvDTO";
 import {JwtAuthGuard} from "../login/guards/jwt-auth.guard";
 
@@ -11,6 +11,7 @@ export class DdwvController extends HeliosController {
 
     @Get('GetConfiguratie')
     @ApiBearerAuth()
+    @ApiOkResponse({type: DDWVConfiguratie, description: 'DDWV configuratie'})
     @UseGuards(JwtAuthGuard)
     async getConfiguratie(): Promise<DDWVConfiguratie> {
         this.logger.verbose(`DdwvController.getConfiguratie()`);
