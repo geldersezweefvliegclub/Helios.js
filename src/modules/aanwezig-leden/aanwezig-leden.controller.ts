@@ -24,7 +24,6 @@ import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/h
 import {AanmeldenRequest} from "./AanmeldenRequest";
 import {AfmeldenRequest} from "./AfmeldenRequest";
 import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
-import {StartlijstService} from "../startlijst/startlijst.service";
 import {LidType} from "../../core/enums/LidType";
 
 @Controller('AanwezigLeden')
@@ -34,7 +33,6 @@ export class AanwezigLedenController  extends HeliosController
    private readonly logger = new Logger(AanwezigLedenController.name);
 
    constructor(private readonly AanwezigLedenService: AanwezigLedenService,
-               private readonly startlijstService: StartlijstService,
                private readonly permissieService:PermissieService)
    {
       super()
@@ -66,13 +64,6 @@ export class AanwezigLedenController  extends HeliosController
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.GetObjects');
       this.heeftDataToegangGetObjects(currentUser);
       const objs = await this.AanwezigLedenService.GetObjects(queryParams);
-
-      if (this.permissieService.isBeheerder(currentUser) || this.permissieService.isInstructeur(currentUser) || this.permissieService.isCIMT(currentUser))
-      {
-         const barometers = await this.startlijstService.GetStatusBarometers(objs.dataset);
-         objs.dataset = objs.dataset.map(obj => ({...obj, STATUS_BAROMETER: barometers.get(obj.LID_ID)}));
-      }
-
       objs.dataset = this.PrivacyMask(currentUser, objs.dataset);
       return objs;
    }
@@ -264,6 +255,17 @@ export class AanwezigLedenController  extends HeliosController
    // van de overige (niet-DDWV) leden zien - vergelijkbaar met privacyMask() in de PHP implementatie
    private PrivacyMask(currentUser: RefLid, dataset: GetObjectsOperAanwezigLedenResponse[]): GetObjectsOperAanwezigLedenResponse[]
    {
+      // de vliegcurrency (STATUS_BAROMETER) is enkel zichtbaar voor beheerder, instructeur en CIMT
+      if (!this.permissieService.isBeheerder(currentUser) && !this.permissieService.isInstructeur(currentUser) && !this.permissieService.isCIMT(currentUser))
+      {
+         dataset = dataset.map(aanmelding =>
+         {
+            const result = {...aanmelding};
+            delete result.STATUS_BAROMETER;
+            return result;
+         });
+      }
+
       if (currentUser.LIDTYPE_ID !== LidType.DDWV)
          return dataset;
 

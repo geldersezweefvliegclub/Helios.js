@@ -141,7 +141,10 @@ export class DienstenService extends IHeliosService
 
       data.ROOSTER_ID = await this.vindOfMaakRooster(nieuweDatum, actorId);
 
-      if (nieuweTypeDienstId != null) {
+      // een dienst die na de update verwijderd is (DeleteObject) telt niet mee voor de uniciteit, anders kan een dubbele
+      // dienst nooit verwijderd worden - zelfde regel als in RoosterService.UpdateObject()
+      const nieuwVerwijderd = data.VERWIJDERD !== undefined ? data.VERWIJDERD as boolean : db.VERWIJDERD;
+      if (nieuweTypeDienstId != null && !nieuwVerwijderd) {
          await this.uniekeDienst(nieuweDatum, nieuweTypeDienstId, id);
       }
 

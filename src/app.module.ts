@@ -3,6 +3,7 @@ import {ConfigModule, ConfigService} from '@nestjs/config';
 import {ServeStaticModule} from '@nestjs/serve-static';
 import {TypesGroepenModule} from './modules/types-groepen/types-groepen.module';
 import {EventEmitterModule} from '@nestjs/event-emitter';
+import {ScheduleModule} from '@nestjs/schedule';
 import {HeliosController} from './core/controllers/helios/helios.controller';
 import {TypesModule} from './modules/types/types.module';
 import {AuditModule} from './modules/audit/audit.module';
@@ -58,6 +59,7 @@ import config from './config/configuration';
          inject: [ConfigService],
       }),
       EventEmitterModule.forRoot(),
+      ScheduleModule.forRoot(),
       ConfigModule,
       HeliosCoreModule,
       TypesGroepenModule,

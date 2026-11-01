@@ -4,11 +4,13 @@ import {RoosterService} from './rooster.service';
 import {AuthorisatieModule} from "../authorisatie/authorisatie.module";
 import {HeliosCoreModule} from "../../core/helios.core.module";
 import {DdwvModule} from "../ddwv/ddwv.module";
+import {LedenModule} from "../leden/leden.module";
+import {RoosterScheduler} from "./rooster.scheduler";
 
 @Module({
-  imports: [AuthorisatieModule, HeliosCoreModule, DdwvModule],
+  imports: [AuthorisatieModule, HeliosCoreModule, DdwvModule, LedenModule],
   controllers: [RoosterController],
-  providers: [RoosterService],
+  providers: [RoosterService, RoosterScheduler],
   exports: [RoosterService]
 })
 export class RoosterModule {}

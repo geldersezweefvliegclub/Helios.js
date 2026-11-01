@@ -378,6 +378,9 @@ export class AanwezigLedenService extends IHeliosService
       }));
       const vliegtuigTypes = dbVliegtuigTypes.dataset;
 
+      // vliegcurrency per lid, gebatcht voor alle leden. Wie dit mag zien bepaalt PrivacyMask() in de controller
+      const barometers = await this.startlijstService.GetStatusBarometers(objs.map(obj => ({LID_ID: obj.LID_ID, INSTRUCTEUR: obj.RefLid.INSTRUCTEUR})));
+
       const result = await Promise.all(objs.map(async obj =>
       {
          const {RefLid: lid, RefVliegtuig: vliegtuig, Veld: veld, ...aanwezigLid} = obj;
@@ -424,7 +427,6 @@ export class AanwezigLedenService extends IHeliosService
             GEBOORTE_DATUM: lid.GEBOORTE_DATUM,
             ZUSTERCLUB_ID: lid.ZUSTERCLUB_ID,
             INLOGNAAM: lid.INLOGNAAM,
-            SECRET: lid.SECRET,
             AVATAR: lid.AVATAR,
             STARTVERBOD: lid.STARTVERBOD,
             PRIVACY: lid.PRIVACY,
@@ -439,6 +441,7 @@ export class AanwezigLedenService extends IHeliosService
             VLIEGTIJD: vliegtijdMinuten > 0 ? MinutenNaarTijd(vliegtijdMinuten) : null,
             STARTS: starts,
             VLIEGT: vliegtNu ? 1 : 0,
+            STATUS_BAROMETER: barometers.get(obj.LID_ID),
          } as GetObjectsOperAanwezigLedenResponse;
       }));
       this.logger.verbose(`AanwezigLedenService.MaakGetObjectsResponseDataset() => ${safeStringify(result)}`);

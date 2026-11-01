@@ -90,9 +90,6 @@ export class GetObjectsOperAanwezigLedenResponse extends OperAanwezigLidDto
    @ApiProperty({type: String, required: false, description: 'Inlognaam van het lid'})
    INLOGNAAM?: string | null;
 
-   @ApiProperty({type: String, required: false, description: 'Secret (2FA) van het lid'})
-   SECRET?: string | null;
-
    @ApiProperty({type: String, required: false, description: 'Avatar van het lid'})
    AVATAR?: string | null;
 

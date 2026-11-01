@@ -1,3 +1,4 @@
+import './config/timezone';                // moet als eerste, zet de tijdzone voor alle tijd functies
 import {NestFactory} from '@nestjs/core';
 import {AppModule} from './app.module';
 import {BadRequestException, INestApplication, ValidationPipe} from "@nestjs/common";

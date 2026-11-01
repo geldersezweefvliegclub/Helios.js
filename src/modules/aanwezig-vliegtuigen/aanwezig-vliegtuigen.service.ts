@@ -59,6 +59,13 @@ export class AanwezigVliegtuigenService extends IHeliosService
       this.logger.verbose(`AanwezigVliegtuigenService.GetObjects(${safeStringify({params})})`);
       if (params === undefined)
          params = MaakGetObjectsRequest(GetObjectsOperAanwezigVliegtuigenRequest, {VERWIJDERD: false});
+
+      const heeftDatum = params.DATUM !== undefined || params.BEGIN_DATUM !== undefined || params.EIND_DATUM !== undefined;
+      const heeftId = params.ID !== undefined || params.IDs !== undefined;
+      const dtSpanne = heeftDatum
+         ? params.VanTot(params.DATUM, params.BEGIN_DATUM, params.EIND_DATUM)
+         : heeftId ? undefined : params.VanTot(new Date(), undefined, undefined);
+
       const where: Prisma.OperAanwezigVliegtuigWhereInput =
          {
             AND:
@@ -67,6 +74,7 @@ export class AanwezigVliegtuigenService extends IHeliosService
                   { VERWIJDERD: params.VERWIJDERD ?? false},
                   { ID: { in: params.IDs }},
                   params.NIET_VERTROKKEN ? { VERTREK: null } : {},
+                  { DATUM: dtSpanne ? { gte: dtSpanne.start, lte: dtSpanne.eind } : undefined },
                ]
          }
       let count: number | undefined;

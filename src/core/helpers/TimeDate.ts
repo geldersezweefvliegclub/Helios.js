@@ -1,3 +1,6 @@
+import {DateTime} from 'luxon';
+import {TIMEZONE} from "../../config/timezone";
+
 // Helpers voor kolommen die in Prisma als DateTime zijn gemodelleerd, maar met een @db.Date of @db.Time
 // database-annotatie enkel een kalenderdatum, resp. enkel een tijdstip representeren. Prisma/JS kennen geen apart
 // "datum-zonder-tijd" of "tijd-zonder-datum" type - dit blijft altijd een JS Date object, dat bij serialisatie naar
@@ -84,4 +87,17 @@ export function MinutenNaarTijd(minuten: number): string
 export function DatumZonderTijd(tijdstip: Date): Date
 {
    return new Date(Date.UTC(tijdstip.getFullYear(), tijdstip.getMonth(), tijdstip.getDate()));
+}
+
+// telt een aantal kalenderdagen op bij een yyyy-MM-dd string in lokale tijd (TIMEZONE). Luxon telt bij days
+// kalenderdagen op, ook over de overgang van zomer- naar wintertijd (dag van 23 of 25 uur) en andersom
+export function addDagen(datum: string, dagen: number): string
+{
+   return DateTime.fromISO(datum, {zone: TIMEZONE}).plus({days: dagen}).toISODate() as string;
+}
+
+// middernacht lokale tijd (TIMEZONE) van een yyyy-MM-dd string, bv. voor de BEGIN_DATUM/EIND_DATUM filters van GetObjects
+export function lokaleDatum(datum: string): Date
+{
+   return DateTime.fromISO(datum, {zone: TIMEZONE}).startOf('day').toJSDate();
 }

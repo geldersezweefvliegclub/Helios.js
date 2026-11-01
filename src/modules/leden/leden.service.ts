@@ -350,6 +350,42 @@ export class LedenService extends IHeliosService
       return avatarUrl;
    }
 
+   // bepaalt het lid waarmee de cronjobs (bv. RoosterScheduler, DienstenScheduler) hun wijzigingen vastleggen in de
+   // audit trail (audit.LID_ID moet naar een bestaand lid verwijzen). Volgorde: de environment variabele CRONJOB_ACTOR_ID
+   // (optioneel, alleen als dat lid bestaat), anders een beheerder met 'cronjob' in de naam, anders een andere beheerder. Undefined als er geen is
+   async CronjobActorId(): Promise<number | undefined>
+   {
+      this.logger.verbose(`LedenService.CronjobActorId()`);
+      const actorId = Number(process.env.CRONJOB_ACTOR_ID);
+      if (Number.isInteger(actorId) && actorId > 0)
+      {
+         // het lid moet bestaan, anders faalt de foreign key van audit.LID_ID. GetObject() geeft een NOT_FOUND als het lid niet bestaat
+         try
+         {
+            await this.GetObject(actorId);
+            this.logger.verbose(`LedenService.CronjobActorId() => ${actorId} (CRONJOB_ACTOR_ID)`);
+            return actorId;
+         }
+         catch (error)
+         {
+            if (!(error instanceof HttpException) || error.getStatus() !== HttpStatus.NOT_FOUND)
+               throw error;
+         }
+         this.logger.warn(`LedenService.CronjobActorId: lid ${actorId} uit CRONJOB_ACTOR_ID bestaat niet, er wordt een beheerder gebruikt`);
+      }
+      else if (process.env.CRONJOB_ACTOR_ID)
+         this.logger.warn(`LedenService.CronjobActorId: CRONJOB_ACTOR_ID '${process.env.CRONJOB_ACTOR_ID}' is geen geldig LID_ID, er wordt een beheerder gebruikt`);
+
+      // beheerder volgens PermissieService.isBeheerder(): het BEHEERDER veld of de rol Beheerder
+      const leden = await this.GetObjects(MaakGetObjectsRequest(GetObjectsRefLedenRequest, {VERWIJDERD: false, SORT: 'ID'}));
+      const beheerders = leden.dataset.filter((lid) => this.permissieService.isBeheerder(lid));
+      const cronjob = beheerders.find((lid) => lid.NAAM.toLowerCase().includes('cronjob'));
+
+      const result = (cronjob ?? beheerders[0])?.ID;
+      this.logger.verbose(`LedenService.CronjobActorId() => ${safeStringify(result)}`);
+      return result;
+   }
+
    // maak de dataset voor de GetObjects response, inclusief de relaties met andere tabellen: LidType/VliegStatus/Zusterclub/Buddy/Buddy2 via
    // reeds ge-include-de relaties, en PAX via een aparte gebatchte Progressie-lookup (geen directe relatie)
    private async MaakGetObjectsResponseDataset(objs: LidMetRelaties[]): Promise<GetObjectsRefLedenResponse[]>
