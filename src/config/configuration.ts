@@ -1,135 +1,76 @@
-
-import * as fs from 'fs';
-import { join } from 'path';
-import {Logger} from "@nestjs/common";
-import {Vliegveld} from "../core/enums/Vliegveld";
-import {TransactieType} from "../core/enums/TransactieType";
-
-const JSON_CONFIG_FILENAME = 'helios-config.json';
+// Alle instellingen komen uit de omgeving (.env, zie .env-template). De vorm van het object is gelijk aan het
+// vroegere helios-config.json, zodat configService.get('JWT.JWT_ACCESS_TOKEN_SECRET') e.d. ongewijzigd blijven werken.
+// Geheimen (JWT) hebben bewust geen default in de code
 
 interface HeliosConfig {
-    db_info: {
-        dbType: string,
-        dbHost: string,
-        dbName: string,
-        dbUser: string,
-        dbPassword: string,
+    LOGGING: {
+        SQL: boolean,                  // SQL queries van Prisma loggen
+        EXCLUDE_AUDIT: string[],       // service namen die niet in de audit trail komen
     },
-    smtp_settings: {
-        smtpuser: string,
-        smtppass: string,
-        smtphost: string,
-        smtpsecure: string,
-        smtpport: number
-        from: string,
-        name: string,
+    JWT: {
+        JWT_ACCESS_TOKEN_SECRET: string,
+        JWT_ACCESS_TOKEN_EXPIRATION_MS: string,
+        JWT_REFRESH_TOKEN_SECRET: string,
+        JWT_REFRESH_TOKEN_EXPIRATION_MS: string,
     },
     app_settings: {
-        DbLogging: boolean,
-        DbError: boolean,
-        Debug: boolean,
         DocDir: string,
         AvatarDir: string,
-        LogDir: string,
-        Vereniging: string,
-        EmailVeiligheidsManager: string,
-        DemoMode: boolean,
-        ApiKeySMS: string,
-        KeyJWT: string,
-        twoFactor: boolean,
-        bypassToken: string,
-        PaxBevoegdheid: number,
-    },
-    mqtt_settings: {
-        host: string,
-        port: number,
-        clientId: string,
-        username: string,
-        password: string,
-    },
-    iDeal: {
-        mollieKey: string,
-        returnUrl: string,
-        reportUrl:  string,
     },
     ddwv: {
-        VELD_ID: number,
-        START: string,
-        EIND: string
-        MAX_STRIPPEN: number,
-        STRIPPEN_RETOUR: number,
-        STRIPPEN_RETOUR_OP_VLIEGDAG: number,
-        ANNULEREN_VLIEGDAG: number,
-        CREW_VERGOEDING: number,
-    }
+        START: string,                 // begin DDWV seizoen, "MM-DD"
+        EIND: string,                  // einde DDWV seizoen, "MM-DD"
+    },
 }
 
-export default () => {
-    const heliosConfig: HeliosConfig = {
-        db_info: {
-            dbType: 'mysql',
-            dbHost: 'mariadb',
-            dbName: 'helios',
-            dbUser: 'root',
-            dbPassword: 'rootroot'
+export default (): HeliosConfig => {
+    const env = process.env;
+
+    const config: HeliosConfig = {
+        LOGGING: {
+            SQL: alsBoolean(env.LOGGING_SQL, false),
+            EXCLUDE_AUDIT: alsLijst(env.LOGGING_EXCLUDE_AUDIT),
         },
-        smtp_settings: {
-            smtpuser: 'noreply@gezc.org',
-            smtppass: 'XTw!KrPypaR4z-U9-M',
-            smtphost: 'smtp.gmail.com',
-            smtpsecure: 'tls',
-            smtpport: 587,
-            from: 'ict@gezc.org',
-            name: 'Uw systeem beheerder'
+        JWT: {
+            JWT_ACCESS_TOKEN_SECRET: verplicht('JWT_ACCESS_TOKEN_SECRET'),
+            JWT_ACCESS_TOKEN_EXPIRATION_MS: tekst(env.JWT_ACCESS_TOKEN_EXPIRATION_MS) ?? '3600000',          // 1 uur
+            JWT_REFRESH_TOKEN_SECRET: verplicht('JWT_REFRESH_TOKEN_SECRET'),
+            JWT_REFRESH_TOKEN_EXPIRATION_MS: tekst(env.JWT_REFRESH_TOKEN_EXPIRATION_MS) ?? '604800000',      // 7 dagen
         },
         app_settings: {
-            DbLogging: true,
-            DbError: true,
-            Debug: true,
-            DocDir: '/var/www/html/documenten',
-            AvatarDir: '/var/www/html/avatars',
-            LogDir: '/var/www/html/log/',
-            Vereniging: 'GeZC',
-            EmailVeiligheidsManager: 'veiligheidsmanager@gezc.org',
-            DemoMode: true,
-            ApiKeySMS: 'API key here',
-            KeyJWT: '480f4p*%ghouiEWf*DXKz22Vy7RDzFeaBlw329zMyHh*o',
-            twoFactor: false,
-            bypassToken: new Date().getDay().toString() + 'BDd2ft2xxYPmqPTm@C_vGPy-mot7GCCmpU9nvfDx',
-            PaxBevoegdheid: 271
-        },
-        mqtt_settings: {
-            host: 'mqtt',
-            port: 1883,
-            clientId: 'gezc',
-            username: 'gezc',
-            password: 'FgT@qML-mCVBUb7WNZbn'
-        },
-        iDeal: {
-            mollieKey: 'test_Nb3HMmyT2mdPhMQk7qRj8ASArRvKjp',
-            returnUrl: 'https://mijn.gezc.org/profiel',
-            reportUrl: `https://mijn.gezc.org/api/ideal/report`
+            DocDir: tekst(env.DOC_DIR) ?? '/var/www/html/documenten',
+            AvatarDir: tekst(env.AVATAR_DIR) ?? '/var/www/html/avatars',
         },
         ddwv: {
-            VELD_ID: Vliegveld.Terlet,
-            START: '04-01',
-            EIND: '10-31',
-            MAX_STRIPPEN: 100,
-            STRIPPEN_RETOUR: TransactieType.UitschrijvenVoorVliegdag,
-            STRIPPEN_RETOUR_OP_VLIEGDAG: TransactieType.UitschrijvenOpVliegdag,
-            ANNULEREN_VLIEGDAG: TransactieType.AnnulerenVliegdag,
-            CREW_VERGOEDING: TransactieType.CrewVergoeding,
-        }
+            START: tekst(env.DDWV_START) ?? '04-01',
+            EIND: tekst(env.DDWV_EIND) ?? '10-31',
+        },
     };
-
-    const configFile = join(process.cwd(), '/', JSON_CONFIG_FILENAME)
-    const logger = new Logger()
-    try
-    {
-        return JSON.parse(fs.readFileSync(configFile, 'utf8')) as HeliosConfig
-    }
-    catch (e) {
-        logger.error(`Failed to load configuration from ${configFile}: ${e.message}`);
-    }
-    return heliosConfig;
+    return config;
 };
+
+// lege of alleen-spaties waarde telt als niet gezet
+function tekst(waarde: string | undefined): string | undefined {
+    const getrimd = waarde?.trim();
+    return getrimd ? getrimd : undefined;
+}
+
+// zonder deze waarde kan Helios.js niet draaien: liever bij het opstarten stoppen dan pas bij het eerste inloggen
+function verplicht(naam: string): string {
+    const waarde = tekst(process.env[naam]);
+    if (!waarde)
+        throw new Error(`${naam} ontbreekt in de omgeving (.env), zie .env-template`);
+    return waarde;
+}
+
+function alsBoolean(waarde: string | undefined, standaard: boolean): boolean {
+    const w = tekst(waarde)?.toLowerCase();
+    if (w === undefined)
+        return standaard;
+    return w === 'true' || w === '1' || w === 'ja';
+}
+
+// komma gescheiden lijst, bv. "AuditService, LoginService"
+function alsLijst(waarde: string | undefined): string[] {
+    return (tekst(waarde) ?? '').split(',').map((w) => w.trim()).filter((w) => w.length > 0);
+}

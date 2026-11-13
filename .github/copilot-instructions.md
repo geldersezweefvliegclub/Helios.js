@@ -33,4 +33,4 @@
 - `GetObjects` endpoints should preserve the existing query conventions such as `ID`, `MAX`, `START`, `SORT`, `VERWIJDERD`, and `HASH`, plus the current hash-based `304 Not Modified` behavior where it already exists.
 - Put authorization and privacy masking where existing modules do: compare [src/modules/leden/leden.controller.ts](../src/modules/leden/leden.controller.ts) and [src/modules/login](../src/modules/login). Match legacy behavior before attempting cleanup or redesign.
 - Reuse shared decorators and response helpers before adding endpoint-specific Swagger or response-envelope code.
-- Configuration is loaded from `helios-config.json` by [src/config/configuration.ts](../src/config/configuration.ts). Do not rely on the fallback defaults in that file, and never commit real credentials or secrets.
+- Configuration comes from environment variables (`.env`, documented in `.env-template`) and is assembled by [src/config/configuration.ts](../src/config/configuration.ts). Add new settings there and to `.env-template`, and never commit real credentials or secrets.

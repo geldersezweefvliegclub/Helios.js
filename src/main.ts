@@ -12,6 +12,7 @@ import { dump }             from 'js-yaml';
 import {HeliosPrismaClientKnownRequestError} from "./core/helpers/HeliosPrismaClientKnownRequestError";
 import {HeliosPrismaClientDefaultError} from "./core/helpers/HeliosPrismaClientDefaultError";
 import {HeliosPrismaClientValidationError} from "./core/helpers/HeliosPrismaClientValidationError";
+import {maakLogFilter} from "./core/helpers/LogHelper";
 
 // Lokale tijd van de dag met milliseconden, geen datum - bijv. "14:23:05.123".
 const localTimeWithMs = (): string => {
@@ -20,24 +21,18 @@ const localTimeWithMs = (): string => {
    return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${pad(now.getMilliseconds(), 3)}`;
 };
 
-// IGNORE_LOGGING="Class.method, Class, Other.method" - onderdrukt de entry/exit logregels voor deze entries,
-// op elke transport. "Class.method" matcht enkel die functie; "Class" (zonder punt) matcht elke functie
-// van die class. Gematcht als prefix - "Class.method(" of "Class." - aangezien onze logging conventie altijd
-// logt als "Class.method(args)" bij binnenkomst en "Class.method() => result" bij het verlaten, beide beginnend op die manier.
+// IGNORE_LOGGING="Class.method, Class, *.GetObjects" - onderdrukt de entry/exit logregels voor deze entries,
+// op elke transport. Zie maakLogFilter() in LogHelper voor de regels en de * wildcard.
 // Dit filter is enkel van toepassing op debug/verbose entries - error/warn/info/silly worden altijd gelogd.
-const ignoredLogPrefixes = (process.env.IGNORE_LOGGING || '')
-   .split(',')
-   .map(entry => entry.trim())
-   .filter(Boolean)
-   .map(entry => entry.includes('.') ? `${entry}(` : `${entry}.`);
+const isGenegeerd = maakLogFilter(process.env.IGNORE_LOGGING);
 
 const ignoreExcludedFunctions = winston.format((info) => {
    const isFilterableLevel = info.level === 'debug' || info.level === 'verbose';
-   if (ignoredLogPrefixes.length === 0 || !isFilterableLevel || typeof info.message !== 'string')
+   if (!isFilterableLevel || typeof info.message !== 'string')
    {
       return info;
    }
-   return ignoredLogPrefixes.some(prefix => (info.message as string).startsWith(prefix)) ? false : info;
+   return isGenegeerd(info.message) ? false : info;
 });
 
 /**

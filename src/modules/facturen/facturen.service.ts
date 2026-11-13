@@ -333,8 +333,8 @@ export class FacturenService extends IHeliosService
       return leeftijd;
    }
 
-   // publiceert het FactuurBericht op de MQTT bus - vertaalt een publish-fout (bijv. mqtt_settings
-   // ontbreekt, of de broker is onbereikbaar) naar een dezelfde X-Error-Message afhandeling als de rest
+   // publiceert het FactuurBericht op de MQTT bus - vertaalt een publish-fout (bijv. MQTT_HOST
+   // ontbreekt in .env, of de broker is onbereikbaar) naar een dezelfde X-Error-Message afhandeling als de rest
    // van de applicatie, in plaats van de generieke 500 die MqttService's eigen Error anders zou opleveren
    private async publiceerFactuurBericht(table: string, bericht: FactuurBericht): Promise<void>
    {

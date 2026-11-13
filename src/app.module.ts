@@ -41,9 +41,7 @@ import config from './config/configuration';
       }),
       // serveert geuploade documenten/avatars (zie DocumentenService/LedenService) statisch onder
       // /documenten/* resp. /avatars/*, analoog aan de directe bestandslink
-      // app_settings.DocDir/AvatarDir komen uit het (per omgeving optionele, niet in git
-      // opgenomen) helios-config.json bestand - als die dit niet definieert wordt teruggevallen op
-      // dezelfde defaults als in configuration.ts
+      // app_settings.DocDir/AvatarDir komen uit DOC_DIR/AVATAR_DIR in .env, zie configuration.ts
       ServeStaticModule.forRootAsync({
          useFactory: (configService: ConfigService) => [
             {

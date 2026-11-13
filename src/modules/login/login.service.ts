@@ -66,7 +66,7 @@ export class LoginService
       const lid = await this.ledenService.GetObjectByInlognaam(inlognaam);
       // todo: wachtwoord controleren met huidige implementatie
 
-      const authenticated = (this.configService.get("DEMO_MODE") === true) ? true : await compare(wachtwoord, lid.WACHTWOORD);
+      const authenticated = await compare(wachtwoord, lid.WACHTWOORD);
       if (!authenticated) {
          throw new UnauthorizedException('Credentials are not valid.');
       }
