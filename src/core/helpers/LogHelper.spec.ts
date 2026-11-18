@@ -1,4 +1,4 @@
-import {maakLogFilter} from './LogHelper';
+import {maakLogFilter, maakNaamFilter} from './LogHelper';
 
 describe('maakLogFilter (IGNORE_LOGGING)', () =>
 {
@@ -55,5 +55,36 @@ describe('maakLogFilter (IGNORE_LOGGING)', () =>
    it('matcht alleen aan het begin van de logregel', () =>
    {
       expect(maakLogFilter('*.GetObjects')('Fout in AgendaService.GetObjects()')).toBe(false);
+   });
+});
+
+describe('maakNaamFilter (LOGGING_EXCLUDE_AUDIT)', () =>
+{
+   it('sluit niets uit bij een lege lijst', () =>
+   {
+      expect(maakNaamFilter([])('AgendaService')).toBe(false);
+      expect(maakNaamFilter(['', '  '])('AgendaService')).toBe(false);
+   });
+
+   it('matcht een exacte naam, hoofdlettergevoelig en volledig', () =>
+   {
+      const uitgesloten = maakNaamFilter(['TracksService']);
+      expect(uitgesloten('TracksService')).toBe(true);
+      expect(uitgesloten('tracksservice')).toBe(false);
+      expect(uitgesloten('TracksServiceExtra')).toBe(false);
+   });
+
+   it('* staat voor een willekeurig stuk van de naam', () =>
+   {
+      const uitgesloten = maakNaamFilter(['Aanwezig*', ' *Groepen* ']);
+      expect(uitgesloten('AanwezigLedenService')).toBe(true);
+      expect(uitgesloten('AanwezigVliegtuigenService')).toBe(true);
+      expect(uitgesloten('TypesGroepenService')).toBe(true);
+      expect(uitgesloten('AgendaService')).toBe(false);
+   });
+
+   it('* alleen sluit alles uit', () =>
+   {
+      expect(maakNaamFilter(['*'])('LedenService')).toBe(true);
    });
 });

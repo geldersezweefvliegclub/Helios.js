@@ -171,6 +171,7 @@ export class LedenService extends IHeliosService
       this.logger.verbose(`LedenService.AddObject(${safeStringify({data})})`);
       await this.checkUniek('LIDNR', data.LIDNR as string | null | undefined);
       await this.checkUniek('INLOGNAAM', data.INLOGNAAM as string | null | undefined);
+      await this.checkUniek('GMAIL', data.GMAIL as string | null | undefined);
       await this.controleerRollen(data.ROLLEN_ID);
 
       const obj = await this.dbService.refLid.create({
@@ -188,6 +189,7 @@ export class LedenService extends IHeliosService
       const db = await this.GetObject(id);
       await this.checkUniek('LIDNR', data.LIDNR as string | null | undefined, id);
       await this.checkUniek('INLOGNAAM', data.INLOGNAAM as string | null | undefined, id);
+      await this.checkUniek('GMAIL', data.GMAIL as string | null | undefined, id);
       await this.controleerRollen(data.ROLLEN_ID as string | null | undefined);
 
       // DDWV leden zonder LIDNR krijgen er automatisch een 90xxxx lidnummer bij, zodat er een factuur verstuurd kan worden
@@ -311,7 +313,8 @@ export class LedenService extends IHeliosService
 
       try
       {
-         await this.mqttService.publish('sync', 'sync_leden', 'ref_leden', payload);
+         // data is een JSON string (dubbel ge-encodeerd), net als json_encode($lid) in de PHP versie: helios-sync doet JSON.parse(raw.data)
+         await this.mqttService.publish('sync', 'sync_leden', 'ref_leden', JSON.stringify(payload));
       }
       catch (err)
       {
@@ -418,10 +421,10 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   // voorkomt dat hetzelfde LIDNR of INLOGNAAM meerdere keren voorkomt -
-   // Een null/undefined waarde wordt altijd toegestaan (meerdere leden zonder LIDNR / INLOGNAAMis prima),
+   // voorkomt dat hetzelfde LIDNR, INLOGNAAM of GMAIL meerdere keren voorkomt -
+   // Een null/undefined waarde wordt altijd toegestaan (meerdere leden zonder LIDNR / INLOGNAAM / GMAIL is prima),
    // bij een update wordt het eigen record uitgezonderd van de controle
-   private async checkUniek(veld: 'LIDNR' | 'INLOGNAAM', waarde: string | null | undefined, uitgezonderdId?: number): Promise<void>
+   private async checkUniek(veld: 'LIDNR' | 'INLOGNAAM' | 'GMAIL', waarde: string | null | undefined, uitgezonderdId?: number): Promise<void>
    {
       if (!waarde)
          return;

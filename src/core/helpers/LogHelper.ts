@@ -28,10 +28,24 @@ export function maakLogFilter(ignoreLogging: string | undefined): (bericht: stri
         .split(',')
         .map((entry) => entry.trim())
         .filter(Boolean)
-        .map((entry) => {
-            const naam = entry.split('*').map((deel) => deel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\w*');
-            return new RegExp(`^${naam}${entry.includes('.') ? '\\(' : '\\.'}`);
-        });
+        .map((entry) => new RegExp(`^${wildcardNaarRegex(entry)}${entry.includes('.') ? '\\(' : '\\.'}`));
 
     return (bericht: string) => patronen.some((patroon) => patroon.test(bericht));
+}
+
+// Maakt een filter voor een lijst namen waarin een * voor een willekeurig stuk van de naam staat, bijv. voor
+// LOGGING_EXCLUDE_AUDIT: "Aanwezig*" matcht AanwezigLedenService en AanwezigVliegtuigenService, "*Service" elke service.
+// De hele naam moet matchen (hoofdlettergevoelig). Geeft true terug als de naam in de lijst voorkomt
+export function maakNaamFilter(namen: string[]): (naam: string) => boolean {
+    const patronen = namen
+        .map((naam) => naam.trim())
+        .filter(Boolean)
+        .map((naam) => new RegExp(`^${wildcardNaarRegex(naam)}$`));
+
+    return (naam: string) => patronen.some((patroon) => patroon.test(naam));
+}
+
+// zet een naam met * om naar een regex: speciale tekens letterlijk, * wordt een willekeurig stuk naam (letters, cijfers, _)
+function wildcardNaarRegex(patroon: string): string {
+    return patroon.split('*').map((deel) => deel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\w*');
 }

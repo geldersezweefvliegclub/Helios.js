@@ -38,16 +38,11 @@ export class MqttService implements OnModuleDestroy
       return this.instellingen !== undefined;
    }
 
-   // publiceert op topic "gezc/<queue>", zoals postMqttMessage() in de PHP versie
+   // publiceert op topic "gezc/<queue>" (bijv. gezc/helios of gezc/sync), zoals postMqttMessage() in de PHP versie
    async publish(queue: string, type: string, table: string, data: unknown): Promise<void>
    {
-      await this.publishOpTopic(`gezc/${queue}`, type, table, data);
-   }
-
-   // publiceert op een volledig opgegeven topic (bijv. "helios/events"), met dezelfde envelope
-   async publishOpTopic(topic: string, type: string, table: string, data: unknown): Promise<void>
-   {
-      this.logger.verbose(`MqttService.publishOpTopic(${JSON.stringify({topic, type, table})})`);
+      const topic = `gezc/${queue}`;
+      this.logger.verbose(`MqttService.publish(${JSON.stringify({topic, type, table})})`);
       const client = await this.haalClientOp();
       const bericht = JSON.stringify({
          type: type,
@@ -56,7 +51,7 @@ export class MqttService implements OnModuleDestroy
          timestamp: new Date().toISOString()
       });
       await client.publishAsync(topic, bericht, {qos: 0});
-      this.logger.verbose(`MqttService.publishOpTopic() => verstuurd op ${topic}`);
+      this.logger.verbose(`MqttService.publish() => verstuurd op ${topic}`);
    }
 
    async onModuleDestroy(): Promise<void>

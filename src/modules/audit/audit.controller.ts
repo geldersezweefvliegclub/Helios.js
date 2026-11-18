@@ -23,24 +23,21 @@ import {GetObjectsAuditResponse} from "./GetObjectsAuditResponse";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
-import {safeStringify} from "../../core/helpers/LogHelper";
+import {maakNaamFilter, safeStringify} from "../../core/helpers/LogHelper";
 
 @Controller('Audit')
 @ApiTags('Audit')
 export class AuditController extends HeliosController {
     private readonly logger = new Logger(AuditController.name);
-    excludeClasses = ['ABCD'];
+    // services die niet in de audit trail komen, uit LOGGING_EXCLUDE_AUDIT (met * als wildcard, zie maakNaamFilter)
+    private readonly isUitgesloten: (objNaam: string) => boolean;
 
     constructor(private readonly auditService: AuditService,
                 private readonly configService: ConfigService,
                 private readonly permissieService: PermissieService) {
         super()
 
-        // excludeClasses is een lijst van classes die niet ge-audit mogen worden
-        const excludeAudit: string[] = this.configService.getOrThrow<string[]>('LOGGING.EXCLUDE_AUDIT');
-        if (excludeAudit) {
-            this.excludeClasses = this.excludeClasses.concat(excludeAudit)
-        }
+        this.isUitgesloten = maakNaamFilter(this.configService.getOrThrow<string[]>('LOGGING.EXCLUDE_AUDIT'));
     }
 
 
@@ -82,7 +79,7 @@ export class AuditController extends HeliosController {
     CreatedRecord(objNaam: string, id: number, data: unknown, result: unknown, actorId: number) {
         this.logger.verbose(`AuditController.CreatedRecord(${safeStringify({objNaam, id, data, result, actorId})})`);
         // Niet alles mag in de audit trail
-        if (this.excludeClasses.includes(objNaam))
+        if (this.isUitgesloten(objNaam))
             return;
 
         const record: Prisma.AuditUncheckedCreateInput = {
@@ -107,7 +104,7 @@ export class AuditController extends HeliosController {
     UpdatedRecord(objNaam: string, id: number, before: unknown, data: unknown, result: unknown, actorId: number) {
         this.logger.verbose(`AuditController.UpdatedRecord(${safeStringify({objNaam, id, before, data, result, actorId})})`);
         // Niet alles mag in de audit trail
-        if (this.excludeClasses.includes(objNaam))
+        if (this.isUitgesloten(objNaam))
             return;
 
         const record: Prisma.AuditUncheckedCreateInput = {
@@ -130,7 +127,7 @@ export class AuditController extends HeliosController {
     RemovedRecord(objNaam: string, id: number, data: unknown, actorId: number) {
         this.logger.verbose(`AuditController.RemovedRecord(${safeStringify({objNaam, id, data, actorId})})`);
         // Niet alles mag in de audit trail
-        if (this.excludeClasses.includes(objNaam))
+        if (this.isUitgesloten(objNaam))
             return;
 
         const record: Prisma.AuditUncheckedCreateInput = {

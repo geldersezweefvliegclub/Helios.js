@@ -1,9 +1,9 @@
-import {MqttEventsListener, MQTT_EVENTS_TOPIC} from './mqtt-events.listener';
+import {MqttEventsListener, MQTT_EVENTS_QUEUE} from './mqtt-events.listener';
 import {MqttService} from './mqtt.service';
 
 describe('MqttEventsListener', () =>
 {
-   let gepubliceerd: {topic: string, type: string, table: string, data: Record<string, unknown>}[];
+   let gepubliceerd: {queue: string, type: string, table: string, data: Record<string, unknown>}[];
    let listener: MqttEventsListener;
 
    beforeEach(() =>
@@ -11,20 +11,21 @@ describe('MqttEventsListener', () =>
       gepubliceerd = [];
       const mqttService = {
          isGeconfigureerd: () => true,
-         publishOpTopic: async (topic: string, type: string, table: string, data: Record<string, unknown>) =>
+         publish: async (queue: string, type: string, table: string, data: Record<string, unknown>) =>
          {
-            gepubliceerd.push({topic, type, table, data});
+            gepubliceerd.push({queue, type, table, data});
          }
       } as unknown as MqttService;
       listener = new MqttEventsListener(mqttService);
    });
 
-   it('publiceert toevoegen op helios/events met de tabelnaam', () =>
+   it('publiceert toevoegen op gezc/helios met de tabelnaam', () =>
    {
       listener.CreatedRecord('AgendaService', 7, {KORT: 'x'}, {ID: 7, KORT: 'x', VERWIJDERD: false}, 1);
 
       expect(gepubliceerd).toHaveLength(1);
-      expect(gepubliceerd[0].topic).toBe(MQTT_EVENTS_TOPIC);
+      expect(gepubliceerd[0].queue).toBe(MQTT_EVENTS_QUEUE);
+      expect(MQTT_EVENTS_QUEUE).toBe('helios');
       expect(gepubliceerd[0].type).toBe('toevoegen');
       expect(gepubliceerd[0].table).toBe('oper_agenda');
       expect(gepubliceerd[0].data).toEqual({
@@ -92,7 +93,7 @@ describe('MqttEventsListener', () =>
    {
       const falend = new MqttEventsListener({
          isGeconfigureerd: () => true,
-         publishOpTopic: async () => { throw new Error('geen verbinding'); }
+         publish: async () => { throw new Error('geen verbinding'); }
       } as unknown as MqttService);
 
       expect(() => falend.CreatedRecord('AgendaService', 1, {}, {ID: 1}, 1)).not.toThrow();
@@ -104,7 +105,7 @@ describe('MqttEventsListener', () =>
       let aangeroepen = false;
       const uit = new MqttEventsListener({
          isGeconfigureerd: () => false,
-         publishOpTopic: async () => { aangeroepen = true; }
+         publish: async () => { aangeroepen = true; }
       } as unknown as MqttService);
 
       uit.CreatedRecord('AgendaService', 1, {}, {ID: 1}, 1);

@@ -7,7 +7,7 @@ import {MqttEventsListener} from "./services/mqtt-events.listener";
     providers: [
         DbService,
         MqttService,
-        MqttEventsListener,     // publiceert alle database wijzigingen op helios/events
+        MqttEventsListener,     // publiceert alle database wijzigingen op gezc/helios
     ],
     exports: [
         DbService,

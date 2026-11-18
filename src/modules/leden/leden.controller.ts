@@ -91,7 +91,7 @@ export class LedenController extends HeliosController
    }
 
    @HeliosCreateObject(CreateRefLidDto, RefLidDto)
-   // NAAM (of ACHTERNAAM) en LIDTYPE_ID zijn verplicht (BAD_REQUEST), LIDNR/INLOGNAAM moeten uniek zijn (CONFLICT)
+   // NAAM (of ACHTERNAAM) en LIDTYPE_ID zijn verplicht (BAD_REQUEST), LIDNR/INLOGNAAM/GMAIL moeten uniek zijn (CONFLICT)
    async AddObject(
       @CurrentUser() currentUser: RefLid,
       @Body() data: CreateRefLidDto): Promise<RefLidDto>
@@ -114,7 +114,7 @@ export class LedenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateRefLidDto, RefLidDto)
-   // LIDNR/INLOGNAAM moeten uniek zijn (CONFLICT) - staat al generiek in HeliosUpdateObject
+   // LIDNR/INLOGNAAM/GMAIL moeten uniek zijn (CONFLICT) - staat al generiek in HeliosUpdateObject
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefLidDto): Promise<RefLid>

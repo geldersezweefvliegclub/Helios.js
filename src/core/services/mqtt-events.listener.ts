@@ -3,8 +3,8 @@ import {OnEvent} from '@nestjs/event-emitter';
 import {MqttService} from './mqtt.service';
 import {DatabaseEvents} from '../helpers/Events';
 
-// topic waarop alle database wijzigingen gepubliceerd worden
-export const MQTT_EVENTS_TOPIC = 'helios/events';
+// queue waarop alle database wijzigingen gepubliceerd worden: topic gezc/helios, zoals in de PHP versie
+export const MQTT_EVENTS_QUEUE = 'helios';
 
 // De services geven bij een event hun klassenaam mee. Externe afnemers kennen (net als in de PHP versie) de
 // database tabelnaam, zie @@map in prisma/schema. Een service die hier ontbreekt wordt met zijn klassenaam gepubliceerd
@@ -97,7 +97,7 @@ export class MqttEventsListener
          return;
 
       const tabel = TABEL_PER_SERVICE[objNaam] ?? objNaam;
-      this.mqttService.publishOpTopic(MQTT_EVENTS_TOPIC, type, tabel, this.zonderGeheimen(bericht))
+      this.mqttService.publish(MQTT_EVENTS_QUEUE, type, tabel, this.zonderGeheimen(bericht))
          .catch((err) =>
          {
             const foutmelding = err instanceof Error ? err.message : String(err);
