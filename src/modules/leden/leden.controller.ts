@@ -106,10 +106,8 @@ export class LedenController extends HeliosController
       if (!data.LIDTYPE_ID)
          throw new HttpException(`Lidtype is verplicht`, HttpStatus.BAD_REQUEST);
 
-      const wachtwoordPlain = data.WACHTWOORD;
       const insert = await this.normaliserenData(data, true, currentUser, true) as Prisma.RefLidUncheckedCreateInput;
       const obj = await this.ledenService.AddObject(insert, currentUser.ID);
-      await this.ledenService.SyncLeden(obj.ID, wachtwoordPlain);
       return this.privacyMask(obj, currentUser);
    }
 
@@ -127,11 +125,8 @@ export class LedenController extends HeliosController
       id = id ?? data.ID;
       const ikBenHetZelf = currentUser.ID === id;
       const dbLid = await this.ledenService.GetObject(id).catch(() => undefined);
-      const wachtwoordPlain = data.WACHTWOORD;
-
       const update = await this.normaliserenData(data, false, currentUser, ikBenHetZelf, dbLid) as Prisma.RefLidUncheckedUpdateInput;
       const obj = await this.ledenService.UpdateObject(id, update, currentUser.ID);
-      await this.ledenService.SyncLeden(id, wachtwoordPlain);
       return this.privacyMask(obj, currentUser);
    }
 
@@ -148,7 +143,6 @@ export class LedenController extends HeliosController
          VERWIJDERD: true
       }
       await this.ledenService.UpdateObject(id, data, currentUser.ID);
-      await this.ledenService.SyncLeden(id);
    }
 
    @HeliosRemoveObject()
@@ -178,7 +172,6 @@ export class LedenController extends HeliosController
          VERWIJDERD: false
       }
       await this.ledenService.UpdateObject(id, data, currentUser.ID);
-      await this.ledenService.SyncLeden(id);
    }
 
 

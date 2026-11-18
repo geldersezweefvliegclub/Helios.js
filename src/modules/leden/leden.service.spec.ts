@@ -5,7 +5,6 @@ import {RefLid} from '@prisma/client';
 import {LedenService} from './leden.service';
 import {DbService} from '../../database/db-service/db.service';
 import {ProgressieService} from '../progressie/progressie.service';
-import {MqttService} from '../../core/services/mqtt.service';
 import {maakPermissieService} from '../authorisatie/permissie.service.testhelper';
 import {TypesService} from '../types/types.service';
 import {Rol} from '../../core/enums/Rol';
@@ -33,7 +32,6 @@ describe('LedenService controle ROLLEN_ID', () =>
       dbService as unknown as DbService,
       {emit: jest.fn()} as unknown as EventEmitter2,
       {} as ProgressieService,
-      {} as MqttService,
       {} as ConfigService,
       (await maakPermissieService()).service,
       typesService as unknown as TypesService));

@@ -38,7 +38,7 @@ export class MqttService implements OnModuleDestroy
       return this.instellingen !== undefined;
    }
 
-   // publiceert op topic "gezc/<queue>" (bijv. gezc/helios of gezc/sync), zoals postMqttMessage() in de PHP versie
+   // publiceert op topic "gezc/<queue>" (bijv. gezc/helios), zoals postMqttMessage() in de PHP versie
    async publish(queue: string, type: string, table: string, data: unknown): Promise<void>
    {
       const topic = `gezc/${queue}`;

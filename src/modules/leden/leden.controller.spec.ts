@@ -24,7 +24,6 @@ describe('LedenController rollen (ROLLEN_ID)', () =>
    const ledenService = {
       GetObject: jest.fn(async () => dbLid),
       UpdateObject: jest.fn(async (_id: number, data: Record<string, unknown>) => { opgeslagen = data; return {...dbLid, ...data}; }),
-      SyncLeden: jest.fn(async () => undefined),
    };
 
    const beheerder = maakLid({ID: 1, BEHEERDER: true, ROLLEN_ID: `${Rol.Beheerder}`});

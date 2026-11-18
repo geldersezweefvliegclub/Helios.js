@@ -18,7 +18,6 @@ import {GetObjectsRefTypesRequest} from "../types/GetObjectsRefTypesRequest";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {MaakGetObjectsRequest} from "../../core/helpers/MaakGetObjectsRequest";
 import {ProgressieService} from "../progressie/progressie.service";
-import {MqttService} from "../../core/services/mqtt.service";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {promises as fs} from "fs";
 import {join} from "path";
@@ -53,7 +52,6 @@ export class LedenService extends IHeliosService
    constructor(private readonly dbService: DbService,
                private readonly eventEmitter: EventEmitter2,
                @Inject(forwardRef(() => ProgressieService)) private readonly progressieService: ProgressieService,
-               private readonly mqttService: MqttService,
                private readonly configService: ConfigService,
                private readonly permissieService: PermissieService,
                private readonly typesService: TypesService)
@@ -224,7 +222,7 @@ export class LedenService extends IHeliosService
    }
 
    // de eerstvolgende verjaardagen binnen 60 dagen, standaard maximaal 7 (zelfde als LIMIT in PHP)
-   async GetVerjaardagen(aantal: number = 7): Promise<VerjaardagenResponse[]>
+   async GetVerjaardagen(aantal = 7): Promise<VerjaardagenResponse[]>
    {
       this.logger.verbose(`LedenService.GetVerjaardagen(${safeStringify({aantal})})`);
 
@@ -291,40 +289,6 @@ export class LedenService extends IHeliosService
       return result;
    }
 
-   // publiceert een lid op de MQTT bus voor externe synchronisatie
-   // Enkel DDWV'ers en "club vliegers" worden gesynchroniseerd; wachtwoord wordt
-   // alleen meegestuurd als het als platte tekst is meegegeven (bijv. net na een AddObject/UpdateObject
-   // met een nieuw wachtwoord) - het gehashte WACHTWOORD veld zelf wordt nooit gepubliceerd
-   async SyncLeden(id: number, wachtwoord?: string | null): Promise<void>
-   {
-      this.logger.verbose(`LedenService.SyncLeden(${safeStringify({id})})`);
-      const lid = await this.GetObject(id);
-
-      const magSynchroniseren = this.permissieService.isDDWVer(lid) || this.permissieService.isClubVlieger(lid);
-      if (!magSynchroniseren)
-      {
-         this.logger.verbose(`LedenService.SyncLeden() => lidtype ${lid.LIDTYPE_ID} wordt niet gesynchroniseerd`);
-         return;
-      }
-
-      const payload: Record<string, unknown> = {...lid, WACHTWOORD: null, SECRET: null};
-      if (wachtwoord)
-         payload.INGEVOERD_WACHTWOORD = wachtwoord;
-
-      try
-      {
-         // data is een JSON string (dubbel ge-encodeerd), net als json_encode($lid) in de PHP versie: helios-sync doet JSON.parse(raw.data)
-         await this.mqttService.publish('sync', 'sync_leden', 'ref_leden', JSON.stringify(payload));
-      }
-      catch (err)
-      {
-         // een sync-fout mag AddObject/UpdateObject nooit laten falen - zie postMqttMessage() in
-         // include/helios.php, die verbindingsfouten ook altijd zelf opvangt en enkel logt
-         const foutmelding = err instanceof Error ? err.message : String(err);
-         this.logger.error(`LedenService.SyncLeden: kon lid ${id} niet synchroniseren: ${foutmelding}`);
-      }
-   }
-
    // slaat een geuploade avatar-afbeelding op en zet AVATAR op het lid - zie UploadAvatar() in
    // class.Leden.inc.php. Deze aparte, gevalideerde upload-flow is de bedoelde manier voor een gewoon lid
    // om zijn eigen AVATAR te zetten (dat veld staat in normaliserenData() achter "enkel beheerder", zie
@@ -347,7 +311,6 @@ export class LedenService extends IHeliosService
 
       const avatarUrl = `${baseUrl}/avatars/${bestandsnaam}`;
       await this.UpdateObject(id, {AVATAR: avatarUrl}, actorId);
-      await this.SyncLeden(id);
 
       this.logger.verbose(`LedenService.UploadAvatar() => ${safeStringify(avatarUrl)}`);
       return avatarUrl;
