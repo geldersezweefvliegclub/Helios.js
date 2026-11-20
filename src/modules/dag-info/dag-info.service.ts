@@ -50,7 +50,8 @@ export class DagInfoService extends IHeliosService
       });
 
       if (!db) {
-         throw new HttpException(`DagInfo record met ID ${id} niet gevonden`, HttpStatus.NOT_FOUND);
+         const zoekterm = id ? `ID ${id}` : `DATUM ${toDateOnly(date as Date)}`;
+         throw new HttpException(`DagInfo record met ${zoekterm} niet gevonden`, HttpStatus.NOT_FOUND);
       }
 
       const result = db;
