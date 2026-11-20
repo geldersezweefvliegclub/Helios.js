@@ -82,8 +82,8 @@ export class ProgressieController extends HeliosController
       this.heeftDataToegangGetObjects(currentUser, queryParams.LID_ID);
 
       // als er geen LID_ID is opgegeven, dan default naar het ID van de ingelogde gebruiker
-      const lidID = queryParams.LID_ID === undefined ? currentUser.ID : queryParams.LID_ID;
-      queryParams.LID_ID = lidID;
+      if (queryParams.LID_ID === undefined)
+         queryParams.LID_ID = currentUser.ID;
 
       return await this.progressieService.GetObjects(queryParams);
    }
