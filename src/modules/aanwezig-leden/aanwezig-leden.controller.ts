@@ -20,7 +20,9 @@ import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSch
 import {AuthGuard} from "@nestjs/passport";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
-import {parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {DatumZonderTijd, parseDateOnly, parseTimeOnly, toDateOnly, toTimeOnly} from "../../core/helpers/TimeDate";
+import {RoosterService} from "../rooster/rooster.service";
+import {DienstenService} from "../diensten/diensten.service";
 import {AanmeldenRequest} from "./AanmeldenRequest";
 import {AfmeldenRequest} from "./AfmeldenRequest";
 import {AanwezigLedenSamenvattingResponse} from "./AanwezigLedenSamenvattingResponse";
@@ -33,7 +35,9 @@ export class AanwezigLedenController  extends HeliosController
    private readonly logger = new Logger(AanwezigLedenController.name);
 
    constructor(private readonly AanwezigLedenService: AanwezigLedenService,
-               private readonly permissieService:PermissieService)
+               private readonly permissieService:PermissieService,
+               private readonly roosterService: RoosterService,
+               private readonly dienstenService: DienstenService)
    {
       super()
    }
@@ -76,7 +80,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.AddObject');
-      this.heeftDataToegangAddObject(currentUser);
+      await this.heeftDataToegangAddObject(currentUser, data);
 
       // DATUM en LID_ID zijn verplicht
       if (data.DATUM === undefined)
@@ -103,7 +107,7 @@ export class AanwezigLedenController  extends HeliosController
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
-      this.heeftDataToegangUpdateObject(currentUser);
+      await this.heeftDataToegangUpdateObject(currentUser, id, data);
 
       const update = await this.normaliserenData(data) as UpdateOperAanwezigLidDto;
       const obj = await this.AanwezigLedenService.UpdateObject(id, update, currentUser.ID);
@@ -122,7 +126,7 @@ export class AanwezigLedenController  extends HeliosController
    {
       this.logger.verbose(`AanwezigLedenController.DeleteObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.DeleteObject');
-      this.heeftDataToegangDeleteObject(currentUser);
+      await this.heeftDataToegangDeleteObject(currentUser, id);
 
       const data: Prisma.OperAanwezigLidUncheckedUpdateInput = {
          VERWIJDERD: true
@@ -174,7 +178,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.Aanmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Aanmelden');
-      this.heeftDataToegangAanmelden(currentUser);
+      await this.heeftDataToegangAanmelden(currentUser, data);
 
       const obj = await this.AanwezigLedenService.Aanmelden(data, currentUser.ID);
       return {
@@ -202,7 +206,7 @@ export class AanwezigLedenController  extends HeliosController
       this.logger.verbose(`AanwezigLedenController.Afmelden(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Afmelden');
-      this.heeftDataToegangAfmelden(currentUser);
+      await this.heeftDataToegangAfmelden(currentUser, data);
 
       const obj = await this.AanwezigLedenService.Afmelden(data, currentUser.ID);
       return {
@@ -308,21 +312,36 @@ export class AanwezigLedenController  extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/AddObject
-   private heeftDataToegangAddObject(_currentUser: RefLid): void
+   // alleen een eigen aanmelding, tenzij volledige toegang op die datum - zie AddObject() in class.AanwezigLeden.inc.php
+   private async heeftDataToegangAddObject(currentUser: RefLid, data: CreateOperAanwezigLidDto): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // ontbrekende DATUM / LID_ID wordt verderop in AddObject met een 400 afgevangen
+      if (data.LID_ID === undefined || data.DATUM === undefined)
+         return;
+
+      await this.controleerEigenAanmelding(currentUser, data.LID_ID, parseDateOnly(data.DATUM as Date | string) as Date);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/UpdateObject
-   private heeftDataToegangUpdateObject(_currentUser: RefLid): void
+   // alleen de eigen aanmelding, tenzij volledige toegang op die datum - zie UpdateObject() in class.AanwezigLeden.inc.php
+   private async heeftDataToegangUpdateObject(currentUser: RefLid, id: number, data: UpdateOperAanwezigLidDto): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      const bestaand = await this.AanwezigLedenService.GetObject(id);
+      await this.controleerEigenAanmelding(currentUser, bestaand.LID_ID, bestaand.DATUM);
+
+      // voorkom dat een eigen aanmelding naar een ander lid of een andere datum verplaatst wordt
+      const nieuwLidId = data.LID_ID ?? bestaand.LID_ID;
+      const nieuweDatum = data.DATUM !== undefined ? parseDateOnly(data.DATUM as Date | string) as Date : bestaand.DATUM;
+      if (nieuwLidId !== bestaand.LID_ID || nieuweDatum.getTime() !== bestaand.DATUM.getTime())
+         await this.controleerEigenAanmelding(currentUser, nieuwLidId, nieuweDatum);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/DeleteObject
-   private heeftDataToegangDeleteObject(_currentUser: RefLid): void
+   // alleen de eigen aanmelding, tenzij volledige toegang op die datum - zie VerwijderObject() in class.AanwezigLeden.inc.php
+   private async heeftDataToegangDeleteObject(currentUser: RefLid, id: number): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      const bestaand = await this.AanwezigLedenService.GetObject(id);
+      await this.controleerEigenAanmelding(currentUser, bestaand.LID_ID, bestaand.DATUM);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/RemoveObject
@@ -338,20 +357,80 @@ export class AanwezigLedenController  extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Aanmelden
-   private heeftDataToegangAanmelden(_currentUser: RefLid): void
+   // alleen zichzelf aanmelden, tenzij volledige toegang op die datum - zie Aanmelden() in class.AanwezigLeden.inc.php
+   private async heeftDataToegangAanmelden(currentUser: RefLid, data: AanmeldenRequest): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // ontbrekende LID_ID wordt in de service met een 406 afgevangen
+      if (data.LID_ID === undefined || data.LID_ID === null)
+         return;
+
+      // zelfde datumbepaling als AanwezigLedenService.Aanmelden()
+      const tijdstip = data.TIJDSTIP ? new Date(data.TIJDSTIP) : new Date();
+      const datum = data.DATUM ? parseDateOnly(data.DATUM) as Date : DatumZonderTijd(tijdstip);
+      await this.controleerEigenAanmelding(currentUser, data.LID_ID, datum);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Afmelden
-   private heeftDataToegangAfmelden(_currentUser: RefLid): void
+   // alleen zichzelf afmelden, tenzij volledige toegang op die datum - zie Afmelden() in class.AanwezigLeden.inc.php
+   private async heeftDataToegangAfmelden(currentUser: RefLid, data: AfmeldenRequest): Promise<void>
    {
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // ontbrekende LID_ID wordt in de service met een 406 afgevangen
+      if (data.LID_ID === undefined || data.LID_ID === null)
+         return;
+
+      // met een ID telt het lid en de datum van dat record (niet de meegegeven LID_ID), anders de aanmelding van
+      // LID_ID van vandaag - zelfde opzoeking als AanwezigLedenService.Afmelden()
+      if (data.ID !== undefined && data.ID !== null)
+      {
+         // onbekend ID wordt in de service met een 409 afgevangen
+         const bestaand = await this.AanwezigLedenService.GetObject(data.ID).catch(() => null);
+         if (bestaand)
+            await this.controleerEigenAanmelding(currentUser, bestaand.LID_ID, bestaand.DATUM);
+         return;
+      }
+      await this.controleerEigenAanmelding(currentUser, data.LID_ID, DatumZonderTijd(new Date()));
    }
 
    // controleer of de gebruiker toegang heeft tot de data van AanwezigLeden/Samenvatting
    private heeftDataToegangSamenvatting(_currentUser: RefLid): void
    {
       // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+   }
+
+   // een aanmelding van een ander lid mag alleen met volledige toegang op die datum
+   private async controleerEigenAanmelding(currentUser: RefLid, lidId: number, datum: Date): Promise<void>
+   {
+      if (lidId === currentUser.ID)
+         return;
+
+      if (!(await this.heeftVolleToegangOpDatum(currentUser, datum)))
+         throw new HttpException("Geen schrijfrechten", HttpStatus.UNAUTHORIZED);
+   }
+
+   // volledige toegang tot de aanmeldingen van een datum, zie heeftDataToegang($datum) in include/helios.php: beheerder,
+   // instructeur of CIMT altijd, starttoren alleen vandaag, beheerder DDWV op DDWV dagen en DDWV crew op DDWV dagen
+   // waarop hij/zij zelf dienst heeft
+   private async heeftVolleToegangOpDatum(currentUser: RefLid, datum: Date): Promise<boolean>
+   {
+      if (this.permissieService.isBeheerder(currentUser)
+         || this.permissieService.isInstructeur(currentUser)
+         || this.permissieService.isCIMT(currentUser))
+         return true;
+
+      if (this.permissieService.isStarttoren(currentUser))
+         return datum.getTime() === DatumZonderTijd(new Date()).getTime();
+
+      if (this.permissieService.isBeheerderDDWV(currentUser) || this.permissieService.isDDWVCrew(currentUser))
+      {
+         const rooster = await this.roosterService.GetObjectByDatum(datum);
+         if (!rooster?.DDWV)
+            return false;
+
+         if (this.permissieService.isBeheerderDDWV(currentUser))
+            return true;
+
+         return await this.dienstenService.LidHeeftDienst(currentUser.ID, datum);
+      }
+      return false;
    }
 }

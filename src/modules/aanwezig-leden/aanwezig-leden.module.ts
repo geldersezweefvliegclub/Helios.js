@@ -8,12 +8,14 @@ import {LedenModule} from "../leden/leden.module";
 import {StartlijstModule} from "../startlijst/startlijst.module";
 import {TypesModule} from "../types/types.module";
 import {VliegtuigenModule} from "../vliegtuigen/vliegtuigen.module";
+import {RoosterModule} from "../rooster/rooster.module";
+import {DienstenModule} from "../diensten/diensten.module";
 
 @Module({
   controllers: [AanwezigLedenController],
   // StartlijstModule importeert op zijn beurt AanwezigLedenModule (aanmelden van vlieger en inzittende na het
   // opslaan van een start) - forwardRef() is hier dus aan beide kanten nodig om deze cirkelverwijzing op te lossen
-  imports: [AuthorisatieModule, HeliosCoreModule, LedenModule, forwardRef(() => StartlijstModule), TypesModule, VliegtuigenModule],
+  imports: [AuthorisatieModule, HeliosCoreModule, LedenModule, forwardRef(() => StartlijstModule), TypesModule, VliegtuigenModule, RoosterModule, DienstenModule],
   providers: [AanwezigLedenService, AanwezigLedenScheduler],
   exports: [AanwezigLedenService]
 })
