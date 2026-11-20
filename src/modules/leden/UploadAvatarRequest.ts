@@ -1,9 +1,12 @@
 import {ApiProperty} from "@nestjs/swagger";
 import {IsInt, IsString} from "class-validator";
+import {Type} from "class-transformer";
 
 // zie UploadAvatar() in class.Leden.inc.php
 export class UploadAvatarRequest
 {
+   // als multipart/form-data veld komt ID binnen als tekst, omzetten naar een getal voor @IsInt()
+   @Type(() => Number)
    @IsInt()
    @ApiProperty(
       {

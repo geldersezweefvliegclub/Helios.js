@@ -306,8 +306,17 @@ export class LedenService extends IHeliosService
       const bestandsnaam = `${lid.INLOGNAAM ?? ''}-${this.tijdstempelYmdHis(new Date())}${gevonden.extensie}`;
 
       const avatarDir = this.configService.get<string>('app_settings.AvatarDir') ?? '/var/www/html/avatars';
-      await fs.mkdir(avatarDir, {recursive: true});
-      await fs.writeFile(join(avatarDir, bestandsnaam), afbeelding);
+      try
+      {
+         await fs.mkdir(avatarDir, {recursive: true});
+         await fs.writeFile(join(avatarDir, bestandsnaam), afbeelding);
+      }
+      catch (error)
+      {
+         // meestal een ontbrekende of niet schrijfbare AVATAR_DIR - geef dat terug in plaats van een kale 500
+         this.logger.error(`LedenService.UploadAvatar: opslaan in ${avatarDir} mislukt: ${error instanceof Error ? error.message : String(error)}`);
+         throw new HttpException(`Avatar kon niet opgeslagen worden, controleer AVATAR_DIR (${avatarDir})`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
 
       const avatarUrl = `${baseUrl}/avatars/${bestandsnaam}`;
       await this.UpdateObject(id, {AVATAR: avatarUrl}, actorId);

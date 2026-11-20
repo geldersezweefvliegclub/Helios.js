@@ -1,11 +1,12 @@
 import {
    Body,
-   Controller, Get, Post, Req,
+   Controller, Get, Header, HttpCode, Post, Req,
    HttpException,
    HttpStatus,
    Logger,
-   Query, UseGuards
+   Query, UseGuards, UseInterceptors
 } from '@nestjs/common';
+import {NoFilesInterceptor} from "@nestjs/platform-express";
 import {Request} from "express";
 import {Prisma, RefLid} from '@prisma/client';
 import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsResponse";
@@ -20,7 +21,7 @@ import { GetObjectsRefLedenRequest} from "./GetObjectsRefLedenRequest";
 import {CreateRefLidDto} from "../../generated/nestjs-dto/create-refLid.dto";
 import {UpdateRefLidDto} from "../../generated/nestjs-dto/update-refLid.dto";
 import {GetObjectsRefLedenResponse} from "./GetObjectsRefLedenResponse";
-import {ApiBasicAuth, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
+import {ApiBasicAuth, ApiConsumes, ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath} from "@nestjs/swagger";
 import {CurrentUser} from "../login/current-user.decorator";
 import {PermissieService} from "../authorisatie/permissie.service";
 import {AuthGuard} from "@nestjs/passport";
@@ -54,7 +55,7 @@ export class LedenController extends HeliosController
    {
       this.logger.verbose(`LedenController.GetObject(${safeStringify({currentUser, id})})`);
       this.permissieService.heeftToegang(currentUser, 'Leden.GetObject');
-      this.heeftDataToegangGetObject(currentUser);
+      this.heeftDataToegangGetObject(currentUser, id);
       const obj =  await this.ledenService.GetObject(id);
       return this.privacyMask(obj, currentUser);
    }
@@ -332,11 +333,19 @@ export class LedenController extends HeliosController
    @Post("UploadAvatar")
    @ApiBasicAuth()
    @UseGuards(AuthGuard(['jwt', 'basic-auth']))
+   // Pegasus stuurt ID en FILE (data-URI) als multipart/form-data velden, net als bij PHP. NoFilesInterceptor leest
+   // die tekstvelden in @Body() in; zonder interceptor blijft de body leeg. fieldSize omhoog: een 512x512 PNG als
+   // base64 data-URI is al snel groter dan de standaard limiet van 1 MB
+   @UseInterceptors(NoFilesInterceptor({limits: {fieldSize: 10 * 1024 * 1024}}))
+   @Header('Content-Type', 'application/json')
+   @HttpCode(HttpStatus.OK)
+   @ApiConsumes('multipart/form-data', 'application/json')
    @ApiOperation({summary: 'Upload een avatar-afbeelding voor een lid.'})
    @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
    @ApiResponse({status: HttpStatus.NOT_FOUND, description: 'Lid niet gevonden.'})
    @ApiResponse({status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Onjuiste bestandsextensie.'})
+   @ApiResponse({status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Avatar kon niet opgeslagen worden (AVATAR_DIR ontbreekt of is niet schrijfbaar).'})
    @ApiResponse({status: HttpStatus.OK, description: 'Avatar geupload, geeft de URL terug.', type: String})
    async UploadAvatar(
       @CurrentUser() currentUser: RefLid,
@@ -348,7 +357,11 @@ export class LedenController extends HeliosController
       this.heeftDataToegangUploadAvatar(currentUser, data.ID);
 
       const baseUrl = `${request.protocol}://${request.get('host')}`;
-      return await this.ledenService.UploadAvatar(data.ID, data.FILE, baseUrl, currentUser.ID);
+      const avatarUrl = await this.ledenService.UploadAvatar(data.ID, data.FILE, baseUrl, currentUser.ID);
+
+      // als JSON string teruggeven (net als json_encode() in PHP): een kale string stuurt Nest als text/html,
+      // waarop response.json() in Pegasus faalt
+      return JSON.stringify(avatarUrl);
    }
 
    // gedeelde verwerking van AddObject en UpdateObject - zie RequestToRecord() in class.Leden.inc.php.
@@ -623,10 +636,17 @@ export class LedenController extends HeliosController
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Leden/GetObject
-   private heeftDataToegangGetObject(_currentUser: RefLid): void
+   private heeftDataToegangGetObject(currentUser: RefLid, id: number): void
    {
-      // TODO: PHP vereist hier heeftDataToegang() of zelf, zie GetObject() in class.Leden.inc.php
-      // throw new HttpException("Geen toegang", HttpStatus.UNAUTHORIZED);
+      // zie GetObject() in class.Leden.inc.php: zelf, of heeftDataToegang() || isBeheerderDDWV() || isRooster().
+      // heeftDataToegang() zonder datum is beheerder, instructeur of CIMT (de installer rol is niet meer van toepassing)
+      if (currentUser.ID !== Number(id)
+         && !this.permissieService.isBeheerder(currentUser)
+         && !this.permissieService.isInstructeur(currentUser)
+         && !this.permissieService.isCIMT(currentUser)
+         && !this.permissieService.isBeheerderDDWV(currentUser)
+         && !this.permissieService.isRooster(currentUser))
+         throw new HttpException("Geen leesrechten", HttpStatus.UNAUTHORIZED);
    }
 
    // controleer of de gebruiker toegang heeft tot de data van Leden/GetObjects
@@ -689,8 +709,9 @@ export class LedenController extends HeliosController
    // controleer of de gebruiker toegang heeft tot de data van Leden/UploadAvatar
    private heeftDataToegangUploadAvatar(currentUser: RefLid, id: number): void
    {
-      // zie UploadAvatar() in class.Leden.inc.php: zelf, of heeftDataToegang()||isBeheerderDDWV()
-      // TODO: isBeheerder is hier een benadering van heeftDataToegang()
+      // zie UploadAvatar() in class.Leden.inc.php: zelf, of heeftDataToegang(null, false)||isBeheerderDDWV().
+      // heeftDataToegang zonder datum en zonder instructeurs is daar beheerder of installer; de installer rol
+      // is niet meer van toepassing, dus blijft beheerder over
       if (currentUser.ID !== id
          && !this.permissieService.isBeheerder(currentUser)
          && !this.permissieService.isBeheerderDDWV(currentUser))
