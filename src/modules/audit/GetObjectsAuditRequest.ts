@@ -21,7 +21,7 @@ export class GetObjectsAuditRequest extends GetObjectsDateRequest
    @ApiProperty(
       {
          required: false,
-         description: 'Zoek in de velden NAAM, TABEL, ACTIE, VOOR, DATA, RESULTAAT',
+         description: 'Zoek in de velden NAAM, TABEL_NAAM, ACTIE, VOOR, DATA, RESULTAAT',
          type: String
       })
    SELECTIE?: string;
@@ -50,7 +50,7 @@ export class GetObjectsAuditRequest extends GetObjectsDateRequest
    @ApiProperty(
       {
          required: false,
-         description: 'Zoek in de audit record van deze tabel',
+         description: 'Alleen audit records van deze tabel (TABEL_NAAM, bv. JournaalService)',
          type: String
       })
    TABEL?: string;

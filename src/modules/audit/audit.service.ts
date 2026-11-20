@@ -60,12 +60,13 @@ export class AuditService extends IHeliosService
             { VERWIJDERD: params.VERWIJDERD ?? false },
             { ID: { in: params.IDs }},
             { LID_ID: params.LID_ID },
-            { TABEL: params.TABEL },
+            // de tabel staat in TABEL_NAAM (bv. JournaalService), de kolom TABEL wordt niet gevuld
+            { TABEL_NAAM: params.TABEL },
             { ID: { gte: params.BEGIN_ID }},
             { ID: { lte: params.EIND_ID }},
             { OR: [
                   { RefLid: { NAAM: {contains: params.SELECTIE }}},
-                  { TABEL: { contains: params.SELECTIE }},
+                  { TABEL_NAAM: { contains: params.SELECTIE }},
                   { ACTIE: { contains: params.SELECTIE }},
                   { VOOR: { contains: params.SELECTIE }},
                   { DATA: { contains: params.SELECTIE }},
