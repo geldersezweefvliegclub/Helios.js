@@ -1,4 +1,4 @@
-import {Body, Controller, Logger, Query, Req} from '@nestjs/common';
+import {Body, Controller, HttpStatus, Logger, Query, Req} from '@nestjs/common';
 import {Request} from "express";
 import {
    HeliosController,
@@ -15,7 +15,7 @@ import {IHeliosGetObjectsResponse} from "../../core/DTO/IHeliosGetObjectsRespons
 import {HeliosDocumentDto} from "../../generated/nestjs-dto/heliosDocument.dto";
 import {CreateHeliosDocumentRequest} from "./CreateHeliosDocumentRequest";
 import {UpdateHeliosDocumentRequest} from "./UpdateHeliosDocumentRequest";
-import {ApiTags} from "@nestjs/swagger";
+import {ApiResponse, ApiTags} from "@nestjs/swagger";
 import {DocumentenService, DocumentUpload} from "./documenten.service";
 import {safeStringify} from "../../core/helpers/LogHelper";
 import {bodyHeeftData} from "../../core/helpers/RequestGuards";
@@ -59,6 +59,7 @@ export class DocumentenController extends HeliosController
    }
 
    @HeliosCreateObject(CreateHeliosDocumentRequest, HeliosDocumentDto)
+   @ApiResponse({status: HttpStatus.PAYLOAD_TOO_LARGE, description: 'Request (met BASE64_DOC) groter dan 120 MB.'})
    async AddObject(
        @CurrentUser() currentUser: RefLid,
        @Req() request: Request,
@@ -75,6 +76,7 @@ export class DocumentenController extends HeliosController
    }
 
    @HeliosUpdateObject(UpdateHeliosDocumentRequest, HeliosDocumentDto)
+   @ApiResponse({status: HttpStatus.PAYLOAD_TOO_LARGE, description: 'Request (met BASE64_DOC) groter dan 120 MB.'})
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
       @Req() request: Request,

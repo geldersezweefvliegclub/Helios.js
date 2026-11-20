@@ -200,7 +200,16 @@ export class DocumentenService extends IHeliosService
          bestandsnaam = `${lidId}_${docNaam}`;
       }
 
-      await fs.mkdir(directory, {recursive: true});
+      try
+      {
+         await fs.mkdir(directory, {recursive: true});
+      }
+      catch (error)
+      {
+         // meestal een ontbrekende of niet schrijfbare DOC_DIR - geef dat terug in plaats van een kale 500
+         this.logger.error(`DocumentenService.opslaanDocument: map ${directory} aanmaken mislukt: ${error instanceof Error ? error.message : String(error)}`);
+         throw new HttpException(`Document kon niet opgeslagen worden, controleer DOC_DIR (${docDir})`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
       const volledigPad = join(directory, bestandsnaam);
 
       if (upload.OVERSCHRIJVEN === false)

@@ -7,7 +7,7 @@ import {WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import * as fs from 'fs';
 import * as cookieParser from 'cookie-parser';
-import {NextFunction, Request, Response} from 'express';
+import {json, NextFunction, Request, Response, urlencoded} from 'express';
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosHttpExceptionFilter";
 import { dump }             from 'js-yaml';
 import {HeliosPrismaClientKnownRequestError} from "./core/helpers/HeliosPrismaClientKnownRequestError";
@@ -160,8 +160,16 @@ async function bootstrap()
    });
 
    const app = await NestFactory.create(AppModule, {
-     logger  // de logger om debug informatie vast te leggen
+     logger,  // de logger om debug informatie vast te leggen
+     bodyParser: false   // body parsers worden hieronder zelf geregistreerd, zie Documenten/SaveObject
    });
+
+   // Documenten/SaveObject krijgt het bestand als base64 (BASE64_DOC) in de JSON body. De standaard limiet van
+   // 100 KB is daarvoor te klein; 120 MB komt overeen met post_max_size van de PHP server. Alleen voor deze route,
+   // de overige endpoints houden de standaard limiet. De route-specifieke parser moet vóór de algemene staan.
+   app.use('/Documenten/SaveObject', json({limit: '120mb'}));
+   app.use(json());
+   app.use(urlencoded({extended: true}));
     app.enableCors({
         credentials: true,
         origin: "http://localhost:4200",
