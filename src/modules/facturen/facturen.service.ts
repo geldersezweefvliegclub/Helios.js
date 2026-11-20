@@ -9,6 +9,7 @@ import {MqttService} from "../../core/services/mqtt.service";
 import {Prisma, OperFactuur} from "@prisma/client";
 import {GetObjectsOperFacturenRequest} from "./GetObjectsOperFacturenRequest";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";
+import {FactuurResponse} from "./FactuurResponse";
 import {NogTeFacturerenResponse} from "./NogTeFacturerenResponse";
 import {FactuurBericht} from "./FactuurBericht";
 import {safeStringify} from "../../core/helpers/LogHelper";
@@ -92,7 +93,8 @@ export class FacturenService extends IHeliosService
          orderBy: this.SortStringToSortObj<Prisma.OperFactuurOrderByWithRelationInput>(params.SORT ?? "ID"),
          take: params.MAX,
          skip: params.START});
-      const result = this.buildGetObjectsResponse(objs, count, params.HASH);
+      const dataset = objs.map((obj) => this.MaakFactuurResponse(obj));
+      const result = this.buildGetObjectsResponse(dataset, count, params.HASH);
       this.logger.verbose(`FacturenService.GetObjects() => ${safeStringify(result)}`);
       return result;
    }
@@ -311,6 +313,14 @@ export class FacturenService extends IHeliosService
       this.logger.verbose(`FacturenService.UploadTransactieFactuur() => gepubliceerd`);
    }
 
+   // zet een factuur om naar de API response: GEFACTUREERD als getal in plaats van Prisma Decimal (in JSON een string)
+   MaakFactuurResponse(obj: OperFactuur): FactuurResponse
+   {
+      return {
+         ...obj,
+         GEFACTUREERD: obj.GEFACTUREERD === null ? null : obj.GEFACTUREERD.toNumber(),
+      };
+   }
 
    private async lidNaam(lidId: number): Promise<string | null>
    {

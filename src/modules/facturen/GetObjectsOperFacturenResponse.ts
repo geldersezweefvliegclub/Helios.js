@@ -1,9 +1,9 @@
 
 import {ApiTags} from "@nestjs/swagger";
-import {OperFactuurDto} from "../../generated/nestjs-dto/operFactuur.dto";
+import {FactuurResponse} from "./FactuurResponse";
 
 @ApiTags('Facturen')
-export class GetObjectsOperFacturenResponse extends OperFactuurDto
+export class GetObjectsOperFacturenResponse extends FactuurResponse
 {
    // hier komen de specifieke velden voor GetObjects
 }

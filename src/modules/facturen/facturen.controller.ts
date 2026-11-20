@@ -8,7 +8,7 @@ import {
    HeliosGetObjects, HeliosRemoveObject, HeliosRestoreObject,
    HeliosUpdateObject
 } from "../../core/controllers/helios/helios.controller";
-import {OperFactuurDto} from "../../generated/nestjs-dto/operFactuur.dto";
+import {FactuurResponse} from "./FactuurResponse";
 import {CurrentUser} from "../login/current-user.decorator";
 import {Prisma, RefLid} from "@prisma/client";
 import {GetObjectsOperFacturenResponse} from "./GetObjectsOperFacturenResponse";
@@ -38,16 +38,17 @@ export class FacturenController  extends HeliosController
       super()
    }
 
-   @HeliosGetObject(OperFactuurDto)
+   @HeliosGetObject(FactuurResponse)
    async GetObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number): Promise<OperFactuurDto>
+      @Query('ID') id: number): Promise<FactuurResponse>
    {
       this.logger.verbose(`FacturenController.GetObject(${safeStringify({currentUser, id})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.GetObject');
       this.heeftDataToegangGetObject(currentUser);
-      return await this.FacturenService.GetObject(id);
+      const obj = await this.FacturenService.GetObject(id);
+      return this.FacturenService.MaakFactuurResponse(obj);
    }
 
    @HeliosGetObjects(GetObjectsOperFacturenResponse)
@@ -62,12 +63,12 @@ export class FacturenController  extends HeliosController
       return await this.FacturenService.GetObjects(queryParams);
    }
 
-   @HeliosCreateObject(CreateOperFactuurDto, OperFactuurDto)
+   @HeliosCreateObject(CreateOperFactuurDto, FactuurResponse)
    // NAAM wordt afgeleid van het gekoppelde lid (LID_ID) - service werpt dit als dat lid niet bestaat
    @ApiResponse({status: HttpStatus.NOT_FOUND, description: 'Lid (LID_ID) niet gevonden.'})
    async AddObject(
       @CurrentUser() currentUser: RefLid,
-      @Body() data: CreateOperFactuurDto): Promise<OperFactuurDto>
+      @Body() data: CreateOperFactuurDto): Promise<FactuurResponse>
    {
       this.logger.verbose(`FacturenController.AddObject(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
@@ -76,15 +77,16 @@ export class FacturenController  extends HeliosController
       this.heeftDataToegangAddObject(currentUser);
 
       const insert = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedCreateInput;
-      return await this.FacturenService.AddObject(insert, currentUser.ID);
+      const obj = await this.FacturenService.AddObject(insert, currentUser.ID);
+      return this.FacturenService.MaakFactuurResponse(obj);
    }
 
-   @HeliosUpdateObject(UpdateOperFactuurDto, OperFactuurDto)
+   @HeliosUpdateObject(UpdateOperFactuurDto, FactuurResponse)
    // Facturen-specifiek: een reeds geuploade factuur (FACTUUR_NUMMER gezet) mag niet meer verwijderd worden
    @ApiResponse({status: HttpStatus.METHOD_NOT_ALLOWED, description: 'Factuur is reeds geupload, kan niet meer verwijderd worden.'})
    async UpdateObject(
       @CurrentUser() currentUser: RefLid,
-      @Query('ID') id: number, @Body() data: UpdateOperFactuurDto): Promise<OperFactuurDto>
+      @Query('ID') id: number, @Body() data: UpdateOperFactuurDto): Promise<FactuurResponse>
    {
       bodyHeeftData(data);
       id = id ?? data.ID;
@@ -94,7 +96,8 @@ export class FacturenController  extends HeliosController
       this.heeftDataToegangUpdateObject(currentUser);
 
       const update = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedUpdateInput;
-      return await this.FacturenService.UpdateObject(id, update, currentUser.ID);
+      const obj = await this.FacturenService.UpdateObject(id, update, currentUser.ID);
+      return this.FacturenService.MaakFactuurResponse(obj);
    }
 
    @HeliosDeleteObject()
@@ -173,25 +176,26 @@ export class FacturenController  extends HeliosController
    @Post('AanmakenFacturen')
    @ApiBasicAuth()
    @UseGuards(AuthGuard(['jwt', 'basic-auth']))
-   @ApiExtraModels(OperFactuurDto)
+   @ApiExtraModels(FactuurResponse)
    @ApiOperation({summary: 'Maak voor elk opgegeven lid een contributiefactuur aan op basis van het lidmaatschapstype.'})
    @ApiResponse({status: HttpStatus.BAD_REQUEST, description: 'Verkeerde input data.'})
    @ApiResponse({status: HttpStatus.UNAUTHORIZED, description: 'Geen toegang.'})
    @ApiResponse({status: HttpStatus.NOT_FOUND, description: 'Lid, lidtype, of contributiebedrag niet gevonden.'})
    @ApiResponse({
       status: HttpStatus.CREATED, description: 'Facturen aangemaakt.',
-      schema: {type: 'array', items: {$ref: getSchemaPath(OperFactuurDto)}}
+      schema: {type: 'array', items: {$ref: getSchemaPath(FactuurResponse)}}
    })
    async AanmakenFacturen(
       @CurrentUser() currentUser: RefLid,
-      @Body() data: AanmakenFacturenRequest): Promise<OperFactuurDto[]>
+      @Body() data: AanmakenFacturenRequest): Promise<FactuurResponse[]>
    {
       this.logger.verbose(`FacturenController.AanmakenFacturen(${safeStringify({currentUser, data})})`);
       bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.AanmakenFacturen');
       this.heeftDataToegangAanmakenFacturen(currentUser);
-      return await this.FacturenService.AanmakenFacturen(data.JAAR, data.LID_ID, currentUser.ID);
+      const facturen = await this.FacturenService.AanmakenFacturen(data.JAAR, data.LID_ID, currentUser.ID);
+      return facturen.map((factuur) => this.FacturenService.MaakFactuurResponse(factuur));
    }
 
    @Post('UploadFactuur')
