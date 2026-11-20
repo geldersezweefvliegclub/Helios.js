@@ -166,7 +166,7 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
    // altijd toegang. Anders moet een van de rollen van de gebruiker (ROLLEN_ID, de oude booleans, het lidtype en
    // de impliciete rol Iedereen) in ref_permissie toegang hebben tot de functie zelf of tot alle endpoints van de
    // module (<module>.*)
-   heeftToegang(user: RefLid, functie: string): void
+   heeftToegang(user: Omit<RefLid, 'TEGOED'>, functie: string): void
    {
       this.logger.verbose(`PermissieService.heeftToegang(${safeStringify({NAAM: user.NAAM, functie})})`);
       if (this.isBeheerder(user))
@@ -188,105 +188,105 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
    // Overgangssituatie: een rol is actief als de (oude) boolean in ref_leden gezet is, of als de rol
    // voorkomt in ROLLEN_ID (ref_types met GROEP = TypesGroep.Rollen). Zodra de booleans uitgefaseerd zijn
    // vervalt het eerste deel van de controle
-   isBeheerder(user: RefLid): boolean
+   isBeheerder(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.BEHEERDER || this.heeftRol(user, Rol.Beheerder);
       this.logger.verbose(`PermissieService.isBeheerder(${safeStringify({NAAM: user.NAAM, BEHEERDER: user.BEHEERDER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isBeheerderDDWV(user: RefLid): boolean
+   isBeheerderDDWV(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.DDWV_BEHEERDER || this.heeftRol(user, Rol.DDWVBeheerder);
       this.logger.verbose(`PermissieService.isBeheerderDDWV(${safeStringify({NAAM: user.NAAM, DDWV_BEHEERDER: user.DDWV_BEHEERDER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isInstructeur(user: RefLid): boolean
+   isInstructeur(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.INSTRUCTEUR || this.heeftRol(user, Rol.Instructeur);
       this.logger.verbose(`PermissieService.isInstructeur(${safeStringify({NAAM: user.NAAM, INSTRUCTEUR: user.INSTRUCTEUR, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isCIMT(user: RefLid): boolean
+   isCIMT(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.CIMT || this.heeftRol(user, Rol.CIMT);
       this.logger.verbose(`PermissieService.isCIMT(${safeStringify({NAAM: user.NAAM, CIMT: user.CIMT, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isStarttoren(user: RefLid): boolean
+   isStarttoren(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.STARTTOREN || this.heeftRol(user, Rol.Starttoren);
       this.logger.verbose(`PermissieService.isStarttoren(${safeStringify({NAAM: user.NAAM, STARTTOREN: user.STARTTOREN, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isRooster(user: RefLid): boolean
+   isRooster(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.ROOSTER || this.heeftRol(user, Rol.Rooster);
       this.logger.verbose(`PermissieService.isRooster(${safeStringify({NAAM: user.NAAM, ROOSTER: user.ROOSTER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isRapporteur(user: RefLid): boolean
+   isRapporteur(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.RAPPORTEUR || this.heeftRol(user, Rol.Rapporteur);
       this.logger.verbose(`PermissieService.isRapporteur(${safeStringify({NAAM: user.NAAM, RAPPORTEUR: user.RAPPORTEUR, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isDDWVCrew(user: RefLid): boolean
+   isDDWVCrew(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.DDWV_CREW || this.heeftRol(user, Rol.DDWVCrew);
       this.logger.verbose(`PermissieService.isDDWVCrew(${safeStringify({NAAM: user.NAAM, DDWV_CREW: user.DDWV_CREW, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isLierist(user: RefLid): boolean
+   isLierist(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.LIERIST || this.heeftRol(user, Rol.Lierist);
       this.logger.verbose(`PermissieService.isLierist(${safeStringify({NAAM: user.NAAM, LIERIST: user.LIERIST, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isLIO(user: RefLid): boolean
+   isLIO(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.LIERIST_IO || this.heeftRol(user, Rol.LIO);
       this.logger.verbose(`PermissieService.isLIO(${safeStringify({NAAM: user.NAAM, LIERIST_IO: user.LIERIST_IO, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isStartleider(user: RefLid): boolean
+   isStartleider(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.STARTLEIDER || this.heeftRol(user, Rol.Startleider);
       this.logger.verbose(`PermissieService.isStartleider(${safeStringify({NAAM: user.NAAM, STARTLEIDER: user.STARTLEIDER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isTechnicus(user: RefLid): boolean
+   isTechnicus(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.TECHNICUS || this.heeftRol(user, Rol.Technicus);
       this.logger.verbose(`PermissieService.isTechnicus(${safeStringify({NAAM: user.NAAM, TECHNICUS: user.TECHNICUS, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isSleepvlieger(user: RefLid): boolean
+   isSleepvlieger(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.SLEEPVLIEGER || this.heeftRol(user, Rol.Sleepvlieger);
       this.logger.verbose(`PermissieService.isSleepvlieger(${safeStringify({NAAM: user.NAAM, SLEEPVLIEGER: user.SLEEPVLIEGER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isGastenvlieger(user: RefLid): boolean
+   isGastenvlieger(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result = user.GASTENVLIEGER || this.heeftRol(user, Rol.Gastenvlieger);
       this.logger.verbose(`PermissieService.isGastenvlieger(${safeStringify({NAAM: user.NAAM, GASTENVLIEGER: user.GASTENVLIEGER, ROLLEN_ID: user.ROLLEN_ID, result})})`);
       return result;
    }
 
-   isLid(user: RefLid): boolean
+   isLid(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result =
              user.LIDTYPE_ID === LidType.Erelid ||
@@ -301,14 +301,14 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
       return result;
    }
 
-   isDDWVer(user: RefLid): boolean
+   isDDWVer(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       this.logger.verbose(`PermissieService.isDDWVer(${safeStringify({NAAM: user.NAAM, ddwv: user.LIDTYPE_ID === LidType.DDWV})})`);
       return user.LIDTYPE_ID === LidType.DDWV;
    }
 
    // zie isClubVlieger() in class.Leden.inc.php - anders dan isLid() hierboven telt Student hier ook mee
-   isClubVlieger(user: RefLid): boolean
+   isClubVlieger(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       const result =
              user.LIDTYPE_ID === LidType.Student ||
@@ -324,13 +324,13 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
       return result;
    }
 
-   isSysteemAccount(user: RefLid): boolean
+   isSysteemAccount(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       this.logger.verbose(`PermissieService.isSysteemAccount(${safeStringify({NAAM: user.NAAM, systeemAccount: user.LIDTYPE_ID === LidType.SysteemAccount})})`);
       return user.LIDTYPE_ID === LidType.SysteemAccount;
    }
 
-   ikBenHetZelf(user: RefLid, currentUser: RefLid): boolean
+   ikBenHetZelf(user: Omit<RefLid, 'TEGOED'>, currentUser: RefLid): boolean
    {
       this.logger.verbose(`PermissieService.ikBenHetZelf(${safeStringify({NAAM: user.NAAM, CURRENT_USER: currentUser.NAAM, result: user.ID === currentUser.ID})})`);
       return user.ID === currentUser.ID;
@@ -338,7 +338,7 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
 
    // controleer of de gebruiker privacy-instellingen heeft ingeschakeld
    // als de gebruiker een beheerder, beheerder DDWV, instructeur of CIMT is, zijn de privacy-instellingen niet van toepassing
-   hasPrivacy(user: RefLid): boolean
+   hasPrivacy(user: Omit<RefLid, 'TEGOED'>): boolean
    {
       if (this.isBeheerder(user) || this.isBeheerderDDWV(user) || this.isInstructeur(user) || this.isCIMT(user) || this.isStarttoren(user))
       {
@@ -350,7 +350,7 @@ export class PermissieService extends IHeliosService implements OnApplicationBoo
    }
 
    // controleer of de rol voorkomt in de comma-separated ROLLEN_ID lijst van het lid
-   private heeftRol(user: RefLid, rol: Rol): boolean
+   private heeftRol(user: Omit<RefLid, 'TEGOED'>, rol: Rol): boolean
    {
       return (user.ROLLEN_ID ?? "").split(",").filter(Boolean).map(Number).includes(rol);
    }

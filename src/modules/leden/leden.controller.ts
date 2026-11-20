@@ -176,7 +176,7 @@ export class LedenController extends HeliosController
 
 
    // verwijder de privacygevoelige data uit de response
-   privacyMask(obj: RefLid, currentUser: RefLid): RefLid
+   privacyMask<T extends Omit<RefLid, 'TEGOED'>>(obj: T, currentUser: RefLid): T
    {
       const ikBenHetZelf = this.permissieService.ikBenHetZelf(obj, currentUser);
       const isBeheerder = this.permissieService.isBeheerder(currentUser);
@@ -207,11 +207,6 @@ export class LedenController extends HeliosController
          obj.BREVET_NUMMER = null;
          obj.KNVVL_LIDNUMMER = null;
          obj.ZUSTERCLUB_ID = null;
-      }
-
-      // tegoed is alleen intressant voor beheerders en beheerders DDWV, of het lid zelf
-      if (!isBeheerder && !isBeheerderDDWV && !ikBenHetZelf) {
-         obj.TEGOED = null;
       }
 
       // buddy is alleen zichtbaar voor beheerders, instructeurs en CIMT, of het lid zelf
@@ -261,7 +256,7 @@ export class LedenController extends HeliosController
       obj.GEBOORTE_DATUM = toDateOnly(obj.GEBOORTE_DATUM) as unknown as Date;
       obj.MEDICAL = toDateOnly(obj.MEDICAL) as unknown as Date;
 
-      return obj as RefLid;
+      return obj;
    }
 
 
@@ -359,7 +354,7 @@ export class LedenController extends HeliosController
    // gedeelde verwerking van AddObject en UpdateObject - zie RequestToRecord() in class.Leden.inc.php.
    // Bewust een ALLOWLIST (in plaats van de vorige denylist-aanpak die enkel NAAM/VERWIJDERD/LAATSTE_AANPASSING/ID
    // uitsloot): elk veld staat achter dezelfde rolcontrole als in PHP, zodat een lid nooit velden als
-   // BEHEERDER, CIMT, TEGOED of LIDTYPE_ID op zichzelf kan zetten via een gewone AddObject/UpdateObject aanroep.
+   // BEHEERDER, CIMT of LIDTYPE_ID op zichzelf kan zetten via een gewone AddObject/UpdateObject aanroep.
    // LIDTYPE_ID, STATUSTYPE_ID, ZUSTERCLUB_ID, BUDDY_ID en BUDDY_ID2 hoeven niet omgezet te worden naar
    // relatie-connects: met het Unchecked Prisma inputtype zijn dit al platte, nullable kolommen, dus een
    // meegegeven null zet de relatie direct los (zowel bij create als update) zonder aparte afhandeling
@@ -444,7 +439,6 @@ export class LedenController extends HeliosController
       // zelf, beheerder of beheerder DDWV
       if (ikBenHetZelf || isBeheerder || isBeheerderDDWV)
       {
-         zet('TEGOED');
          zet('VOORNAAM');
          zet('TUSSENVOEGSEL');
          zet('ACHTERNAAM');

@@ -316,12 +316,6 @@ export class RefLidDto {
   })
   OPMERKINGEN: string | null;
   @ApiProperty({
-    description: "Aantal strippen tegoed",
-    type: "number",
-    format: "float",
-  })
-  TEGOED: number;
-  @ApiProperty({
     description:
       "Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk",
     type: "boolean",

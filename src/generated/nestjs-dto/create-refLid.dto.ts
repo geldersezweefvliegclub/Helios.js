@@ -4,7 +4,6 @@ import {
   IsDateString,
   IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
   Matches,
@@ -499,16 +498,6 @@ export class CreateRefLidDto {
   @IsOptional()
   @IsString()
   OPMERKINGEN?: string | null;
-  @ApiProperty({
-    description: "Aantal strippen tegoed",
-    type: "number",
-    format: "float",
-    default: 0,
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  TEGOED?: number;
   @ApiProperty({
     description:
       "Is het record gemarkeerd als verwijderd - wordt genegeerd via UpdateObject/SaveObject, enkel DeleteObject/RestoreObject wijzigen dit daadwerkelijk",

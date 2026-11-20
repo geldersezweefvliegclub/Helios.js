@@ -8,8 +8,13 @@ export class DbService extends PrismaClient implements  OnModuleInit
 {
     private readonly logger = new Logger(DbService.name);
 
+    // TODO: TEGOED er helemaal uithalen
     constructor(private readonly configService: ConfigService) {
         super({
+            // TEGOED blijft als kolom in ref_leden bestaan, maar wordt nergens meer gebruikt - nooit ophalen
+            omit: {
+                refLid: {TEGOED: true},
+            },
             log: [
                 {
                     emit: 'event',

@@ -184,9 +184,11 @@ model RefLid {
   EMAIL_DAGINFO        Boolean   @default(false)
   /// @description Opmerkingen van het lid
   OPMERKINGEN          String?   @db.Text
-  /// @description Aantal strippen tegoed
-  /// @DtoCreateOptional
-  /// @DtoUpdateOptional
+  /// @description Aantal strippen tegoed. Kolom blijft bestaan in de database, maar wordt niet meer gebruikt:
+  /// niet in de API (DTO's) en globaal weggelaten uit query resultaten (zie omit in DbService)
+  /// @DtoCreateHidden
+  /// @DtoUpdateHidden
+  /// @DtoEntityHidden
   TEGOED               Float     @default(0) @db.Float
   /// @DtoCreateOptional
   /// @DtoUpdateOptional
