@@ -1,10 +1,14 @@
 import {Transform} from "class-transformer";
 
 
+// "1" en "0" worden ook geaccepteerd (net als isBOOL() in PHP): Pegasus stuurt bv. VERWIJDERD=1 voor het archief.
+// Zonder deze waarden werd "1" stilletjes undefined, waardoor het filter genegeerd werd
 const optionBooleanMapper = new Map<string, boolean>([
    ["undefined", undefined],
    ["true", true],
-   ["false", false]
+   ["false", false],
+   ["1", true],
+   ["0", false]
 ]);
 
 /**
