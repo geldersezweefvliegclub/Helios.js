@@ -7,6 +7,7 @@ import {WinstonModule} from 'nest-winston';
 import * as winston from 'winston';
 import * as fs from 'fs';
 import * as cookieParser from 'cookie-parser';
+import {NextFunction, Request, Response} from 'express';
 import {BadRequestExceptionFilter, HeliosHttpExceptionFilter} from "./core/helpers/HeliosHttpExceptionFilter";
 import { dump }             from 'js-yaml';
 import {HeliosPrismaClientKnownRequestError} from "./core/helpers/HeliosPrismaClientKnownRequestError";
@@ -193,6 +194,16 @@ async function bootstrap()
    app.useGlobalFilters(new HeliosPrismaClientKnownRequestError());
 
    app.use(cookieParser()); // Zorgt dat de applicatie cookies kan lezen en toevoegen aan het request object
+
+   // API responses nooit door de browser laten cachen. GetObjects geeft zelf een 304 als de meegegeven HASH
+   // overeenkomt; Pegasus gebruikt dan zijn eigen cache. Met een browsercache maakt de browser van die 304 stilletjes
+   // de oude 200 response voor dezelfde URL, waardoor bv. verwijderde starts weer in de lijst verschijnen.
+   // Statische bestanden (documenten, avatars) mogen wel gecached worden.
+   app.use((req: Request, res: Response, next: NextFunction) => {
+      if (!req.path.startsWith('/documenten/') && !req.path.startsWith('/avatars/'))
+         res.setHeader('Cache-Control', 'no-store');
+      next();
+   });
    await app.listen(3000);
 
    // getUrl() geeft het IPv6/IPv4 loopback adres terug (bv. http://[::1]:3000), localhost leest prettiger
