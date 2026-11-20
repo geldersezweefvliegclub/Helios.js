@@ -95,9 +95,9 @@ export class ProgressieController extends HeliosController
       @Body() data: CreateOperProgressieDto): Promise<OperProgressieDto>
    {
       this.logger.verbose(`ProgressieController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Progressie.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       // LID_ID en COMPETENTIE_ID zijn verplicht
       if (data.LID_ID === undefined || data.LID_ID === null)
@@ -126,11 +126,11 @@ export class ProgressieController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperProgressieDto): Promise<OperProgressieDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`ProgressieController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Progressie.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       // een lid mag geen eigen progressie aanpassen, of een progressie op zichzelf zetten
       const bestaand = await this.progressieService.GetObject(id);

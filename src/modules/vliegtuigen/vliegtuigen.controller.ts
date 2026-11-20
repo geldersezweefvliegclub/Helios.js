@@ -78,9 +78,9 @@ export class VliegtuigenController extends HeliosController
    {
       this.logger.verbose(`VliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Vliegtuigen.UpdateObject');
-      bodyHeeftData(data);
       id = id ?? data.ID;
       await this.heeftDataToegangUpdateObject(currentUser, id, data);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.RefVliegtuigUncheckedUpdateInput;
       return await this.vliegtuigenService.UpdateObject(id, update, currentUser.ID);
@@ -145,6 +145,11 @@ export class VliegtuigenController extends HeliosController
       // Bij UpdateObject is REGISTRATIE optioneel (een partiële update kan het veld weglaten), dus enkel trimmen als het is meegegeven.
       if (data.REGISTRATIE !== undefined) {
          data.REGISTRATIE = data.REGISTRATIE.trim();
+
+         // de kolom is VarChar(8), te lang gaf een kale database fout. Zelfde grenzen als in de schema documentatie
+         // (@minLength 4, @maxLength 8) en als registratieGeldig() in Pegasus
+         if (data.REGISTRATIE.length < 4 || data.REGISTRATIE.length > 8)
+            throw new HttpException("REGISTRATIE moet 4 tot 8 tekens lang zijn", HttpStatus.BAD_REQUEST);
 
          // formaat zoals PH-123 of D-KABC, zie RequestToRecord() in class.Vliegtuigen.inc.php (daar [A-z], wat per
          // ongeluk ook een aantal leestekens toestaat)

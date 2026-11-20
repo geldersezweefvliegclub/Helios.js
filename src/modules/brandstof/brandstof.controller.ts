@@ -68,9 +68,9 @@ export class BrandstofController  extends HeliosController
       @Body() data: CreateOperBrandstofDto): Promise<OperBrandstofDto>
    {
       this.logger.verbose(`BrandstofController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       if (data.LID_ID === undefined)
          throw new HttpException("LidID is verplicht", HttpStatus.BAD_REQUEST);
@@ -85,11 +85,11 @@ export class BrandstofController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperBrandstofDto): Promise<OperBrandstofDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`BrandstofController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Brandstof.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data, false) as UpdateOperBrandstofDto;
       const obj = await this.brandstofService.UpdateObject(id, update, currentUser.ID);

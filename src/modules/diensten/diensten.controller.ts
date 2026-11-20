@@ -75,9 +75,9 @@ export class DienstenController  extends HeliosController
       @Body() data: CreateOperDienstDto): Promise<GetOperDienstenResponse>
    {
       this.logger.verbose(`DienstenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Diensten.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       // DDWV-leden (LIDTYPE_ID = DDWV) mogen zelf nooit een dienst aanmaken
       if (this.permissieService.isDDWVer(currentUser)) {
@@ -108,11 +108,11 @@ export class DienstenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDienstDto): Promise<GetOperDienstenResponse>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`DienstenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Diensten.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const bestaandeDienst = await this.DienstenService.GetObject(id);
       this.controleerSchrijfrechten(bestaandeDienst, currentUser);

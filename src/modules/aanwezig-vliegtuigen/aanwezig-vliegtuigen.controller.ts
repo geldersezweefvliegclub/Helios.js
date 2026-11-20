@@ -70,9 +70,9 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @Body() data: CreateOperAanwezigVliegtuigDto): Promise<OperAanwezigVliegtuigDto>
    {
       this.logger.verbose(`AanwezigVliegtuigenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedCreateInput;
       const obj = await this.AanwezigVliegtuigenService.AddObject(insert, currentUser.ID);
@@ -89,11 +89,11 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigVliegtuigDto): Promise<OperAanwezigVliegtuigDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigVliegtuigenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.OperAanwezigVliegtuigUncheckedUpdateInput;
       const obj = await this.AanwezigVliegtuigenService.UpdateObject(id, update, currentUser.ID);
@@ -162,9 +162,9 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @Body() data: AanmeldenVliegtuigRequest): Promise<OperAanwezigVliegtuigDto>
    {
       this.logger.verbose(`AanwezigVliegtuigenController.Aanmelden(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Aanmelden');
       this.heeftDataToegangAanmelden(currentUser);
+      bodyHeeftData(data);
 
       const obj = await this.AanwezigVliegtuigenService.Aanmelden(data, currentUser.ID);
       return {
@@ -190,9 +190,9 @@ export class AanwezigVliegtuigenController  extends HeliosController
       @Body() data: AfmeldenVliegtuigRequest): Promise<OperAanwezigVliegtuigDto>
    {
       this.logger.verbose(`AanwezigVliegtuigenController.Afmelden(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigVliegtuigen.Afmelden');
       this.heeftDataToegangAfmelden(currentUser);
+      bodyHeeftData(data);
 
       const obj = await this.AanwezigVliegtuigenService.Afmelden(data, currentUser.ID);
       return {

@@ -63,9 +63,9 @@ export class JournaalController extends HeliosController
       @Body() data: CreateOperJournaalDto): Promise<OperJournaalDto>
    {
       this.logger.verbose(`JournaalController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Journaal.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedCreateInput;
       return await this.journaalService.AddObject(insert, currentUser.ID);
@@ -76,12 +76,12 @@ export class JournaalController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperJournaalDto): Promise<OperJournaal>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`JournaalController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() || isTechnicus() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Journaal.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.OperJournaalUncheckedUpdateInput;
       return await this.journaalService.UpdateObject(id, update, currentUser.ID);

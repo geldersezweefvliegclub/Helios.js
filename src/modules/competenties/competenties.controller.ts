@@ -68,9 +68,9 @@ export class CompetentiesController extends HeliosController
       @Body() data: CreateRefCompetentieDto): Promise<RefCompetentieDto>
    {
       this.logger.verbose(`CompetentiesController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Competenties.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedCreateInput;
       return await this.competentiesService.AddObject(insert, currentUser.ID);
@@ -81,11 +81,11 @@ export class CompetentiesController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateRefCompetentieDto): Promise<RefCompetentie>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`CompetentiesController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Competenties.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.RefCompetentieUncheckedUpdateInput;
       return await this.competentiesService.UpdateObject(id, update, currentUser.ID);

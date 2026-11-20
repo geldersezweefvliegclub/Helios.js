@@ -65,10 +65,10 @@ export class DocumentenController extends HeliosController
        @Req() request: Request,
        @Body() data: CreateHeliosDocumentRequest): Promise<HeliosDocumentDto> {
       this.logger.verbose(`DocumentenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const upload = this.bepaalUpload(request, data);
       const insert = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedCreateInput;
@@ -82,12 +82,12 @@ export class DocumentenController extends HeliosController
       @Req() request: Request,
       @Query('ID') id: number, @Body() data: UpdateHeliosDocumentRequest): Promise<HeliosDocument>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`DocumentenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() || isCIMT() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Documenten.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const upload = this.bepaalUpload(request, data);
       const update = await this.normaliserenData(data) as Prisma.HeliosDocumentUncheckedUpdateInput;

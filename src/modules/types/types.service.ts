@@ -94,6 +94,18 @@ export class TypesService extends IHeliosService
    async AddObject(data: Prisma.RefTypeUncheckedCreateInput , actorId: number): Promise<GetRefTypesResponse>
    {
       this.logger.verbose(`TypesService.AddObject(${safeStringify({data})})`);
+
+      // zonder SORTEER_VOLGORDE komt een nieuw type achteraan zijn groep (hoogste + 1). Met null kwam het bovenaan te
+      // staan en nummerde de eerste verplaatsing de hele groep opnieuw. De kolom is UnsignedTinyInt, dus maximaal 255
+      if (data.SORTEER_VOLGORDE === undefined || data.SORTEER_VOLGORDE === null)
+      {
+         const hoogste = await this.dbService.refType.aggregate({
+            where: {GROEP: data.GROEP},
+            _max: {SORTEER_VOLGORDE: true}
+         });
+         data.SORTEER_VOLGORDE = Math.min((hoogste._max.SORTEER_VOLGORDE ?? 0) + 1, 255);
+      }
+
       const obj = await this.dbService.refType.create({
          data: data
       });

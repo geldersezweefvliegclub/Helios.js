@@ -78,9 +78,9 @@ export class AanwezigLedenController  extends HeliosController
       @Body() data: CreateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
       this.logger.verbose(`AanwezigLedenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.AddObject');
       await this.heeftDataToegangAddObject(currentUser, data);
+      bodyHeeftData(data);
 
       // DATUM en LID_ID zijn verplicht
       if (data.DATUM === undefined)
@@ -103,11 +103,11 @@ export class AanwezigLedenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperAanwezigLidDto): Promise<OperAanwezigLidDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`AanwezigLedenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.UpdateObject');
       await this.heeftDataToegangUpdateObject(currentUser, id, data);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as UpdateOperAanwezigLidDto;
       const obj = await this.AanwezigLedenService.UpdateObject(id, update, currentUser.ID);
@@ -176,9 +176,9 @@ export class AanwezigLedenController  extends HeliosController
       @Body() data: AanmeldenRequest): Promise<OperAanwezigLidDto>
    {
       this.logger.verbose(`AanwezigLedenController.Aanmelden(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Aanmelden');
       await this.heeftDataToegangAanmelden(currentUser, data);
+      bodyHeeftData(data);
 
       const obj = await this.AanwezigLedenService.Aanmelden(data, currentUser.ID);
       return {
@@ -204,9 +204,9 @@ export class AanwezigLedenController  extends HeliosController
       @Body() data: AfmeldenRequest): Promise<OperAanwezigLidDto>
    {
       this.logger.verbose(`AanwezigLedenController.Afmelden(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'AanwezigLeden.Afmelden');
       await this.heeftDataToegangAfmelden(currentUser, data);
+      bodyHeeftData(data);
 
       const obj = await this.AanwezigLedenService.Afmelden(data, currentUser.ID);
       return {

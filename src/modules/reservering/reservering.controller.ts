@@ -64,9 +64,9 @@ export class ReserveringController extends HeliosController
       @Body() data: CreateOperReserveringDto): Promise<OperReserveringDto>
    {
       this.logger.verbose(`ReserveringController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Reservering.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       // INGEVOERD_ID wordt enkel intern gezet, zie RequestToRecord() in class.Reservering.inc.php
       if ('INGEVOERD_ID' in data)
@@ -93,11 +93,11 @@ export class ReserveringController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperReserveringDto): Promise<OperReserveringDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`ReserveringController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Reservering.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       if ('INGEVOERD_ID' in data)
          throw new HttpException("INGEVOERD_ID kan niet extern gezet worden", HttpStatus.BAD_REQUEST);

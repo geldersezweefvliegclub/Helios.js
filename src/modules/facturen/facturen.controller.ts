@@ -71,10 +71,10 @@ export class FacturenController  extends HeliosController
       @Body() data: CreateOperFactuurDto): Promise<FactuurResponse>
    {
       this.logger.verbose(`FacturenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedCreateInput;
       const obj = await this.FacturenService.AddObject(insert, currentUser.ID);
@@ -88,12 +88,12 @@ export class FacturenController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperFactuurDto): Promise<FactuurResponse>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`FacturenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.OperFactuurUncheckedUpdateInput;
       const obj = await this.FacturenService.UpdateObject(id, update, currentUser.ID);
@@ -190,10 +190,10 @@ export class FacturenController  extends HeliosController
       @Body() data: AanmakenFacturenRequest): Promise<FactuurResponse[]>
    {
       this.logger.verbose(`FacturenController.AanmakenFacturen(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.AanmakenFacturen');
       this.heeftDataToegangAanmakenFacturen(currentUser);
+      bodyHeeftData(data);
       const facturen = await this.FacturenService.AanmakenFacturen(data.JAAR, data.LID_ID, currentUser.ID);
       return facturen.map((factuur) => this.FacturenService.MaakFactuurResponse(factuur));
    }
@@ -212,10 +212,10 @@ export class FacturenController  extends HeliosController
       @Body() data: UploadFactuurRequest): Promise<void>
    {
       this.logger.verbose(`FacturenController.UploadFactuur(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UploadFactuur');
       this.heeftDataToegangUploadFactuur(currentUser);
+      bodyHeeftData(data);
       await this.FacturenService.UploadFactuur(data.ID);
    }
 
@@ -233,10 +233,10 @@ export class FacturenController  extends HeliosController
       @Body() data: UploadTransactieFactuurRequest): Promise<void>
    {
       this.logger.verbose(`FacturenController.UploadTransactieFactuur(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       // TODO: PHP vereist hier isBeheerder() || isBeheerderDDWV() (401 anders) - heeftToegang() is nog een no-op stub
       this.permissieService.heeftToegang(currentUser, 'Facturen.UploadTransactieFactuur');
       this.heeftDataToegangUploadTransactieFactuur(currentUser);
+      bodyHeeftData(data);
       await this.FacturenService.UploadTransactieFactuur(data.LID_ID, data.DATUM);
    }
 

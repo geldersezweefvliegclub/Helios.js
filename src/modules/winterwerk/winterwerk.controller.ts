@@ -68,9 +68,9 @@ export class WinterwerkController extends HeliosController
       @Body() data: CreateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
       this.logger.verbose(`WinterwerkController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedCreateInput;
       const obj = await this.WinterwerkService.AddObject(insert, currentUser.ID);
@@ -87,11 +87,11 @@ export class WinterwerkController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperWinterwerkDto): Promise<OperWinterwerkDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`WinterwerkController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Winterwerk.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.OperWinterwerkUncheckedUpdateInput;
       const obj = await this.WinterwerkService.UpdateObject(id, update, currentUser.ID);

@@ -90,9 +90,9 @@ export class StartlijstController extends HeliosController
       @Body() data: CreateOperStartlijstDto): Promise<OperStartlijstDto>
    {
       this.logger.verbose(`StartlijstController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.AddObject');
       await this.heeftDataToegangAddObject(currentUser, data);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data, currentUser) as CreateOperStartlijstDto;
       const obj = await this.startlijstService.AddObject(insert as Prisma.OperStartlijstUncheckedCreateInput, currentUser.ID);
@@ -110,11 +110,11 @@ export class StartlijstController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperStartlijstDto): Promise<OperStartlijstDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`StartlijstController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Startlijst.UpdateObject');
       await this.heeftDataToegangUpdateObject(currentUser, id, data);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data, currentUser) as UpdateOperStartlijstDto;
       const obj = await this.startlijstService.UpdateObject(id, update as Prisma.OperStartlijstUncheckedUpdateInput, currentUser.ID);

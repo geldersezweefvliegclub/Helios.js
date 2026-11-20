@@ -62,9 +62,9 @@ export class RoosterController  extends HeliosController
       @Body() data: CreateOperRoosterDto): Promise<OperRoosterDto>
    {
       this.logger.verbose(`RoosterController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'Rooster.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       // een gewone gebruiker mag alleen een default rooster aanmaken: OPMERKINGEN leeg, DDWV, CLUB_BEDRIJF en
       // WINTER_WERK worden door de service afgeleid van de datum, zie AddObject()
@@ -86,11 +86,11 @@ export class RoosterController  extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperRoosterDto): Promise<OperRoosterDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`RoosterController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'Rooster.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as UpdateOperRoosterDto;
       const obj = await this.RoosterService.UpdateObject(id, update as Prisma.OperRoosterUncheckedUpdateInput, currentUser.ID);

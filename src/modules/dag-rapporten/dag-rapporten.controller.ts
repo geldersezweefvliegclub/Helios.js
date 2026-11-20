@@ -71,9 +71,9 @@ export class DagRapportenController extends HeliosController
       @Body() data: CreateOperDagRapportDto): Promise<OperDagRapportDto>
    {
       this.logger.verbose(`DagRapportenController.AddObject(${safeStringify({currentUser, data})})`);
-      bodyHeeftData(data);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.AddObject');
       this.heeftDataToegangAddObject(currentUser);
+      bodyHeeftData(data);
 
       const insert = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedCreateInput;
       // PHP class.DagRapporten.inc.php::AddObject() - INGEVOERD_ID wordt altijd server-side gezet op de
@@ -88,11 +88,11 @@ export class DagRapportenController extends HeliosController
       @CurrentUser() currentUser: RefLid,
       @Query('ID') id: number, @Body() data: UpdateOperDagRapportDto): Promise<OperDagRapportDto>
    {
-      bodyHeeftData(data);
       id = id ?? data.ID;
       this.logger.verbose(`DagRapportenController.UpdateObject(${safeStringify({currentUser, id, data})})`);
       this.permissieService.heeftToegang(currentUser, 'DagRapporten.UpdateObject');
       this.heeftDataToegangUpdateObject(currentUser);
+      bodyHeeftData(data);
 
       const update = await this.normaliserenData(data) as Prisma.OperDagRapportUncheckedUpdateInput;
       const obj = await this.DagRapportenService.UpdateObject(id, update, currentUser.ID);
